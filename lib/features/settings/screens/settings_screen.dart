@@ -765,7 +765,7 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
             child: Text(_editing ? 'Cancel' : 'Change'),
           ),
         ),
-        if (service.keyIsEphemeral && !_editing)
+        if (service.keyIsLegacyStandard && !_editing)
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppTheme.spacingMd,
@@ -774,9 +774,10 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
               AppTheme.spacingSm,
             ),
             child: Text(
-              'This is an AI Studio token, which expires. When online answers '
-              'stop working, create a key at aistudio.google.com/apikey — one '
-              'that starts with "AIza" does not expire — and paste it here.',
+              'This is an old-style "AIza" Standard key. Google stops accepting '
+              'those for the Gemini API in September 2026. Make a replacement '
+              'at aistudio.google.com/apikey — new keys start "AQ." — and '
+              'paste it here.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.tertiary,
               ),
@@ -800,7 +801,7 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
                   style: theme.textTheme.bodyMedium,
                   decoration: const InputDecoration(
                     labelText: 'Paste key',
-                    hintText: 'AIza…',
+                    hintText: 'AQ.…',
                     border: OutlineInputBorder(),
                     isDense: true,
                   ),

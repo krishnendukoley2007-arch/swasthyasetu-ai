@@ -27,8 +27,8 @@ enum GeminiFailure {
   /// No credential entered at all.
   notConfigured,
 
-  /// The key was rejected: wrong format, expired, revoked, or not enabled for
-  /// this API. Short-lived `AQ.`-style tokens land here once they lapse.
+  /// The key was rejected: revoked, restricted to a different API, or an old
+  /// `AIza` Standard key, which Google stops accepting in September 2026.
   rejectedKey,
 
   /// Quota or rate limit.
@@ -56,10 +56,10 @@ extension GeminiFailureText on GeminiFailure {
               'The written explanation below was produced on this phone and does '
               'not need one.',
         GeminiFailure.rejectedKey =>
-          'Google rejected the key. It may be expired, revoked, or not a Gemini '
-              'key at all. Long-lived keys start "AIza"; the AI Studio tokens '
-              'start "AQ." and stop working once they lapse. Paste a fresh one '
-              'in Settings.',
+          'Google rejected the key. It may be revoked, restricted to a '
+              'different API, or an old-style "AIza" Standard key — those stop '
+              'being accepted in September 2026. Make a new key at '
+              'aistudio.google.com/apikey and paste it into Settings.',
         GeminiFailure.quota =>
           'This key has used its quota for now. The offline explanation still '
               'works, and online answers should return later.',
@@ -92,8 +92,9 @@ class GeminiService {
   /// distribution. It is the lowest-priority source: Settings overrides it, and
   /// pasting a key there is how it gets replaced once this one lapses.
   ///
-  /// Verified live on 2026-08-23. It is an AI Studio token, so it *will* expire;
-  /// the Settings field exists precisely so that day does not require a rebuild.
+  /// Empty in this build, and it stays empty: no credential is committed to the
+  /// repository. The Settings field is how a key gets in, and how it gets
+  /// replaced without a rebuild.
   static const String shippedKey = '';
 
   /// The credential in force, preferring the one entered at runtime.
@@ -110,19 +111,27 @@ class GeminiService {
   /// after a success, or before any attempt.
   GeminiFailure? lastFailure;
 
-  /// Google's long-lived API keys start `AIza`; the short-lived AI Studio tokens
-  /// start `AQ.` and are also accepted by `generateContent` while they last.
-  /// Anything else — a bare project id, an OAuth `ya29.` token — is still sent,
-  /// since refusing to try would be presumptuous about a format Google may
-  /// change, but the UI is told so it can warn before the worker waits on a
-  /// doomed request.
+  /// Two formats reach this API. `AQ.` is the current one — every key AI Studio
+  /// now issues is an "auth key" with that prefix. `AIza` is the older
+  /// **Standard** key. Anything else — a bare project id, an OAuth `ya29.`
+  /// token — is still sent, since refusing to try would be presumptuous about a
+  /// format Google may change, but the UI is told so it can warn before the
+  /// worker waits on a doomed request.
   bool get keyLooksLikeApiKey =>
       (apiKey.startsWith('AIza') && apiKey.length >= 35) ||
       (apiKey.startsWith('AQ.') && apiKey.length >= 20);
 
-  /// Short-lived tokens work, then stop working. Worth saying out loud in
-  /// Settings rather than letting a worker rediscover it mid-screening.
-  bool get keyIsEphemeral => apiKey.startsWith('AQ.');
+  /// True for an old-style Standard key, which is the one with a deadline.
+  ///
+  /// This getter used to be `keyIsEphemeral`, fired on the `AQ.` prefix, and
+  /// drove a Settings banner telling the worker their key "expires". That was
+  /// simply wrong: Google's own documentation states that "all new API keys
+  /// created in Google AI Studio are automatically created as auth keys" — the
+  /// `AQ.` ones — and that the Gemini API "will reject requests from Standard
+  /// keys" from September 2026. The app was warning about the format that
+  /// works and recommending the format that is being switched off. The prefix
+  /// worth a banner is the other one.
+  bool get keyIsLegacyStandard => apiKey.startsWith('AIza');
 
   /// Verified against the live API on 2026-08-23: `gemini-2.0-flash` is retired
   /// and returns 404 `NOT_FOUND`, which the old constant here would have
@@ -263,9 +272,10 @@ ${_factsBlock(assessment)}
 ${retrieved.isEmpty ? '' : 'Reference guideline text:\n${_referenceBlock(retrieved)}\n'}
 A community health worker asks: "${question.trim()}"
 
-Answer in under 120 words, plain language, no diagnosis, no medicine names or
-doses. If the question cannot be answered safely from the facts above, say so
-and tell them to refer instead.''',
+Answer in under 80 words, plain language, no diagnosis, no medicine names or
+doses. Do not repeat the screening numbers back unless they are the answer. If
+the question cannot be answered safely from the facts above, say so and tell
+them to refer instead.''',
                 },
               ],
             },

@@ -134,35 +134,45 @@ class ExplanationRepository {
       if (cached != null) return cached;
     }
 
-    final retrieved = await relevantGuidelines(assessment);
-    final citations =
-        retrieved.map((r) => r.chunk.citation).toList(growable: false);
-
-    if (preferOnline && _gemini.isConfigured) {
-      final online = await _gemini.explain(
+    if (preferOnline) {
+      final online = await explainOnline(
         assessment: assessment,
-        retrieved: retrieved,
+        screeningId: screeningId,
         patientName: patientName,
         languageCode: languageCode,
       );
-      if (online != null) {
-        await _writeCache(
-          screeningId: screeningId,
-          explanation: online,
-          source: ExplanationSource.gemini,
-          citations: citations,
-          modelName: GeminiService.model,
-        );
-        return ExplanationResult(
-          explanation: online,
-          source: ExplanationSource.gemini,
-          fromCache: false,
-          citations: citations,
-        );
-      }
-      // Fell through: no network, timeout, or unusable response. Not an error —
-      // this is the designed degradation.
+      if (online != null) return online;
+      // Fell through: no key, no network, timeout, or unusable response. Not an
+      // error — this is the designed degradation.
     }
+
+    return explainOffline(
+      assessment: assessment,
+      screeningId: screeningId,
+      patientName: patientName,
+    );
+  }
+
+  /// Whatever is already stored for this screening, generating nothing.
+  Future<ExplanationResult?> cached(String screeningId) =>
+      _readCache(screeningId);
+
+  /// The explanation the on-device corpus can produce, with nothing awaited over
+  /// the network.
+  ///
+  /// Split out of [explain] so a caller can put words on screen immediately and
+  /// upgrade later. The single-call flow awaits Gemini first and only falls back
+  /// on failure, which meant a worker on a weak signal watched a spinner for the
+  /// full timeout before seeing text that had been sitting on the phone the
+  /// whole time.
+  Future<ExplanationResult> explainOffline({
+    required TriageAssessment assessment,
+    String? screeningId,
+    String? patientName,
+  }) async {
+    final retrieved = await relevantGuidelines(assessment);
+    final citations =
+        retrieved.map((r) => r.chunk.citation).toList(growable: false);
 
     final offline = OfflineExplainer.build(
       assessment: assessment,
@@ -181,6 +191,47 @@ class ExplanationRepository {
     return ExplanationResult(
       explanation: offline,
       source: ExplanationSource.offline,
+      fromCache: false,
+      citations: citations,
+    );
+  }
+
+  /// The online tier on its own.
+  ///
+  /// Null means it did not answer — no key, no signal, quota, or an unusable
+  /// reply. Never an error to surface, because the offline tier can always
+  /// answer and the caller is expected to have shown that first.
+  Future<ExplanationResult?> explainOnline({
+    required TriageAssessment assessment,
+    String? screeningId,
+    String? patientName,
+    String? languageCode,
+  }) async {
+    if (!_gemini.isConfigured) return null;
+
+    final retrieved = await relevantGuidelines(assessment);
+    final citations =
+        retrieved.map((r) => r.chunk.citation).toList(growable: false);
+
+    final online = await _gemini.explain(
+      assessment: assessment,
+      retrieved: retrieved,
+      patientName: patientName,
+      languageCode: languageCode,
+    );
+    if (online == null) return null;
+
+    await _writeCache(
+      screeningId: screeningId,
+      explanation: online,
+      source: ExplanationSource.gemini,
+      citations: citations,
+      modelName: GeminiService.model,
+    );
+
+    return ExplanationResult(
+      explanation: online,
+      source: ExplanationSource.gemini,
       fromCache: false,
       citations: citations,
     );

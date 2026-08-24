@@ -172,6 +172,11 @@ sample rates rather than asserting them.
 
 Without that board the app runs in demo mode, clearly labelled throughout.
 
+Full build details — bill of materials, pin mapping, schematic notes, assembly,
+firmware configuration and validation steps — are in
+[`hardware/HARDWARE.md`](hardware/HARDWARE.md), with a wiring diagram in
+[`hardware/hardware-schematic.svg`](hardware/hardware-schematic.svg).
+
 ---
 
 ## Licence and attribution

@@ -46,6 +46,11 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
   /// text-scale change, and a screening that saved itself three times because
   /// the worker rotated the phone would be a data-integrity bug.
   bool _persistStarted = false;
+
+  /// One-shot. The explanation opens itself once, on the visit that actually
+  /// wrote the record — never on back-navigation, or returning from the chat
+  /// would push it straight back and trap the worker.
+  bool _autoOpened = false;
   _SaveState _saveState = _SaveState.notApplicable;
   String? _saveError;
   String? _savedId;
@@ -229,6 +234,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
         _saveState = _SaveState.saved;
         _savedId = id;
       });
+      _autoOpenExplanation();
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -238,8 +244,37 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
     }
   }
 
-  Future<void> _retrySave() async {
-    setState(() {
+  /// Opens the explanation chat on top of this screen.
+  ///
+  /// `push`, not `go`: the result stays underneath, so the back arrow and the
+  /// system gesture both return to the band, the score and — for a red case —
+  /// the SOS button. Replacing this route would have made the convenience cost
+  /// a worker their emergency affordance.
+  void _openExplanation() {
+    context.push(
+      '/screening/ai-explanation',
+      // The saved id travels with it so the explanation can be cached against
+      // the row instead of regenerated every visit.
+      extra: {
+        ...?_extraData,
+        if (_savedId != null) 'screeningId': _savedId,
+      },
+    );
+  }
+
+  /// The explanation used to sit behind an "Explain this" button, which meant
+  /// the reason for a result was optional and the numbers were not. It opens on
+  /// its own now, once the record is safely written — reading it is the default,
+  /// and the back arrow is how you decline.
+  void _autoOpenExplanation() {
+    if (_autoOpened) return;
+    _autoOpened = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _openExplanation();
+    });
+  }
+
+  Future<void> _retrySave() async {    setState(() {
       _saveState = _SaveState.saving;
       _saveError = null;
     });
@@ -965,15 +1000,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                 child: AppOutlinedButton(
                   label: 'Explain this',
                   icon: const Icon(Icons.psychology_rounded),
-                  // The saved id travels with it so the explanation can be
-                  // cached against the row instead of regenerated every visit.
-                  onPressed: () => context.go(
-                    '/screening/ai-explanation',
-                    extra: {
-                      ...?_extraData,
-                      if (_savedId != null) 'screeningId': _savedId,
-                    },
-                  ),
+                  onPressed: _openExplanation,
                   borderColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.primary,
                 ),
