@@ -1,7 +1,13 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swasthyasetu_ai/data/database/app_database.dart';
+import 'package:swasthyasetu_ai/features/auth/screens/login_screen.dart';
+import 'package:swasthyasetu_ai/features/auth/screens/patient_registration_screen.dart';
 import 'package:swasthyasetu_ai/features/dashboard/screens/home_screen.dart';
+import 'package:swasthyasetu_ai/features/patient_home/screens/patient_home_screen.dart';
+import 'package:swasthyasetu_ai/features/environment/screens/advisories_screen.dart';
+import 'package:swasthyasetu_ai/features/trends/screens/trends_screen.dart';
 import 'package:swasthyasetu_ai/features/devices/screens/device_connection_screen.dart';
 import 'package:swasthyasetu_ai/features/devices/screens/device_diagnostics_screen.dart';
 import 'package:swasthyasetu_ai/features/devices/screens/device_scan_screen.dart';
@@ -32,7 +38,30 @@ const List<double> _textScales = [1.0, 1.3, 2.0];
 const String _patientId = 'overflow-p1';
 const String _screeningId = 'overflow-p1-s1';
 
-Future<void> _seed(AppDatabase db) => seedPatientWithHistory(db, id: _patientId);
+Future<void> _seed(AppDatabase db) async {
+  await seedPatientWithHistory(db, id: _patientId);
+  // A completed patient session, so the registration and patient-home screens
+  // render their real content instead of the no-account placeholders.
+  await db.upsertAuthAccount(
+    AuthAccountsCompanion.insert(
+      id: 'acc-1',
+      email: 'patient@example.com',
+      displayName: 'Rukhsana Bibi Chowdhury',
+      role: 'patient',
+      provider: 'email',
+      age: const Value(34),
+      sex: const Value('F'),
+      heightCm: const Value(160),
+      weightKg: const Value(58),
+      conditions: const Value('["Diabetes","High blood pressure"]'),
+      profileComplete: const Value(true),
+      patientId: const Value(_patientId),
+      createdAt: DateTime(2026, 1, 1),
+      lastLoginAt: DateTime(2026, 8, 20),
+    ),
+  );
+  await db.setSetting('auth.activeAccountId', 'acc-1');
+}
 
 /// A screen under test. [frames] is trimmed for screens that run an unbounded
 /// simulation loop, so the test observes a bounded window of it.
@@ -45,6 +74,11 @@ class _ScreenCase {
 }
 
 final List<_ScreenCase> _cases = [
+  _ScreenCase('login', () => const LoginScreen()),
+  _ScreenCase('patient registration', () => const PatientRegistrationScreen()),
+  _ScreenCase('patient home', () => const PatientHomeScreen()),
+  _ScreenCase('advisories', () => const AdvisoriesScreen()),
+  _ScreenCase('trends', () => const TrendsScreen(patientId: _patientId)),
   _ScreenCase('home', () => const HomeScreen()),
   _ScreenCase('patient list', () => const PatientListScreen()),
   _ScreenCase('add patient', () => const AddPatientScreen()),

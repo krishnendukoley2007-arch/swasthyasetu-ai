@@ -1,7 +1,7 @@
 name: swasthyasetu_ai
 description: AI-Powered Smart Health Monitoring & Community Early-Warning Platform
 publish_to: 'none'
-version: 1.1.0+2
+version: 1.3.0+4
 
 environment:
   sdk: '>=3.9.0 <4.0.0'
@@ -24,6 +24,14 @@ dependencies:
   path_provider: ^2.1.2
   # BLE
   flutter_blue_plus: ^1.31.2
+  # Sign-in: Google identity (7.x = Credential Manager on Android). Deliberately
+  # NOT firebase_auth: this build must keep working with no google-services.json,
+  # so accounts fall back to salted-hash local credentials when Google is not
+  # configured for this package signature.
+  google_sign_in: ^7.2.0
+  # PBKDF2-HMAC-SHA256 for local email passwords — pure Dart, no native build
+  # cost, and the same primitive on every device.
+  crypto: ^3.0.3
   # Network
   dio: ^5.4.0
   connectivity_plus: ^6.0.5

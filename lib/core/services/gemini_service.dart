@@ -13,6 +13,7 @@ library;
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:swasthyasetu_ai/domain/models/audience.dart';
 import 'package:swasthyasetu_ai/domain/models/triage_result.dart';
 import 'package:swasthyasetu_ai/domain/rules/guideline_retriever.dart';
 import 'package:swasthyasetu_ai/domain/rules/offline_explainer.dart';
@@ -34,6 +35,14 @@ enum GeminiFailure {
   /// Quota or rate limit.
   quota,
 
+  /// Google answered, with a 5xx. Its side, not the phone's.
+  ///
+  /// Split out from [network] because collapsing the two was actively
+  /// misleading: `gemini-flash` returns `503 UNAVAILABLE` under load often
+  /// enough that a worker with four bars of signal was being told the phone
+  /// could not reach Google, and went looking for a network they already had.
+  serverBusy,
+
   /// Unreachable, timed out, DNS failure — the ordinary offline case.
   network,
 
@@ -46,6 +55,7 @@ extension GeminiFailureText on GeminiFailure {
         GeminiFailure.notConfigured => 'No AI key entered',
         GeminiFailure.rejectedKey => 'Key rejected',
         GeminiFailure.quota => 'Daily limit reached',
+        GeminiFailure.serverBusy => 'Google\'s AI is busy',
         GeminiFailure.network => 'No connection',
         GeminiFailure.badResponse => 'Unusable reply',
       };
@@ -63,6 +73,11 @@ extension GeminiFailureText on GeminiFailure {
         GeminiFailure.quota =>
           'This key has used its quota for now. The offline explanation still '
               'works, and online answers should return later.',
+        GeminiFailure.serverBusy =>
+          'Your connection is fine — Google\'s AI service turned the request '
+              'away as overloaded, and it was already retried. Asking again in '
+              'a moment usually works. The explanation below is on this phone '
+              'either way.',
         GeminiFailure.network =>
           'The phone could not reach Google. Nothing was sent. The explanation '
               'below is already saved on this phone.',
@@ -74,6 +89,10 @@ extension GeminiFailureText on GeminiFailure {
   /// Whether the worker can fix this themselves right now.
   bool get isActionable =>
       this == GeminiFailure.notConfigured || this == GeminiFailure.rejectedKey;
+
+  /// Whether asking the same thing again is worth the worker's time.
+  bool get isWorthRetrying =>
+      this == GeminiFailure.serverBusy || this == GeminiFailure.network;
 }
 
 class GeminiService {
@@ -141,18 +160,33 @@ class GeminiService {
   static const String endpoint =
       'https://generativelanguage.googleapis.com/v1beta/models';
 
-  /// Short on purpose. A health worker in a village with one bar of signal is
-  /// better served by the offline explanation than by a spinner.
-  static const Duration timeout = Duration(seconds: 12);
+  /// Fail fast on *reaching* Google. A phone with no signal should fall through
+  /// to the offline explanation in seconds, not sit on a spinner.
+  static const Duration connectTimeout = Duration(seconds: 10);
+
+  /// Then wait properly for the answer. This was 12 seconds for both phases,
+  /// which a thinking model on a village connection overran often enough to look
+  /// like random failure — the request had landed and was being worked on, and
+  /// the app hung up on it.
+  static const Duration receiveTimeout = Duration(seconds: 25);
+
+  /// Extra attempts after the first, for failures that another try could fix.
+  ///
+  /// The single biggest cause of "it answered, then it didn't, then it did" was
+  /// that there was no second attempt at all: one transient 503 from Flash and
+  /// that question was answered offline forever.
+  static const int maxRetries = 2;
 
   final Dio _dio;
+  final int _maxRetries;
 
-  GeminiService({Dio? dio})
-      : _dio = dio ??
+  GeminiService({Dio? dio, int maxRetries = maxRetries})
+      : _maxRetries = maxRetries,
+        _dio = dio ??
             Dio(
               BaseOptions(
-                connectTimeout: timeout,
-                receiveTimeout: timeout,
+                connectTimeout: connectTimeout,
+                receiveTimeout: receiveTimeout,
                 headers: {'Content-Type': 'application/json'},
               ),
             );
@@ -172,10 +206,52 @@ class GeminiService {
       // model ids on a schedule, and mapping that to "no connection" sent a
       // worker looking for signal they already had.
       if (status == 404) return GeminiFailure.badResponse;
-      if (status != null && status >= 500) return GeminiFailure.network;
+      // Google answered and the answer was "not right now".
+      if (status != null && status >= 500) return GeminiFailure.serverBusy;
       return GeminiFailure.network;
     }
     return GeminiFailure.network;
+  }
+
+  /// Whether another attempt could plausibly succeed.
+  ///
+  /// Retried: Google's own 5xx, and a read timeout — which means the request did
+  /// land and the model was merely slow. Not retried: a connect timeout or
+  /// socket error, because the phone has no route to Google and two more
+  /// attempts only spend twenty more seconds proving it; nor a rejected key or
+  /// an exhausted quota, which fail identically every time.
+  static bool isRetryable(Object error) {
+    if (error is! DioException) return false;
+    final status = error.response?.statusCode;
+    if (status != null) return status >= 500;
+    return error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout;
+  }
+
+  /// Short, and deliberately not much longer on the second go: a health worker
+  /// is standing in front of somebody. Two retries at these delays add under two
+  /// seconds to the worst case.
+  static Duration backoffFor(int attempt) =>
+      Duration(milliseconds: 400 + 800 * attempt);
+
+  /// One `generateContent` call, retried where retrying is honest.
+  ///
+  /// Every request in this class goes through here, so the retry policy is in
+  /// one place and `explain`, `answerQuestion` and `testKey` cannot drift apart.
+  Future<Map<String, dynamic>?> _generate(Map<String, dynamic> body) async {
+    for (var attempt = 0;; attempt++) {
+      try {
+        final response = await _dio.post<Map<String, dynamic>>(
+          '$endpoint/$model:generateContent',
+          queryParameters: {'key': apiKey},
+          data: body,
+        );
+        return response.data;
+      } catch (error) {
+        if (attempt >= _maxRetries || !isRetryable(error)) rethrow;
+        await Future<void>.delayed(backoffFor(attempt));
+      }
+    }
   }
 
   /// Returns null on any failure — no key, no network, timeout, bad JSON, safety
@@ -186,6 +262,7 @@ class GeminiService {
     List<RetrievedChunk> retrieved = const [],
     String? patientName,
     String? languageCode,
+    Audience audience = Audience.nurse,
   }) async {
     if (!isConfigured) {
       lastFailure = GeminiFailure.notConfigured;
@@ -193,39 +270,42 @@ class GeminiService {
     }
 
     try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        '$endpoint/$model:generateContent',
-        queryParameters: {'key': apiKey},
-        data: {
-          'contents': [
-            {
-              'parts': [
-                {
-                  'text': _buildPrompt(
-                    assessment: assessment,
-                    retrieved: retrieved,
-                    patientName: patientName,
-                    languageCode: languageCode,
-                  ),
-                },
-              ],
-            },
-          ],
-          'generationConfig': {
-            // Low temperature: this is a restatement task, not a creative one.
-            'temperature': 0.2,
-            // Generous, because on a thinking model the reasoning tokens are
-            // charged against this same budget. At 1024 the model spent the
-            // whole allowance thinking and returned `finishReason: MAX_TOKENS`
-            // with an empty body — which read as "AI unavailable" in the UI.
-            'maxOutputTokens': 3072,
-            'responseMimeType': 'application/json',
-            ..._thinkingConfig,
+      final data = await _generate({
+        'contents': [
+          {
+            'parts': [
+              {
+                'text': audience.isPatient
+                    ? _buildPatientPrompt(
+                        assessment: assessment,
+                        retrieved: retrieved,
+                        patientName: patientName,
+                        languageCode: languageCode,
+                      )
+                    : _buildPrompt(
+                        assessment: assessment,
+                        retrieved: retrieved,
+                        patientName: patientName,
+                        languageCode: languageCode,
+                      ),
+              },
+            ],
           },
+        ],
+        'generationConfig': {
+          // Low temperature: this is a restatement task, not a creative one.
+          'temperature': 0.2,
+          // Generous, because on a thinking model the reasoning tokens are
+          // charged against this same budget. At 1024 the model spent the
+          // whole allowance thinking and returned `finishReason: MAX_TOKENS`
+          // with an empty body — which read as "AI unavailable" in the UI.
+          'maxOutputTokens': 3072,
+          'responseMimeType': 'application/json',
+          ..._thinkingConfig,
         },
-      );
+      });
 
-      final text = _extractText(response.data);
+      final text = _extractText(data);
       if (text == null) {
         lastFailure = GeminiFailure.badResponse;
         return null;
@@ -247,6 +327,8 @@ class GeminiService {
     required TriageAssessment assessment,
     required String question,
     List<RetrievedChunk> retrieved = const [],
+    Audience audience = Audience.nurse,
+    String? languageCode,
   }) async {
     if (!isConfigured) {
       lastFailure = GeminiFailure.notConfigured;
@@ -255,40 +337,41 @@ class GeminiService {
     if (question.trim().isEmpty) return null;
 
     try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        '$endpoint/$model:generateContent',
-        queryParameters: {'key': apiKey},
-        data: {
-          'contents': [
-            {
-              'parts': [
-                {
-                  'text': '''
-$_systemRules
-
-Screening facts (fixed, do not contradict):
-${_factsBlock(assessment)}
-
-${retrieved.isEmpty ? '' : 'Reference guideline text:\n${_referenceBlock(retrieved)}\n'}
-A community health worker asks: "${question.trim()}"
-
-Answer in under 80 words, plain language, no diagnosis, no medicine names or
-doses. Do not repeat the screening numbers back unless they are the answer. If
-the question cannot be answered safely from the facts above, say so and tell
-them to refer instead.''',
-                },
-              ],
-            },
-          ],
-          'generationConfig': {
-            'temperature': 0.2,
-            'maxOutputTokens': 1600,
-            ..._thinkingConfig,
+      final data = await _generate({
+        'contents': [
+          {
+            'parts': [
+              {
+                'text': audience.isPatient
+                    ? _patientQuestionPrompt(
+                        assessment: assessment,
+                        question: question,
+                        retrieved: retrieved,
+                        languageCode: languageCode,
+                      )
+                    : _nurseQuestionPrompt(
+                        assessment: assessment,
+                        question: question,
+                        retrieved: retrieved,
+                      ),
+              },
+            ],
           },
+        ],
+        'generationConfig': {
+          'temperature': 0.2,
+          // Same budget as the main explanation, and for the same reason. At
+          // 1600 the reasoning tokens could consume the whole allowance and the
+          // model returned `finishReason: MAX_TOKENS` with no text part at all —
+          // which the UI showed as a flat failure. The main explanation was
+          // raised to 3072 when this was first hit; this path was missed, so
+          // short questions were answered and longer ones silently were not.
+          'maxOutputTokens': 3072,
+          ..._thinkingConfig,
         },
-      );
+      });
 
-      final text = _extractText(response.data)?.trim();
+      final text = _extractText(data)?.trim();
       if (text == null || text.isEmpty) {
         lastFailure = GeminiFailure.badResponse;
         return null;
@@ -306,21 +389,17 @@ them to refer instead.''',
   Future<GeminiFailure?> testKey() async {
     if (!isConfigured) return GeminiFailure.notConfigured;
     try {
-      await _dio.post<Map<String, dynamic>>(
-        '$endpoint/$model:generateContent',
-        queryParameters: {'key': apiKey},
-        data: {
-          'contents': [
-            {'parts': [{'text': 'Reply with the single word: ok'}]},
-          ],
-          'generationConfig': {
-            // 8 was enough on a non-thinking model; here the whole budget would
-            // go to reasoning and the round trip would look like a failure.
-            'maxOutputTokens': 600,
-            ..._thinkingConfig,
-          },
+      await _generate({
+        'contents': [
+          {'parts': [{'text': 'Reply with the single word: ok'}]},
+        ],
+        'generationConfig': {
+          // 8 was enough on a non-thinking model; here the whole budget would
+          // go to reasoning and the round trip would look like a failure.
+          'maxOutputTokens': 600,
+          ..._thinkingConfig,
         },
-      );
+      });
       lastFailure = null;
       return null;
     } catch (e) {
@@ -340,6 +419,132 @@ Hard rules:
 - Never suggest a medicine, a dose, or a home remedy.
 - Plain language, short sentences. Assume the reader is not a clinician.
 - If the facts are insufficient, say so plainly.''';
+
+  /// The patient-facing preamble.
+  ///
+  /// Deliberately different in one substantive way from [_systemRules]: it drops
+  /// the blanket ban on home remedies, because a person reading their own result
+  /// needs something they can actually do, and "refer to the PHC" is not an
+  /// instruction a patient can follow. That widening is the app owner's explicit
+  /// decision. The two limits that remain are the ones that keep it honest —
+  /// nothing invented, and no diagnosis claimed from screening data — and the
+  /// band still comes from the rule engine, not from here.
+  static const String _patientSystemRules = '''
+You are a patient-facing health assistant.
+
+Analyze the patient's actual vital signs, ECG, symptoms, and available medical guidance. Focus mainly on **what may be happening, what the findings could mean, what the patient can safely do at home, what to monitor, and when medical care is needed**.
+
+Give practical, evidence-based home care and remedies when appropriate. Do not invent information or claim a confirmed diagnosis from screening data. If findings could be serious, clearly explain when to seek urgent or emergency care.
+
+Use the risk score only as supporting information and explain it in one short line.''';
+
+  /// Which language to write in, shared by both audiences.
+  ///
+  /// Not optional for the patient path: the people most likely to be handed
+  /// their own result are the ones least likely to read English.
+  static String _languageName(String? languageCode) => switch (languageCode) {
+        'bn' => 'Bengali (Bangla script)',
+        'hi' => 'Hindi (Devanagari script)',
+        _ => 'English',
+      };
+
+  /// The five keys both audiences return.
+  ///
+  /// Identical on purpose. The parser, the cache columns and every bubble in the
+  /// chat are shared, so switching audience changes the wording and nothing
+  /// structural.
+  static const String _jsonContract = '''
+Return ONLY a JSON object with exactly these keys:
+{
+  "summary": "...",
+  "whyThisLevel": "...",
+  "safeNextSteps": "...",
+  "whenToEscalate": "...",
+  "questionsToAsk": ["...", "...", "..."]
+}''';
+
+  String _buildPatientPrompt({
+    required TriageAssessment assessment,
+    required List<RetrievedChunk> retrieved,
+    String? patientName,
+    String? languageCode,
+  }) {
+    return '''
+$_patientSystemRules
+
+Write in ${_languageName(languageCode)}.
+
+PATIENT DATA:
+${_patientFactsBlock(assessment, retrieved)}
+${patientName == null || patientName.isEmpty ? '' : 'Name: $patientName\n'}
+$_jsonContract''';
+  }
+
+  /// The compact, pipe-separated form the patient prompt asks for.
+  String _patientFactsBlock(
+    TriageAssessment assessment,
+    List<RetrievedChunk> retrieved,
+  ) {
+    final s = assessment.sample;
+    final rules = assessment.firedRules.isEmpty
+        ? 'none'
+        : assessment.firedRules.map((r) => '${r.id} ${r.title}').join('; ');
+
+    return '''
+Risk: ${assessment.band.storageValue}, Score: ${assessment.score}/100
+Heart rate: ${s.heartRateBpm} bpm | SpO2: ${s.spo2Percent}% | Temperature: ${s.temperatureC.toStringAsFixed(1)} °C
+ECG quality: ${(s.ecgSignalQuality * 100).round()}% | Symptoms: ${assessment.symptoms.isEmpty ? 'none' : assessment.symptoms.join(', ')}
+Vulnerability: ${assessment.flags.isEmpty ? 'none' : assessment.flags.map((f) => f.id).join(', ')} | Rules: $rules
+Guidance: ${retrieved.isEmpty ? 'none available offline' : _referenceBlock(retrieved)}''';
+  }
+
+  String _nurseQuestionPrompt({
+    required TriageAssessment assessment,
+    required String question,
+    required List<RetrievedChunk> retrieved,
+  }) {
+    return '''
+$_systemRules
+
+Screening facts (fixed, do not contradict):
+${_factsBlock(assessment)}
+
+${retrieved.isEmpty ? '' : 'Reference guideline text:\n${_referenceBlock(retrieved)}\n'}
+A community health worker asks: "${question.trim()}"
+
+Answer in under 80 words, plain language, no diagnosis, no medicine names or
+doses. Do not repeat the screening numbers back unless they are the answer. If
+the question cannot be answered safely from the facts above, say so and tell
+them to refer instead.''';
+  }
+
+  /// The follow-up, patient side.
+  ///
+  /// Mirrors [_patientSystemRules] rather than the nurse rules: it may suggest
+  /// home care, because refusing to while the main explanation does would be
+  /// incoherent to the person reading both.
+  String _patientQuestionPrompt({
+    required TriageAssessment assessment,
+    required String question,
+    required List<RetrievedChunk> retrieved,
+    String? languageCode,
+  }) {
+    return '''
+$_patientSystemRules
+
+Write in ${_languageName(languageCode)}.
+
+PATIENT DATA:
+${_patientFactsBlock(assessment, retrieved)}
+
+The patient asks: "${question.trim()}"
+
+Answer in under 100 words, in plain language they can act on. Practical home
+care is welcome where it is safe. Do not claim a diagnosis and do not invent
+anything the data does not support. If the question cannot be answered safely
+from the data above, say so plainly and tell them to see a health worker or
+doctor.''';
+  }
 
   String _buildPrompt({
     required TriageAssessment assessment,

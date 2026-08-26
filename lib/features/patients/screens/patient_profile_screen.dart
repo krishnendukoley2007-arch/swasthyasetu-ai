@@ -35,6 +35,14 @@ class PatientProfileScreen extends ConsumerWidget {
           tooltip: 'Back',
           onPressed: () => context.go('/patients'),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.show_chart_rounded),
+            tooltip: 'Trends',
+            onPressed: () =>
+                context.push('/trends?patientId=$patientId'),
+          ),
+        ],
       ),
       body: patientAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

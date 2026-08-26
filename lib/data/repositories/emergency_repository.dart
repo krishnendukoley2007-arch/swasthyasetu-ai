@@ -157,21 +157,25 @@ class EmergencyRepository {
     return all.firstWhere((c) => c.isPrimary, orElse: () => all.first);
   }
 
-  Future<void> saveContact(EmergencyContact contact) async {
-    // Exactly one primary. Demoting the others here keeps the invariant in one
-    // place instead of trusting every call site to do it.
-    if (contact.isPrimary) {
-      for (final existing in await getContacts()) {
-        if (existing.id != contact.id && existing.isPrimary) {
-          await _db.upsertEmergencyContact(
-            EmergencyContactsCompanion(
-              id: Value(existing.id),
-              isPrimary: const Value(false),
-            ),
-          );
-        }
-      }
+  /// The contact actually flagged primary, or null.
+  ///
+  /// Distinct from [primaryContact], which falls back to the first row so SOS
+  /// always has someone to warn. A caller that is about to *write* needs the
+  /// truth instead: the health-profile editor uses this to update the existing
+  /// primary rather than minting a second contact for the same person on every
+  /// save.
+  Future<EmergencyContact?> explicitPrimaryContact() async {
+    for (final contact in await getContacts()) {
+      if (contact.isPrimary) return contact;
     }
+    return null;
+  }
+
+  Future<void> saveContact(EmergencyContact contact) async {
+    // Write the row first, then demote the others. That order matters: if the
+    // write fails there is nothing to demote, so the list can never be left
+    // with zero primaries — which would silently point SOS at whichever
+    // contact happened to sort first.
     await _db.upsertEmergencyContact(
       EmergencyContactsCompanion.insert(
         id: contact.id,
@@ -182,6 +186,13 @@ class EmergencyRepository {
         sortOrder: Value(contact.sortOrder),
       ),
     );
+    // Exactly one primary. Kept here rather than trusting every call site, and
+    // expressed as one UPDATE rather than a read-then-upsert-each loop — the
+    // loop had to invent a full row per contact just to flip one boolean, and
+    // could not, so it threw instead.
+    if (contact.isPrimary) {
+      await _db.demoteOtherPrimaryContacts(contact.id);
+    }
   }
 
   Future<void> deleteContact(String id) => _db.deleteEmergencyContact(id);

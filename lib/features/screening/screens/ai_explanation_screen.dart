@@ -30,6 +30,7 @@ import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/explanation_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
 import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
+import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
 
 /// Who a bubble belongs to. [system] is the app speaking about itself — a
@@ -173,6 +174,9 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     if (assessment == null) return;
 
     final settings = ref.read(settingsProvider);
+    // Derived from the account, never from a setting anyone can tap — see
+    // effectiveAudienceProvider.
+    final audience = ref.read(effectiveAudienceProvider);
     final repo = ref.read(explanationRepositoryProvider);
 
     setState(() {
@@ -189,7 +193,7 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     ExplanationResult? shown;
     final id = _screeningId;
     if (id != null && !refresh) {
-      shown = await _attempt(() => repo.cached(id));
+      shown = await _attempt(() => repo.cached(id, audience: audience));
     }
 
     shown ??= await _attempt(
@@ -197,6 +201,7 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
         assessment: assessment,
         screeningId: _screeningId,
         patientName: _patientName,
+        audience: audience,
       ),
     );
 
@@ -237,6 +242,7 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
         screeningId: _screeningId,
         patientName: _patientName,
         languageCode: settings.locale.languageCode,
+        audience: audience,
       ),
     );
 
@@ -261,12 +267,32 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
   void _postBrief(ExplanationResult result, {bool replacing = false}) {
     final explanation = result.explanation;
     final now = DateTime.now();
+    // Same four sections either way — only the labels differ, because a patient
+    // is not "escalating" anything and a nurse is not being told what to do at
+    // home. The underlying JSON keys are identical in both prompts.
+    final patient = ref.read(effectiveAudienceProvider).isPatient;
 
     final sections = <(String, String, _Tone?)>[
-      ('What this reading showed', explanation.summary, null),
-      ('Why this level', explanation.whyThisLevel, null),
-      ('What to do now', explanation.safeNextSteps, null),
-      ('Go immediately if', explanation.whenToEscalate, _Tone.danger),
+      (
+        patient ? 'What your reading showed' : 'What this reading showed',
+        explanation.summary,
+        null,
+      ),
+      (
+        patient ? 'What this could mean' : 'Why this level',
+        explanation.whyThisLevel,
+        null,
+      ),
+      (
+        patient ? 'What you can do now' : 'What to do now',
+        explanation.safeNextSteps,
+        null,
+      ),
+      (
+        patient ? 'See a doctor immediately if' : 'Go immediately if',
+        explanation.whenToEscalate,
+        _Tone.danger,
+      ),
     ].where((section) => section.$2.trim().isNotEmpty).toList();
 
     final built = <_Message>[
@@ -369,6 +395,8 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
       () => ref.read(explanationRepositoryProvider).answerQuestion(
             assessment: assessment,
             question: text,
+            audience: ref.read(effectiveAudienceProvider),
+            languageCode: ref.read(settingsProvider).locale.languageCode,
           ),
     );
 

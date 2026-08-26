@@ -6405,6 +6405,1041 @@ class AppSettingsCompanion extends UpdateCompanion<SettingRow> {
   }
 }
 
+class $AuthAccountsTable extends AuthAccounts
+    with TableInfo<$AuthAccountsTable, AuthAccountRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AuthAccountsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  @override
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+    'role',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _providerMeta = const VerificationMeta(
+    'provider',
+  );
+  @override
+  late final GeneratedColumn<String> provider = GeneratedColumn<String>(
+    'provider',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _passwordHashMeta = const VerificationMeta(
+    'passwordHash',
+  );
+  @override
+  late final GeneratedColumn<String> passwordHash = GeneratedColumn<String>(
+    'password_hash',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _passwordSaltMeta = const VerificationMeta(
+    'passwordSalt',
+  );
+  @override
+  late final GeneratedColumn<String> passwordSalt = GeneratedColumn<String>(
+    'password_salt',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _photoUrlMeta = const VerificationMeta(
+    'photoUrl',
+  );
+  @override
+  late final GeneratedColumn<String> photoUrl = GeneratedColumn<String>(
+    'photo_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ageMeta = const VerificationMeta('age');
+  @override
+  late final GeneratedColumn<int> age = GeneratedColumn<int>(
+    'age',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sexMeta = const VerificationMeta('sex');
+  @override
+  late final GeneratedColumn<String> sex = GeneratedColumn<String>(
+    'sex',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _heightCmMeta = const VerificationMeta(
+    'heightCm',
+  );
+  @override
+  late final GeneratedColumn<double> heightCm = GeneratedColumn<double>(
+    'height_cm',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _weightKgMeta = const VerificationMeta(
+    'weightKg',
+  );
+  @override
+  late final GeneratedColumn<double> weightKg = GeneratedColumn<double>(
+    'weight_kg',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _conditionsMeta = const VerificationMeta(
+    'conditions',
+  );
+  @override
+  late final GeneratedColumn<String> conditions = GeneratedColumn<String>(
+    'conditions',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _problemsMeta = const VerificationMeta(
+    'problems',
+  );
+  @override
+  late final GeneratedColumn<String> problems = GeneratedColumn<String>(
+    'problems',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _profileCompleteMeta = const VerificationMeta(
+    'profileComplete',
+  );
+  @override
+  late final GeneratedColumn<bool> profileComplete = GeneratedColumn<bool>(
+    'profile_complete',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("profile_complete" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _patientIdMeta = const VerificationMeta(
+    'patientId',
+  );
+  @override
+  late final GeneratedColumn<String> patientId = GeneratedColumn<String>(
+    'patient_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastLoginAtMeta = const VerificationMeta(
+    'lastLoginAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastLoginAt = GeneratedColumn<DateTime>(
+    'last_login_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    email,
+    displayName,
+    role,
+    provider,
+    passwordHash,
+    passwordSalt,
+    photoUrl,
+    age,
+    sex,
+    heightCm,
+    weightKg,
+    conditions,
+    problems,
+    profileComplete,
+    patientId,
+    createdAt,
+    lastLoginAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'auth_accounts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AuthAccountRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_emailMeta);
+    }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayNameMeta);
+    }
+    if (data.containsKey('role')) {
+      context.handle(
+        _roleMeta,
+        role.isAcceptableOrUnknown(data['role']!, _roleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_roleMeta);
+    }
+    if (data.containsKey('provider')) {
+      context.handle(
+        _providerMeta,
+        provider.isAcceptableOrUnknown(data['provider']!, _providerMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_providerMeta);
+    }
+    if (data.containsKey('password_hash')) {
+      context.handle(
+        _passwordHashMeta,
+        passwordHash.isAcceptableOrUnknown(
+          data['password_hash']!,
+          _passwordHashMeta,
+        ),
+      );
+    }
+    if (data.containsKey('password_salt')) {
+      context.handle(
+        _passwordSaltMeta,
+        passwordSalt.isAcceptableOrUnknown(
+          data['password_salt']!,
+          _passwordSaltMeta,
+        ),
+      );
+    }
+    if (data.containsKey('photo_url')) {
+      context.handle(
+        _photoUrlMeta,
+        photoUrl.isAcceptableOrUnknown(data['photo_url']!, _photoUrlMeta),
+      );
+    }
+    if (data.containsKey('age')) {
+      context.handle(
+        _ageMeta,
+        age.isAcceptableOrUnknown(data['age']!, _ageMeta),
+      );
+    }
+    if (data.containsKey('sex')) {
+      context.handle(
+        _sexMeta,
+        sex.isAcceptableOrUnknown(data['sex']!, _sexMeta),
+      );
+    }
+    if (data.containsKey('height_cm')) {
+      context.handle(
+        _heightCmMeta,
+        heightCm.isAcceptableOrUnknown(data['height_cm']!, _heightCmMeta),
+      );
+    }
+    if (data.containsKey('weight_kg')) {
+      context.handle(
+        _weightKgMeta,
+        weightKg.isAcceptableOrUnknown(data['weight_kg']!, _weightKgMeta),
+      );
+    }
+    if (data.containsKey('conditions')) {
+      context.handle(
+        _conditionsMeta,
+        conditions.isAcceptableOrUnknown(data['conditions']!, _conditionsMeta),
+      );
+    }
+    if (data.containsKey('problems')) {
+      context.handle(
+        _problemsMeta,
+        problems.isAcceptableOrUnknown(data['problems']!, _problemsMeta),
+      );
+    }
+    if (data.containsKey('profile_complete')) {
+      context.handle(
+        _profileCompleteMeta,
+        profileComplete.isAcceptableOrUnknown(
+          data['profile_complete']!,
+          _profileCompleteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('patient_id')) {
+      context.handle(
+        _patientIdMeta,
+        patientId.isAcceptableOrUnknown(data['patient_id']!, _patientIdMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('last_login_at')) {
+      context.handle(
+        _lastLoginAtMeta,
+        lastLoginAt.isAcceptableOrUnknown(
+          data['last_login_at']!,
+          _lastLoginAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastLoginAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AuthAccountRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AuthAccountRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      role: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role'],
+      )!,
+      provider: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider'],
+      )!,
+      passwordHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}password_hash'],
+      ),
+      passwordSalt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}password_salt'],
+      ),
+      photoUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}photo_url'],
+      ),
+      age: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}age'],
+      ),
+      sex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sex'],
+      )!,
+      heightCm: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}height_cm'],
+      ),
+      weightKg: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}weight_kg'],
+      ),
+      conditions: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}conditions'],
+      )!,
+      problems: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}problems'],
+      ),
+      profileComplete: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}profile_complete'],
+      )!,
+      patientId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}patient_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      lastLoginAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_login_at'],
+      )!,
+    );
+  }
+
+  @override
+  $AuthAccountsTable createAlias(String alias) {
+    return $AuthAccountsTable(attachedDatabase, alias);
+  }
+}
+
+class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
+  final String id;
+
+  /// The login key. Google accounts use the Google email; email accounts the
+  /// registered address. Unique per install — enforced by the repository.
+  final String email;
+  final String displayName;
+
+  /// 'patient' | 'clinician'. Decides the home the router sends them to and
+  /// which AI prompt family explains their results.
+  final String role;
+
+  /// 'email' | 'google'.
+  final String provider;
+
+  /// Base64 PBKDF2-HMAC-SHA256 hash and its salt. Null for Google accounts.
+  final String? passwordHash;
+  final String? passwordSalt;
+
+  /// Google profile photo, purely cosmetic.
+  final String? photoUrl;
+  final int? age;
+  final String sex;
+  final double? heightCm;
+  final double? weightKg;
+
+  /// JSON array of pre-existing condition labels the patient ticked.
+  final String conditions;
+
+  /// Free-text "anything bothering you" from registration.
+  final String? problems;
+
+  /// False until a patient has completed the registration profile — the router
+  /// holds them on the registration screen until then.
+  final bool profileComplete;
+
+  /// The Patients row this account screens itself as. Null for clinicians.
+  final String? patientId;
+  final DateTime createdAt;
+  final DateTime lastLoginAt;
+  const AuthAccountRow({
+    required this.id,
+    required this.email,
+    required this.displayName,
+    required this.role,
+    required this.provider,
+    this.passwordHash,
+    this.passwordSalt,
+    this.photoUrl,
+    this.age,
+    required this.sex,
+    this.heightCm,
+    this.weightKg,
+    required this.conditions,
+    this.problems,
+    required this.profileComplete,
+    this.patientId,
+    required this.createdAt,
+    required this.lastLoginAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['email'] = Variable<String>(email);
+    map['display_name'] = Variable<String>(displayName);
+    map['role'] = Variable<String>(role);
+    map['provider'] = Variable<String>(provider);
+    if (!nullToAbsent || passwordHash != null) {
+      map['password_hash'] = Variable<String>(passwordHash);
+    }
+    if (!nullToAbsent || passwordSalt != null) {
+      map['password_salt'] = Variable<String>(passwordSalt);
+    }
+    if (!nullToAbsent || photoUrl != null) {
+      map['photo_url'] = Variable<String>(photoUrl);
+    }
+    if (!nullToAbsent || age != null) {
+      map['age'] = Variable<int>(age);
+    }
+    map['sex'] = Variable<String>(sex);
+    if (!nullToAbsent || heightCm != null) {
+      map['height_cm'] = Variable<double>(heightCm);
+    }
+    if (!nullToAbsent || weightKg != null) {
+      map['weight_kg'] = Variable<double>(weightKg);
+    }
+    map['conditions'] = Variable<String>(conditions);
+    if (!nullToAbsent || problems != null) {
+      map['problems'] = Variable<String>(problems);
+    }
+    map['profile_complete'] = Variable<bool>(profileComplete);
+    if (!nullToAbsent || patientId != null) {
+      map['patient_id'] = Variable<String>(patientId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['last_login_at'] = Variable<DateTime>(lastLoginAt);
+    return map;
+  }
+
+  AuthAccountsCompanion toCompanion(bool nullToAbsent) {
+    return AuthAccountsCompanion(
+      id: Value(id),
+      email: Value(email),
+      displayName: Value(displayName),
+      role: Value(role),
+      provider: Value(provider),
+      passwordHash: passwordHash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(passwordHash),
+      passwordSalt: passwordSalt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(passwordSalt),
+      photoUrl: photoUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(photoUrl),
+      age: age == null && nullToAbsent ? const Value.absent() : Value(age),
+      sex: Value(sex),
+      heightCm: heightCm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(heightCm),
+      weightKg: weightKg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weightKg),
+      conditions: Value(conditions),
+      problems: problems == null && nullToAbsent
+          ? const Value.absent()
+          : Value(problems),
+      profileComplete: Value(profileComplete),
+      patientId: patientId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(patientId),
+      createdAt: Value(createdAt),
+      lastLoginAt: Value(lastLoginAt),
+    );
+  }
+
+  factory AuthAccountRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AuthAccountRow(
+      id: serializer.fromJson<String>(json['id']),
+      email: serializer.fromJson<String>(json['email']),
+      displayName: serializer.fromJson<String>(json['displayName']),
+      role: serializer.fromJson<String>(json['role']),
+      provider: serializer.fromJson<String>(json['provider']),
+      passwordHash: serializer.fromJson<String?>(json['passwordHash']),
+      passwordSalt: serializer.fromJson<String?>(json['passwordSalt']),
+      photoUrl: serializer.fromJson<String?>(json['photoUrl']),
+      age: serializer.fromJson<int?>(json['age']),
+      sex: serializer.fromJson<String>(json['sex']),
+      heightCm: serializer.fromJson<double?>(json['heightCm']),
+      weightKg: serializer.fromJson<double?>(json['weightKg']),
+      conditions: serializer.fromJson<String>(json['conditions']),
+      problems: serializer.fromJson<String?>(json['problems']),
+      profileComplete: serializer.fromJson<bool>(json['profileComplete']),
+      patientId: serializer.fromJson<String?>(json['patientId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      lastLoginAt: serializer.fromJson<DateTime>(json['lastLoginAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'email': serializer.toJson<String>(email),
+      'displayName': serializer.toJson<String>(displayName),
+      'role': serializer.toJson<String>(role),
+      'provider': serializer.toJson<String>(provider),
+      'passwordHash': serializer.toJson<String?>(passwordHash),
+      'passwordSalt': serializer.toJson<String?>(passwordSalt),
+      'photoUrl': serializer.toJson<String?>(photoUrl),
+      'age': serializer.toJson<int?>(age),
+      'sex': serializer.toJson<String>(sex),
+      'heightCm': serializer.toJson<double?>(heightCm),
+      'weightKg': serializer.toJson<double?>(weightKg),
+      'conditions': serializer.toJson<String>(conditions),
+      'problems': serializer.toJson<String?>(problems),
+      'profileComplete': serializer.toJson<bool>(profileComplete),
+      'patientId': serializer.toJson<String?>(patientId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'lastLoginAt': serializer.toJson<DateTime>(lastLoginAt),
+    };
+  }
+
+  AuthAccountRow copyWith({
+    String? id,
+    String? email,
+    String? displayName,
+    String? role,
+    String? provider,
+    Value<String?> passwordHash = const Value.absent(),
+    Value<String?> passwordSalt = const Value.absent(),
+    Value<String?> photoUrl = const Value.absent(),
+    Value<int?> age = const Value.absent(),
+    String? sex,
+    Value<double?> heightCm = const Value.absent(),
+    Value<double?> weightKg = const Value.absent(),
+    String? conditions,
+    Value<String?> problems = const Value.absent(),
+    bool? profileComplete,
+    Value<String?> patientId = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? lastLoginAt,
+  }) => AuthAccountRow(
+    id: id ?? this.id,
+    email: email ?? this.email,
+    displayName: displayName ?? this.displayName,
+    role: role ?? this.role,
+    provider: provider ?? this.provider,
+    passwordHash: passwordHash.present ? passwordHash.value : this.passwordHash,
+    passwordSalt: passwordSalt.present ? passwordSalt.value : this.passwordSalt,
+    photoUrl: photoUrl.present ? photoUrl.value : this.photoUrl,
+    age: age.present ? age.value : this.age,
+    sex: sex ?? this.sex,
+    heightCm: heightCm.present ? heightCm.value : this.heightCm,
+    weightKg: weightKg.present ? weightKg.value : this.weightKg,
+    conditions: conditions ?? this.conditions,
+    problems: problems.present ? problems.value : this.problems,
+    profileComplete: profileComplete ?? this.profileComplete,
+    patientId: patientId.present ? patientId.value : this.patientId,
+    createdAt: createdAt ?? this.createdAt,
+    lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+  );
+  AuthAccountRow copyWithCompanion(AuthAccountsCompanion data) {
+    return AuthAccountRow(
+      id: data.id.present ? data.id.value : this.id,
+      email: data.email.present ? data.email.value : this.email,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      role: data.role.present ? data.role.value : this.role,
+      provider: data.provider.present ? data.provider.value : this.provider,
+      passwordHash: data.passwordHash.present
+          ? data.passwordHash.value
+          : this.passwordHash,
+      passwordSalt: data.passwordSalt.present
+          ? data.passwordSalt.value
+          : this.passwordSalt,
+      photoUrl: data.photoUrl.present ? data.photoUrl.value : this.photoUrl,
+      age: data.age.present ? data.age.value : this.age,
+      sex: data.sex.present ? data.sex.value : this.sex,
+      heightCm: data.heightCm.present ? data.heightCm.value : this.heightCm,
+      weightKg: data.weightKg.present ? data.weightKg.value : this.weightKg,
+      conditions: data.conditions.present
+          ? data.conditions.value
+          : this.conditions,
+      problems: data.problems.present ? data.problems.value : this.problems,
+      profileComplete: data.profileComplete.present
+          ? data.profileComplete.value
+          : this.profileComplete,
+      patientId: data.patientId.present ? data.patientId.value : this.patientId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      lastLoginAt: data.lastLoginAt.present
+          ? data.lastLoginAt.value
+          : this.lastLoginAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AuthAccountRow(')
+          ..write('id: $id, ')
+          ..write('email: $email, ')
+          ..write('displayName: $displayName, ')
+          ..write('role: $role, ')
+          ..write('provider: $provider, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('passwordSalt: $passwordSalt, ')
+          ..write('photoUrl: $photoUrl, ')
+          ..write('age: $age, ')
+          ..write('sex: $sex, ')
+          ..write('heightCm: $heightCm, ')
+          ..write('weightKg: $weightKg, ')
+          ..write('conditions: $conditions, ')
+          ..write('problems: $problems, ')
+          ..write('profileComplete: $profileComplete, ')
+          ..write('patientId: $patientId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastLoginAt: $lastLoginAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    email,
+    displayName,
+    role,
+    provider,
+    passwordHash,
+    passwordSalt,
+    photoUrl,
+    age,
+    sex,
+    heightCm,
+    weightKg,
+    conditions,
+    problems,
+    profileComplete,
+    patientId,
+    createdAt,
+    lastLoginAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AuthAccountRow &&
+          other.id == this.id &&
+          other.email == this.email &&
+          other.displayName == this.displayName &&
+          other.role == this.role &&
+          other.provider == this.provider &&
+          other.passwordHash == this.passwordHash &&
+          other.passwordSalt == this.passwordSalt &&
+          other.photoUrl == this.photoUrl &&
+          other.age == this.age &&
+          other.sex == this.sex &&
+          other.heightCm == this.heightCm &&
+          other.weightKg == this.weightKg &&
+          other.conditions == this.conditions &&
+          other.problems == this.problems &&
+          other.profileComplete == this.profileComplete &&
+          other.patientId == this.patientId &&
+          other.createdAt == this.createdAt &&
+          other.lastLoginAt == this.lastLoginAt);
+}
+
+class AuthAccountsCompanion extends UpdateCompanion<AuthAccountRow> {
+  final Value<String> id;
+  final Value<String> email;
+  final Value<String> displayName;
+  final Value<String> role;
+  final Value<String> provider;
+  final Value<String?> passwordHash;
+  final Value<String?> passwordSalt;
+  final Value<String?> photoUrl;
+  final Value<int?> age;
+  final Value<String> sex;
+  final Value<double?> heightCm;
+  final Value<double?> weightKg;
+  final Value<String> conditions;
+  final Value<String?> problems;
+  final Value<bool> profileComplete;
+  final Value<String?> patientId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> lastLoginAt;
+  final Value<int> rowid;
+  const AuthAccountsCompanion({
+    this.id = const Value.absent(),
+    this.email = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.role = const Value.absent(),
+    this.provider = const Value.absent(),
+    this.passwordHash = const Value.absent(),
+    this.passwordSalt = const Value.absent(),
+    this.photoUrl = const Value.absent(),
+    this.age = const Value.absent(),
+    this.sex = const Value.absent(),
+    this.heightCm = const Value.absent(),
+    this.weightKg = const Value.absent(),
+    this.conditions = const Value.absent(),
+    this.problems = const Value.absent(),
+    this.profileComplete = const Value.absent(),
+    this.patientId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.lastLoginAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AuthAccountsCompanion.insert({
+    required String id,
+    required String email,
+    required String displayName,
+    required String role,
+    required String provider,
+    this.passwordHash = const Value.absent(),
+    this.passwordSalt = const Value.absent(),
+    this.photoUrl = const Value.absent(),
+    this.age = const Value.absent(),
+    this.sex = const Value.absent(),
+    this.heightCm = const Value.absent(),
+    this.weightKg = const Value.absent(),
+    this.conditions = const Value.absent(),
+    this.problems = const Value.absent(),
+    this.profileComplete = const Value.absent(),
+    this.patientId = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime lastLoginAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       email = Value(email),
+       displayName = Value(displayName),
+       role = Value(role),
+       provider = Value(provider),
+       createdAt = Value(createdAt),
+       lastLoginAt = Value(lastLoginAt);
+  static Insertable<AuthAccountRow> custom({
+    Expression<String>? id,
+    Expression<String>? email,
+    Expression<String>? displayName,
+    Expression<String>? role,
+    Expression<String>? provider,
+    Expression<String>? passwordHash,
+    Expression<String>? passwordSalt,
+    Expression<String>? photoUrl,
+    Expression<int>? age,
+    Expression<String>? sex,
+    Expression<double>? heightCm,
+    Expression<double>? weightKg,
+    Expression<String>? conditions,
+    Expression<String>? problems,
+    Expression<bool>? profileComplete,
+    Expression<String>? patientId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? lastLoginAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (email != null) 'email': email,
+      if (displayName != null) 'display_name': displayName,
+      if (role != null) 'role': role,
+      if (provider != null) 'provider': provider,
+      if (passwordHash != null) 'password_hash': passwordHash,
+      if (passwordSalt != null) 'password_salt': passwordSalt,
+      if (photoUrl != null) 'photo_url': photoUrl,
+      if (age != null) 'age': age,
+      if (sex != null) 'sex': sex,
+      if (heightCm != null) 'height_cm': heightCm,
+      if (weightKg != null) 'weight_kg': weightKg,
+      if (conditions != null) 'conditions': conditions,
+      if (problems != null) 'problems': problems,
+      if (profileComplete != null) 'profile_complete': profileComplete,
+      if (patientId != null) 'patient_id': patientId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (lastLoginAt != null) 'last_login_at': lastLoginAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AuthAccountsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? email,
+    Value<String>? displayName,
+    Value<String>? role,
+    Value<String>? provider,
+    Value<String?>? passwordHash,
+    Value<String?>? passwordSalt,
+    Value<String?>? photoUrl,
+    Value<int?>? age,
+    Value<String>? sex,
+    Value<double?>? heightCm,
+    Value<double?>? weightKg,
+    Value<String>? conditions,
+    Value<String?>? problems,
+    Value<bool>? profileComplete,
+    Value<String?>? patientId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? lastLoginAt,
+    Value<int>? rowid,
+  }) {
+    return AuthAccountsCompanion(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      displayName: displayName ?? this.displayName,
+      role: role ?? this.role,
+      provider: provider ?? this.provider,
+      passwordHash: passwordHash ?? this.passwordHash,
+      passwordSalt: passwordSalt ?? this.passwordSalt,
+      photoUrl: photoUrl ?? this.photoUrl,
+      age: age ?? this.age,
+      sex: sex ?? this.sex,
+      heightCm: heightCm ?? this.heightCm,
+      weightKg: weightKg ?? this.weightKg,
+      conditions: conditions ?? this.conditions,
+      problems: problems ?? this.problems,
+      profileComplete: profileComplete ?? this.profileComplete,
+      patientId: patientId ?? this.patientId,
+      createdAt: createdAt ?? this.createdAt,
+      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
+    if (provider.present) {
+      map['provider'] = Variable<String>(provider.value);
+    }
+    if (passwordHash.present) {
+      map['password_hash'] = Variable<String>(passwordHash.value);
+    }
+    if (passwordSalt.present) {
+      map['password_salt'] = Variable<String>(passwordSalt.value);
+    }
+    if (photoUrl.present) {
+      map['photo_url'] = Variable<String>(photoUrl.value);
+    }
+    if (age.present) {
+      map['age'] = Variable<int>(age.value);
+    }
+    if (sex.present) {
+      map['sex'] = Variable<String>(sex.value);
+    }
+    if (heightCm.present) {
+      map['height_cm'] = Variable<double>(heightCm.value);
+    }
+    if (weightKg.present) {
+      map['weight_kg'] = Variable<double>(weightKg.value);
+    }
+    if (conditions.present) {
+      map['conditions'] = Variable<String>(conditions.value);
+    }
+    if (problems.present) {
+      map['problems'] = Variable<String>(problems.value);
+    }
+    if (profileComplete.present) {
+      map['profile_complete'] = Variable<bool>(profileComplete.value);
+    }
+    if (patientId.present) {
+      map['patient_id'] = Variable<String>(patientId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (lastLoginAt.present) {
+      map['last_login_at'] = Variable<DateTime>(lastLoginAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AuthAccountsCompanion(')
+          ..write('id: $id, ')
+          ..write('email: $email, ')
+          ..write('displayName: $displayName, ')
+          ..write('role: $role, ')
+          ..write('provider: $provider, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('passwordSalt: $passwordSalt, ')
+          ..write('photoUrl: $photoUrl, ')
+          ..write('age: $age, ')
+          ..write('sex: $sex, ')
+          ..write('heightCm: $heightCm, ')
+          ..write('weightKg: $weightKg, ')
+          ..write('conditions: $conditions, ')
+          ..write('problems: $problems, ')
+          ..write('profileComplete: $profileComplete, ')
+          ..write('patientId: $patientId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastLoginAt: $lastLoginAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6419,6 +7454,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $EmergencyContactsTable(this);
   late final $SosEventsTable sosEvents = $SosEventsTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
+  late final $AuthAccountsTable authAccounts = $AuthAccountsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6434,6 +7470,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     emergencyContacts,
     sosEvents,
     appSettings,
+    authAccounts,
   ];
 }
 
@@ -9549,6 +10586,465 @@ typedef $$AppSettingsTableProcessedTableManager =
       SettingRow,
       PrefetchHooks Function()
     >;
+typedef $$AuthAccountsTableCreateCompanionBuilder =
+    AuthAccountsCompanion Function({
+      required String id,
+      required String email,
+      required String displayName,
+      required String role,
+      required String provider,
+      Value<String?> passwordHash,
+      Value<String?> passwordSalt,
+      Value<String?> photoUrl,
+      Value<int?> age,
+      Value<String> sex,
+      Value<double?> heightCm,
+      Value<double?> weightKg,
+      Value<String> conditions,
+      Value<String?> problems,
+      Value<bool> profileComplete,
+      Value<String?> patientId,
+      required DateTime createdAt,
+      required DateTime lastLoginAt,
+      Value<int> rowid,
+    });
+typedef $$AuthAccountsTableUpdateCompanionBuilder =
+    AuthAccountsCompanion Function({
+      Value<String> id,
+      Value<String> email,
+      Value<String> displayName,
+      Value<String> role,
+      Value<String> provider,
+      Value<String?> passwordHash,
+      Value<String?> passwordSalt,
+      Value<String?> photoUrl,
+      Value<int?> age,
+      Value<String> sex,
+      Value<double?> heightCm,
+      Value<double?> weightKg,
+      Value<String> conditions,
+      Value<String?> problems,
+      Value<bool> profileComplete,
+      Value<String?> patientId,
+      Value<DateTime> createdAt,
+      Value<DateTime> lastLoginAt,
+      Value<int> rowid,
+    });
+
+class $$AuthAccountsTableFilterComposer
+    extends Composer<_$AppDatabase, $AuthAccountsTable> {
+  $$AuthAccountsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get provider => $composableBuilder(
+    column: $table.provider,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get passwordSalt => $composableBuilder(
+    column: $table.passwordSalt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get photoUrl => $composableBuilder(
+    column: $table.photoUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get age => $composableBuilder(
+    column: $table.age,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sex => $composableBuilder(
+    column: $table.sex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get heightCm => $composableBuilder(
+    column: $table.heightCm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get weightKg => $composableBuilder(
+    column: $table.weightKg,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get conditions => $composableBuilder(
+    column: $table.conditions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get problems => $composableBuilder(
+    column: $table.problems,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get profileComplete => $composableBuilder(
+    column: $table.profileComplete,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get patientId => $composableBuilder(
+    column: $table.patientId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastLoginAt => $composableBuilder(
+    column: $table.lastLoginAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AuthAccountsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AuthAccountsTable> {
+  $$AuthAccountsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get provider => $composableBuilder(
+    column: $table.provider,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get passwordSalt => $composableBuilder(
+    column: $table.passwordSalt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get photoUrl => $composableBuilder(
+    column: $table.photoUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get age => $composableBuilder(
+    column: $table.age,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sex => $composableBuilder(
+    column: $table.sex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get heightCm => $composableBuilder(
+    column: $table.heightCm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get weightKg => $composableBuilder(
+    column: $table.weightKg,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get conditions => $composableBuilder(
+    column: $table.conditions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get problems => $composableBuilder(
+    column: $table.problems,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get profileComplete => $composableBuilder(
+    column: $table.profileComplete,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get patientId => $composableBuilder(
+    column: $table.patientId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastLoginAt => $composableBuilder(
+    column: $table.lastLoginAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AuthAccountsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AuthAccountsTable> {
+  $$AuthAccountsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => column);
+
+  GeneratedColumn<String> get provider =>
+      $composableBuilder(column: $table.provider, builder: (column) => column);
+
+  GeneratedColumn<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get passwordSalt => $composableBuilder(
+    column: $table.passwordSalt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get photoUrl =>
+      $composableBuilder(column: $table.photoUrl, builder: (column) => column);
+
+  GeneratedColumn<int> get age =>
+      $composableBuilder(column: $table.age, builder: (column) => column);
+
+  GeneratedColumn<String> get sex =>
+      $composableBuilder(column: $table.sex, builder: (column) => column);
+
+  GeneratedColumn<double> get heightCm =>
+      $composableBuilder(column: $table.heightCm, builder: (column) => column);
+
+  GeneratedColumn<double> get weightKg =>
+      $composableBuilder(column: $table.weightKg, builder: (column) => column);
+
+  GeneratedColumn<String> get conditions => $composableBuilder(
+    column: $table.conditions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get problems =>
+      $composableBuilder(column: $table.problems, builder: (column) => column);
+
+  GeneratedColumn<bool> get profileComplete => $composableBuilder(
+    column: $table.profileComplete,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get patientId =>
+      $composableBuilder(column: $table.patientId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastLoginAt => $composableBuilder(
+    column: $table.lastLoginAt,
+    builder: (column) => column,
+  );
+}
+
+class $$AuthAccountsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AuthAccountsTable,
+          AuthAccountRow,
+          $$AuthAccountsTableFilterComposer,
+          $$AuthAccountsTableOrderingComposer,
+          $$AuthAccountsTableAnnotationComposer,
+          $$AuthAccountsTableCreateCompanionBuilder,
+          $$AuthAccountsTableUpdateCompanionBuilder,
+          (
+            AuthAccountRow,
+            BaseReferences<_$AppDatabase, $AuthAccountsTable, AuthAccountRow>,
+          ),
+          AuthAccountRow,
+          PrefetchHooks Function()
+        > {
+  $$AuthAccountsTableTableManager(_$AppDatabase db, $AuthAccountsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AuthAccountsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AuthAccountsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AuthAccountsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> email = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<String> role = const Value.absent(),
+                Value<String> provider = const Value.absent(),
+                Value<String?> passwordHash = const Value.absent(),
+                Value<String?> passwordSalt = const Value.absent(),
+                Value<String?> photoUrl = const Value.absent(),
+                Value<int?> age = const Value.absent(),
+                Value<String> sex = const Value.absent(),
+                Value<double?> heightCm = const Value.absent(),
+                Value<double?> weightKg = const Value.absent(),
+                Value<String> conditions = const Value.absent(),
+                Value<String?> problems = const Value.absent(),
+                Value<bool> profileComplete = const Value.absent(),
+                Value<String?> patientId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> lastLoginAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AuthAccountsCompanion(
+                id: id,
+                email: email,
+                displayName: displayName,
+                role: role,
+                provider: provider,
+                passwordHash: passwordHash,
+                passwordSalt: passwordSalt,
+                photoUrl: photoUrl,
+                age: age,
+                sex: sex,
+                heightCm: heightCm,
+                weightKg: weightKg,
+                conditions: conditions,
+                problems: problems,
+                profileComplete: profileComplete,
+                patientId: patientId,
+                createdAt: createdAt,
+                lastLoginAt: lastLoginAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String email,
+                required String displayName,
+                required String role,
+                required String provider,
+                Value<String?> passwordHash = const Value.absent(),
+                Value<String?> passwordSalt = const Value.absent(),
+                Value<String?> photoUrl = const Value.absent(),
+                Value<int?> age = const Value.absent(),
+                Value<String> sex = const Value.absent(),
+                Value<double?> heightCm = const Value.absent(),
+                Value<double?> weightKg = const Value.absent(),
+                Value<String> conditions = const Value.absent(),
+                Value<String?> problems = const Value.absent(),
+                Value<bool> profileComplete = const Value.absent(),
+                Value<String?> patientId = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime lastLoginAt,
+                Value<int> rowid = const Value.absent(),
+              }) => AuthAccountsCompanion.insert(
+                id: id,
+                email: email,
+                displayName: displayName,
+                role: role,
+                provider: provider,
+                passwordHash: passwordHash,
+                passwordSalt: passwordSalt,
+                photoUrl: photoUrl,
+                age: age,
+                sex: sex,
+                heightCm: heightCm,
+                weightKg: weightKg,
+                conditions: conditions,
+                problems: problems,
+                profileComplete: profileComplete,
+                patientId: patientId,
+                createdAt: createdAt,
+                lastLoginAt: lastLoginAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AuthAccountsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AuthAccountsTable,
+      AuthAccountRow,
+      $$AuthAccountsTableFilterComposer,
+      $$AuthAccountsTableOrderingComposer,
+      $$AuthAccountsTableAnnotationComposer,
+      $$AuthAccountsTableCreateCompanionBuilder,
+      $$AuthAccountsTableUpdateCompanionBuilder,
+      (
+        AuthAccountRow,
+        BaseReferences<_$AppDatabase, $AuthAccountsTable, AuthAccountRow>,
+      ),
+      AuthAccountRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9573,4 +11069,6 @@ class $AppDatabaseManager {
       $$SosEventsTableTableManager(_db, _db.sosEvents);
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
+  $$AuthAccountsTableTableManager get authAccounts =>
+      $$AuthAccountsTableTableManager(_db, _db.authAccounts);
 }

@@ -7,7 +7,9 @@ import 'package:swasthyasetu_ai/core/services/storage_manager.dart';
 import 'package:swasthyasetu_ai/data/repositories/device_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/settings_repository.dart';
+import 'package:swasthyasetu_ai/domain/models/audience.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
+import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/settings/screens/settings_screen.dart';
 
 /// Settings is the screen most likely to overflow: it is nothing but rows of
@@ -21,6 +23,12 @@ class _FakeSettingsController extends StateNotifier<AppSettingsSnapshot>
   _FakeSettingsController(super.state);
 
   final calls = <String>[];
+
+  @override
+  Future<void> setEnvLocationConsent(bool granted) async {
+    calls.add('setEnvLocationConsent:$granted');
+    state = state.copyWith(envLocationConsent: granted);
+  }
 
   @override
   Future<void> setLocale(Locale locale) async {
@@ -38,6 +46,12 @@ class _FakeSettingsController extends StateNotifier<AppSettingsSnapshot>
   Future<void> setHighContrast(bool on) async {
     calls.add('setHighContrast:$on');
     state = state.copyWith(highContrast: on);
+  }
+
+  @override
+  Future<void> setAudience(Audience audience) async {
+    calls.add('setAudience:${audience.storageValue}');
+    state = state.copyWith(audience: audience);
   }
 
   @override
@@ -134,6 +148,7 @@ void main() {
     StorageUsage? usage,
     BpCalibration calibration = const BpCalibration(),
     List<Device> devices = const [],
+    Audience? accountAudience,
   }) {
     controller = _FakeSettingsController(
       settings ?? const AppSettingsSnapshot(),
@@ -142,6 +157,14 @@ void main() {
     return ProviderScope(
       overrides: [
         settingsProvider.overrideWith((ref) => controller),
+        // Signed in as [accountAudience], or nobody (the demo shell) when null.
+        // The derivation from the account's role is covered in
+        // scan_regressions_test; here the point is what the tile does with the
+        // answer.
+        if (accountAudience != null) ...[
+          canChooseAudienceProvider.overrideWithValue(false),
+          effectiveAudienceProvider.overrideWithValue(accountAudience),
+        ],
         emergencyContactsProvider
             .overrideWith((ref) => Stream.value(contacts)),
         pairedDevicesProvider.overrideWith((ref) => Stream.value(devices)),
@@ -213,6 +236,7 @@ void main() {
       await tester.pumpWidget(harness());
       await tester.pumpAndSettle();
 
+      await reveal(tester, find.text('High contrast'));
       await tester.tap(find.text('High contrast'));
       await tester.pumpAndSettle();
 
@@ -278,6 +302,62 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(controller.calls, contains('setSosCountdownSeconds:30'));
+    });
+  });
+
+  group('the nurse/patient mode is locked to the account', () {
+    testWidgets('a signed-in account cannot tap its way to the other mode',
+        (tester) async {
+      await tester.pumpWidget(harness(
+        accountAudience: Audience.nurse,
+        // Deliberately mismatched: this is the state a nurse account reached by
+        // switching the mode before the lock existed. The stored value must not
+        // win over the account.
+        settings: const AppSettingsSnapshot(audience: Audience.patient),
+      ));
+      await tester.pumpAndSettle();
+
+      await reveal(tester, find.text(Audience.patient.label));
+      await tester.tap(find.text(Audience.patient.label));
+      await tester.pumpAndSettle();
+
+      // The tap did nothing. The two prompts are not tone variants — the patient
+      // one drops the ban on naming medicines and doses — so a nurse account
+      // reaching it from Settings was a real escalation.
+      expect(
+        controller.calls.where((c) => c.startsWith('setAudience')),
+        isEmpty,
+      );
+      // And the tile shows the account's mode, not the stale stored one.
+      expect(find.text(Audience.nurse.label), findsOneWidget);
+      expect(find.byIcon(Icons.lock_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.check_rounded), findsNothing);
+    });
+
+    testWidgets('the locked tile says why, and points at signing in again',
+        (tester) async {
+      await tester.pumpWidget(harness(accountAudience: Audience.patient));
+      await tester.pumpAndSettle();
+
+      await reveal(tester, find.text(Audience.patient.label));
+      expect(
+        find.textContaining('Sign in with a different account'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the demo shell keeps the choice', (tester) async {
+      // No account, so nothing to enforce — the offline walkthrough still lets
+      // a reviewer see both voices.
+      await tester.pumpWidget(harness());
+      await tester.pumpAndSettle();
+
+      await reveal(tester, find.text(Audience.patient.label));
+      await tester.tap(find.text(Audience.patient.label));
+      await tester.pumpAndSettle();
+
+      expect(controller.calls, contains('setAudience:patient'));
+      expect(find.byIcon(Icons.lock_rounded), findsNothing);
     });
   });
 

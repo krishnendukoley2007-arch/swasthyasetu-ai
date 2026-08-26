@@ -87,7 +87,8 @@ class _FallAlarmListenerState extends ConsumerState<FallAlarmListener> {
     if (!ref.read(settingsProvider).fallDetection) return;
 
     _alarmOpen = true;
-    router
+    ref
+        .read(routerProvider)
         .push(
           Uri(
             path: '/emergency/sos',

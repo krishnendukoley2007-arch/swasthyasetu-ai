@@ -150,7 +150,10 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     await Future.delayed(const Duration(milliseconds: 500));
     
     if (mounted) {
-      context.go('/login');
+      // '/' has no screen of its own — the router's auth guard turns it into
+      // /login, /register/patient, /home or /my-health depending on the
+      // session that was just restored.
+      context.go('/');
     }
   }
 

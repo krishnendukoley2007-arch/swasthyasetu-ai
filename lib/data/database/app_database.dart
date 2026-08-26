@@ -229,6 +229,64 @@ class AppSettings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+/// One sign-in account on this phone.
+///
+/// Local-first by design: a screening camp can run for days with no internet,
+/// so identity cannot depend on a server round-trip. Email accounts keep a
+/// salted PBKDF2 hash here; Google accounts keep no credential — the sign-in
+/// itself happened against Google's servers, and the row only remembers who
+/// came back from it.
+@DataClassName('AuthAccountRow')
+class AuthAccounts extends Table {
+  TextColumn get id => text()();
+
+  /// The login key. Google accounts use the Google email; email accounts the
+  /// registered address. Unique per install — enforced by the repository.
+  TextColumn get email => text()();
+  TextColumn get displayName => text()();
+
+  /// 'patient' | 'clinician'. Decides the home the router sends them to and
+  /// which AI prompt family explains their results.
+  TextColumn get role => text()();
+
+  /// 'email' | 'google'.
+  TextColumn get provider => text()();
+
+  /// Base64 PBKDF2-HMAC-SHA256 hash and its salt. Null for Google accounts.
+  TextColumn get passwordHash => text().nullable()();
+  TextColumn get passwordSalt => text().nullable()();
+
+  /// Google profile photo, purely cosmetic.
+  TextColumn get photoUrl => text().nullable()();
+
+  // Health profile — collected at registration for patients. All nullable so
+  // a clinician account never pretends to hold body measurements.
+  IntColumn get age => integer().nullable()();
+  TextColumn get sex => text().withDefault(const Constant(''))();
+  RealColumn get heightCm => real().nullable()();
+  RealColumn get weightKg => real().nullable()();
+
+  /// JSON array of pre-existing condition labels the patient ticked.
+  TextColumn get conditions => text().withDefault(const Constant('[]'))();
+
+  /// Free-text "anything bothering you" from registration.
+  TextColumn get problems => text().nullable()();
+
+  /// False until a patient has completed the registration profile — the router
+  /// holds them on the registration screen until then.
+  BoolColumn get profileComplete =>
+      boolean().withDefault(const Constant(false))();
+
+  /// The Patients row this account screens itself as. Null for clinicians.
+  TextColumn get patientId => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get lastLoginAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Patients,
@@ -241,6 +299,7 @@ class AppSettings extends Table {
     EmergencyContacts,
     SosEvents,
     AppSettings,
+    AuthAccounts,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -250,11 +309,19 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          // v2 adds the local account store. Existing installs keep every
+          // patient, screening and setting untouched — the only change is one
+          // new empty table.
+          if (from < 2) {
+            await m.createTable(authAccounts);
+          }
+        },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
         },
@@ -598,6 +665,19 @@ class AppDatabase extends _$AppDatabase {
   Future<int> upsertEmergencyContact(EmergencyContactsCompanion c) =>
       into(emergencyContacts).insertOnConflictUpdate(c);
 
+  /// Clears the primary flag on every contact except [exceptId].
+  ///
+  /// A real UPDATE, deliberately, and not [upsertEmergencyContact] with a
+  /// partial companion: `insertOnConflictUpdate` validates the row as an INSERT
+  /// first, so a companion carrying only `{id, isPrimary}` is rejected for the
+  /// missing required `name`/`phone` — which is how demoting the old primary
+  /// used to throw `InvalidDataException` and take the whole profile save down
+  /// with it. An UPDATE touches only the column named.
+  Future<int> demoteOtherPrimaryContacts(String exceptId) =>
+      (update(emergencyContacts)
+            ..where((t) => t.isPrimary.equals(true) & t.id.equals(exceptId).not()))
+          .write(const EmergencyContactsCompanion(isPrimary: Value(false)));
+
   Future<void> deleteEmergencyContact(String id) =>
       (delete(emergencyContacts)..where((t) => t.id.equals(id))).go();
 
@@ -663,6 +743,33 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteSetting(String key) =>
       (delete(appSettings)..where((t) => t.key.equals(key))).go();
+
+  // ───────────────────────────── Accounts ─────────────────────────────
+
+  Future<int> upsertAuthAccount(AuthAccountsCompanion account) =>
+      into(authAccounts).insertOnConflictUpdate(account);
+
+  /// Partial patch of an existing account row.
+  ///
+  /// Deliberately separate from [upsertAuthAccount]: drift validates an
+  /// upsert's insert branch, so a companion holding only the changed fields
+  /// fails a phantom insert even when the row exists. A real UPDATE has no
+  /// such branch.
+  Future<void> patchAuthAccount(String id, AuthAccountsCompanion patch) =>
+      (update(authAccounts)..where((t) => t.id.equals(id))).write(patch);
+
+  Future<AuthAccountRow?> getAuthAccount(String id) =>
+      (select(authAccounts)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  /// Email is the login key, matched case-insensitively — Android keyboards
+  /// love capitalising the first letter unprompted.
+  Future<AuthAccountRow?> getAuthAccountByEmail(String email) =>
+      (select(authAccounts)
+            ..where((t) => t.email.lower().equals(email.trim().toLowerCase())))
+          .getSingleOrNull();
+
+  Future<void> deleteAuthAccount(String id) =>
+      (delete(authAccounts)..where((t) => t.id.equals(id))).go();
 
   // ───────────────────────────── Whole-DB ops ─────────────────────────────
 

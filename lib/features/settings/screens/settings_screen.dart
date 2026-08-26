@@ -10,6 +10,8 @@ import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/data/repositories/device_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/settings_repository.dart';
+import 'package:swasthyasetu_ai/domain/models/audience.dart';
+import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 
 /// The one screen where the app's behaviour is actually configured.
 ///
@@ -41,6 +43,10 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           const _WorkerCard(),
           const AppSpacing.vlg(),
+
+          _Section('Who is using this app', [
+            _AudienceTile(selected: settings.audience),
+          ]),
 
           _Section('Language', [
             _ChoiceTile(
@@ -390,6 +396,75 @@ class _Section extends StatelessWidget {
   }
 }
 
+/// Who the explanations are written for.
+///
+/// Two rows rather than a picker sheet, because this is the one setting a
+/// first-time user has to get right and burying it behind a tap would leave a
+/// patient reading nurse instructions without ever knowing there was a choice.
+///
+/// It changes the wording and what the AI may suggest. It does not change the
+/// screening, the sensors, the rule engine or the risk band — all of which are
+/// identical for both, and the tile says so rather than leaving anyone to guess
+/// whether "patient mode" measures something different.
+///
+/// Read-only for a signed-in account. The mode used to be freely tappable here,
+/// which meant a nurse account could switch to the patient prompt — the one that
+/// deliberately drops the ban on naming medicines and home remedies — without
+/// signing in as anybody. The role picked at sign-up decides now, and the rows
+/// only show what that decision was. Demo mode has no account, so there the
+/// choice is still the user's.
+class _AudienceTile extends ConsumerWidget {
+  const _AudienceTile({required this.selected});
+
+  final Audience selected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final canChoose = ref.watch(canChooseAudienceProvider);
+    // What the app will actually speak in, which for an account is its role and
+    // not whatever `selected` was left at.
+    final effective = ref.watch(effectiveAudienceProvider);
+    final shown = canChoose ? selected : effective;
+
+    return Column(
+      children: [
+        for (final option in Audience.values)
+          _OptionTile(
+            title: option.label,
+            subtitle: option.description,
+            selected: option == shown,
+            locked: !canChoose,
+            onTap: canChoose
+                ? () => ref.read(settingsProvider.notifier).setAudience(option)
+                : null,
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacingMd,
+            0,
+            AppTheme.spacingMd,
+            AppTheme.spacingMd,
+          ),
+          child: Text(
+            canChoose
+                ? 'This only changes how results are explained. The screening, '
+                    'the sensors and the risk level are the same either way.'
+                : 'Set by the account you signed in with, and not changeable '
+                    'here — the wording a result is explained in has to match '
+                    'who the account belongs to. Sign in with a different '
+                    'account to change it. Either way the screening, the '
+                    'sensors and the risk level are identical.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// One selectable row in a picker sheet.
 ///
 /// Hand-rolled rather than a `RadioListTile` because that widget's `groupValue`
@@ -401,27 +476,50 @@ class _OptionTile extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.subtitle,
+    this.locked = false,
   });
 
   final String title;
   final String? subtitle;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+
+  /// Dims the rows that are not in force and shows a lock on the one that is,
+  /// so a read-only tile reads as "decided" rather than as a control that has
+  /// stopped responding to taps.
+  final bool locked;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final dimmed = locked && !selected;
+
     return ListTile(
       title: Text(
         title,
         style: theme.textTheme.bodyLarge?.copyWith(
           fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-          color: selected ? theme.colorScheme.primary : null,
+          color: selected
+              ? theme.colorScheme.primary
+              : dimmed
+                  ? theme.colorScheme.onSurfaceVariant
+                  : null,
         ),
       ),
-      subtitle: subtitle == null ? null : Text(subtitle!),
+      subtitle: subtitle == null
+          ? null
+          : Text(
+              subtitle!,
+              style: dimmed
+                  ? theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)
+                  : null,
+            ),
       trailing: selected
-          ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
+          ? Icon(
+              locked ? Icons.lock_rounded : Icons.check_rounded,
+              color: theme.colorScheme.primary,
+            )
           : null,
       onTap: onTap,
     );

@@ -21,6 +21,7 @@ class SwasthyaSetuApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     final highContrast = ref.watch(highContrastProvider);
+    final router = ref.watch(routerProvider);
 
     ThemeData resolve(ThemeData base) =>
         highContrast ? AppTheme.highContrast(base) : base;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:swasthyasetu_ai/data/database/app_database.dart';
+import 'package:swasthyasetu_ai/domain/models/audience.dart';
 
 /// Every persisted preference key in one place. Strings are namespaced so a
 /// stray `getSetting('language')` from some other layer can't collide.
@@ -16,6 +17,11 @@ abstract final class SettingKeys {
   static const locationConsent = 'consent.location';
   static const aiConsent = 'consent.onlineAi';
   static const syncConsent = 'consent.sync';
+
+  /// Whether the phone may locate itself to fetch local heat/air conditions.
+  /// Separate from [locationConsent] (screening geotags) on purpose: agreeing
+  /// to weather alerts must not silently turn screening geotags on too.
+  static const envLocationConsent = 'consent.envWeather';
 
   static const fallDetection = 'sos.fallDetection';
   static const autoSuggestSos = 'sos.autoSuggestOnHighRisk';
@@ -40,6 +46,23 @@ abstract final class SettingKeys {
   /// tokens expire in minutes, and a build-time constant would strand the app
   /// with a dead credential until someone rebuilt it.
   static const geminiApiKey = 'ai.geminiApiKey';
+
+  /// Whether explanations are written for a nurse or for the patient.
+  ///
+  /// Persisted per device, because it is a property of who holds the phone, not
+  /// of any one screening.
+  static const audience = 'ai.audience';
+
+  /// The signed-in account, or absent when signed out. Login state lives in
+  /// the settings table rather than the accounts table because it is a
+  /// per-device session pointer, not a property of the account itself.
+  static const authActiveAccountId = 'auth.activeAccountId';
+
+  /// Last environmental reading as JSON (see `EnvironmentReading`). Cached so
+  /// the environment card survives exactly as long as the advice is worth —
+  /// a heat-wave warning from this morning is still true tonight, even with
+  /// the network gone.
+  static const envLastReading = 'env.lastReading';
 }
 
 /// The full settings snapshot. Read once into memory at startup — these are all
@@ -59,6 +82,9 @@ class AppSettingsSnapshot {
   final bool aiConsent;
   final bool syncConsent;
 
+  /// Local weather / AQI lookups. See [SettingKeys.envLocationConsent].
+  final bool envLocationConsent;
+
   final bool fallDetection;
   final bool autoSuggestSos;
   final int sosCountdownSeconds;
@@ -73,6 +99,10 @@ class AppSettingsSnapshot {
   /// deliberately not part of any export.
   final String geminiApiKey;
 
+  /// Who explanations are written for. Nurse by default, so an existing install
+  /// keeps the wording it had.
+  final Audience audience;
+
   const AppSettingsSnapshot({
     this.locale = const Locale('en'),
     this.themeMode = ThemeMode.system,
@@ -84,6 +114,7 @@ class AppSettingsSnapshot {
     this.locationConsent = false,
     this.aiConsent = false,
     this.syncConsent = true,
+    this.envLocationConsent = false,
     this.fallDetection = false,
     this.autoSuggestSos = true,
     this.sosCountdownSeconds = 10,
@@ -92,6 +123,7 @@ class AppSettingsSnapshot {
     this.storageBudgetBytes = 200 * 1024 * 1024,
     this.lastSyncAt,
     this.geminiApiKey = '',
+    this.audience = Audience.nurse,
   });
 
   factory AppSettingsSnapshot.fromMap(Map<String, String> m) {
@@ -112,6 +144,7 @@ class AppSettingsSnapshot {
       locationConsent: flag(SettingKeys.locationConsent, false),
       aiConsent: flag(SettingKeys.aiConsent, false),
       syncConsent: flag(SettingKeys.syncConsent, true),
+      envLocationConsent: flag(SettingKeys.envLocationConsent, false),
       fallDetection: flag(SettingKeys.fallDetection, false),
       autoSuggestSos: flag(SettingKeys.autoSuggestSos, true),
       sosCountdownSeconds:
@@ -123,6 +156,7 @@ class AppSettingsSnapshot {
               200 * 1024 * 1024,
       lastSyncAt: DateTime.tryParse(m[SettingKeys.lastSyncAt] ?? ''),
       geminiApiKey: m[SettingKeys.geminiApiKey] ?? '',
+      audience: Audience.fromStorage(m[SettingKeys.audience]),
     );
   }
 
@@ -151,6 +185,7 @@ class AppSettingsSnapshot {
     bool? locationConsent,
     bool? aiConsent,
     bool? syncConsent,
+    bool? envLocationConsent,
     bool? fallDetection,
     bool? autoSuggestSos,
     int? sosCountdownSeconds,
@@ -159,6 +194,7 @@ class AppSettingsSnapshot {
     int? storageBudgetBytes,
     DateTime? lastSyncAt,
     String? geminiApiKey,
+    Audience? audience,
   }) =>
       AppSettingsSnapshot(
         locale: locale ?? this.locale,
@@ -171,6 +207,7 @@ class AppSettingsSnapshot {
         locationConsent: locationConsent ?? this.locationConsent,
         aiConsent: aiConsent ?? this.aiConsent,
         syncConsent: syncConsent ?? this.syncConsent,
+        envLocationConsent: envLocationConsent ?? this.envLocationConsent,
         fallDetection: fallDetection ?? this.fallDetection,
         autoSuggestSos: autoSuggestSos ?? this.autoSuggestSos,
         sosCountdownSeconds: sosCountdownSeconds ?? this.sosCountdownSeconds,
@@ -179,6 +216,7 @@ class AppSettingsSnapshot {
         storageBudgetBytes: storageBudgetBytes ?? this.storageBudgetBytes,
         lastSyncAt: lastSyncAt ?? this.lastSyncAt,
         geminiApiKey: geminiApiKey ?? this.geminiApiKey,
+        audience: audience ?? this.audience,
       );
 }
 
@@ -228,11 +266,17 @@ class SettingsRepository {
   Future<void> setLocationConsent(bool granted) =>
       setBool(SettingKeys.locationConsent, granted);
 
+  Future<void> setEnvLocationConsent(bool granted) =>
+      setBool(SettingKeys.envLocationConsent, granted);
+
   Future<void> setAiConsent(bool granted) =>
       setBool(SettingKeys.aiConsent, granted);
 
   Future<void> setGeminiApiKey(String key) =>
       setString(SettingKeys.geminiApiKey, key.trim());
+
+  Future<void> setAudience(Audience audience) =>
+      setString(SettingKeys.audience, audience.storageValue);
 
   Future<void> markSynced(DateTime at) =>
       setString(SettingKeys.lastSyncAt, at.toIso8601String());

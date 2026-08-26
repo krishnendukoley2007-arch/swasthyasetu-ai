@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:swasthyasetu_ai/core/services/gemini_service.dart';
 import 'package:swasthyasetu_ai/core/services/seed_service.dart';
 import 'package:swasthyasetu_ai/data/database/app_database.dart';
+import 'package:swasthyasetu_ai/domain/models/audience.dart';
 import 'package:swasthyasetu_ai/domain/models/triage_result.dart';
 import 'package:swasthyasetu_ai/domain/rules/guideline_retriever.dart';
 import 'package:swasthyasetu_ai/domain/rules/offline_explainer.dart';
@@ -126,11 +127,12 @@ class ExplanationRepository {
     String? screeningId,
     String? patientName,
     String? languageCode,
+    Audience audience = Audience.nurse,
     bool preferOnline = true,
     bool forceRefresh = false,
   }) async {
     if (screeningId != null && !forceRefresh) {
-      final cached = await _readCache(screeningId);
+      final cached = await _readCache(screeningId, audience);
       if (cached != null) return cached;
     }
 
@@ -140,6 +142,7 @@ class ExplanationRepository {
         screeningId: screeningId,
         patientName: patientName,
         languageCode: languageCode,
+        audience: audience,
       );
       if (online != null) return online;
       // Fell through: no key, no network, timeout, or unusable response. Not an
@@ -150,12 +153,16 @@ class ExplanationRepository {
       assessment: assessment,
       screeningId: screeningId,
       patientName: patientName,
+      audience: audience,
     );
   }
 
   /// Whatever is already stored for this screening, generating nothing.
-  Future<ExplanationResult?> cached(String screeningId) =>
-      _readCache(screeningId);
+  Future<ExplanationResult?> cached(
+    String screeningId, {
+    Audience audience = Audience.nurse,
+  }) =>
+      _readCache(screeningId, audience);
 
   /// The explanation the on-device corpus can produce, with nothing awaited over
   /// the network.
@@ -169,6 +176,7 @@ class ExplanationRepository {
     required TriageAssessment assessment,
     String? screeningId,
     String? patientName,
+    Audience audience = Audience.nurse,
   }) async {
     final retrieved = await relevantGuidelines(assessment);
     final citations =
@@ -186,6 +194,7 @@ class ExplanationRepository {
       source: ExplanationSource.offline,
       citations: citations,
       modelName: 'on-device rules + guideline retrieval',
+      audience: audience,
     );
 
     return ExplanationResult(
@@ -206,6 +215,7 @@ class ExplanationRepository {
     String? screeningId,
     String? patientName,
     String? languageCode,
+    Audience audience = Audience.nurse,
   }) async {
     if (!_gemini.isConfigured) return null;
 
@@ -218,6 +228,7 @@ class ExplanationRepository {
       retrieved: retrieved,
       patientName: patientName,
       languageCode: languageCode,
+      audience: audience,
     );
     if (online == null) return null;
 
@@ -227,6 +238,7 @@ class ExplanationRepository {
       source: ExplanationSource.gemini,
       citations: citations,
       modelName: GeminiService.model,
+      audience: audience,
     );
 
     return ExplanationResult(
@@ -242,22 +254,44 @@ class ExplanationRepository {
   Future<String?> answerQuestion({
     required TriageAssessment assessment,
     required String question,
+    Audience audience = Audience.nurse,
+    String? languageCode,
   }) async {
     final retrieved = await relevantGuidelines(assessment, limit: 2);
     return _gemini.answerQuestion(
       assessment: assessment,
       question: question,
       retrieved: retrieved,
+      audience: audience,
+      languageCode: languageCode,
     );
   }
 
-  Future<ExplanationResult?> _readCache(String screeningId) async {
+  /// Which audience a cached row was written for.
+  ///
+  /// Recorded inside `modelName` rather than in a column of its own, so adding
+  /// the patient mode needed no schema migration. Rows written before the mode
+  /// existed carry no marker and are read as nurse text, which is what they are.
+  static Audience _audienceOf(String modelName) =>
+      modelName.contains('audience:${Audience.patient.storageValue}')
+          ? Audience.patient
+          : Audience.nurse;
+
+  Future<ExplanationResult?> _readCache(
+    String screeningId,
+    Audience audience,
+  ) async {
     // Prefer the online one when both exist: it is the richer text, and the
     // offline row may have been written first while the signal was still down.
     final row = await _db.getExplanation(screeningId,
             source: ExplanationSource.gemini.storageValue) ??
         await _db.getExplanation(screeningId);
     if (row == null) return null;
+
+    // Text written for the other audience is worse than no cache at all: a
+    // patient would be told to refer themselves to a PHC, and a nurse would be
+    // handed home-care advice the nurse prompt forbids. Regenerate instead.
+    if (_audienceOf(row.modelName) != audience) return null;
 
     return ExplanationResult(
       explanation: AIExplanation(
@@ -280,6 +314,7 @@ class ExplanationRepository {
     required ExplanationSource source,
     required List<String> citations,
     required String modelName,
+    required Audience audience,
   }) async {
     if (screeningId == null) return;
 
@@ -294,7 +329,7 @@ class ExplanationRepository {
         questionsToAsk: jsonEncode(explanation.questionsToAsk),
         citations: Value(jsonEncode(citations)),
         disclaimer: explanation.disclaimer,
-        modelName: Value(modelName),
+        modelName: Value('$modelName · audience:${audience.storageValue}'),
         createdAt: DateTime.now(),
       ),
     );

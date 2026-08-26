@@ -8,7 +8,10 @@ import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/device.dart';
+import 'package:swasthyasetu_ai/domain/models/environment.dart';
 import 'package:swasthyasetu_ai/domain/models/screening.dart';
+import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
+import 'package:swasthyasetu_ai/features/environment/state/environment_providers.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -251,6 +254,55 @@ void _initializeAnimations() {
           _buildDeviceStatusCard(isConnected),
           const AppSpacing.vxl(),
           _buildGreetingSection(),
+          const AppSpacing.vlg(),
+          _buildEnvironmentBanner(),
+        ],
+      ),
+    );
+  }
+
+  /// Shown only when today's conditions carry advice — heat, bad air — that
+  /// changes how the worker should sequence and counsel a day's rounds.
+  /// Absent when conditions are ordinary: a permanent banner is wallpaper.
+  Widget _buildEnvironmentBanner() {
+    final theme = Theme.of(context);
+    final advisories =
+        ref.watch(environmentAdvisoriesProvider).valueOrNull ?? const [];
+    if (advisories.isEmpty) return const SizedBox.shrink();
+
+    final top = advisories.first;
+    final isWarning = top.level == AdvisoryLevel.warning;
+    final color = isWarning
+        ? theme.colorScheme.errorContainer
+        : theme.colorScheme.tertiaryContainer;
+    final onColor = isWarning
+        ? theme.colorScheme.onErrorContainer
+        : theme.colorScheme.onTertiaryContainer;
+
+    return AppCard(
+      color: color,
+      padding: const EdgeInsets.all(AppTheme.spacingMd),
+      onTap: () => context.push('/advisories'),
+      child: Row(
+        children: [
+          Icon(
+            isWarning
+                ? Icons.warning_amber_rounded
+                : Icons.tips_and_updates_outlined,
+            color: onColor,
+            size: 22,
+          ),
+          const AppSpacing.hmd(),
+          Expanded(
+            child: Text(
+              top.title,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: onColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: onColor),
         ],
       ),
     );
@@ -860,6 +912,13 @@ void _initializeAnimations() {
         usePush: true,
       ),
       _ActionData(
+        label: 'Health guides',
+        icon: Icons.health_and_safety_outlined,
+        color: theme.colorScheme.tertiary,
+        route: '/advisories',
+        usePush: true,
+      ),
+      _ActionData(
         label: l10n.navSos,
         icon: Icons.sos_rounded,
         color: theme.colorScheme.error,
@@ -1157,12 +1216,21 @@ Widget _buildDisclaimerCard() {
   }
 
   Widget _buildProfileButton() {
+    final account = ref.watch(authStateProvider).account;
+    final workerName = ref.watch(settingsProvider).workerName;
+    final displayName = workerName.isNotEmpty
+        ? workerName
+        : account?.displayName ?? '';
+    final initial = displayName.trim().isNotEmpty
+        ? displayName.trim()[0].toUpperCase()
+        : 'D'; // demo session
+
     return PopupMenuButton<String>(
       icon: CircleAvatar(
         radius: 18,
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         child: Text(
-          'U',
+          initial,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -1176,6 +1244,9 @@ Widget _buildDisclaimerCard() {
           context.go('/debug/ui-showcase');
         } else if (value == 'settings') {
           context.go('/settings');
+        } else if (value == 'signout') {
+          ref.read(authStateProvider.notifier).signOut();
+          // Redirect watches the session; nothing to navigate by hand.
         }
       },
       itemBuilder: (context) => [
@@ -1196,6 +1267,17 @@ Widget _buildDisclaimerCard() {
               Icon(Icons.palette_rounded, size: 20),
               SizedBox(width: 12),
               Text('UI Showcase'),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'signout',
+          child: Row(
+            children: [
+              Icon(Icons.logout_rounded, size: 20),
+              SizedBox(width: 12),
+              Text('Sign out'),
             ],
           ),
         ),

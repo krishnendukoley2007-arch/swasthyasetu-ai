@@ -4,8 +4,8 @@ class AppConstants {
 
   /// Kept in step with `pubspec.yaml` by hand — nothing generates it at build
   /// time here, so bumping one means bumping the other.
-  static const String appVersion = '1.1.0';
-  static const int appBuildNumber = 2;
+  static const String appVersion = '1.3.0';
+  static const int appBuildNumber = 4;
 
   static const String deviceServiceUuid = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
   static const String deviceInfoCharUuid = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';

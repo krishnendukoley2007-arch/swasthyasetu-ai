@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:swasthyasetu_ai/core/services/ble_service.dart';
 import 'package:swasthyasetu_ai/core/services/fall_detection_service.dart';
 import 'package:swasthyasetu_ai/core/services/gemini_service.dart';
+import 'package:swasthyasetu_ai/core/services/google_auth_service.dart';
 import 'package:swasthyasetu_ai/core/services/location_service.dart';
 import 'package:swasthyasetu_ai/core/services/mbtiles_reader.dart';
 import 'package:swasthyasetu_ai/core/services/seed_service.dart';
@@ -13,12 +14,14 @@ import 'package:swasthyasetu_ai/core/services/storage_manager.dart';
 import 'package:swasthyasetu_ai/core/services/sync_service.dart';
 import 'package:swasthyasetu_ai/core/services/waveform_store.dart';
 import 'package:swasthyasetu_ai/data/database/app_database.dart';
+import 'package:swasthyasetu_ai/data/repositories/auth_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/device_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/explanation_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/patient_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/screening_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/settings_repository.dart';
+import 'package:swasthyasetu_ai/domain/models/audience.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
 
 /// The single dependency-injection surface for the app. Everything stateful
@@ -104,6 +107,22 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
   (ref) => SettingsRepository(ref.watch(databaseProvider)),
 );
 
+// ───────────────────────────── Auth / accounts ─────────────────────────────
+
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => AuthRepository(ref.watch(databaseProvider)),
+);
+
+final googleAuthServiceProvider = Provider<GoogleAuthService>(
+  (ref) => GoogleAuthService(),
+);
+
+// Session state (`authStateProvider`, `currentAccountProvider`,
+// `myPatientProvider`) lives in features/auth/state/auth_controller.dart —
+// next to the controller, as with screeningDraftProvider — because the account
+// surface depends on these leaf services, and holding it here would make the
+// DI graph a circle.
+
 // ───────────────────────────── Settings ─────────────────────────────
 
 /// Settings are held in a notifier rather than read straight from the stream so
@@ -117,7 +136,13 @@ class SettingsController extends StateNotifier<AppSettingsSnapshot> {
   final SettingsRepository _repo;
 
   Future<void> _load() async {
-    state = await _repo.load();
+    final snapshot = await _repo.load();
+    // The container may be disposed while the read is in flight (tests create
+    // and tear down containers fast). Setting state after dispose throws in
+    // state_notifier, and a late-arriving settings snapshot is never worth
+    // that crash.
+    if (!mounted) return;
+    state = snapshot;
   }
 
   Future<void> refresh() => _load();
@@ -147,9 +172,22 @@ class SettingsController extends StateNotifier<AppSettingsSnapshot> {
     await _repo.setLocationConsent(granted);
   }
 
+  Future<void> setEnvLocationConsent(bool granted) async {
+    state = state.copyWith(envLocationConsent: granted);
+    await _repo.setEnvLocationConsent(granted);
+  }
+
   Future<void> setAiConsent(bool granted) async {
     state = state.copyWith(aiConsent: granted);
     await _repo.setAiConsent(granted);
+  }
+
+  /// Switches who explanations are written for. Everything else about the app is
+  /// unchanged by this — only the prompt sent to the model, and with it what the
+  /// model may suggest.
+  Future<void> setAudience(Audience audience) async {
+    state = state.copyWith(audience: audience);
+    await _repo.setAudience(audience);
   }
 
   /// Trimmed, because a key pasted from a browser almost always arrives with a
