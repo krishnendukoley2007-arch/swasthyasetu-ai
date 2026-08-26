@@ -25,23 +25,23 @@ jobs:
           cache: true
 
       - name: Get dependencies
-        working-directory: ./app
+        working-directory: .
         run: flutter pub get
 
       - name: Generate code
-        working-directory: ./app
+        working-directory: .
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Run tests
-        working-directory: ./app
+        working-directory: .
         run: flutter test
 
       - name: Build APKs (split per ABI)
-        working-directory: ./app
+        working-directory: .
         run: flutter build apk --release --split-per-abi
 
       - name: Rename APKs for release
-        working-directory: ./app
+        working-directory: .
         run: |
           cd build/app/outputs/flutter-apk
           for f in *.apk; do
