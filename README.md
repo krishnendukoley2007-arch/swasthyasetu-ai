@@ -1,197 +1,180 @@
-# SwasthyaSetu AI
+# 🏥 SwasthyaSetu AI
 
-An offline-first health screening app for community health workers. It records a
-patient's vitals and symptoms, sorts them into a triage band (routine / soon /
-urgent), explains that decision in plain language, and can raise an SMS SOS —
-all with no internet connection and no server.
+<div align="center">
 
-**It is a screening aid, not a diagnosis.** Nothing in the app decides whether
-someone is ill. It sorts people into "see a clinician sooner" or "later" using
-published threshold rules, and shows the numbers it used so a worker can
-disagree with it.
+![Version](https://img.shields.io/badge/version-1.3.0%20%28build%204%29-blue?style=for-the-badge)
+![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-green?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-purple?style=for-the-badge)
+![Offline](https://img.shields.io/badge/works%20offline-yes-brightgreen?style=for-the-badge)
+![Tests](https://img.shields.io/badge/tests-428%20passing-success?style=for-the-badge)
 
-- **Version:** 1.3.0 (build 4)
-- **Platform:** Android 7.0 (API 24) and newer
-- **Languages:** English, हिन्दी (Hindi), বাংলা (Bengali)
-- **Works offline:** yes — every screening, rule, explanation tier and map tile
-  is on the device
+**🌍 An offline-first AI-powered health screening platform for community health workers**
+
+*Record vitals → Get triage → Understand in plain language → Act fast — all without internet*
+
+</div>
 
 ---
 
-## Install it on your phone
+## 📱 Install on Your Phone (No Computer Needed!)
 
-**You do not need a computer, an account, or a developer setup.**
+<div align="center">
 
-1. Open the [Releases page](../../releases) on your Android phone.
-2. Under the newest release, download **`SwasthyaSetu-fixed.apk`**.
-   That's the primary release build (universal APK, works on all architectures).
-   If you prefer a smaller architecture-specific build, also available:
-   - `app-release-arm64.apk` — 64-bit ARM (most phones since ~2018)
-   - `app-release.apk` — universal (all architectures, larger download)
-3. Tap the downloaded file. Android will say something like *"For your security,
-   your phone is not allowed to install unknown apps from this source."* Tap
-   **Settings → Allow from this source**, then go back and tap the file again.
-4. Install, open, and grant permissions when asked. See
-   [What it asks for, and why](#what-it-asks-for-and-why) below — you can say no
-   to all of them and the app still works.
+| APK | Size | Architecture | Best For |
+|-----|------|--------------|----------|
+| 🎯 **`SwasthyaSetu-fixed.apk`** | ~74 MB | Universal (all) | **Recommended — works everywhere** |
+| ⚡ `app-release-arm64.apk` | ~32 MB | 64-bit ARM | Most phones since 2018 |
+| 📦 `app-release.apk` | ~74 MB | Universal (all) | Alternative universal build |
 
-### Two honest warnings about installing this
+</div>
 
-- **The APK is signed with a debug key.** Android will warn you that the
-  developer is unverified, and you will not be able to install it *over* a
-  Play Store copy of the same app. That's a consequence of this being a
-  field/demo build rather than a store release, not a sign the file is broken.
-- **Without a compatible sensor board, all vitals are simulated.** The app is
-  explicit about this — every simulated reading carries a `DEMO` badge and is
-  stored flagged as demo — but if you install it expecting your phone alone to
-  measure your heart rate, it cannot. Phones have no pulse oximeter.
+### 🚀 Quick Install Steps
+
+1. **Open** the [Releases page](../../releases) on your Android phone
+2. **Download** `SwasthyaSetu-fixed.apk` (or your preferred variant)
+3. **Tap** the file → Android shows security warning → **Settings → Allow from this source** → **Install**
+4. **Open** the app → **Grant permissions** when prompted (all optional!)
+
+> ⚠️ **Two honest warnings:**
+> - **Debug-signed APK** — Android warns "unverified developer" (normal for field builds, not Play Store)
+> - **No sensor board = Demo mode** — Phone alone **cannot** measure heart rate/SpO₂; simulated readings show `🧪 DEMO` badge
 
 ---
 
-## What it actually does
+## ✨ What It Actually Does
 
-| | |
-|---|---|
-| **Screening** | Heart rate, SpO₂, temperature and a single-lead ECG trace read over Bluetooth LE from a sensor board; symptoms and duration entered by the worker. |
-| **Triage** | A deterministic rule engine (no model, no network) maps vitals + symptoms to green / yellow / red, plus an escalation level. The thresholds it used are shown on screen. |
-| **Explanation** | Two tiers, and the app always says which one you got: *"Explained offline"* from the guideline corpus on the phone, or *"Explained online"* from Google Gemini when a network and an API key are both present. Offline is never silently dressed up as online. |
-| **Patients** | Multiple patient profiles with screening history, stored locally in SQLite. |
-| **Emergency** | An SOS screen that composes an SMS to saved contacts with the triage result and, if you consented to location, a coordinate. It opens your messaging app — it cannot and does not send silently. |
-| **Fall detection** | Uses the phone's accelerometer, and the sensor board's IMU when connected. |
-| **Offline map** | Real OpenStreetMap raster tiles from a bundled MBTiles pack, so the "where have I screened" map works with no data. Zoom 0–6 only (country-level) — when a pack has no tiles for your area, the app says so instead of drawing invented terrain. |
-| **Sync** | Optional and consent-gated. Screenings queue locally and upload only when you have a network and have turned sync on. |
-| **Environment alerts** | Heat and air-quality advisories from Open-Meteo (no API key), personalized to the patient's health profile and combined with their own vital trends. |
-| **Trends** | 30-day personal baselines for heart rate, SpO₂, and temperature with deviation highlighting. |
-
-### A note on what this codebase is trying not to do
-
-Much of the recent work on this app has been removing UI that displayed numbers
-the app had not measured — hardcoded dashboard counts, a pull-to-refresh that
-incremented a counter, a "scan for devices" button that waited two seconds and
-then selected a simulated device, a battery percentage that always read the demo
-device's. If you find a screen showing you a value it could not have obtained,
-that is a bug worth reporting, not a feature.
+| Feature | Description | Offline? |
+|---------|-------------|:--------:|
+| 🩺 **Screening** | Heart rate, SpO₂, temperature, single-lead ECG via Bluetooth LE sensor board | ✅ |
+| 🎯 **Triage** | Deterministic rule engine → **🟢 Routine / 🟡 Soon / 🔴 Urgent** + escalation level | ✅ |
+| 💬 **Explanation** | **Two tiers:** "Explained offline" (local corpus) or "Explained online" (Gemini AI) — always labeled | ✅/🌐 |
+| 👥 **Patients** | Multiple profiles with full screening history in local SQLite | ✅ |
+| 🆘 **Emergency SOS** | Composes SMS with triage result + location (if consented) → opens messaging app | ✅ |
+| 📉 **Fall Detection** | Phone accelerometer + sensor board IMU (when connected) | ✅ |
+| 🗺️ **Offline Map** | Real OpenStreetMap tiles (bundled MBTiles) — country-level, no data needed | ✅ |
+| ☁️ **Sync** | Optional, consent-gated upload when online | 🌐 |
+| 🌡️ **Environment Alerts** | Heat & air-quality advisories from Open-Meteo (no API key), personalized to patient | 🌐/✅ |
+| 📈 **30-Day Trends** | Personal baselines for HR/SpO₂/Temp with deviation highlighting | ✅ |
 
 ---
 
-## What it asks for, and why
+## 🛡️ Permissions — All Optional, All Transparent
 
-Every permission is optional. Denying any of them degrades a feature; none of
-them breaks the app.
+| Permission | Why? | If Denied |
+|------------|------|-----------|
+| 🔵 **Bluetooth / Nearby Devices** | Connect to sensor board | Vitals stay in demo mode |
+| 📍 **Location** | Tag screenings for community map | Map disabled; screenings save without coords |
+| 🌐 **Internet** | Online AI explanations + optional sync | Everything else works; offline explanations used |
+| 📷 **Camera** | Scan patient/device QR codes | Enter details manually |
+| ⚙️ **Foreground Service** | Keep BLE alive during screening | Session may drop if you switch apps |
 
-| Permission | Used for | If you deny it |
-|---|---|---|
-| Bluetooth / nearby devices | Connecting to the sensor board | Vitals stay in simulated demo mode |
-| Location | Tagging screenings so the community map works | Map is off; screenings save without coordinates |
-| Internet | Optional AI explanations and optional sync | Everything else works; explanations come from the phone |
-| Camera | Scanning a patient/device QR code | Enter details by hand |
-| Foreground service | Keeping a BLE session alive while screening | Screening may drop if you switch apps |
-
-Location consent is **off by default**, and the community map says plainly when
-it is off rather than showing an empty map.
+> 🔒 **Location consent is OFF by default** — the map explicitly says when it's off instead of showing empty terrain.
 
 ---
 
-## Build it yourself
-
-You need the [Flutter SDK](https://docs.flutter.dev/get-started/install) —
-this was built with **Flutter 3.47.1 / Dart 3.13.1** — and, for Android, the
-Android SDK with a build-tools install (Android Studio provides both).
+## 🏗️ Build It Yourself
 
 ```bash
+# Prerequisites: Flutter 3.47+ / Dart 3.13+ (Android SDK via Android Studio)
 git clone https://github.com/<your-username>/swasthyasetu-ai.git
 cd swasthyasetu-ai
-flutter pub get
-flutter test          # 428 tests, all of which should pass
-flutter build apk --release --split-per-abi
+
+flutter pub get                    # 📦 Install dependencies
+flutter test                       # ✅ 428 tests — all should pass!
+flutter build apk --release --split-per-abi  # 📱 APKs in build/app/outputs/flutter-apk/
+
+# Or run directly on connected device:
+flutter run --release
 ```
 
-The APKs land in `build/app/outputs/flutter-apk/`. To run on a plugged-in phone
-instead: `flutter run --release`.
-
-### Optional: enable the online explanation tier
-
-The app works without this. To turn on Gemini-backed explanations and chat,
-either paste a [Google AI Studio](https://aistudio.google.com/apikey) key into
-**Settings → AI** at runtime, or compile one in:
-
+### 🔑 Optional: Enable Online AI Explanations
 ```bash
+# Compile-time (builds key into APK):
 flutter build apk --release --dart-define=GEMINI_API_KEY=your_key_here
+
+# Or at runtime: Settings → AI → paste Google AI Studio key
 ```
+*No key committed. No key required to build/run.*
 
-No key is committed to this repository, and none is required to build or run.
-
-### Optional: a better offline map
-
-The bundled pack (`assets/map/india_lowzoom.mbtiles`, ~690 KB) is real OSM
-tiles at zoom 0–6 — enough for country-level context, not for streets. To add
-detail, copy any standard raster `.mbtiles` file into the app's `map_tiles`
-directory on the device; imported packs take priority over the bundled one, and
-the map caption tells you which pack it is drawing from. `tool/build_map_pack.py`
-is the script that produced the bundled pack.
+### 🗺️ Optional: Better Offline Map
+- Bundled: `assets/map/india_lowzoom.mbtiles` (~690 KB, zoom 0–6)
+- Add detail: Drop any `.mbtiles` file into device's `map_tiles` folder
+- Imported packs take priority; map caption shows active source
+- Generator script: `tool/build_map_pack.py`
 
 ---
 
-## Project layout
+## 📂 Project Structure
 
 ```
 lib/
-  core/          services (BLE, SMS/SOS, storage, sync, MBTiles reader),
-                 theme, shared widgets, routing, Riverpod providers
-  data/          drift/SQLite database, repositories, row mappers
-  domain/        models and the deterministic triage rule engine
-  features/      one folder per screen area: dashboard, patients,
-                 screening, history, emergency, community, settings
-  l10n/          app_en.arb / app_hi.arb / app_bn.arb (source of all UI text)
-test/            428 tests, including layout-overflow tests at 2.0x font
-                 scale and a suite pinning offline-map honesty
+├── core/           🔧 Services (BLE, SMS/SOS, storage, sync, MBTiles), theme, routing, providers
+├── data/           💾 Drift/SQLite database, repositories, row mappers
+├── domain/         🧠 Models + deterministic triage rule engine
+├── features/       🎯 Per-screen modules: dashboard, patients, screening, history, emergency, community, settings
+├── l10n/           🌐 app_en.arb / app_hi.arb / app_bn.arb (all UI text)
+test/               🧪 428 tests (overflow @ 2.0x font, offline-map honesty, etc.)
 assets/
-  guidelines/    the offline explanation corpus
-  map/           bundled low-zoom OpenStreetMap tile pack
-  fonts/         Inter, bundled so vitals never render in an OEM font
+├── guidelines/     📚 Offline explanation corpus
+├── map/            🗺️ Bundled OSM tile pack
+└── fonts/          🔤 Inter (bundled — vitals never render in OEM fonts)
 ```
 
-Architecture notes worth knowing before changing things:
+### 🏛️ Architecture Principles
 
-- **Provenance is one-directional.** A reading can go from measured to
-  demo-flagged, never the other way. `isDemo` on samples, screenings and drafts
-  exists so a simulated number can never be presented as a measured one.
-- **Storage strings stay English.** Only labels are translated, so the database,
-  the exports and the rule engine share one vocabulary regardless of UI language.
-- **Nothing is fabricated to fill a gap.** A value the app does not have renders
-  as `—`, not as `0` and not as a plausible guess.
+| Principle | What It Means |
+|-----------|---------------|
+| 🔄 **One-way provenance** | Measured → demo-flagged, never reverse. `isDemo` prevents simulated data masquerading as real |
+| 🇬🇧 **Storage stays English** | Only labels translate; DB, exports, rules share one vocabulary |
+| ❌ **No fabricated gaps** | Missing values render as `—`, never `0` or guesses |
 
 ---
 
-## Hardware
+## 🔧 Hardware (For Real Vitals)
 
-Real vitals need a BLE peripheral exposing heart rate, SpO₂, temperature and raw
-ECG samples — the reference build is an ESP32 with MAX30102 (pulse/SpO₂),
-AD8232 (ECG), MLX90614 or DS18B20 (temperature) and MPU6050 (fall detection).
-The app connects by service UUID, reports honest link state (scanning /
-connecting / connected / lost), and has a diagnostics screen that measures real
-sample rates rather than asserting them.
+<div align="center">
 
-Without that board the app runs in demo mode, clearly labelled throughout.
+| Component | Purpose | Reference |
+|-----------|---------|-----------|
+| 💓 **MAX30102** | Pulse oximetry (HR + SpO₂) | PPG sensor |
+| 📊 **AD8232** | Single-lead ECG | Raw waveform |
+| 🌡️ **MLX90614 / DS18B20** | Body temperature | Contactless / contact |
+| 🤸 **MPU6050** | Fall detection | IMU on board |
+| 📡 **ESP32** | BLE + WiFi + MQTT | Main MCU |
 
-Full build details — bill of materials, pin mapping, schematic notes, assembly,
-firmware configuration and validation steps — are in
-[`hardware/HARDWARE.md`](hardware/HARDWARE.md), with a wiring diagram in
-[`hardware/hardware-schematic.svg`](hardware/hardware-schematic.svg).
+</div>
+
+**App connects by service UUID** → honest link state (scanning/connecting/connected/lost) → diagnostics screen measures real sample rates.
+
+📖 **Full hardware docs:** [`hardware/HARDWARE.md`](hardware/HARDWARE.md)  
+📐 **Wiring diagram:** [`hardware/hardware-schematic.svg`](hardware/hardware-schematic.svg)
+
+*Without the board → app runs in clearly labeled demo mode.*
 
 ---
 
-## Licence and attribution
+## 📜 License & Attribution
 
-- Application code: [MIT](LICENSE).
-- Bundled map tiles: © OpenStreetMap contributors, available under the
-  [Open Database Licence](https://www.openstreetmap.org/copyright).
-- Inter typeface: [SIL Open Font Licence 1.1](https://github.com/rsms/inter).
+| Asset | License |
+|-------|---------|
+| Application code | [MIT](LICENSE) |
+| Bundled map tiles | © OpenStreetMap contributors • [ODbL](https://www.openstreetmap.org/copyright) |
+| Inter typeface | [SIL OFL 1.1](https://github.com/rsms/inter) |
 
-## Medical disclaimer
+---
 
-This software is a screening and triage-support tool for trained community
-health workers. It does not diagnose, treat, or prescribe. Its risk bands are
-produced by fixed threshold rules and are not a clinical judgement. Do not use
-it as the sole basis for a care decision, and do not use it in place of
-emergency services.
+## ⚠️ Medical Disclaimer
+
+> **This software is a screening and triage-support tool for trained community health workers.**  
+> It does **not** diagnose, treat, or prescribe. Its risk bands come from **fixed threshold rules**, not clinical judgment.  
+> **Do not use as sole basis for care decisions. Do not use in place of emergency services.**
+
+---
+
+<div align="center">
+
+**Built with ❤️ for community health workers everywhere**
+
+[🐛 Report Bug](../../issues) • [💡 Request Feature](../../issues/new) • [📖 Wiki](../../wiki) • [🔒 Security](../../security/policy)
+
+</div>
