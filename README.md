@@ -10,7 +10,7 @@ someone is ill. It sorts people into "see a clinician sooner" or "later" using
 published threshold rules, and shows the numbers it used so a worker can
 disagree with it.
 
-- **Version:** 1.1.0 (build 2)
+- **Version:** 1.3.0 (build 4)
 - **Platform:** Android 7.0 (API 24) and newer
 - **Languages:** English, हिन्दी (Hindi), বাংলা (Bengali)
 - **Works offline:** yes — every screening, rule, explanation tier and map tile
@@ -23,11 +23,11 @@ disagree with it.
 **You do not need a computer, an account, or a developer setup.**
 
 1. Open the [Releases page](../../releases) on your Android phone.
-2. Under the newest release, download **`app-arm64-v8a-release.apk`**.
-   That's the right file for essentially every phone sold since ~2018. If it
-   refuses to install, try `app-armeabi-v7a-release.apk` (older 32-bit phones),
-   or `app-release.apk`, which contains every chip type and works everywhere but
-   is ~68 MB instead of ~26 MB.
+2. Under the newest release, download **`SwasthyaSetu-fixed.apk`**.
+   That's the primary release build (universal APK, works on all architectures).
+   If you prefer a smaller architecture-specific build, also available:
+   - `app-release-arm64.apk` — 64-bit ARM (most phones since ~2018)
+   - `app-release.apk` — universal (all architectures, larger download)
 3. Tap the downloaded file. Android will say something like *"For your security,
    your phone is not allowed to install unknown apps from this source."* Tap
    **Settings → Allow from this source**, then go back and tap the file again.
@@ -60,6 +60,8 @@ disagree with it.
 | **Fall detection** | Uses the phone's accelerometer, and the sensor board's IMU when connected. |
 | **Offline map** | Real OpenStreetMap raster tiles from a bundled MBTiles pack, so the "where have I screened" map works with no data. Zoom 0–6 only (country-level) — when a pack has no tiles for your area, the app says so instead of drawing invented terrain. |
 | **Sync** | Optional and consent-gated. Screenings queue locally and upload only when you have a network and have turned sync on. |
+| **Environment alerts** | Heat and air-quality advisories from Open-Meteo (no API key), personalized to the patient's health profile and combined with their own vital trends. |
+| **Trends** | 30-day personal baselines for heart rate, SpO₂, and temperature with deviation highlighting. |
 
 ### A note on what this codebase is trying not to do
 
@@ -100,7 +102,7 @@ Android SDK with a build-tools install (Android Studio provides both).
 git clone https://github.com/<your-username>/swasthyasetu-ai.git
 cd swasthyasetu-ai
 flutter pub get
-flutter test          # 345 tests, all of which should pass
+flutter test          # 428 tests, all of which should pass
 flutter build apk --release --split-per-abi
 ```
 
@@ -141,7 +143,7 @@ lib/
   features/      one folder per screen area: dashboard, patients,
                  screening, history, emergency, community, settings
   l10n/          app_en.arb / app_hi.arb / app_bn.arb (source of all UI text)
-test/            345 tests, including layout-overflow tests at 2.0x font
+test/            428 tests, including layout-overflow tests at 2.0x font
                  scale and a suite pinning offline-map honesty
 assets/
   guidelines/    the offline explanation corpus
