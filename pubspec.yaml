@@ -1,0 +1,93 @@
+name: swasthyasetu_ai
+description: AI-Powered Smart Health Monitoring & Community Early-Warning Platform
+publish_to: 'none'
+version: 1.3.0+4
+
+environment:
+  sdk: '>=3.9.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  # State management
+  flutter_riverpod: ^2.4.9
+  # Navigation
+  go_router: ^13.0.1
+  # Local database
+  drift: ^2.28.0
+  sqlite3: ^2.4.0
+  sqlite3_flutter_libs: ^0.5.18
+  path: ^1.9.0
+  path_provider: ^2.1.2
+  # BLE
+  flutter_blue_plus: ^1.31.2
+  # Sign-in: Google identity (7.x = Credential Manager on Android). Deliberately
+  # NOT firebase_auth: this build must keep working with no google-services.json,
+  # so accounts fall back to salted-hash local credentials when Google is not
+  # configured for this package signature.
+  google_sign_in: ^7.2.0
+  # PBKDF2-HMAC-SHA256 for local email passwords — pure Dart, no native build
+  # cost, and the same primitive on every device.
+  crypto: ^3.0.3
+  # Network
+  dio: ^5.4.0
+  connectivity_plus: ^6.0.5
+  # Utilities
+  uuid: ^4.3.3
+  intl: ^0.20.2
+  collection: ^1.18.0
+  # Charts
+  fl_chart: ^0.66.0
+  # Animations
+  flutter_animate: ^4.5.0
+  # Permissions
+  permission_handler: ^11.1.0
+  # Emergency flow: sms:/tel: intents (work with zero data connectivity)
+  url_launcher: ^6.2.4
+  # Consent-gated data export
+  share_plus: ^11.0.0
+  # Phone-side fall detection (complements the device MPU6050 over BLE)
+  sensors_plus: ^6.1.1
+  # Consent-gated screening geotag
+  geolocator: ^11.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  build_runner: ^2.9.0
+  drift_dev: ^2.31.0
+  # Pinned high on purpose: analyzer <10 lacks visitDotShorthandPropertyAccess
+  # and crashes the whole codegen run on Dart 3.13 sources.
+  analyzer: ^10.1.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - assets/guidelines/
+    # Real OpenStreetMap raster tiles, zoom 0-6 over the subcontinent (~690 KB).
+    # Bundled so the community map has country-level context with no network and
+    # no import step; street-level detail needs an imported pack.
+    - assets/map/
+  # Bundled, not fetched at runtime: an offline field app cannot depend on
+  # google_fonts downloading a typeface, and OEM Android skins substitute
+  # rounded or decorative defaults that have no business rendering a vital sign.
+  # Five weights only — italics and the display cut are unused, and every TTF is
+  # ~400 KB of APK.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800
