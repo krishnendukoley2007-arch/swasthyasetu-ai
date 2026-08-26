@@ -82,13 +82,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Download Android APKs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: android-apks
           path: ./apks
 
       - name: Download Firmware
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: firmware
           path: ./firmware
