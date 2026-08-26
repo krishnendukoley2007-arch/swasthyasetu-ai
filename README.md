@@ -10,7 +10,7 @@
 
 **🌍 An offline-first AI-powered health screening platform for community health workers**
 
-*Record vitals → Get triage → Understand in plain language → Act fast — all without internet*
+*Record vitals → Get triage → Understand in plain language → Act fast — all without internet and available additional online explanations*
 
 </div>
 
