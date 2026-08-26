@@ -1,0 +1,49 @@
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  auto-merge:
+    name: Auto-merge Dependabot PRs
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if minor/patch update
+        id: check-version
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          # Only auto-merge patch/minor version bumps (not major)
+          if echo "$TITLE" | grep -qE '^(chore\(deps\): )?Bump.*from [0-9]+\.[0-9]+\.[0-9]+ to [0-9]+\.[0-9]+\.[0-9]+'; then
+            # Extract versions
+            FROM=$(echo "$TITLE" | sed -E 's/.*from ([0-9]+\.[0-9]+\.[0-9]+) to.*/\1/')
+            TO=$(echo "$TITLE" | sed -E 's/.*to ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+            FROM_MAJOR=$(echo "$FROM" | cut -d. -f1)
+            TO_MAJOR=$(echo "$TO" | cut -d. -f1)
+            if [ "$FROM_MAJOR" = "$TO_MAJOR" ]; then
+              echo "minor_or_patch=true" >> $GITHUB_OUTPUT
+            else
+              echo "minor_or_patch=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "minor_or_patch=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Enable auto-merge for minor/patch
+        if: steps.check-version.outputs.minor_or_patch == 'true'
+        run: |
+          gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add needs-review label for major
+        if: steps.check-version.outputs.minor_or_patch == 'false'
+        run: |
+          gh pr edit "${{ github.event.pull_request.html_url }}" --add-label "needs-review"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,37 @@
+# CODEOWNERS
+# These users/teams will be automatically requested for review on PRs touching these paths
+
+# Global owners (fallback for everything)
+* @krishnendukoley2007-arch
+
+# Flutter app
+/app/lib/ @krishnendukoley2007-arch
+/app/test/ @krishnendukoley2007-arch
+/app/pubspec.yaml @krishnendukoley2007-arch
+/app/analysis_options.yaml @krishnendukoley2007-arch
+
+# Backend
+/backend/app/ @krishnendukoley2007-arch
+/backend/requirements.txt @krishnendukoley2007-arch
+/backend/.env.example @krishnendukoley2007-arch
+
+# Firmware
+/firmware/src/ @krishnendukoley2007-arch
+/firmware/platformio.ini @krishnendukoley2007-arch
+
+# Documentation
+/docs/ @krishnendukoley2007-arch
+/README.md @krishnendukoley2007-arch
+/CONTRIBUTING.md @krishnendukoley2007-arch
+/hardware/ @krishnendukoley2007-arch
+
+# CI/CD
+/.github/workflows/ @krishnendukoley2007-arch
+/.github/dependabot.yml @krishnendukoley2007-arch
+
+# Android-specific
+/app/android/ @krishnendukoley2007-arch
+
+# Assets & localization
+/app/assets/ @krishnendukoley2007-arch
+/app/lib/l10n/ @krishnendukoley2007-arch

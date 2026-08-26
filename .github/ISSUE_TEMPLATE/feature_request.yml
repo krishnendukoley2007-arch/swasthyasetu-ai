@@ -1,0 +1,81 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! Please describe the feature and why it would help community health workers.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Use Case
+      description: What problem does this solve? Who benefits?
+      placeholder: |
+        Health workers in areas with poor connectivity need to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How should it work? Any UI/flow sketches?
+      placeholder: |
+        Add a new "Export CSV" button on the History screen that...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Other ways to solve this, or why existing features don't suffice
+      placeholder: |
+        Could use the existing Share feature but it only exports PDF...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area of App
+      options:
+        - Screening / Vitals
+        - Triage / Risk Engine
+        - Explanations (AI / Offline)
+        - Patient Management
+        - Emergency / SOS
+        - Offline Map
+        - Sync / Backend
+        - Settings / Permissions
+        - Hardware / Firmware
+        - UI / Accessibility
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: offline
+    attributes:
+      label: Offline-First Requirements
+      options:
+        - label: Must work 100% offline (no network dependency)
+          required: false
+        - label: Can have optional online enhancement
+          required: false
+        - label: Requires new permissions
+          required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Links, mockups, references, related issues
+      placeholder: |
+        Related to #123
+        Mockup: https://...
+    validations:
+      required: false
