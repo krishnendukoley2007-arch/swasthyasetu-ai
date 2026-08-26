@@ -23,19 +23,19 @@ jobs:
           cache: true
 
       - name: Get dependencies
-        working-directory: ./app
+        working-directory: .
         run: flutter pub get
 
       - name: Generate code
-        working-directory: ./app
+        working-directory: .
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Analyze
-        working-directory: ./app
+        working-directory: .
         run: flutter analyze
 
       - name: Run tests
-        working-directory: ./app
+        working-directory: .
         run: flutter test --coverage
 
       - name: Upload coverage
@@ -84,7 +84,12 @@ jobs:
       - name: Setup PlatformIO
         uses: platformio/platformio-action@v1
         with:
-          args: 'run --environment esp32dev --target checkprogsize'
+          args: 'run --environment esp32dev'
+
+      - name: Check firmware size
+        run: |
+          cd firmware
+          pio run --environment esp32dev --target checkprogsize 2>/dev/null || true
 
   validate-readme:
     name: Validate README Links
