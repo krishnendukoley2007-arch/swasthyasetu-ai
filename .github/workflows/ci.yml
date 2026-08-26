@@ -95,7 +95,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check links
-        uses: lycheeverse/lychee-action@v1
+        uses: lycheeverse/lychee-action@v2
         with:
           args: README.md --verbose --no-progress --exclude-mail
         env:
