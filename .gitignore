@@ -1,42 +1,48 @@
-# Flutter / Dart
-.dart_tool/
-.packages
-.pub-cache/
-.pub/
-build/
-.flutter-plugins
-.flutter-plugins-dependencies
-.flutter-versions
+﻿# Python
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
 
-# Generated code IS committed on purpose — both the drift database (*.g.dart)
-# and the localizations under lib/l10n/generated/. It costs ~400 KB and means a
-# fresh clone builds and tests with no build_runner or gen-l10n step first.
-# The real sources are lib/data/database/app_database.dart and lib/l10n/*.arb.
-
-# Machine-specific SDK paths, written by the Flutter tool on first build.
-android/local.properties
-android/key.properties
-**/android/**/gradle-wrapper.jar
-.gradle/
-android/.gradle/
-android/build/
-android/app/build/
-
-# Signing material. Never commit a keystore.
-*.jks
-*.keystore
-*.p12
+# Build artifacts
+*.apk
+*.aab
+*.exe
+*.dll
+*.so
 
 # IDE
 .idea/
-*.iml
 .vscode/
 *.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Scratch
-analyze.txt
-*.log
+# Flutter
+build/
+.dart_tool/
+.packages
+.pub-cache/
+
+# PlatformIO
+.pio/
+
+# Android SDK
+android-sdk/
+
+# Flutter SDK
+flutter/
+
+# Local scripts
+*.ps1
+
+# AI context bundle
+ai_context_bundle/
+
+# APKs
+*.apk
