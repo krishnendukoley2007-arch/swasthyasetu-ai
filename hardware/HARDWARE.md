@@ -6,28 +6,27 @@
 
 | Qty | Component | Description | Approx. Cost |
 |-----|-----------|-------------|--------------|
-| 1 | ESP32-WROOM-32 DevKit | Main microcontroller board | $8-12 |
-| 1 | MAX30102 Breakout | Heart rate/SpO₂ sensor | $5-8 |
-| 1 | AD8232 Breakout | Single-lead ECG sensor | $10-15 |
-| 1 | MLX90614 Breakout | IR temperature sensor | $8-12 |
-| 1 | MPU6050 Breakout | 6-axis IMU, fall/impact detection | $2-4 |
-| 1 | SSD1306 0.96" OLED | 128x64 I2C display | $3-5 |
-| 1 | Li-ion 18650 + Holder | Rechargeable battery | $3-5 |
-| 1 | TP4056 Module | Battery charging/protection | $1-2 |
-| 1 | AMS1117 3.3V | Voltage regulator | $0.50 |
-| 3 | ECG Snap Electrodes | Disposable electrodes | $2-5/set |
-| 1 | Tactile Switch | User button (6x6mm) | $0.20 |
-| 1 | Piezo Buzzer | 5V active buzzer | $0.30 |
-| 1 | Slide Switch | Power switch | $0.30 |
-| - | Resistors/Capacitors | Various (see schematic) | $1-2 |
-| - | Perfboard/PCB | Custom or breadboard | $2-5 |
-
-**Total Estimated Cost: $45-75**
+| 1 | ESP32-WROOM-32 DevKit | Main microcontroller board | 330 |
+| 1 | MAX30102 Breakout | Heart rate/SpO₂ sensor | 300 |
+| 1 | AD8232 Breakout | Single-lead ECG sensor | 500 |
+| 1 | MLX90614 Breakout | IR temperature sensor | 400 |
+| 1 | SSD1306 0.96" OLED | 128x64 I2C display | 150 |
+| 1 | Li-ion 1000MaH | Rechargeable battery | 300 |
+| 1 | TP4056 Module | Battery charging/protection | 100 |
+| 1 | AMS1117 3.3V | Voltage regulator | 100 |
+| 3 | ECG Snap Electrodes | Disposable electrodes | 100 |
+| 1 | Touch Button | User button (6x6mm) | 20 |
+| 1 | Piezo Buzzer | 5V active buzzer | 5 |
+| 1 | Slide Switch | Power switch | 10 |
+| - | Resistors/Capacitors | Various (see schematic) | 10 |
+| - | Vero Board | Custom or breadboard | 40 |
+| - | Wires | Connection | 20 |
+| - | 3D Printed Enclosure | Casing | 115 |
+**Total Estimated Cost: 2500**
 
 ### Optional Components
 - 3D Printed Enclosure
 - Lanyard/strap
-- Silicone finger sleeve for MAX30102
 
 ## Pin Mapping
 
