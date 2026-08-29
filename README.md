@@ -139,7 +139,6 @@ assets/
 | 💓 **MAX30102** | Pulse oximetry (HR + SpO₂) | PPG sensor |
 | 📊 **AD8232** | Single-lead ECG | Raw waveform |
 | 🌡️ **MLX90614 / DS18B20** | Body temperature | Contactless / contact |
-| 🤸 **MPU6050** | Fall detection | IMU on board |
 | 📡 **ESP32** | BLE + WiFi + MQTT | Main MCU |
 
 </div>
