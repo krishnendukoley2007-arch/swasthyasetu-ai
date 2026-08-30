@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<!--
+  SwasthyaSetu SSAI-SENSE-01 — Laptop Demo Dashboard
+  ==================================================
+  Single-file Web Bluetooth client for the ESP32 firmware (v1.2+).
+  Speaks exactly the app's wire protocol (lib/core/services/ble_protocol.dart).
+
+  HOW TO USE
+  ----------
+  1. Power the ESP32 (battery or power bank — never a charger while
+     the ECG electrodes are on skin).
+  2. Open this file in Chrome or Edge on a laptop with Bluetooth.
+     (file:// works in Chrome; if your browser refuses it, serve the
+     folder with:  python -m http.server 8000  and open
+     http://localhost:8000/tools/ecg_dashboard.html )
+  3. Click "Connect", pick "SSAI-SENSE-01".
+  4. Hold the electrodes. Watch a real QRS trace and measured BPM.
+
+  The board only allows ONE BLE connection at a time — disconnect the
+  phone app first.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwasthyaSetu ECG — Laptop Dashboard</title>
+<style>
+  :root {
+    --bg: #0b1220; --panel: #13203a; --line: #20304f;
+    --accent: #22c55e; --warn: #f59e0b; --err: #ef4444;
+    --text: #e5e7eb; --dim: #94a3b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    display: flex; flex-direction: column; min-height: 100vh;
+  }
+  header {
+    padding: 14px 22px; display: flex; align-items: center; gap: 14px;
+    background: var(--panel); border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 1.1rem; margin: 0; letter-spacing: .02em; }
+  .badge {
+    font-size: .72rem; padding: 4px 10px; border-radius: 999px;
+    background: #27354f; color: var(--dim); letter-spacing: .05em;
+  }
+  .badge.on  { background: #06381f; color: var(--accent); }
+  main { padding: 18px 22px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px;
+  }
+  .vitals { flex: 1 1 auto; justify-content: space-between; }
+
+  #hr { font-size: 3.4rem; font-weight: 800; line-height: 1; color: var(--accent); transition: color .3s; }
+  #hr.off { color: var(--dim); }
+  .unit { font-size: .9rem; color: var(--dim); }
+  .vlabel { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); }
+  .pill { padding: 4px 12px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+  #quality-pill { background: #1d2f21; color: var(--accent); }
+  #quality-pill.warn { background: #3a2a14; color: var(--warn); }
+  #quality-pill.err  { background: #3a1a1a; color: var(--err); }
+  #lead-pill.on  { background: #3a1a1a; color: var(--err); }
+  #lead-pill.off { background: #06381f; color: var(--accent); }
+
+  #scope-wrap { flex: 1; min-height: 300px; display: flex; }
+  #scope { width: 100%; height: 100%; border-radius: 10px; background: #071018; }
+
+  button {
+    font: inherit; font-weight: 600; padding: 12px 26px; border-radius: 10px;
+    border: none; cursor: pointer;
+  }
+  #connect { background: var(--accent); color: #06281a; }
+  #connect:disabled { background: #2a3a50; color: var(--dim); cursor: not-allowed; }
+  #stream { background: #1d4ed8; color: #eff6ff; }
+  #stream:disabled { background: #2a3a50; color: var(--dim); }
+
+  #log {
+    font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--dim);
+    height: 120px; overflow-y: auto; border-top: 1px solid var(--line);
+    padding: 10px 0; white-space: pre-wrap;
+  }
+  footer { padding: 10px 22px; font-size: .75rem; color: #556274; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SwasthyaSetu ECG Monitor</h1>
+  <span class="badge" id="conn-badge">DISCONNECTED</span>
+  <span class="badge" id="fw-badge">FW —</span>
+</header>
+
+<main>
+  <div class="row">
+    <div class="card vitals" style="display:flex; align-items:center; gap:32px;">
+      <div>
+        <div class="vlabel">Heart rate</div>
+        <div><span id="hr" class="off">--</span> <span class="unit">BPM</span></div>
+      </div>
+      <div>
+        <div class="vlabel">RR interval</div>
+        <div style="font-size:1.4rem;font-weight:700"><span id="rr">--</span> <span class="unit">ms</span></div>
+      </div>
+      <div>
+        <div class="vlabel">Signal quality</div>
+        <div><span class="pill" id="quality-pill">--</span></div>
+      </div>
+      <div>
+        <div class="vlabel">Electrodes</div>
+        <div><span class="pill" id="lead-pill">OFF BODY</span></div>
+      </div>
+      <div>
+        <button id="connect">Connect</button>
+        <button id="stream" disabled>Start stream</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="scope-wrap">
+    <canvas id="scope"></canvas>
+  </div>
+
+  <div id="log"></div>
+</main>
+
+<footer>
+  Screening aid, not a medical device. 250 samples/s over BLE,
+  protocol v1. Never run ECG while the board is on a charger.
+</footer>
+
+<script>
+// ── Protocol constants (mirror app_constants.dart / ble_protocol.dart) ──
+const SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const CHAR_VITALS = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+const CHAR_ECG    = '6e400004-b5a3-f393-e0a9-e50e24dcca9e';
+const CHAR_CTRL   = '6e400005-b5a3-f393-e0a9-e50e24dcca9e';
+const CHAR_INFO   = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const SAMPLE_HZ = 250;
+const WINDOW_S  = 4;
+
+// ── State ──────────────────────────────────────────────────────────────
+let device = null, server = null;
+let vitalsChar = null, ecgChar = null, ctrlChar = null;
+let streaming = false;
+const samples = [];                       // rolling window, int16 values
+let expectedSeq = null;
+let dropped = 0;
+
+const $ = (id) => document.getElementById(id);
+const log = (m) => {
+  const el = $('log');
+  const t = new Date().toLocaleTimeString();
+  el.textContent = `[${t}] ${m}\n` + el.textContent;
+};
+
+// ── Connect ────────────────────────────────────────────────────────────
+$('connect').addEventListener('click', async () => {
+  if (device && device.gatt.connected) {   // toggle: disconnect
+    device.gatt.disconnect();
+    return;
+  }
+  if (!navigator.bluetooth) {
+    log('Web Bluetooth not available. Use Chrome/Edge on the laptop.');
+    return;
+  }
+  try {
+    log('Requesting device scan...');
+    device = await navigator.bluetooth.requestDevice({
+      filters: [{ name: 'SSAI-SENSE-01' }],
+      optionalServices: [SERVICE],
+    });
+    device.addEventListener('gattserverdisconnected', onDisconnected);
+
+    log('Connecting GATT...');
+    server = await device.gatt.connect();
+    const svc = await server.getPrimaryService(SERVICE);
+    vitalsChar = await svc.getCharacteristic(CHAR_VITALS);
+    ecgChar    = await svc.getCharacteristic(CHAR_ECG);
+    ctrlChar   = await svc.getCharacteristic(CHAR_CTRL);
+
+    try {
+      const info = await svc.getCharacteristic(CHAR_INFO);
+      const v = await info.readValue();
+      $('fw-badge').textContent = 'FW ' + new TextDecoder().decode(v);
+    } catch { /* info optional */ }
+
+    await vitalsChar.startNotifications();
+    vitalsChar.addEventListener('characteristicvaluechanged', onTelemetry);
+    await ecgChar.startNotifications();
+    ecgChar.addEventListener('characteristicvaluechanged', onEcg);
+
+    setConnected(true);
+    log('Connected. Notifications subscribed.');
+  } catch (e) {
+    log('Connect failed: ' + e.message);
+  }
+});
+
+$('stream').addEventListener('click', async () => {
+  if (!ctrlChar) return;
+  try {
+    const cmd = new Uint8Array([streaming ? 0xA0 : 0xA1]);
+    await ctrlChar.writeValueWithResponse(cmd);
+    streaming = !streaming;
+    $('stream').textContent = streaming ? 'Stop stream' : 'Start stream';
+    log(streaming ? 'ECG stream started (0xA1).' : 'ECG stream stopped (0xA0).');
+    if (!streaming) { samples.length = 0; }
+  } catch (e) { log('Control write failed: ' + e.message); }
+});
+
+function onDisconnected() {
+  setConnected(false);
+  log('Disconnected.');
+}
+
+function setConnected(ok) {
+  $('conn-badge').textContent = ok ? 'CONNECTED' : 'DISCONNECTED';
+  $('conn-badge').classList.toggle('on', ok);
+  $('connect').textContent = ok ? 'Disconnect' : 'Connect';
+  $('stream').disabled = !ok;
+  if (!ok) {
+    streaming = false;
+    $('stream').textContent = 'Start stream';
+    $('hr').textContent = '--'; $('hr').classList.add('off');
+    $('rr').textContent = '--';
+  }
+}
+
+// ── Telemetry frame (20 bytes, little-endian) ─────────────────────────
+function onTelemetry(ev) {
+  const v = ev.target.value;
+  if (v.byteLength !== 20 || v.getUint8(0) !== 0x01) return;
+
+  const hr    = v.getUint8(2);
+  const rr    = v.getUint16(6, true);
+  const qual  = v.getUint8(8);
+  const flags = v.getUint8(9);
+  const leadOff = (flags & 0x04) !== 0;
+  const beat    = (flags & 0x01) !== 0;
+
+  const hrEl = $('hr');
+  if (hr > 0) { hrEl.textContent = hr; hrEl.classList.remove('off'); }
+  else        { hrEl.textContent = '--'; hrEl.classList.add('off'); }
+  $('rr').textContent = rr > 0 ? rr : '--';
+
+  const q = $('quality-pill');
+  q.textContent = 'Q ' + qual;
+  q.className = 'pill' + (qual >= 70 ? '' : qual >= 40 ? ' warn' : ' err');
+
+  const lp = $('lead-pill');
+  lp.textContent = leadOff ? 'OFF BODY' : 'ON BODY';
+  lp.className = 'pill ' + (leadOff ? 'on' : 'off');
+
+  if (beat) pulseHeart();
+}
+
+let pulseTimer = null;
+function pulseHeart() {
+  $('hr').style.transform = 'scale(1.12)';
+  clearTimeout(pulseTimer);
+  pulseTimer = setTimeout(() => $('hr').style.transform = 'scale(1)', 130);
+}
+
+// ── ECG frame: header 4 B, then int16 samples, 8 per frame ────────────
+function onEcg(ev) {
+  const v = ev.target.value;
+  if (v.byteLength < 4 || v.getUint8(0) !== 0x02) return;
+  const seq = v.getUint16(2, true);
+  if (expectedSeq !== null && seq !== expectedSeq) dropped++;
+  expectedSeq = (seq + 1) & 0xFFFF;
+
+  for (let o = 4; o + 2 <= v.byteLength; o += 2) {
+    samples.push(v.getInt16(o, true));
+  }
+  const keep = SAMPLE_HZ * WINDOW_S;
+  if (samples.length > keep) samples.splice(0, samples.length - keep);
+}
+
+// ── Canvas scope ───────────────────────────────────────────────────────
+const canvas = $('scope');
+const ctx = canvas.getContext('2d');
+
+function draw() {
+  requestAnimationFrame(draw);
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+    canvas.width = w * dpr; canvas.height = h * dpr;
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // background + grid (25 px boxes ~ ECG paper look)
+  ctx.fillStyle = '#071018';
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(34,197,94,0.08)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 25) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 25) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+  ctx.fillStyle = 'rgba(148,163,184,.7)';
+  ctx.font = '11px system-ui';
+  ctx.fillText(`${WINDOW_S}s window • ${SAMPLE_HZ} Hz • dropped frames: ${dropped}`, 10, 16);
+
+  if (samples.length < 2) {
+    ctx.fillStyle = 'rgba(148,163,184,.8)';
+    ctx.font = '16px system-ui';
+    ctx.fillText(streaming ? 'Waiting for samples…' : 'Connected. Press "Start stream".', 20, h / 2);
+    return;
+  }
+
+  // auto-scale against the visible window
+  let lo = Infinity, hi = -Infinity;
+  for (const s of samples) { if (s < lo) lo = s; if (s > hi) hi = s; }
+  const span = Math.max(1, hi - lo);
+  const mid = (hi + lo) / 2;
+  const yPad = h * 0.12;
+
+  ctx.strokeStyle = '#22c55e';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  for (let i = 0; i < samples.length; i++) {
+    const x = (i / (SAMPLE_HZ * WINDOW_S - 1)) * w;
+    const norm = (samples[i] - mid) / (span / 2);        // -1..1
+    const y = h / 2 - norm * (h / 2 - yPad);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+draw();
+
+// canvas occupies its card
+function fit() { /* redraw on resize handled each frame */ }
+window.addEventListener('resize', fit);
+
+log('Dashboard ready. Click Connect.');
+</script>
+</body>
+</html>
