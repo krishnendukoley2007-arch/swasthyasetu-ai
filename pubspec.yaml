@@ -50,7 +50,7 @@ dependencies:
   # Consent-gated data export
   share_plus: ^11.0.0
   # Phone-side fall detection (complements the device MPU6050 over BLE)
-  sensors_plus: ^6.1.1
+  sensors_plus: ^7.1.0
   # Consent-gated screening geotag
   geolocator: ^11.0.0
 
