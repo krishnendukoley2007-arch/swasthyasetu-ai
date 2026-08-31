@@ -44,7 +44,7 @@ dependencies:
   # Animations
   flutter_animate: ^4.5.0
   # Permissions
-  permission_handler: ^11.1.0
+  permission_handler: ^13.0.1
   # Emergency flow: sms:/tel: intents (work with zero data connectivity)
   url_launcher: ^6.2.4
   # Consent-gated data export
