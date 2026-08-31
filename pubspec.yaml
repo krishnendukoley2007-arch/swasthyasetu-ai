@@ -19,7 +19,7 @@ dependencies:
   # Local database
   drift: ^2.28.0
   sqlite3: ^2.4.0
-  sqlite3_flutter_libs: ^0.5.18
+  sqlite3_flutter_libs: ^0.6.0+eol
   path: ^1.9.0
   path_provider: ^2.1.2
   # BLE
