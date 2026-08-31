@@ -34,7 +34,7 @@ dependencies:
   crypto: ^3.0.3
   # Network
   dio: ^5.4.0
-  connectivity_plus: ^6.0.5
+  connectivity_plus: ^7.3.1
   # Utilities
   uuid: ^4.3.3
   intl: ^0.20.2
