@@ -40,7 +40,7 @@ dependencies:
   intl: ^0.20.2
   collection: ^1.18.0
   # Charts
-  fl_chart: ^0.66.0
+  fl_chart: ^1.2.0
   # Animations
   flutter_animate: ^4.5.0
   # Permissions
