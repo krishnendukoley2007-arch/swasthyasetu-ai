@@ -342,7 +342,20 @@ class BleService {
         _emit(_state.copyWith(status: BleLinkStatus.unsupported));
         return BleLinkStatus.unsupported;
       }
-      final adapter = FlutterBluePlus.adapterStateNow;
+      var adapter = FlutterBluePlus.adapterStateNow;
+      if (adapter == BluetoothAdapterState.unknown) {
+        // adapterStateNow is only the last broadcast the plugin delivered, and
+        // nothing in this app listens to that broadcast, so no broadcast is
+        // ever delivered: a switched-on radio sits at "unknown" forever and
+        // was being shown to the worker as "Bluetooth is off". Asking the
+        // stream once forces the platform layer to answer with the real state.
+        adapter = await FlutterBluePlus.adapterState
+            .firstWhere((s) => s != BluetoothAdapterState.unknown)
+            .timeout(
+              const Duration(seconds: 3),
+              onTimeout: () => BluetoothAdapterState.unknown,
+            );
+      }
       if (adapter == BluetoothAdapterState.unauthorized) {
         _emit(_state.copyWith(status: BleLinkStatus.permissionDenied));
         return BleLinkStatus.permissionDenied;

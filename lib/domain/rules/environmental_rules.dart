@@ -24,6 +24,7 @@ class EnvironmentalRules {
   static const double vulnerableShiftC = 4.0;
 
   static const List<AdvisoryLevel> _ordered = [
+    AdvisoryLevel.danger,
     AdvisoryLevel.warning,
     AdvisoryLevel.advice,
     AdvisoryLevel.info,
@@ -50,7 +51,8 @@ class EnvironmentalRules {
 
     // When heat AND air are both bad, one extra line on the combined risk is
     // worth more than a third card.
-    if (heat == AdvisoryLevel.warning && out.length > 1) {
+    if ((heat == AdvisoryLevel.danger || heat == AdvisoryLevel.warning) &&
+        out.length > 1) {
       out.add(const EnvironmentAdvisory(
         level: AdvisoryLevel.warning,
         id: 'combined_heat_air',
@@ -141,7 +143,7 @@ class EnvironmentalRules {
 
   static AdvisoryLevel? _heatLevel(double apparentC, bool vulnerable) {
     final shift = vulnerable ? vulnerableShiftC : 0.0;
-    if (apparentC >= heatDangerC - shift) return AdvisoryLevel.warning;
+    if (apparentC >= heatDangerC - shift) return AdvisoryLevel.danger;
     if (apparentC >= heatWarningC - shift) return AdvisoryLevel.warning;
     if (apparentC >= heatAdviceC - shift) return AdvisoryLevel.advice;
     return null;
@@ -155,9 +157,19 @@ class EnvironmentalRules {
             'seriously than others around you.'
         : '';
     return switch (level) {
-      AdvisoryLevel.warning => EnvironmentAdvisory(
+      AdvisoryLevel.danger => EnvironmentAdvisory(
           level: level,
           id: 'heat_danger',
+          title: 'Extreme heat danger (feels like $feels°C)',
+          body: 'Stay indoors. Drink water every 15 minutes even if not '
+              'thirsty. Cancel all outdoor activity. Cool yourself with wet '
+              'cloths, fans, or cool showers. Check on elderly and children '
+              'every 30 minutes. Confusion, fainting, or hot dry skin = '
+              'call 108 immediately.$who',
+        ),
+      AdvisoryLevel.warning => EnvironmentAdvisory(
+          level: level,
+          id: 'heat_warning',
           title: 'Dangerous heat (feels like $feels°C)',
           body: 'Stay indoors as much as possible, drink water regularly even '
               'if not thirsty, avoid outdoor work in the afternoon, and check '
@@ -197,6 +209,15 @@ class EnvironmentalRules {
         ? ' With your health history, this air level means extra care for you.'
         : '';
     return switch (level) {
+      AdvisoryLevel.danger => EnvironmentAdvisory(
+          level: AdvisoryLevel.warning,
+          id: 'air_bad',
+          title: 'Hazardous air (AQI $aqi)',
+          body: 'Stay indoors, use air purifiers if available, avoid all '
+              'outdoor activity, and use your reliever inhaler as prescribed '
+              'if you have asthma. This level is rare and indicates a severe '
+              'pollution event.$who',
+        ),
       AdvisoryLevel.warning => EnvironmentAdvisory(
           level: level,
           id: 'air_bad',

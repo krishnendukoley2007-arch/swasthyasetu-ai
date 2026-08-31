@@ -326,7 +326,15 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
 
     return AppPageScaffold(
       appBar: AppBar(
-        title: const Text('Triage Result'),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Triage Result'),
+            SizedBox(height: 2),
+            ScreeningStepIndicator(current: 4),
+          ],
+        ),
+        bottom: const ScreeningStepBar(current: 4),
         automaticallyImplyLeading: false,
         elevation: 0,
         scrolledUnderElevation: 0,

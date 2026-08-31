@@ -76,7 +76,15 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
 
     return AppPageScaffold(
       appBar: AppBar(
-        title: const Text('Symptoms'),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Symptoms'),
+            SizedBox(height: 2),
+            ScreeningStepIndicator(current: 3),
+          ],
+        ),
+        bottom: const ScreeningStepBar(current: 3),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/screening/live'),

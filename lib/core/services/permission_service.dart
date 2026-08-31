@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart'
+    as permission_handler;
 
 class PermissionService {
   static Future<PermissionStatus> requestCameraPermission() async {
@@ -73,7 +75,9 @@ class PermissionService {
   }
 
   static Future<void> openAppSettings() async {
-    await openAppSettings();
+    // The package's top-level function has the same name as this method, so an
+    // unprefixed call would recurse into ourselves forever and crash.
+    await permission_handler.openAppSettings();
   }
 }
 

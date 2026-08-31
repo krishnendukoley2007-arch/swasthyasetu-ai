@@ -1,1 +1,333 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1180" viewBox="0 0 1560 1180" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+    </marker>
+    <style>
+      .blk   { fill:#ffffff; stroke:#334155; stroke-width:2; }
+      .blkp  { fill:#fef3c7; stroke:#b45309; stroke-width:2; }
+      .blks  { fill:#eff6ff; stroke:#1d4ed8; stroke-width:2; }
+      .blkm  { fill:#f0fdf4; stroke:#15803d; stroke-width:2.5; }
+      .blkw  { fill:#fee2e2; stroke:#b91c1c; stroke-width:2; }
+      .blko  { fill:#f8fafc; stroke:#94a3b8; stroke-width:2; stroke-dasharray:6 4; }
+      .ttl   { font-size:15px; font-weight:700; fill:#0f172a; }
+      .sub   { font-size:11px; fill:#475569; }
+      .pin   { font-size:10.5px; fill:#0f172a; font-family:Consolas,monospace; }
+      .net   { font-size:10.5px; fill:#1e293b; font-family:Consolas,monospace; }
+      .netb  { font-size:10.5px; fill:#b91c1c; font-family:Consolas,monospace; font-weight:700; }
+      .w     { stroke:#334155; stroke-width:1.6; fill:none; }
+      .wpwr  { stroke:#dc2626; stroke-width:2.6; fill:none; }
+      .wgnd  { stroke:#111827; stroke-width:2.6; fill:none; }
+      .wi2c  { stroke:#2563eb; stroke-width:1.8; fill:none; }
+      .wi2cb { stroke:#7c3aed; stroke-width:1.8; fill:none; }
+      .wana  { stroke:#ea580c; stroke-width:2; fill:none; }
+      .wopt  { stroke:#94a3b8; stroke-width:1.6; fill:none; stroke-dasharray:5 4; }
+      .h1    { font-size:22px; font-weight:700; fill:#0f172a; }
+      .h2    { font-size:12px; fill:#475569; }
+      .lgd   { font-size:11px; fill:#334155; }
+      .warn  { font-size:11px; fill:#b91c1c; font-weight:600; }
+    </style>
+  </defs>
 
+  <rect width="1560" height="1180" fill="#ffffff"/>
+
+  <text x="28" y="36" class="h1">SwasthyaSetu AI — SSAI-SENSE-01 interconnect schematic</text>
+  <text x="28" y="56" class="h2">Revision 2.0 · 2026-08-27 · authoritative netlist = HARDWARE.md §6 · BLE frame layout = lib/core/services/ble_protocol.dart</text>
+
+  <!-- ══════════════ POWER SECTION ══════════════ -->
+  <rect x="28" y="80" width="330" height="392" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="42" y="100" class="ttl" fill="#b45309">POWER  (§5)</text>
+
+  <!-- battery -->
+  <rect x="52" y="112" width="130" height="58" rx="5" class="blkp"/>
+  <text x="62" y="132" class="ttl">BT1  18650</text>
+  <text x="62" y="148" class="sub">3.0 – 4.2 V, 3000 mAh</text>
+  <text x="62" y="162" class="sub">protected cell only</text>
+
+  <!-- fuse -->
+  <rect x="212" y="118" width="118" height="46" rx="5" class="blk"/>
+  <text x="221" y="136" class="ttl">F1</text>
+  <text x="221" y="152" class="sub">1.5 A polyfuse</text>
+
+  <path class="wpwr" d="M182 130 H212" marker-end="url(#arw)"/>
+  <text x="185" y="124" class="net">B+</text>
+
+  <!-- TP4056 -->
+  <rect x="52" y="196" width="278" height="66" rx="5" class="blkp"/>
+  <text x="62" y="216" class="ttl">U8  TP4056 + DW01A</text>
+  <text x="62" y="232" class="sub">micro-USB 5 V in · Rprog 1.2 k = 1 A charge</text>
+  <text x="62" y="248" class="sub">B+ / B− · OUT+ / OUT− · CHRG (open-drain)</text>
+
+  <path class="wpwr" d="M271 164 V196" marker-end="url(#arw)"/>
+
+  <!-- regulator -->
+  <rect x="52" y="290" width="278" height="72" rx="5" class="blkm"/>
+  <text x="62" y="310" class="ttl">U9  TPS63020 buck-boost</text>
+  <text x="62" y="326" class="sub">3.3 V / 2 A · flat rail from 4.2 V down to 2.5 V</text>
+  <text x="62" y="342" class="sub">in 100 µF · out 100 µF + 100 nF</text>
+  <text x="62" y="356" class="warn">NEVER an LDO from a bare cell — see errata E1</text>
+
+  <path class="wpwr" d="M120 262 V290" marker-end="url(#arw)"/>
+  <text x="126" y="280" class="net">OUT+ 3.0–4.2 V</text>
+
+  <!-- 3V3 rail bar -->
+  <rect x="52" y="392" width="278" height="26" rx="4" fill="#fecaca" stroke="#dc2626" stroke-width="2"/>
+  <text x="62" y="410" class="ttl" fill="#991b1b">3V3 RAIL     ← 100 µF ‖ 100 nF at U1</text>
+  <path class="wpwr" d="M191 362 V392" marker-end="url(#arw)"/>
+
+  <!-- GND rail bar -->
+  <rect x="52" y="430" width="278" height="26" rx="4" fill="#e5e7eb" stroke="#111827" stroke-width="2"/>
+  <text x="62" y="448" class="ttl">GND RAIL     ← star point at U9 GND</text>
+
+  <!-- battery sense divider -->
+  <rect x="28" y="492" width="330" height="118" rx="8" class="blk"/>
+  <text x="42" y="512" class="ttl">Battery sense divider (§12)</text>
+  <text x="42" y="532" class="pin">B+ ──┬── 100 kΩ ──┬── 100 kΩ ── GND</text>
+  <text x="42" y="550" class="pin">      │            │</text>
+  <text x="42" y="568" class="pin">  (to U9)      GPIO35 ──┬── 100 nF ── GND</text>
+  <text x="42" y="586" class="pin">                        └── ADC1_CH7</text>
+  <text x="42" y="602" class="sub">4.2 V → 2.10 V · 3.0 V → 1.50 V · 21 µA drain · avg 64 samples</text>
+
+  <!-- safety interlock box -->
+  <rect x="28" y="628" width="330" height="132" rx="8" class="blkw"/>
+  <text x="42" y="650" class="ttl" fill="#991b1b">⚠ SAFETY INTERLOCK  (§13.2)</text>
+  <text x="42" y="670" class="warn">NEVER take an ECG while USB charger is connected.</text>
+  <text x="42" y="688" class="sub">A charger ties the patient's electrodes to mains earth</text>
+  <text x="42" y="703" class="sub">through this unisolated board. Firmware enforces it:</text>
+  <text x="42" y="723" class="pin">if (digitalRead(CHG_STAT)==LOW) {</text>
+  <text x="42" y="739" class="pin">    digitalWrite(ECG_SDN, LOW);  // AD8232 off</text>
+  <text x="42" y="755" class="pin">    ecg_enabled = false; }</text>
+
+  <!-- CHRG net -->
+  <path class="w" d="M330 240 H372 V690 H392" marker-end="url(#arw)"/>
+  <text x="336" y="234" class="net">CHRG → GPIO4</text>
+
+  <!-- ══════════════ MCU ══════════════ -->
+  <rect x="418" y="112" width="330" height="648" rx="8" class="blkm"/>
+  <text x="434" y="138" class="ttl">U1  ESP32-WROOM-32  DevKit V1</text>
+  <text x="434" y="155" class="sub">dual core 240 MHz · BLE 4.2 · 4 MB flash</text>
+  <text x="434" y="170" class="sub">core 0: 250 Hz ECG ISR + DSP  |  core 1: BLE notify</text>
+  <line x1="434" y1="180" x2="732" y2="180" stroke="#15803d" stroke-width="1.5"/>
+
+  <!-- left pins (power/analog in) -->
+  <text x="434" y="202" class="pin">3V3</text>
+  <text x="434" y="220" class="pin">GND ×2</text>
+  <text x="434" y="244" class="pin">GPIO36 / VP   ADC1_CH0   ECG_OUT</text>
+  <text x="434" y="262" class="pin">GPIO39 / VN   in-only    ECG_LO_P</text>
+  <text x="434" y="280" class="pin">GPIO34        in-only    ECG_LO_N</text>
+  <text x="434" y="298" class="pin">GPIO35        ADC1_CH7   VBAT_SENSE</text>
+  <text x="434" y="322" class="pin">GPIO18        out        ECG_SDN</text>
+  <text x="434" y="340" class="pin">GPIO19        in+PU      PPG_INT</text>
+  <text x="434" y="364" class="pin">GPIO21        I2C0_SDA</text>
+  <text x="434" y="382" class="pin">GPIO22        I2C0_SCL</text>
+  <text x="434" y="406" class="pin">GPIO26        I2C1_SDA</text>
+  <text x="434" y="424" class="pin">GPIO27        I2C1_SCL</text>
+  <text x="434" y="448" class="pin">GPIO33        RTC        IMU_INT   (ext1 wake)</text>
+  <text x="434" y="466" class="pin">GPIO32        RTC        BTN_MAIN  (ext1 wake)</text>
+  <text x="434" y="490" class="pin">GPIO25        LEDC       BUZZ</text>
+  <text x="434" y="508" class="pin">GPIO4         RTC+PU     CHG_STAT</text>
+  <text x="434" y="526" class="pin">GPIO13        in+PU      SW2</text>
+  <text x="434" y="544" class="pin">GPIO2         out        LED_STAT</text>
+  <text x="434" y="568" class="pin">GPIO16 / 17   UART2      PM_RX / PM_TX  (opt)</text>
+
+  <line x1="434" y1="586" x2="732" y2="586" stroke="#15803d" stroke-width="1.5"/>
+  <text x="434" y="606" class="netb">RESERVED — DO NOT USE  (§4)</text>
+  <text x="434" y="624" class="pin">GPIO6–11  → internal SPI flash die</text>
+  <text x="434" y="642" class="pin">GPIO0, 12, 15  → strapping (12 can brick)</text>
+  <text x="434" y="660" class="pin">GPIO1, 3  → USB serial console</text>
+  <text x="434" y="684" class="netb">ADC2 (GPIO 0,2,4,12–15,25–27) unusable with WiFi</text>
+  <text x="434" y="702" class="pin">→ every analog input is on ADC1: GPIO32–39</text>
+  <text x="434" y="726" class="netb">GPIO34–39 have NO internal pull-up</text>
+  <text x="434" y="744" class="pin">→ PPG_INT (open-drain) must live on GPIO19</text>
+
+  <!-- power into MCU -->
+  <path class="wpwr" d="M330 405 H400 V202 H418" marker-end="url(#arw)"/>
+  <path class="wgnd" d="M330 443 H388 V220 H418" marker-end="url(#arw)"/>
+
+  <!-- battery sense into MCU -->
+  <path class="w" d="M358 550 H404 V298 H418" marker-end="url(#arw)"/>
+
+  <!-- ══════════════ ECG FRONT END ══════════════ -->
+  <rect x="800" y="96" width="380" height="222" rx="8" class="blks"/>
+  <text x="816" y="120" class="ttl">U2  AD8232 single-lead ECG front end</text>
+  <text x="816" y="138" class="sub">0.5 Hz 2-pole HP · 40 Hz LP · gain ≈ 100 · RLD feedback</text>
+  <line x1="816" y1="148" x2="1164" y2="148" stroke="#1d4ed8" stroke-width="1.2"/>
+  <text x="816" y="170" class="pin">OUTPUT  → GPIO36   analog, ~1.5 V quiescent</text>
+  <text x="816" y="188" class="pin">LO+     → GPIO39   push-pull, HIGH = lead off</text>
+  <text x="816" y="206" class="pin">LO−     → GPIO34   push-pull, NO pull-down</text>
+  <text x="816" y="224" class="pin">SDN     ← GPIO18   LOW = shutdown (≈0 µA)</text>
+  <text x="816" y="242" class="pin">3.3V / GND         + 10 µF ‖ 100 nF local</text>
+  <text x="816" y="266" class="netb">GND: own wire to U9 star point — do NOT daisy-chain</text>
+  <text x="816" y="284" class="sub">RA / LA / RL → 3.5 mm TRS → 3-lead snap cable</text>
+  <text x="816" y="300" class="sub">sampled 250 Hz by hardware timer ISR · 50 Hz notch (India)</text>
+
+  <path class="wana" d="M748 244 H800" marker-end="url(#arw)"/>
+  <path class="w"    d="M748 262 H782 V188 H800" marker-end="url(#arw)"/>
+  <path class="w"    d="M748 280 H770 V206 H800" marker-end="url(#arw)"/>
+  <path class="w"    d="M748 322 H764 V224 H800" marker-start="url(#arw)"/>
+
+  <!-- electrodes -->
+  <rect x="1210" y="120" width="150" height="120" rx="5" class="blk"/>
+  <text x="1220" y="140" class="ttl">Ag/AgCl pads</text>
+  <text x="1220" y="160" class="pin">RA → R clavicle</text>
+  <text x="1220" y="178" class="pin">LA → L clavicle</text>
+  <text x="1220" y="196" class="pin">RL → L lower rib</text>
+  <text x="1220" y="216" class="sub">Einthoven Lead I</text>
+  <text x="1220" y="232" class="sub">fresh gel, single use</text>
+  <path class="w" d="M1180 180 H1210" marker-start="url(#arw)"/>
+
+  <!-- ══════════════ I2C1 / MAX30102 ══════════════ -->
+  <rect x="800" y="336" width="380" height="140" rx="8" class="blks"/>
+  <text x="816" y="360" class="ttl">U3  MAX30102  PPG / SpO₂   @ 0x57</text>
+  <text x="816" y="378" class="sub">red+IR reflectance · 100 Hz · 411 µs pulse · FIFO int</text>
+  <text x="816" y="398" class="pin">SDA → GPIO26   SCL → GPIO27   (I2C1, 400 kHz)</text>
+  <text x="816" y="416" class="pin">INT → GPIO19   open-drain, needs INPUT_PULLUP</text>
+  <text x="816" y="440" class="netb">SEPARATE BUS — breakout pull-ups reference 1.8 V (E5)</text>
+  <text x="816" y="456" class="sub">add NO external pull-ups here · perfusion index &lt; 0.2 → SpO₂ = 0</text>
+  <text x="816" y="470" class="sub">fingertip clip, opaque shroud, 40 cm tether</text>
+
+  <path class="wi2cb" d="M748 406 H774 V398 H800" marker-end="url(#arw)"/>
+  <path class="wi2cb" d="M748 424 H764 V412 H800"/>
+  <path class="w"     d="M748 340 H790 V416 H800" marker-start="url(#arw)"/>
+
+  <!-- ══════════════ I2C0 BUS ══════════════ -->
+  <rect x="800" y="496" width="380" height="330" rx="8" class="blks"/>
+  <text x="816" y="520" class="ttl">I²C0 bus — GPIO21 / GPIO22 @ 100 kHz</text>
+  <text x="816" y="538" class="sub">100 kHz is set by the MLX90614's SMBus timing, not the fastest device</text>
+  <text x="816" y="558" class="pin">pull-ups: 4.7 kΩ to 3V3 — ONE pair only</text>
+  <text x="816" y="574" class="netb">desolder the onboard pull-ups from 3 of the 4 breakouts</text>
+  <text x="816" y="589" class="sub">4 × 4.7 k in parallel = 1.18 kΩ → bus works only sometimes (§7.2)</text>
+  <text x="816" y="605" class="sub">Rmax = 1000 ns / (0.8473 × 90 pF) ≈ 13.1 kΩ · Rmin ≈ 967 Ω</text>
+  <line x1="816" y1="616" x2="1164" y2="616" stroke="#1d4ed8" stroke-width="1.2"/>
+
+  <rect x="816" y="628" width="348" height="44" rx="4" class="blk"/>
+  <text x="826" y="646" class="ttl">U4  MLX90614ESF   @ 0x5A</text>
+  <text x="826" y="663" class="sub">IR skin temp · BAA ±0.5 °C/90° FOV · DCI ±0.2 °C/5° FOV (E2)</text>
+
+  <rect x="816" y="680" width="348" height="44" rx="4" class="blk"/>
+  <text x="826" y="698" class="ttl">U5  MPU-6050   @ 0x68  (AD0→GND)</text>
+  <text x="826" y="715" class="sub">±8 g · INT → GPIO33, active HIGH push-pull, RTC wake (E3)</text>
+
+  <rect x="816" y="732" width="348" height="44" rx="4" class="blk"/>
+  <text x="826" y="750" class="ttl">U6  BME280   @ 0x76  (SDO→GND)</text>
+  <text x="826" y="767" class="sub">T / RH / P — verify chip ID 0xD0 == 0x60, not 0x58 (BMP280)</text>
+
+  <rect x="816" y="784" width="348" height="34" rx="4" class="blk"/>
+  <text x="826" y="806" class="ttl">U7  SSD1306 128×64 OLED   @ 0x3C</text>
+
+  <path class="wi2c" d="M748 364 H788 V545 H800" marker-end="url(#arw)"/>
+  <path class="wi2c" d="M748 382 H778 V552 H800"/>
+  <text x="754" y="358" class="net">SDA</text>
+  <text x="754" y="396" class="net">SCL</text>
+
+  <!-- IMU INT -->
+  <path class="w" d="M816 702 H796 V448 H748" marker-end="url(#arw)"/>
+
+  <!-- ══════════════ USER I/O ══════════════ -->
+  <rect x="418" y="792" width="330" height="200" rx="8" class="blk"/>
+  <text x="434" y="814" class="ttl">User I/O &amp; wake sources</text>
+  <text x="434" y="836" class="netb">SW1 polarity is INVERTED on purpose (§6.7)</text>
+  <text x="434" y="856" class="pin">   3V3 ──┬── SW1 ──┬── GPIO32</text>
+  <text x="434" y="872" class="pin">         │       100 kΩ + 100 nF</text>
+  <text x="434" y="888" class="pin">        GND ──────┴── GND</text>
+  <text x="434" y="908" class="sub">pressed = HIGH. ext1 with two sources supports only</text>
+  <text x="434" y="923" class="sub">ANY_HIGH, so IMU_INT and BTN_MAIN must both be active-high.</text>
+  <text x="434" y="945" class="pin">SW2  → GPIO13, switch to GND, INPUT_PULLUP</text>
+  <text x="434" y="963" class="pin">BZ1  → GPIO25 via 1 kΩ + BC547, LEDC 2 kHz</text>
+  <text x="434" y="981" class="pin">LED  → GPIO2 (onboard, output only)</text>
+
+  <!-- ══════════════ OPTIONAL ══════════════ -->
+  <rect x="800" y="846" width="380" height="146" rx="8" class="blko"/>
+  <text x="816" y="868" class="ttl" fill="#475569">Optional — the PS-26181 differentiators</text>
+  <text x="816" y="890" class="pin">PMS5003 PM2.5 → UART2 GPIO16 RX / GPIO17 TX, 9600 8N1</text>
+  <text x="816" y="906" class="sub">needs 5 V @ ~100 mA — tap BEFORE the 3.3 V regulator, never 3V3</text>
+  <text x="816" y="921" class="sub">duty-cycle via SET pin: fan needs 30 s to stabilise</text>
+  <text x="816" y="943" class="pin">Black-globe thermistor → ADS1115 @ 0x48 on I²C0</text>
+  <text x="816" y="959" class="sub">WBGT = 0.7·T_wet + 0.2·T_globe + 0.1·T_dry — measured, not looked up</text>
+  <text x="816" y="977" class="pin">DS3231 RTC @ 0x68→0x57 conflict: use 0x68 bus slot carefully</text>
+
+  <!-- ══════════════ BLE / PHONE ══════════════ -->
+  <rect x="1210" y="336" width="326" height="490" rx="8" class="blks"/>
+  <text x="1226" y="360" class="ttl">BLE GATT → Android app  (§14)</text>
+  <text x="1226" y="378" class="sub">base 6e4000XX-b5a3-f393-e0a9-e50e24dcca9e</text>
+  <line x1="1226" y1="388" x2="1520" y2="388" stroke="#1d4ed8" stroke-width="1.2"/>
+  <text x="1226" y="408" class="pin">…0001  service   (must be advertised)</text>
+  <text x="1226" y="424" class="pin">…0002  read      fw version "1.0.0"</text>
+  <text x="1226" y="440" class="pin">…0003  notify    telemetry, 20 B @ 4 Hz</text>
+  <text x="1226" y="456" class="pin">…0004  notify    ECG, 4 B hdr + 8×int16</text>
+  <text x="1226" y="472" class="pin">…0005  write     0xA1 start / 0xA0 stop</text>
+  <text x="1226" y="488" class="pin">…0006  read/notify  reserved</text>
+
+  <rect x="1226" y="502" width="294" height="126" rx="4" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="1236" y="522" class="ttl" fill="#991b1b">HARD LIMIT: 8 ECG samples / frame</text>
+  <text x="1236" y="540" class="sub">ble_service.dart never calls requestMtu(), so</text>
+  <text x="1236" y="555" class="sub">ATT MTU stays at the 23-byte default →</text>
+  <text x="1236" y="573" class="pin">20 B payload − 4 B hdr = 16 B = 8 × int16</text>
+  <text x="1236" y="591" class="pin">250 Hz ÷ 8 = 31.25 notifies/s</text>
+  <text x="1236" y="611" class="warn">9 samples → every ECG frame silently dropped</text>
+
+  <text x="1226" y="652" class="ttl">Telemetry frame — exactly 20 B, LE</text>
+  <text x="1226" y="670" class="pin">0  u8   type = 0x01</text>
+  <text x="1226" y="685" class="pin">1  u8   version = 1</text>
+  <text x="1226" y="700" class="pin">2  u8   HR bpm        (25–250)</text>
+  <text x="1226" y="715" class="pin">3  u8   SpO₂ %        (50–100, 0 = n/m)</text>
+  <text x="1226" y="730" class="pin">4  i16  temp ×100 °C  (2000–4500)</text>
+  <text x="1226" y="745" class="pin">6  u16  last R-R ms</text>
+  <text x="1226" y="760" class="pin">8  u8   ECG quality 0–100</text>
+  <text x="1226" y="775" class="pin">9  u8   flags b0 Rpeak b1 fall</text>
+  <text x="1226" y="790" class="pin">                b2 leadOff b3 fingerOff</text>
+  <text x="1226" y="805" class="pin">10 u16  PTT ms   12/13 u8 SBP/DBP</text>
+  <text x="1226" y="820" class="pin">14 u8   battery %   15 u8 BP conf</text>
+
+  <path class="w" d="M1180 470 H1196 V500 H1210" marker-end="url(#arw)"/>
+  <path class="w" d="M748 570 H772 V330 H1200 V420 H1210" stroke-dasharray="4 3" marker-end="url(#arw)"/>
+
+  <!-- BP note -->
+  <rect x="1210" y="846" width="326" height="146" rx="8" class="blkw"/>
+  <text x="1226" y="868" class="ttl" fill="#991b1b">Byte 15 = 0xFF  → 'EXPERIMENTAL'</text>
+  <text x="1226" y="888" class="sub">risk_engine.dart _evaluateBloodPressure returns early</text>
+  <text x="1226" y="903" class="sub">on 'EXPERIMENTAL', so the cuffless BP estimate adds</text>
+  <text x="1226" y="918" class="sub">ZERO to the risk score. Ship it that way (§15).</text>
+  <text x="1226" y="940" class="sub">PTT is a real measurement worth transmitting.</text>
+  <text x="1226" y="955" class="sub">SBP/DBP without per-subject cuff calibration is not.</text>
+  <text x="1226" y="977" class="warn">The board never computes a risk band. Ever.</text>
+
+  <!-- ══════════════ FALL DETECTION ══════════════ -->
+  <rect x="28" y="792" width="366" height="200" rx="8" class="blk"/>
+  <text x="42" y="814" class="ttl">Fall detection — match the app exactly (§17.2)</text>
+  <text x="42" y="834" class="sub">lib/core/services/fall_detection_service.dart is already unit-tested;</text>
+  <text x="42" y="849" class="sub">porting its constants means those tests document the firmware too.</text>
+  <text x="42" y="871" class="pin">freeFallThreshold   4.0 m/s²  = 1671 LSB @ ±8 g</text>
+  <text x="42" y="887" class="pin">impactThreshold    26.0 m/s²  = 10859 LSB</text>
+  <text x="42" y="903" class="pin">minFreeFallDuration   80 ms   = 8 samples @ 100 Hz</text>
+  <text x="42" y="919" class="pin">impactWindow        1200 ms</text>
+  <text x="42" y="935" class="pin">refractoryPeriod        20 s</text>
+  <text x="42" y="956" class="sub">idle → freeFall → awaitingImpact → FALL. A bare impact spike</text>
+  <text x="42" y="971" class="sub">with no preceding free fall is NOT a fall — that gate is what stops</text>
+  <text x="42" y="986" class="sub">"phone set down hard" firing an SOS several times an hour.</text>
+
+  <!-- ══════════════ DEEP SLEEP ══════════════ -->
+  <rect x="28" y="1010" width="720" height="146" rx="8" class="blkm"/>
+  <text x="42" y="1032" class="ttl">Deep sleep — the claim a phone cannot make (§5.2, §17.3)</text>
+  <text x="42" y="1054" class="pin">esp_sleep_enable_ext1_wakeup((1&lt;&lt;GPIO_NUM_33)|(1&lt;&lt;GPIO_NUM_32), ESP_EXT1_WAKEUP_ANY_HIGH);</text>
+  <text x="42" y="1070" class="pin">MPU6050 motion int in cycle mode ≈ 10 µA · AD8232 SDN low · MAX30102 shutdown · OLED off</text>
+  <text x="42" y="1092" class="sub">Total ≈ 25 µA →  ≈ 11 months of fall-watch standby on one 3000 mAh cell.</text>
+  <text x="42" y="1112" class="sub">Streaming 130 mA ≈ 19.8 h  ·  monitoring 63 mA ≈ 40 h  ·  idle 26 mA ≈ 99 h</text>
+  <text x="42" y="1134" class="warn">Use the MPU6050's MOTION interrupt as a wake trigger only — its built-in free-fall bit is unreliable. Classify on the ESP32.</text>
+
+  <!-- ══════════════ LEGEND ══════════════ -->
+  <rect x="800" y="1010" width="736" height="146" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="816" y="1032" class="ttl">Legend &amp; build order</text>
+
+  <line x1="820" y1="1050" x2="856" y2="1050" class="wpwr"/>       <text x="864" y="1054" class="lgd">3V3 / battery power</text>
+  <line x1="1010" y1="1050" x2="1046" y2="1050" class="wgnd"/>     <text x="1054" y="1054" class="lgd">GND (star point at U9)</text>
+  <line x1="1240" y1="1050" x2="1276" y2="1050" class="wana"/>     <text x="1284" y="1054" class="lgd">analog (keep &lt; 10 cm)</text>
+
+  <line x1="820" y1="1072" x2="856" y2="1072" class="wi2c"/>       <text x="864" y="1076" class="lgd">I²C0 @ 100 kHz</text>
+  <line x1="1010" y1="1072" x2="1046" y2="1072" class="wi2cb"/>    <text x="1054" y="1076" class="lgd">I²C1 @ 400 kHz (isolated)</text>
+  <line x1="1240" y1="1072" x2="1276" y2="1072" class="wopt"/>     <text x="1284" y="1076" class="lgd">optional / logical link</text>
+
+  <text x="816" y="1102" class="sub">Bring-up order (§16) — each step must pass before soldering the next:</text>
+  <text x="816" y="1120" class="pin">1 power stage alone (verify 3.30 V at a 3.4 V cell)  →  2 bulk caps  →  3 ESP32 blink  →  4 OLED  →  5 MLX  →  6 MPU  →  7 BME</text>
+  <text x="816" y="1138" class="pin">8 re-measure bus pull-up  →  9 I²C1 + MAX30102  →  10-11 AD8232  →  12 I/O  →  13 BLE  →  14 ECG stream  →  15 deep sleep &lt; 100 µA</text>
+</svg>

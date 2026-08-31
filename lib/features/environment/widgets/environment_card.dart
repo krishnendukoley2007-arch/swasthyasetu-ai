@@ -162,6 +162,10 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
     final worst = advisories.isEmpty ? null : advisories.first;
 
     final (levelColor, levelBg) = switch (worst?.level) {
+      AdvisoryLevel.danger => (
+          theme.colorScheme.onErrorContainer,
+          theme.colorScheme.errorContainer
+        ),
       AdvisoryLevel.warning => (
           theme.colorScheme.onErrorContainer,
           theme.colorScheme.errorContainer
@@ -239,7 +243,8 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
                 child: Row(
                   children: [
                     Icon(
-                      worst.level == AdvisoryLevel.warning
+                      (worst.level == AdvisoryLevel.warning ||
+                              worst.level == AdvisoryLevel.danger)
                           ? Icons.warning_amber_rounded
                           : Icons.info_outline_rounded,
                       color: levelColor,

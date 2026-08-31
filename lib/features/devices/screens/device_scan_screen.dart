@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/services/ble_service.dart';
+import 'package:swasthyasetu_ai/core/services/permission_service.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/data/repositories/device_repository.dart';
@@ -66,6 +68,27 @@ class _DeviceScanScreenState extends ConsumerState<DeviceScanScreen> {
   Future<void> _scan() async {
     final ble = _ble;
     if (ble == null) return;
+
+    // Runtime permissions must come first. On Android 12+ the OS reports the
+    // adapter state as "unknown" to an app holding no Bluetooth permission,
+    // and BleService maps that to the "Bluetooth is off" banner — so a missing
+    // permission looks exactly like a switched-off radio. Asking at the moment
+    // of need is also the only thing that makes the permission appear in the
+    // system's app-permissions page at all.
+    final bluetooth = await PermissionService.requestBluetoothPermissions();
+    if (!bluetooth.isGranted) {
+      if (mounted) {
+        PermissionService.showPermissionSnackBar(
+          context: context,
+          message:
+              'Bluetooth and location access are needed to find the board.',
+          permission: Permission.bluetoothConnect,
+          onOpenSettings: PermissionService.openAppSettings,
+        );
+      }
+      return;
+    }
+
     setState(() => _scanning = true);
     await ble.startScan();
     if (mounted) setState(() => _scanning = false);

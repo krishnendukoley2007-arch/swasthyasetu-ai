@@ -71,6 +71,12 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
   /// Recent heart rates, for the trend arrows. Three points is enough to tell a
   /// direction from jitter and short enough to react within a screening.
   final List<int> _hrTrail = <int>[];
+
+/// Recent R-R intervals (ms) straight from the board, used to compute
+/// RMSSD — the short-window heart-rate-variability figure — on the phone
+/// rather than asking the firmware for another number over the wire.
+final List<int> _rrWindow = <int>[];
+int _rrRepeats = 0;
   final List<int> _spo2Trail = <int>[];
   final List<double> _tempTrail = <double>[];
 
@@ -261,6 +267,8 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
       _fingerOff = false;
       _ecgHistory = <int>[];
       _hrTrail.clear();
+      _rrWindow.clear();
+      _rrRepeats = 0;
       _spo2Trail.clear();
       _tempTrail.clear();
       if (_isDemo) {
@@ -328,9 +336,29 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
         _fingerOff = frame.fingerOff;
         _currentSample = frame.sample;
 
-        _hrTrail.add(frame.sample.heartRateBpm);
-        _spo2Trail.add(frame.sample.spo2Percent);
-        _tempTrail.add(frame.sample.temperatureC);
+        // Zero means "sensor not measured" on the wire, not a flatlined
+        // patient. Trails only learn from measured values, or a disconnected
+        // SpO2 sensor would drag the trend arrows to the floor.
+        final s = frame.sample;
+        if (s.heartRateBpm > 0) _hrTrail.add(s.heartRateBpm);
+        if (s.spo2Percent > 0) _spo2Trail.add(s.spo2Percent);
+        if (s.temperatureC > 0) _tempTrail.add(s.temperatureC);
+
+        // RR history for HRV: each beat the board measured, oldest first.
+        // 0 ms is the "no new beat" sentinel, not a 0-millisecond interval.
+        if (s.rrIntervalMs > 0) {
+          if (_rrWindow.isNotEmpty && s.rrIntervalMs == _rrWindow.last) {
+            _rrRepeats++;
+          } else {
+            _rrRepeats = 0;
+          }
+          // A repeated value longer than 5 s is a stalled detector,
+          // not a steady heart: stop feeding it to RMSSD.
+          if (_rrRepeats < 20) {
+            _rrWindow.add(s.rrIntervalMs);
+            if (_rrWindow.length > 20) _rrWindow.removeAt(0);
+          }
+        }
         for (final trail in [_hrTrail, _spo2Trail]) {
           if (trail.length > _trailLength) trail.removeAt(0);
         }
@@ -488,13 +516,21 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
 
     return AppPageScaffold(
       appBar: AppBar(
-        title: AnimatedSwitcher(
-          duration: AppTheme.durationMd,
-          child: Text(
-            _isScreening ? 'Live Screening' : 'Ready to Screen',
-            key: ValueKey(_isScreening),
-          ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedSwitcher(
+              duration: AppTheme.durationMd,
+              child: Text(
+                _isScreening ? 'Live Screening' : 'Ready to Screen',
+                key: ValueKey(_isScreening),
+              ),
+            ),
+            const SizedBox(height: 2),
+            const ScreeningStepIndicator(current: 1),
+          ],
         ),
+        bottom: const ScreeningStepBar(current: 1),
         leading: _isScreening
             ? IconButton(
                 icon: const Icon(Icons.close_rounded),
@@ -886,6 +922,7 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
       children: [
         _buildProgressHeader(),
         if (!_isDemo) _buildLinkBanner(),
+        _buildRhythmBanner(),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppTheme.spacingMd),
@@ -936,7 +973,8 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
         ),
       BleLinkStatus.streaming => (null, null, null),
       BleLinkStatus.reconnecting => (
-          'Reconnecting to the board — attempt ${link.attempt}. '
+          'Reconnecting to the board — attempt ${link.attempt}'
+              '${link.retryIn != null ? ', retrying in ${link.retryIn!.inSeconds}s' : ''}. '
               'The $_ecgSeconds s captured so far is kept.',
           theme.colorScheme.tertiary,
           Icons.sync_problem_rounded,
@@ -962,6 +1000,66 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: color, size: 20),
+          const AppSpacing.hsm(),
+          Expanded(
+            child: Text(
+              message,
+              style: theme.textTheme.bodySmall?.copyWith(color: color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Beat-to-beat regularity, surfacing only when there is a real finding —
+  /// a quiet row during a screening is worse than a loud one that is wrong.
+  ///
+  /// Two honest sources both already measured by the board: sustained high/low
+  /// rate, and scatter across the RR window. It says "recheck", never
+  /// "diagnosed": this is a screening aid, not a cardiologist.
+  Widget _buildRhythmBanner() {
+    if (!_isScreening || _isDemo) return const SizedBox.shrink();
+    if (_rrWindow.length < 8) return const SizedBox.shrink();
+
+    final hr = _currentSample.heartRateBpm;
+
+    // Mean absolute successive RR difference over the window, ms.
+    var scatter = 0.0;
+    for (var i = 1; i < _rrWindow.length; i++) {
+      scatter += (_rrWindow[i] - _rrWindow[i - 1]).abs();
+    }
+    scatter /= (_rrWindow.length - 1);
+
+    final String? message;
+    if (hr > 0 && hr < 45) {
+      message = 'Heart rate has stayed below 45 bpm for several beats. '
+          'Keep the patient seated and re-check in a minute.';
+    } else if (hr > 0 && hr > 130) {
+      message = 'Heart rate has stayed above 130 bpm for several beats. '
+          'Keep the patient seated and re-check in a minute.';
+    } else if (scatter > 150 && hr > 0) {
+      message = 'The beat-to-beat timing is very uneven (±${scatter.round()} ms). '
+          'Ask the patient to sit still and repeat the strip before deciding.';
+    } else {
+      message = null;
+    }
+
+    if (message == null) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.error;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacingMd,
+        vertical: AppTheme.spacingSm,
+      ),
+      color: color.withValues(alpha: 0.10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.monitor_heart_outlined, color: color, size: 20),
           const AppSpacing.hsm(),
           Expanded(
             child: Text(
@@ -1100,36 +1198,42 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
     final theme = Theme.of(context);
     final ready = _hasReading;
 
+    // 0 on the wire means "sensor not measured" (no PPG / no thermopile
+    // fitted), not a zero reading on a patient. Render "--" rather than a
+    // number, and never trip an alert on it — a 0% SpO2 alarm for a sensor
+    // that does not exist would be the app's own false emergency.
+    final hr = _currentSample.heartRateBpm;
+    final spo2 = _currentSample.spo2Percent;
+    final tempC = _currentSample.temperatureC;
+
     final vitals = [
       _VitalData(
         label: 'Heart Rate',
-        value: ready ? _currentSample.heartRateBpm.toString() : '--',
+        value: ready && hr > 0 ? hr.toString() : '--',
         unit: 'BPM',
         icon: Icons.favorite_rounded,
         color: theme.colorScheme.primary,
-        alert: ready &&
-            (_currentSample.heartRateBpm > 100 ||
-                _currentSample.heartRateBpm < 50),
+        alert: ready && hr > 0 && (hr > 100 || hr < 50),
         alertColor: theme.colorScheme.error,
         trend: _getHRTrend(),
       ),
       _VitalData(
-        label: 'SpO\u2082',
-        value: ready ? _currentSample.spo2Percent.toString() : '--',
+        label: 'SpO₂',
+        value: ready && spo2 > 0 ? spo2.toString() : '--',
         unit: '%',
         icon: Icons.air_rounded,
         color: theme.colorScheme.secondary,
-        alert: ready && _currentSample.spo2Percent < 95,
+        alert: ready && spo2 > 0 && spo2 < 95,
         alertColor: theme.colorScheme.error,
         trend: _getSpO2Trend(),
       ),
       _VitalData(
         label: 'Temperature',
-        value: ready ? _currentSample.temperatureC.toStringAsFixed(1) : '--',
-        unit: '\u00b0C',
+        value: ready && tempC > 0 ? tempC.toStringAsFixed(1) : '--',
+        unit: '°C',
         icon: Icons.thermostat_rounded,
         color: theme.colorScheme.tertiary,
-        alert: ready && _currentSample.temperatureC >= 38.0,
+        alert: ready && tempC > 0 && tempC >= 38.0,
         alertColor: theme.colorScheme.error,
         trend: _getTempTrend(),
       ),
@@ -1262,7 +1366,25 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
   /// worker is being asked to act on. This compares the first and last readings
   /// held in the trail and calls anything inside [deadband] stable, so ordinary
   /// beat-to-beat jitter does not read as a rising rate.
-  _TrendDirection _trendOf(List<num> trail, num deadband) {
+  /// RMSSD in milliseconds over the recent RR window, or null when there
+/// are too few beats to say anything honest. RMSSD is the standard
+/// short-window HRV measure: root-mean-square of successive RR
+/// differences. It needs no firmware support because the board already
+/// reports each R-R interval and this is pure arithmetic on top.
+double? _rmssdMs() {
+  if (_rrWindow.length < 6) return null;
+  var sumSquares = 0.0;
+  var count = 0;
+  for (var i = 1; i < _rrWindow.length; i++) {
+    final d = (_rrWindow[i] - _rrWindow[i - 1]).toDouble();
+    sumSquares += d * d;
+    count++;
+  }
+  if (count == 0) return null;
+  return sqrt(sumSquares / count);
+}
+
+_TrendDirection _trendOf(List<num> trail, num deadband) {
     if (trail.length < 2) return _TrendDirection.stable;
     final delta = trail.last - trail.first;
     if (delta.abs() < deadband) return _TrendDirection.stable;
@@ -1374,6 +1496,11 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
             children: [
               _buildAnimatedECGInfo('Rate', _hasReading ? '${_currentSample.heartRateBpm} BPM' : '--', theme),
               _buildAnimatedECGInfo('RR Interval', _hasReading ? '${_currentSample.rrIntervalMs} ms' : '--', theme),
+              // HRV from the RR window: '--' until ~6 beats have been seen.
+              _buildAnimatedECGInfo('HRV (RMSSD)', () {
+                final hrv = _rmssdMs();
+                return _hasReading && hrv != null ? '${hrv.round()} ms' : '--';
+              }(), theme),
               _buildAnimatedECGInfo('Quality', _hasReading ? '${(quality * 100).round()}%' : '--', theme),
               _buildAnimatedECGInfo('R-Peaks', !_hasReading ? '--' : _currentSample.rPeakDetected ? 'Detected' : 'Searching', theme),
             ],

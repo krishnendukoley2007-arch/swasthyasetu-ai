@@ -48,12 +48,12 @@ void main() {
     test('43°C apparent is a danger warning', () {
       final adv = EnvironmentalRules.evaluate(reading(apparent: 44));
       expect(adv.first.id, 'heat_danger');
-      expect(adv.first.level, AdvisoryLevel.warning);
+      expect(adv.first.level, AdvisoryLevel.danger);
     });
 
     test('copy never invents a diagnosis: warnings are about conduct', () {
       final adv = EnvironmentalRules.evaluate(reading(apparent: 44));
-      expect(adv.first.body, contains('drink water'));
+      expect(adv.first.body, contains('Drink water'));
       expect(adv.first.body, isNot(contains('you have')));
     });
   });
@@ -91,8 +91,8 @@ void main() {
       final adv = EnvironmentalRules.evaluate(reading(apparent: 44, aqi: 170));
       expect(adv.map((a) => a.id),
           containsAll(['heat_danger', 'air_bad', 'combined_heat_air']));
-      // Most serious first.
-      expect(adv.first.level, AdvisoryLevel.warning);
+      // Most serious first: danger now beats warning.
+      expect(adv.first.level, AdvisoryLevel.danger);
     });
 
     test('worst-first ordering holds for mixed levels', () {

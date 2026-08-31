@@ -91,14 +91,15 @@ class _DeviceDiagnosticsScreenState
   }
 }
 
-class _Header extends StatelessWidget {
+class _Header extends ConsumerWidget {
   final DiagnosticReport report;
 
   const _Header({required this.report});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final link = ref.watch(bleLinkProvider);
 
     // Green only for a clean, complete run. A run with skipped checks is not an
     // all-clear, and the old unconditional "ALL TESTS PASSED" badge was the
@@ -147,6 +148,36 @@ class _Header extends StatelessWidget {
             style: theme.textTheme.bodyMedium
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
+          // Board identity, live: name, firmware string and the battery figure
+          // from the most recent telemetry frame. Hidden when nothing is
+          // connected rather than showing stale numbers.
+          if (link.deviceName != null) ...[
+            const AppSpacing.vsm(),
+            Wrap(
+              spacing: AppTheme.spacingSm,
+              runSpacing: AppTheme.spacingXs,
+              children: [
+                _metaChip(
+                  theme,
+                  Icons.memory_rounded,
+                  link.firmwareVersion != null
+                      ? 'Firmware ${link.firmwareVersion}'
+                      : 'Firmware unknown',
+                ),
+                if (link.batteryPercent != null)
+                  _metaChip(
+                    theme,
+                    Icons.battery_std_rounded,
+                    'Battery ${link.batteryPercent}%',
+                  ),
+                _metaChip(
+                  theme,
+                  Icons.bluetooth_connected_rounded,
+                  link.deviceName!,
+                ),
+              ],
+            ),
+          ],
           if (report.isRunning && report.remaining != null) ...[
             const AppSpacing.vxs(),
             Text(
@@ -180,6 +211,32 @@ class _Header extends StatelessWidget {
           ],
           const AppSpacing.vsm(),
           Divider(color: theme.colorScheme.outlineVariant),
+        ],
+      ),
+    );
+  }
+
+  Widget _metaChip(ThemeData theme, IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacingSm,
+        vertical: AppTheme.spacingXs,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );

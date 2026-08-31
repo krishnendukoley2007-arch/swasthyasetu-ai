@@ -134,6 +134,11 @@ class _AdvisoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final (color, container, icon) = switch (advisory.level) {
+      AdvisoryLevel.danger => (
+          theme.colorScheme.onErrorContainer,
+          theme.colorScheme.errorContainer,
+          Icons.warning_amber_rounded,
+        ),
       AdvisoryLevel.warning => (
           theme.colorScheme.onErrorContainer,
           theme.colorScheme.errorContainer,

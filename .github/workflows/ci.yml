@@ -41,55 +41,8 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
-          files: ./app/coverage/lcov.info
+          files: coverage/lcov.info
           fail_ci_if_error: false
-
-  backend-lint:
-    name: Lint Backend (Python)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        working-directory: ./backend
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install ruff
-
-      - name: Lint with Ruff
-        working-directory: ./backend
-        run: ruff check .
-
-      - name: Check formatting
-        working-directory: ./backend
-        run: ruff format --check .
-
-  firmware-check:
-    name: Check Firmware (PlatformIO)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PlatformIO
-        uses: platformio/platformio-action@v1
-        with:
-          args: 'run --environment esp32dev'
-
-      - name: Check firmware size
-        run: |
-          cd firmware
-          pio run --environment esp32dev --target checkprogsize 2>/dev/null || true
 
   validate-readme:
     name: Validate README Links

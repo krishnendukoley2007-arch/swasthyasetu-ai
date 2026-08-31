@@ -33,6 +33,84 @@ import 'package:swasthyasetu_ai/features/settings/screens/settings_screen.dart';
 import 'package:swasthyasetu_ai/features/settings/screens/storage_settings_screen.dart';
 import 'package:swasthyasetu_ai/features/debug/screens/ui_showcase_screen.dart';
 
+/// Persistent bottom navigation shell for clinician mode.
+class _ClinicianShell extends ConsumerWidget {
+  const _ClinicianShell({required this.shell});
+  final StatefulNavigationShell shell;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      body: shell,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: shell.currentIndex,
+        onDestinationSelected: (i) => shell.goBranch(i),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_rounded),
+            selectedIcon: Icon(Icons.home_rounded, fill: 1.0),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.people_alt_rounded),
+            selectedIcon: Icon(Icons.people_alt_rounded, fill: 1.0),
+            label: 'Patients',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.history_rounded),
+            selectedIcon: Icon(Icons.history_rounded, fill: 1.0),
+            label: 'History',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.groups_rounded),
+            selectedIcon: Icon(Icons.groups_rounded, fill: 1.0),
+            label: 'Community',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Persistent bottom navigation shell for patient mode.
+class _PatientShell extends ConsumerWidget {
+  const _PatientShell({required this.shell});
+  final StatefulNavigationShell shell;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      body: shell,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: shell.currentIndex,
+        onDestinationSelected: (i) => shell.goBranch(i),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.favorite_rounded),
+            selectedIcon: Icon(Icons.favorite_rounded, fill: 1.0),
+            label: 'My Health',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.wb_sunny_rounded),
+            selectedIcon: Icon(Icons.wb_sunny_rounded, fill: 1.0),
+            label: 'Advisories',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bluetooth_searching_rounded),
+            selectedIcon: Icon(Icons.bluetooth_searching_rounded, fill: 1.0),
+            label: 'My Device',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.call_rounded),
+            selectedIcon: Icon(Icons.call_rounded, fill: 1.0),
+            label: 'Help',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// The router is a provider, not a top-level field: its redirect reads
 /// [authStateProvider], and `refreshListenable` re-runs that redirect the
 /// moment the session changes. Sign-in/out therefore never calls `context.go`
@@ -47,6 +125,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: refresh,
     redirect: (context, state) => _guard(ref.read(authStateProvider), state),
     routes: [
+      // ─── Public / auth routes (no shell) ───
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
@@ -59,59 +138,132 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register/patient',
         builder: (context, state) => const PatientRegistrationScreen(),
       ),
-      GoRoute(
-        path: '/my-health',
-        builder: (context, state) => const PatientHomeScreen(),
+
+      // ─── Clinician shell ───
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            _ClinicianShell(shell: navigationShell),
+        branches: [
+          // Home
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          // Patients
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/patients',
+                builder: (context, state) => const PatientListScreen(),
+              ),
+              GoRoute(
+                path: '/patients/add',
+                builder: (context, state) => const AddPatientScreen(),
+              ),
+              GoRoute(
+                path: '/patients/:id',
+                builder: (context, state) => PatientProfileScreen(
+                  patientId: state.pathParameters['id']!,
+                ),
+              ),
+            ],
+          ),
+          // History
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/history',
+                builder: (context, state) => const ScreeningHistoryScreen(),
+              ),
+              GoRoute(
+                path: '/history/:id',
+                builder: (context, state) => ScreeningDetailsScreen(
+                  screeningId: state.pathParameters['id']!,
+                ),
+              ),
+            ],
+          ),
+          // Community
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/community',
+                builder: (context, state) => const CommunityDashboardScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
-      GoRoute(
-        path: '/advisories',
-        builder: (context, state) => const AdvisoriesScreen(),
+
+      // ─── Patient shell ───
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            _PatientShell(shell: navigationShell),
+        branches: [
+          // My Health
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/my-health',
+                builder: (context, state) => const PatientHomeScreen(),
+              ),
+            ],
+          ),
+          // Advisories
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/advisories',
+                builder: (context, state) => const AdvisoriesScreen(),
+              ),
+            ],
+          ),
+          // My Device
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/devices/scan',
+                builder: (context, state) => const DeviceScanScreen(),
+              ),
+              GoRoute(
+                path: '/devices/connect',
+                builder: (context, state) {
+                  final extra = state.extra;
+                  final args = extra is Map ? extra : const <Object?, Object?>{};
+                  return DeviceConnectionScreen(
+                    remoteId: args['remoteId'] as String?,
+                    deviceName: args['name'] as String?,
+                    demo: args['demo'] == true,
+                  );
+                },
+              ),
+              GoRoute(
+                path: '/devices/diagnostics',
+                builder: (context, state) => const DeviceDiagnosticsScreen(),
+              ),
+            ],
+          ),
+          // Help
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/emergency/contacts',
+                builder: (context, state) => const EmergencyContactsScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
+
+      // ─── All other routes (top-level, no persistent bottom bar) ───
       GoRoute(
         path: '/trends',
         builder: (context, state) => TrendsScreen(
           patientId: state.uri.queryParameters['patientId'] ?? '',
-        ),
-      ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
-        path: '/devices/scan',
-        builder: (context, state) => const DeviceScanScreen(),
-      ),
-      GoRoute(
-        path: '/devices/connect',
-        // The scan screen passes the chosen radio through `extra`. Unpacked here
-        // rather than read from GoRouterState inside the screen so the screen can
-        // be built directly in a test with no router above it.
-        builder: (context, state) {
-          final extra = state.extra;
-          final args = extra is Map ? extra : const <Object?, Object?>{};
-          return DeviceConnectionScreen(
-            remoteId: args['remoteId'] as String?,
-            deviceName: args['name'] as String?,
-            demo: args['demo'] == true,
-          );
-        },
-      ),
-      GoRoute(
-        path: '/devices/diagnostics',
-        builder: (context, state) => const DeviceDiagnosticsScreen(),
-      ),
-      GoRoute(
-        path: '/patients',
-        builder: (context, state) => const PatientListScreen(),
-      ),
-      GoRoute(
-        path: '/patients/add',
-        builder: (context, state) => const AddPatientScreen(),
-      ),
-      GoRoute(
-        path: '/patients/:id',
-        builder: (context, state) => PatientProfileScreen(
-          patientId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(
@@ -139,28 +291,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AiExplanationScreen(),
       ),
       GoRoute(
-        path: '/history',
-        builder: (context, state) => const ScreeningHistoryScreen(),
-      ),
-      GoRoute(
-        path: '/history/:id',
-        builder: (context, state) => ScreeningDetailsScreen(
-          screeningId: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
         path: '/sync',
         builder: (context, state) => const PendingSyncScreen(),
       ),
       GoRoute(
-        path: '/emergency/contacts',
-        builder: (context, state) => const EmergencyContactsScreen(),
-      ),
-      GoRoute(
         path: '/emergency/sos',
-        // Query parameters rather than a path segment: every field is optional.
-        // A manual SOS from the dashboard carries none of them; one raised by a
-        // high-risk reading carries the patient and the screening it came from.
         builder: (context, state) {
           final q = state.uri.queryParameters;
           return SosScreen(
@@ -170,10 +305,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             autoStart: q['autoStart'] == 'true',
           );
         },
-      ),
-      GoRoute(
-        path: '/community',
-        builder: (context, state) => const CommunityDashboardScreen(),
       ),
       GoRoute(
         path: '/settings',
@@ -259,6 +390,10 @@ String? _guard(AuthState auth, GoRouterState state) {
         if (qid == null || qid != account.patientId) return '/my-health';
         return null;
       default:
+        // Block any detail routes under workforce namespaces.
+        if (loc.startsWith('/patients/') || loc.startsWith('/history/')) {
+          return '/my-health';
+        }
         return null;
     }
   }

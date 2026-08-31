@@ -344,6 +344,7 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
       qrsDurationMs: _measureQrs(samples, peaks),
       rrScatterMs: scatter.round(),
       rrIntervals: intervals,
+      peakIndices: peaks,
     );
   }
 
@@ -535,7 +536,15 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ECG Live View'),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('ECG Live View'),
+            SizedBox(height: 2),
+            ScreeningStepIndicator(current: 2),
+          ],
+        ),
+        bottom: const ScreeningStepBar(current: 2),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/screening/live'),
@@ -575,6 +584,7 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
                                   capacity: _windowSamples,
                                   sampleRate: sampleRateHz,
                                   color: AppTheme.infoBlue,
+                                  peakIndices: _metrics.peakIndices,
                                 ),
                               ),
                       ),
@@ -1051,6 +1061,7 @@ class _EcgMetrics {
     this.qrsDurationMs,
     this.rrScatterMs,
     this.rrIntervals = const [],
+    this.peakIndices = const [],
   }) : unphysiologic = false;
 
   /// Peaks were found, but not at a rate a heart beats at — artefacts, so the
@@ -1061,6 +1072,7 @@ class _EcgMetrics {
         qrsDurationMs = null,
         rrScatterMs = null,
         rrIntervals = const [],
+        peakIndices = const [],
         unphysiologic = true;
 
   static const _EcgMetrics none = _EcgMetrics();
@@ -1076,6 +1088,10 @@ class _EcgMetrics {
   /// The interval series itself, so the rhythm call can see irregularity that a
   /// mean would hide.
   final List<int> rrIntervals;
+
+  /// Sample indices of the detected R-peaks inside the analysed window, so the
+  /// strip painter can put a tick above every beat the metrics came from.
+  final List<int> peakIndices;
 
   final bool unphysiologic;
 
@@ -1131,6 +1147,7 @@ class _EcgStripPainter extends CustomPainter {
     required this.capacity,
     required this.sampleRate,
     required this.color,
+    this.peakIndices = const [],
   });
 
   /// Samples to draw, oldest first. Shorter than [capacity] until the window
@@ -1139,6 +1156,11 @@ class _EcgStripPainter extends CustomPainter {
   final int capacity;
   final int sampleRate;
   final Color color;
+
+  /// R-peak sample indices within [waveform], from the same analysis that
+  /// produced the rate. Drawn as small ticks above the trace so the viewer
+  /// can see exactly which complexes the numbers came from.
+  final List<int> peakIndices;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1213,6 +1235,18 @@ class _EcgStripPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round,
     );
+
+    // Beat markers: a tick above every detected R-peak, so the numbers shown
+    // under the strip are visibly anchored to complexes on it.
+    final tickPaint = Paint()
+      ..color = color.withValues(alpha: 0.75)
+      ..strokeWidth = 1.0;
+    final tickTop = size.height * inset * 0.5;
+    for (final peak in peakIndices) {
+      final x = (offset + peak) * pxPerSample;
+      if (x < 0 || x > size.width) continue;
+      canvas.drawLine(Offset(x, tickTop), Offset(x, tickTop + 8), tickPaint);
+    }
   }
 
   @override
@@ -1224,6 +1258,7 @@ class _EcgStripPainter extends CustomPainter {
         oldDelegate.waveform != waveform ||
         oldDelegate.capacity != capacity ||
         oldDelegate.sampleRate != sampleRate ||
-        oldDelegate.color != color;
+        oldDelegate.color != color ||
+        oldDelegate.peakIndices != peakIndices;
   }
 }

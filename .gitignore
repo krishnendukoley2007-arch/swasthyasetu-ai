@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 backend/venv/
 __pycache__/
 *.pyc
@@ -46,3 +46,9 @@ ai_context_bundle/
 
 # APKs
 *.apk
+releases/
+
+# Environment Variables
+.env
+.env.*
+!.env.example

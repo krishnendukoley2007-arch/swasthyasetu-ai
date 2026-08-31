@@ -66,7 +66,7 @@ class EnvironmentReading {
 
 /// How seriously an environmental advisory should press itself onto the home
 /// screen. The order is the sort order when several apply.
-enum AdvisoryLevel { info, advice, warning }
+enum AdvisoryLevel { info, advice, warning, danger }
 
 /// One environmental advisory, ready to render. The rule layer produces these;
 /// screens never re-derive them.
