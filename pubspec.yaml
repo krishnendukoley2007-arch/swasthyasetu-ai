@@ -23,7 +23,7 @@ dependencies:
   path: ^1.9.0
   path_provider: ^2.1.2
   # BLE
-  flutter_blue_plus: ^1.31.2
+  flutter_blue_plus: ^2.3.12
   # Sign-in: Google identity (7.x = Credential Manager on Android). Deliberately
   # NOT firebase_auth: this build must keep working with no google-services.json,
   # so accounts fall back to salted-hash local credentials when Google is not
