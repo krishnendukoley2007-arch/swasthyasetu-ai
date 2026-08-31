@@ -37,13 +37,13 @@ jobs:
       - name: Enable auto-merge for minor/patch
         if: steps.check-version.outputs.minor_or_patch == 'true'
         run: |
-          gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
+          gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}" || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add needs-review label for major
         if: steps.check-version.outputs.minor_or_patch == 'false'
         run: |
-          gh pr edit "${{ github.event.pull_request.html_url }}" --add-label "needs-review"
+          gh pr edit "${{ github.event.pull_request.html_url }}" --add-label "needs-review" || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,10 +13,16 @@ jobs:
   build-android:
     name: Build Android APKs
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -25,60 +32,55 @@ jobs:
           cache: true
 
       - name: Get dependencies
-        working-directory: .
         run: flutter pub get
 
       - name: Generate code
-        working-directory: .
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Run tests
-        working-directory: .
         run: flutter test
 
       - name: Build APKs (split per ABI)
-        working-directory: .
         run: flutter build apk --release --split-per-abi
-
-      - name: Rename APKs for release
-        working-directory: .
-        run: |
-          cd build/app/outputs/flutter-apk
-          for f in *.apk; do
-            mv "$f" "${f/app-release/SwasthyaSetu}"
-          done
 
       - name: Upload APKs as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-apks
-          path: app/build/app/outputs/flutter-apk/*.apk
+          path: build/app/outputs/flutter-apk/*.apk
           retention-days: 90
 
   build-firmware:
     name: Build Firmware
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PlatformIO
-        uses: platformio/platformio-action@v1
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          args: 'run --environment esp32dev'
+          python-version: '3.11'
+
+      - name: Install PlatformIO
+        run: pip install --upgrade platformio
+
+      - name: Build ESP32 firmware
+        run: pio run -d firmware
 
       - name: Upload firmware binary
         uses: actions/upload-artifact@v4
         with:
           name: firmware
-          path: firmware/.pio/build/esp32dev/firmware.bin
+          path: firmware/.pio/build/*/firmware.bin
           retention-days: 90
 
-  create-release:
-    name: Create GitHub Release
+  attach-to-release:
+    name: Attach Artifacts to Release
     runs-on: ubuntu-latest
     needs: [build-android, build-firmware]
+    if: startsWith(github.ref, 'refs/tags/v')
     timeout-minutes: 10
     steps:
       - name: Download Android APKs
@@ -91,46 +93,15 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: firmware
-          path: ./firmware
+          path: ./fw
 
-      - name: Generate changelog
-        id: changelog
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          PREV_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || echo "")
-          if [ -n "$PREV_TAG" ]; then
-            git log --pretty=format:"- %s (%h)" "${PREV_TAG}..${TAG}" > changelog.txt
-          else
-            git log --pretty=format:"- %s (%h)" "${TAG}" > changelog.txt
-          fi
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat changelog.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Attach assets to the existing release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: SwasthyaSetu AI ${{ github.ref_name }}
-          body: |
-            ## 📱 Android APKs
-            - **SwasthyaSetu-fixed.apk** — Universal (all architectures) — Recommended
-            - **SwasthyaSetu-arm64-v8a.apk** — 64-bit ARM (most phones since 2018)
-            - **SwasthyaSetu-armeabi-v7a.apk** — 32-bit ARM (older phones)
-            - **SwasthyaSetu-x86_64.apk** — x86_64 (emulators)
-
-            ## 🔧 Firmware
-            - **firmware.bin** — ESP32 binary (flash with `esptool.py` or PlatformIO)
-
-            ## 📝 Changes
-            ${{ steps.changelog.outputs.changelog }}
-
-            ---
-            **Full changelog:** https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.prev_tag }}...${{ github.ref_name }}
-            **Install guide:** See [README.md](../../blob/main/README.md#-install-on-your-phone-no-computer-needed)
           files: |
             ./apks/*.apk
-            ./firmware/firmware.bin
+            ./fw/**/firmware.bin
           draft: false
           prerelease: false
         env:
