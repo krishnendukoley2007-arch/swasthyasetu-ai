@@ -42,7 +42,7 @@
    PROTOCOL IS BYTE-IDENTICAL TO v1.5 -- the Flutter app and the
    laptop dashboard need no changes at all.
 
-PIN MAP (locked, matches hardware/HARDWARE.md)
+PIN MAP (locked for SSAI-SENSE-01 reference build)
 ----------------------------------------------
 GPIO36 (VP / ADC1_CH0) : AD8232 OUTPUT (analog ECG)
 GPIO39 (VN)            : AD8232 LO+

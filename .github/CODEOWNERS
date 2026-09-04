@@ -22,8 +22,6 @@
 # Documentation
 /docs/ @krishnendukoley2007-arch
 /README.md @krishnendukoley2007-arch
-/CONTRIBUTING.md @krishnendukoley2007-arch
-/hardware/ @krishnendukoley2007-arch
 
 # CI/CD
 /.github/workflows/ @krishnendukoley2007-arch
