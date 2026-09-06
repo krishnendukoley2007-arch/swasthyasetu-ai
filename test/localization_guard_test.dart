@@ -11,7 +11,7 @@
 // the map so it becomes permanently guarded.
 import 'dart:io';
 
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 const _pattern =
     r"(?:Text|label|title|subtitle|hint|hintText|message|confirmLabel|tooltip|value|blurb)\s*[:(]\s*'[^'`\$]{3,}'";
