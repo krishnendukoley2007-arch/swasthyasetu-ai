@@ -405,11 +405,11 @@ class PatientHomeScreen extends ConsumerWidget {
       children: [
         Icon(icon, color: theme.colorScheme.primary, size: 20),
         const AppSpacing.vxs(),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: RichText(
-            maxLines: 1,
-            text: TextSpan(
+        RichText(
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          text: TextSpan(
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: theme.colorScheme.onSurface,
@@ -426,7 +426,6 @@ class PatientHomeScreen extends ConsumerWidget {
               ],
             ),
           ),
-        ),
         Text(label,
             style: theme.textTheme.labelSmall
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),

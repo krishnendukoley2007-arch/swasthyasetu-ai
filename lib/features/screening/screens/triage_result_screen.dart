@@ -640,6 +640,8 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
             Center(
               child: ArcGauge(
                 value: _triageResult!.score.toDouble(),
+                semanticsLabel:
+                    '${context.l10n.riskBandLabel(RiskBand.fromStorage(_triageResult!.level))}. ${context.l10n.triageScoreCaption} ${_triageResult!.score}',
                 size: 200,
                 bands: [
                   ArcBand(0, greenMax.toDouble(), ClinicalPalette.teal),
@@ -898,7 +900,11 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
 
     return AppRippleEffect(
       color: item.color.withValues(alpha: 0.2),
-      child: Column(
+      child: Semantics(
+        label: item.alert
+            ? '${item.label}: ${item.value}. ${context.l10n.vitalOutOfRange}'
+            : '${item.label}: ${item.value}',
+        child: Column(
         children: [
           AppPulseAnimation(
             minScale: 0.95,
@@ -922,6 +928,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
             ),
           ],
         ],
+      ),
       ),
     );
   }

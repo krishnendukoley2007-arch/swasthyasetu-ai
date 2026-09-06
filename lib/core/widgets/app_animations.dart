@@ -576,6 +576,17 @@ class _AppPulseAnimationState extends State<AppPulseAnimation> with SingleTicker
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Vestibular safety: user asked the OS to disable animations.
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      _controller.stop();
+    } else if (widget.repeat && !_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();

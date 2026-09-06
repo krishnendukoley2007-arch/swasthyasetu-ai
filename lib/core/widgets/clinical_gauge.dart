@@ -21,6 +21,7 @@ class ArcGauge extends StatelessWidget {
     required this.bands,
     this.size = 148,
     this.child,
+    this.semanticsLabel,
   });
 
   final double value; // 0–100
@@ -28,10 +29,17 @@ class ArcGauge extends StatelessWidget {
   final double size;
   final Widget? child;
 
+  /// What a screen reader announces for this gauge, e.g.
+  /// "Risk score 72 out of 100, urgent". Falls back to the raw value.
+  final String? semanticsLabel;
+
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    return TweenAnimationBuilder<double>(
+    return Semantics(
+      label: semanticsLabel,
+      value: semanticsLabel == null ? '${value.round()} of 100' : null,
+      child: TweenAnimationBuilder<double>(
       tween: Tween(end: value.clamp(0, 100)),
       // Reduced motion: the gauge must still show the final value, just
       // without the sweep.
@@ -49,6 +57,7 @@ class ArcGauge extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

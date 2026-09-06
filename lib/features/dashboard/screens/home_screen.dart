@@ -793,11 +793,11 @@ void _initializeAnimations() {
             child: Icon(icon, color: color, size: 20),
           ),
           const AppSpacing.vsm(),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: RichText(
-              maxLines: 1,
-              text: TextSpan(
+          RichText(
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            text: TextSpan(
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSurface,
@@ -815,7 +815,6 @@ void _initializeAnimations() {
                 ],
               ),
             ),
-          ),
           Text(
             label,
             textAlign: TextAlign.center,
