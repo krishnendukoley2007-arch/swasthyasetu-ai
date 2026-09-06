@@ -11,6 +11,8 @@ class HealthSample {
   final int estimatedSystolic;
   final int estimatedDiastolic;
   final String bpConfidence;
+  final int estimatedGlucose;
+  final String glucoseConfidence;
   final int batteryPercent;
   final bool isDemo;
 
@@ -27,6 +29,8 @@ class HealthSample {
     this.estimatedSystolic = 0,
     this.estimatedDiastolic = 0,
     this.bpConfidence = 'EXPERIMENTAL',
+    this.estimatedGlucose = 0,
+    this.glucoseConfidence = 'EXPERIMENTAL',
     required this.batteryPercent,
     this.isDemo = false,
   });
@@ -44,6 +48,8 @@ class HealthSample {
     estimatedSystolic: json['estimatedSystolic'] as int? ?? 0,
     estimatedDiastolic: json['estimatedDiastolic'] as int? ?? 0,
     bpConfidence: json['bpConfidence'] as String? ?? 'EXPERIMENTAL',
+    estimatedGlucose: json['estimatedGlucose'] as int? ?? 0,
+    glucoseConfidence: json['glucoseConfidence'] as String? ?? 'EXPERIMENTAL',
     batteryPercent: json['batteryPercent'] as int,
     isDemo: json['isDemo'] as bool? ?? false,
   );
@@ -61,6 +67,8 @@ class HealthSample {
     'estimatedSystolic': estimatedSystolic,
     'estimatedDiastolic': estimatedDiastolic,
     'bpConfidence': bpConfidence,
+    'estimatedGlucose': estimatedGlucose,
+    'glucoseConfidence': glucoseConfidence,
     'batteryPercent': batteryPercent,
     'isDemo': isDemo,
   };
@@ -78,6 +86,8 @@ class HealthSample {
     int? estimatedSystolic,
     int? estimatedDiastolic,
     String? bpConfidence,
+    int? estimatedGlucose,
+    String? glucoseConfidence,
     int? batteryPercent,
     bool? isDemo,
   }) => HealthSample(
@@ -93,6 +103,8 @@ class HealthSample {
     estimatedSystolic: estimatedSystolic ?? this.estimatedSystolic,
     estimatedDiastolic: estimatedDiastolic ?? this.estimatedDiastolic,
     bpConfidence: bpConfidence ?? this.bpConfidence,
+    estimatedGlucose: estimatedGlucose ?? this.estimatedGlucose,
+    glucoseConfidence: glucoseConfidence ?? this.glucoseConfidence,
     batteryPercent: batteryPercent ?? this.batteryPercent,
     isDemo: isDemo ?? this.isDemo,
   );
@@ -110,6 +122,8 @@ class HealthSample {
     int estimatedSystolic = 120,
     int estimatedDiastolic = 80,
     String bpConfidence = 'EXPERIMENTAL',
+    int estimatedGlucose = 98,
+    String glucoseConfidence = 'EXPERIMENTAL',
     int batteryPercent = 85,
   }) {
     return HealthSample(
@@ -125,6 +139,8 @@ class HealthSample {
       estimatedSystolic: estimatedSystolic,
       estimatedDiastolic: estimatedDiastolic,
       bpConfidence: bpConfidence,
+      estimatedGlucose: estimatedGlucose,
+      glucoseConfidence: glucoseConfidence,
       batteryPercent: batteryPercent,
       isDemo: true,
     );
@@ -147,6 +163,8 @@ class HealthSample {
           estimatedSystolic == other.estimatedSystolic &&
           estimatedDiastolic == other.estimatedDiastolic &&
           bpConfidence == other.bpConfidence &&
+          estimatedGlucose == other.estimatedGlucose &&
+          glucoseConfidence == other.glucoseConfidence &&
           batteryPercent == other.batteryPercent &&
           isDemo == other.isDemo;
 
@@ -154,7 +172,8 @@ class HealthSample {
   int get hashCode => Object.hash(
     timestamp, heartRateBpm, spo2Percent, temperatureC, ecgSignal,
     ecgSignalQuality, rPeakDetected, rrIntervalMs, pttMs,
-    estimatedSystolic, estimatedDiastolic, bpConfidence, batteryPercent, isDemo
+    estimatedSystolic, estimatedDiastolic, bpConfidence,
+    estimatedGlucose, glucoseConfidence, batteryPercent, isDemo
   );
 }
 

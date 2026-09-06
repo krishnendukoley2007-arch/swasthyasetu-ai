@@ -6,6 +6,7 @@ import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/services/ble_service.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
+import 'package:swasthyasetu_ai/core/widgets/clinical_primitives.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/device.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
@@ -45,8 +46,28 @@ class PatientHomeScreen extends ConsumerWidget {
         actions: [_buildMenu(context, ref)],
         elevation: 0,
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/general-chat'),
+        icon: const Icon(Icons.chat_bubble_outline_rounded),
+        label: const Text('AI Chat'),
+        backgroundColor: theme.colorScheme.tertiaryContainer,
+        foregroundColor: theme.colorScheme.onTertiaryContainer,
+      ),
       body: patientAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        // Skeletons mimic the page's real blocks, so first paint doesn't
+        // flash a bare spinner mid-screen.
+        loading: () => ListView(
+          padding: const EdgeInsets.all(AppTheme.spacingMd),
+          children: const [
+            ClinicalSkeleton(height: 26, width: 180),
+            AppSpacing.vlg(),
+            ClinicalSkeleton(height: 84, radius: 16),
+            AppSpacing.vmd(),
+            ClinicalSkeleton(height: 150, radius: 16),
+            AppSpacing.vmd(),
+            ClinicalSkeleton(height: 200, radius: 16),
+          ],
+        ),
         error: (_, __) => _buildProfileError(context, ref),
         data: (patient) {
           if (patient == null || account == null) {
@@ -331,6 +352,10 @@ class PatientHomeScreen extends ConsumerWidget {
                             child: _vital(context, 'Temp', latest.temperature,
                                 '°C', Icons.thermostat_rounded,
                                 digits: 1)),
+                        if (latest.hasGlucoseEstimate)
+                          Expanded(
+                              child: _vital(context, 'Glucose', latest.estimatedGlucose,
+                                  'mg/dL', Icons.water_drop_outlined)),
                       ],
                     ),
                     const AppSpacing.vlg(),

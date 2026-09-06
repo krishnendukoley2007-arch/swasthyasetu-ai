@@ -1,9 +1,11 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
+import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
+import 'package:swasthyasetu_ai/core/widgets/clinical_primitives.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
+import 'package:swasthyasetu_ai/core/widgets/series_chart.dart';
 import 'package:swasthyasetu_ai/domain/rules/trend_engine.dart';
 
 /// "My Trends" — a personal vitals history turned into something a person can
@@ -40,26 +42,25 @@ class TrendsScreen extends ConsumerWidget {
               _TrendCard(
                 title: 'Heart rate',
                 unit: 'bpm',
-                icon: Icons.favorite_rounded,
-                color: theme.colorScheme.primary,
+                fractionDigits: 0,
+                color: ClinicalPalette.coral,
                 trend: TrendEngine.heartRate(screenings),
               ),
               const AppSpacing.vlg(),
               _TrendCard(
                 title: 'Blood oxygen (SpO₂)',
                 unit: '%',
-                icon: Icons.air_rounded,
-                color: theme.colorScheme.secondary,
+                fractionDigits: 0,
+                color: ClinicalPalette.cyan,
                 trend: TrendEngine.spo2(screenings),
               ),
               const AppSpacing.vlg(),
               _TrendCard(
                 title: 'Temperature',
                 unit: '°C',
-                icon: Icons.thermostat_rounded,
-                color: theme.colorScheme.tertiary,
-                trend: TrendEngine.temperature(screenings),
                 fractionDigits: 1,
+                color: ClinicalPalette.amber,
+                trend: TrendEngine.temperature(screenings),
               ),
               const AppSpacing.vlg(),
               AppFilledCard(
@@ -152,7 +153,6 @@ class _NotesCard extends StatelessWidget {
 class _TrendCard extends StatelessWidget {
   final String title;
   final String unit;
-  final IconData icon;
   final Color color;
   final VitalTrend trend;
   final int fractionDigits;
@@ -160,44 +160,66 @@ class _TrendCard extends StatelessWidget {
   const _TrendCard({
     required this.title,
     required this.unit,
-    required this.icon,
     required this.color,
     required this.trend,
     this.fractionDigits = 0,
   });
 
+  List<SeriesSample> get _samples => [
+        for (var i = 0; i < trend.points.length; i++)
+          SeriesSample(trend.points[i].at.millisecondsSinceEpoch.toDouble(),
+              trend.points[i].value),
+      ];
+
+  String _xLabel(double t) {
+    final d = DateTime.fromMillisecondsSinceEpoch(t.round());
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${d.day} ${months[d.month - 1]}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final delta = trend.delta;
 
     return AppCard(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header: overlined metric, provenance, then the readout itself.
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spacingSm),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const AppSpacing.hmd(),
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
+              Expanded(child: Overline(title.toUpperCase())),
+              const ProvenanceTag(Provenance.measured),
+            ],
+          ),
+          const AppSpacing.vsm(),
+          Row(
+            children: [
               if (trend.latest != null)
-                AppBadge(
-                  label:
-                      '${trend.latest!.toStringAsFixed(fractionDigits)} $unit now',
+                UnitNumber(
+                  trend.latest!.toStringAsFixed(fractionDigits),
+                  unit,
+                  size: 26,
                   color: color,
+                )
+              else
+                Text('—',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant)),
+              const AppSpacing.hsm(),
+              if (delta != null && trend.points.length >= 2)
+                DeltaChip(
+                  delta: delta,
+                  unit: unit,
+                  decimals: fractionDigits,
+                  // SpO₂ down is bad; HR/temp both directions can be.
+                  positiveIsGood: unit == '%',
+                  neutralEpsilon: fractionDigits == 0 ? 0.5 : 0.05,
                 ),
             ],
           ),
@@ -216,90 +238,31 @@ class _TrendCard extends StatelessWidget {
               ),
             )
           else ...[
-            SizedBox(
-              height: 150,
-              child: _buildChart(context),
+            SeriesChart(
+              data: _samples,
+              stroke: color,
+              unit: unit,
+              xLabel: _xLabel,
+              yDecimals: fractionDigits,
+              height: 170,
+              reference: trend.average,
+              referenceLabel: trend.hasBaseline
+                  ? 'usual ${trend.average.toStringAsFixed(fractionDigits)} $unit'
+                  : null,
             ),
-            const AppSpacing.vsm(),
-            // Wrap, not Row: three labels across 340 logical px only fit at
-            // small text scales; at 2.0x the middle one must drop to its own
-            // line instead of shoving 'today' off the edge.
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              spacing: AppTheme.spacingSm,
-              runSpacing: AppTheme.spacingXs,
-              children: [
-                Text('30 days ago',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant)),
-                if (trend.hasBaseline)
-                  Text(
-                    'Your usual: ${trend.average.toStringAsFixed(fractionDigits)} $unit',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                Text('today',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant)),
-              ],
+            const AppSpacing.vxs(),
+            // Sparse-dot cadence note: screening happens occasionally, not
+            // continuously, so say what the axis actually is.
+            Text(
+              '${trend.points.length} readings · last 30 days',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ],
       ),
     );
   }
-
-  Widget _buildChart(BuildContext context) {
-    final theme = Theme.of(context);
-    final points = trend.points;
-    final values = points.map((p) => p.value).toList();
-    final minY = values.reduce((a, b) => a < b ? a : b);
-    final maxY = values.reduce((a, b) => a > b ? a : b);
-    // Pad so a steady line is not cramped against the card edge.
-    final pad = (maxY - minY == 0) ? maxY * 0.05 : (maxY - minY) * 0.25;
-
-    return LineChart(
-      LineChartData(
-        gridData: const FlGridData(show: false),
-        titlesData: const FlTitlesData(show: false),
-        borderData: FlBorderData(show: false),
-        lineTouchData: const LineTouchData(enabled: false),
-        minX: 0,
-        maxX: (points.length - 1).toDouble(),
-        minY: minY - pad,
-        maxY: maxY + pad,
-        lineBarsData: [
-          LineChartBarData(
-            spots: [
-              for (var i = 0; i < points.length; i++)
-                FlSpot(i.toDouble(), points[i].value),
-            ],
-            isCurved: true,
-            preventCurveOverShooting: true,
-            color: color,
-            barWidth: 2.5,
-            isStrokeCapRound: true,
-            dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(
-              show: true,
-              color: color.withValues(alpha: 0.1),
-            ),
-          ),
-          // The "your usual" line — flat, dashed, quieter than the data.
-          if (trend.hasBaseline)
-            LineChartBarData(
-              spots: [
-                FlSpot(0, trend.average),
-                FlSpot((points.length - 1).toDouble(), trend.average),
-              ],
-              isCurved: false,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-              barWidth: 1.5,
-              dashArray: const [6, 6],
-              dotData: const FlDotData(show: false),
-            ),
-        ],
-      ),
-    );
-  }
 }
+

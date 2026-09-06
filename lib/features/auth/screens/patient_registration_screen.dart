@@ -1,5 +1,7 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
@@ -146,8 +148,18 @@ class _PatientRegistrationScreenState
             emergencyName: _emergencyName.text,
             emergencyPhone: _emergencyPhone.text,
           );
-      // Router redirect takes us to /my-health: the profile flip changed
-      // authStateProvider, and the router is listening.
+      // Navigate away explicitly. The old code relied on the router's auth
+      // redirect to move us, but the guard allows a signed-in patient to sit
+      // on /register/patient (it's also the edit-profile route), so nothing
+      // pushed the user forward and the app appeared to ignore "Save".
+      if (!mounted) return;
+      if (Navigator.of(context).canPop()) {
+        // Reached by editing from My Health — return to where we came from.
+        Navigator.of(context).pop();
+      } else {
+        // First registration, held here by the guard.
+        context.go('/my-health');
+      }
     } on AuthException catch (e) {
       if (mounted) {
         setState(() => _error = e.detail ?? 'Could not save the profile.');
@@ -184,16 +196,19 @@ class _PatientRegistrationScreenState
         title: Text(editingName ? 'Edit health profile' : 'Your health profile'),
         automaticallyImplyLeading: false,
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppTheme.spacingLg),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final contentWidth = math.min(constraints.maxWidth - 32, 540.0);
+          return Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: Center(
+                child: SizedBox(
+                  width: contentWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                   if (!editingName) ...[
                     AppCard(
                       color: theme.colorScheme.primaryContainer
@@ -440,8 +455,10 @@ class _PatientRegistrationScreenState
             ),
           ),
         ),
-      ),
-    );
+      );
+    },
+  ),
+);
   }
 
   static String _bmiBand(double bmi) {

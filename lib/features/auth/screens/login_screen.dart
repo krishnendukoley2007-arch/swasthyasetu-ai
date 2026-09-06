@@ -1,21 +1,22 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:swasthyasetu_ai/core/constants/app_constants.dart';
-import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
-import 'package:swasthyasetu_ai/core/widgets/index.dart';
+import 'package:swasthyasetu_ai/core/services/phone_auth_service.dart';
+import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/data/repositories/auth_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/user_account.dart';
+import 'package:swasthyasetu_ai/features/auth/screens/otp_verification_screen.dart';
 import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 
-/// The two-mode front door.
+/// The front door of SwasthyaSetu AI.
 ///
-/// The screen is a short state machine, not two routes:
-///   1. pick a role (big cards — the whole app bends around this choice), then
-///   2. prove identity for that role (email, or Google where configured).
-///
-/// Successful sign-in never navigates from here. It changes
-/// [authStateProvider], and the router's redirect moves the phone to the
-/// right home — one place owns "who goes where".
+/// Visual language follows the clinical design system: one accent (teal),
+/// hairline borders instead of shadows/gradients, no marketing copy, and the
+/// only motion is the 350 ms panel swap. Every path funnels the same
+/// way: role → method → on with the work.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -25,400 +26,875 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
 
-  /// Null while the two role cards are up; set once one is tapped.
   UserRole? _role;
-
-  bool _registerMode = false;
-  bool _isLoading = false;
-  bool _googleLoading = false;
-  bool _obscurePassword = true;
-  String? _errorMessage;
-
-  bool get _busy => _isLoading || _googleLoading;
+  _AuthMode _mode = _AuthMode.phone;
+  bool _loading = false;
+  bool _obscure = true;
+  String? _error;
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _runAuth(Future<void> Function() action,
-      {bool google = false}) async {
+  void _pickRole(UserRole role) {
+    HapticFeedback.selectionClick();
     setState(() {
-      _errorMessage = null;
-      if (google) {
-        _googleLoading = true;
-      } else {
-        _isLoading = true;
-      }
+      _role = role;
+      _error = null;
+      _mode = role == UserRole.clinician ? _AuthMode.asha : _AuthMode.phone;
+    });
+  }
+
+  void _back() {
+    setState(() {
+      _role = null;
+      _error = null;
+    });
+  }
+
+  Future<void> _sendOtp() async {
+    if (_nameCtrl.text.trim().isEmpty) {
+      setState(() => _error = 'Enter your name first.');
+      return;
+    }
+    final phone = '+91${_phoneCtrl.text.replaceAll(RegExp(r'\D'), '')}';
+    if (_phoneCtrl.text.replaceAll(RegExp(r'\D'), '').length != 10) {
+      setState(() => _error = 'Enter a valid 10-digit mobile number.');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
     });
     try {
-      await action();
-      // No navigation: the router has been watching authStateProvider the
-      // whole time and is already moving the app to the right home.
-    } on AuthException catch (e) {
+      final session = await PhoneAuthService.instance.sendOtp(phone);
       if (!mounted) return;
-      // A cancelled Google sheet is not an error the user needs explained —
-      // they know they closed it.
-      if (e.failure != AuthFailure.googleCancelled) {
-        setState(() => _errorMessage = _messageFor(e));
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _errorMessage =
-            'Sign-in failed on this phone. Email sign-in is fully offline — '
-            'it keeps working with no network at all.');
-      }
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OtpVerificationScreen(
+            phoneNumber: phone,
+            session: session,
+            role: _role!,
+            displayName: _nameCtrl.text.trim(),
+          ),
+        ),
+      );
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = e.detail ?? 'Failed to send OTP.');
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Error: $e');
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _googleLoading = false;
-        });
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _submitEmail({required bool register}) async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final auth = ref.read(authStateProvider.notifier);
+      if (register) {
+        await auth.registerWithEmail(
+          email: _emailCtrl.text,
+          password: _passwordCtrl.text,
+          displayName: _nameCtrl.text,
+          role: _role!,
+        );
+      } else {
+        await auth.signInWithEmail(
+          email: _emailCtrl.text,
+          password: _passwordCtrl.text,
+        );
       }
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = _messageFor(e));
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Sign-in error. Try again.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _quickSignIn() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(authStateProvider.notifier)
+          .quickSignIn(role: UserRole.clinician);
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Quick sign-in failed: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _demo() => ref.read(authStateProvider.notifier).continueAsDemo();
+
+  Future<void> _signInWithGoogle([UserRole? explicitRole]) async {
+    final targetRole = explicitRole ?? _role ?? UserRole.patient;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authStateProvider.notifier).signInWithGoogle(
+            roleForNewAccounts: targetRole,
+          );
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = _messageFor(e));
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Google Sign-In failed: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   String _messageFor(AuthException e) => switch (e.failure) {
         AuthFailure.emailInUse =>
-          'An account for this email already exists — switch to "Sign in" '
-              'and use its password.',
-        AuthFailure.wrongCredentials => 'Email or password is incorrect.',
-        AuthFailure.weakPassword =>
-          'Password needs at least 6 characters.',
-        AuthFailure.invalidEmail =>
-          'That does not look like an email address.',
-        AuthFailure.googleUnavailable => e.detail ?? 'Google sign-in is not '
-            'available on this build. Email sign-in works offline instead.',
-        AuthFailure.googleCancelled => '',
+          'An account with this email exists. Switch to "Sign in".',
+        AuthFailure.wrongCredentials => 'Email or password not recognized.',
+        AuthFailure.weakPassword => 'Password must be at least 6 characters.',
+        AuthFailure.invalidEmail => 'Enter a valid email address.',
+        AuthFailure.googleUnavailable =>
+          e.detail ?? 'Google Sign-In is unavailable on this device.',
+        AuthFailure.googleCancelled =>
+          e.detail ?? 'Google Sign-In was cancelled or dismissed.',
+        AuthFailure.phoneOtpFailed =>
+          e.detail ?? 'OTP verification failed. Try again.',
       };
-
-  Future<void> _submit() {
-    if (!_formKey.currentState!.validate()) {
-      return Future.value();
-    }
-    final auth = ref.read(authStateProvider.notifier);
-    final role = _role!;
-    if (_registerMode) {
-      return _runAuth(() => auth.registerWithEmail(
-            email: _emailController.text,
-            password: _passwordController.text,
-            displayName: _nameController.text,
-            role: role,
-          ));
-    }
-    return _runAuth(() => auth.signInWithEmail(
-          email: _emailController.text,
-          password: _passwordController.text,
-        ));
-  }
-
-  Future<void> _google() => _runAuth(
-        () => ref
-            .read(authStateProvider.notifier)
-            .signInWithGoogle(roleForNewAccounts: _role!),
-        google: true,
-      );
-
-  void _demo() => ref.read(authStateProvider.notifier).continueAsDemo();
 
   @override
   Widget build(BuildContext context) {
-    // Constrained + centred: this screen is the first thing shown on tablets
-    // at clinics, and a full-width login form looks broken at 900 dp.
-    return AppPageScaffold(
-      appBar: null,
+    final theme = Theme.of(context);
+    final busy = _loading;
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: AppCenteredScrollView(
-          padding: const EdgeInsets.all(AppTheme.spacingXl),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: _role == null ? _buildRolePicker() : _buildAuthForm(),
+        child: LayoutBuilder(builder: (context, constraints) {
+          final w = math.min(constraints.maxWidth - 48, 420.0);
+          return Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: SizedBox(
+                width: w,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 350),
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.04),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                          parent: anim, curve: Curves.easeOutCubic)),
+                      child: child,
+                    ),
+                  ),
+                  child: _role == null
+                      ? _RolePicker(
+                          key: const ValueKey('picker'),
+                          onPick: _pickRole,
+                          onGoogle: (role) => _signInWithGoogle(role),
+                          onDemo: _demo,
+                          busy: busy,
+                        )
+                      : _AuthPanel(
+                          key: ValueKey('auth-${_role!.name}'),
+                          role: _role!,
+                          mode: _mode,
+                          nameCtrl: _nameCtrl,
+                          phoneCtrl: _phoneCtrl,
+                          emailCtrl: _emailCtrl,
+                          passwordCtrl: _passwordCtrl,
+                          formKey: _formKey,
+                          obscure: _obscure,
+                          loading: _loading,
+                          error: _error,
+                          onModeChange: (m) =>
+                              setState(() {
+                                _mode = m;
+                                _error = null;
+                              }),
+                          onToggleObscure: () =>
+                              setState(() => _obscure = !_obscure),
+                          onBack: _back,
+                          onSendOtp: _sendOtp,
+                          onEmailSignIn: () => _submitEmail(register: false),
+                          onEmailRegister: () => _submitEmail(register: true),
+                          onAshaQuick: _quickSignIn,
+                          onGoogle: () => _signInWithGoogle(_role),
+                          onDemo: _demo,
+                        ),
+                ),
+              ),
             ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+enum _AuthMode { phone, email, asha }
+
+// ───────────────────────── Role picker ─────────────────────────
+
+class _RolePicker extends StatelessWidget {
+  final ValueChanged<UserRole> onPick;
+  final ValueChanged<UserRole> onGoogle;
+  final VoidCallback onDemo;
+  final bool busy;
+
+  const _RolePicker({
+    super.key,
+    required this.onPick,
+    required this.onGoogle,
+    required this.onDemo,
+    required this.busy,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 8),
+
+        // Brand mark: one accent, no glow.
+        Center(
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [ClinicalPalette.tealBright, ClinicalPalette.teal],
+              ),
+            ),
+            child: const Icon(Icons.health_and_safety_rounded,
+                color: Colors.white, size: 32),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        Text(
+          AppConstants.appName,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.6,
+          ),
+          textAlign: TextAlign.center,
+        ),
+
+        const SizedBox(height: 4),
+
+        Text(
+          'Screening · triage · follow-up',
+          style: theme.textTheme.bodyMedium
+              ?.copyWith(color: ClinicalPalette.muted(context)),
+          textAlign: TextAlign.center,
+        ),
+
+        const SizedBox(height: 28),
+
+        _RoleTile(
+          icon: Icons.person_rounded,
+          title: 'Patient',
+          subtitle: 'Check vitals and follow your trends',
+          onTap: busy ? null : () => onPick(UserRole.patient),
+        ),
+        const SizedBox(height: 12),
+        _RoleTile(
+          icon: Icons.local_hospital_rounded,
+          title: 'Doctor / Nurse',
+          subtitle: 'Screen patients and issue referral slips',
+          onTap: busy ? null : () => onPick(UserRole.clinician),
+        ),
+        const SizedBox(height: 12),
+        _RoleTile(
+          icon: Icons.medical_services_rounded,
+          title: 'ASHA / Health worker',
+          subtitle: 'Field access with one-tap sign-in',
+          onTap: busy ? null : () => onPick(UserRole.clinician),
+        ),
+
+        const SizedBox(height: 20),
+
+        const _OrDivider(text: 'or'),
+        const SizedBox(height: 16),
+
+        _GoogleSignInButton(
+          onTap: busy ? null : () => onGoogle(UserRole.patient),
+          loading: busy,
+        ),
+
+        const SizedBox(height: 12),
+
+        Center(
+          child: TextButton(
+            onPressed: busy ? null : onDemo,
+            child: const Text('Explore demo mode'),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+        const _FooterNote(),
+      ],
+    );
+  }
+}
+
+/// One role option. Flat, hairline border, single accent chip — the tap state
+/// is the ripple, nothing else.
+class _RoleTile extends StatelessWidget {
+  const _RoleTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: theme.colorScheme.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClinicalPalette.hairline(context)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: ClinicalPalette.teal.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: ClinicalPalette.teal, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: ClinicalPalette.muted(context),
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: ClinicalPalette.faint(context)),
+            ],
           ),
         ),
       ),
     );
   }
+}
 
-  // ───────────────────────────── Role picker ─────────────────────────────
+// ───────────────────────── Auth panel ─────────────────────────
 
-  Widget _buildRolePicker() {
+class _AuthPanel extends StatefulWidget {
+  final UserRole role;
+  final _AuthMode mode;
+  final TextEditingController nameCtrl;
+  final TextEditingController phoneCtrl;
+  final TextEditingController emailCtrl;
+  final TextEditingController passwordCtrl;
+  final GlobalKey<FormState> formKey;
+  final bool obscure;
+  final bool loading;
+  final String? error;
+  final ValueChanged<_AuthMode> onModeChange;
+  final VoidCallback onToggleObscure;
+  final VoidCallback onBack;
+  final VoidCallback onSendOtp;
+  final VoidCallback onEmailSignIn;
+  final VoidCallback onEmailRegister;
+  final VoidCallback onAshaQuick;
+  final VoidCallback onGoogle;
+  final VoidCallback onDemo;
+
+  const _AuthPanel({
+    super.key,
+    required this.role,
+    required this.mode,
+    required this.nameCtrl,
+    required this.phoneCtrl,
+    required this.emailCtrl,
+    required this.passwordCtrl,
+    required this.formKey,
+    required this.obscure,
+    required this.loading,
+    required this.error,
+    required this.onModeChange,
+    required this.onToggleObscure,
+    required this.onBack,
+    required this.onSendOtp,
+    required this.onEmailSignIn,
+    required this.onEmailRegister,
+    required this.onAshaQuick,
+    required this.onGoogle,
+    required this.onDemo,
+  });
+
+  @override
+  State<_AuthPanel> createState() => _AuthPanelState();
+}
+
+class _AuthPanelState extends State<_AuthPanel> {
+  bool _registerMode = false;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Icon(Icons.favorite_rounded,
-            size: 64, color: theme.colorScheme.primary),
-        const AppSpacing.vlg(),
-        Text(
-          AppConstants.appName,
-          style: theme.textTheme.headlineMedium
-              ?.copyWith(fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const AppSpacing.vxs(),
-        Text(
-          'One platform, two ways in. This choice decides what the app shows '
-          'you and how the AI speaks to you.',
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
-        const AppSpacing.vxl(),
-        _RoleCard(
-          icon: Icons.face_rounded,
-          color: theme.colorScheme.primary,
-          title: 'I am a Patient',
-          subtitle: 'Check my own health with the ESP32 device. '
-              'Plain-language results, and safe home care when it is not '
-              'serious.',
-          onTap: _busy
-              ? null
-              : () => setState(() {
-                    _role = UserRole.patient;
-                    _errorMessage = null;
-                  }),
-        ),
-        const AppSpacing.vmd(),
-        _RoleCard(
-          icon: Icons.medical_services_outlined,
-          color: theme.colorScheme.secondary,
-          title: 'Nurse / Doctor / Health Worker',
-          subtitle: 'Screen patients with the device, manage cases, and get '
-              'clinical referral guidance.',
-          onTap: _busy
-              ? null
-              : () => setState(() {
-                    _role = UserRole.clinician;
-                    _errorMessage = null;
-                  }),
-        ),
-        const AppSpacing.vxl(),
-        AppOutlinedButton(
-          label: 'Continue as Demo (no account)',
-          icon: const Icon(Icons.science_rounded, size: 24),
-          onPressed: _busy ? null : _demo,
-          borderColor: theme.colorScheme.outline,
-          foregroundColor: theme.colorScheme.onSurfaceVariant,
-          minHeight: 52,
-        ),
-        const AppSpacing.vsm(),
-        Text(
-          'Demo mode uses simulated data — nothing is tied to an account.',
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
-        const AppSpacing.vlg(),
-        _buildFootnote(theme),
-      ],
-    );
-  }
-
-  // ───────────────────────────── Auth form ─────────────────────────────
-
-  Widget _buildAuthForm() {
-    final theme = Theme.of(context);
-    final isPatient = _role == UserRole.patient;
+    final cs = theme.colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            AppIconButton(
+            IconButton(
               icon: const Icon(Icons.arrow_back_rounded),
-              tooltip: 'Back to role choice',
-              onPressed: _busy
-                  ? null
-                  : () => setState(() {
-                        _role = null;
-                        _errorMessage = null;
-                      }),
+              onPressed: widget.loading ? null : widget.onBack,
+              tooltip: 'Change role',
             ),
-            const AppSpacing.hsm(),
+            const SizedBox(width: 4),
             Expanded(
-              child: Text(
-                isPatient
-                    ? 'Patient sign-in'
-                    : 'Nurse / Doctor sign-in',
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _roleTitle(widget.role),
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    _roleSubtitle(widget.role),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: ClinicalPalette.muted(context),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-        const AppSpacing.vsm(),
-        Text(
-          isPatient
-              ? 'Your results stay on this phone, explained in plain words.'
-              : 'Screen camps, patients and referral guidance stay on this '
-                  'phone — even with no network.',
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-        ),
-        const AppSpacing.vlg(),
-        AppSegmentedButton<bool>(
-          segments: const [
-            ButtonSegment(value: false, label: Text('Sign in')),
-            ButtonSegment(value: true, label: Text('Create account')),
-          ],
-          selected: {_registerMode},
-          onSelectionChanged: _busy
-              ? (_) {}
-              : (selection) => setState(() {
-                    _registerMode = selection.first;
-                    _errorMessage = null;
-                  }),
-        ),
-        const AppSpacing.vlg(),
-        Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              if (_registerMode) ...[
-                AppTextField(
-                  controller: _nameController,
-                  label: 'Full name',
-                  hint: isPatient ? 'Your name' : 'Worker name',
-                  prefixIcon: Icons.badge_outlined,
-                  textCapitalization: TextCapitalization.words,
-                  validator: (value) =>
-                      (value == null || value.trim().isEmpty)
-                          ? 'Please enter the name'
-                          : null,
-                ),
-                const AppSpacing.vmd(),
-              ],
-              AppTextField(
-                controller: _emailController,
-                label: 'Email',
-                hint: isPatient ? 'you@example.com' : 'asha.worker@health.gov',
-                prefixIcon: Icons.mail_outline_rounded,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  return null;
-                },
+
+        const SizedBox(height: 20),
+
+        if (widget.role == UserRole.clinician) ...[
+          _QuickLoginTile(
+            onTap: widget.loading ? null : widget.onAshaQuick,
+            loading: widget.loading && widget.mode == _AuthMode.asha,
+          ),
+          const SizedBox(height: 16),
+          const _OrDivider(text: 'or sign in with phone'),
+          const SizedBox(height: 16),
+        ],
+
+        if (widget.mode == _AuthMode.phone ||
+            widget.mode == _AuthMode.asha)
+          _buildPhoneForm(theme, cs),
+
+        if (widget.mode == _AuthMode.email) _buildEmailForm(theme, cs),
+
+        const SizedBox(height: 12),
+        Center(
+          child: TextButton(
+            onPressed: widget.loading
+                ? null
+                : () => widget.onModeChange(
+                      widget.mode == _AuthMode.email
+                          ? _AuthMode.phone
+                          : _AuthMode.email,
+                    ),
+            child: Text(
+              widget.mode == _AuthMode.email
+                  ? 'Sign in with phone OTP instead'
+                  : 'Sign in with email and password instead',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: ClinicalPalette.teal,
+                fontWeight: FontWeight.w600,
               ),
-              const AppSpacing.vmd(),
-              AppTextField(
-                controller: _passwordController,
-                label: 'Password',
-                hint: _registerMode ? 'At least 6 characters' : 'Your password',
-                prefixIcon: Icons.lock_outline_rounded,
-                obscureText: _obscurePassword,
-                suffixIcon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_off_rounded
-                      : Icons.visibility_rounded,
-                ),
-                onSuffixTap: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  if (_registerMode && value.length < 6) {
-                    return 'At least 6 characters';
-                  }
-                  return null;
-                },
-              ),
-              if (_errorMessage != null) ...[
-                const AppSpacing.vmd(),
-                AppCard(
-                  color: theme.colorScheme.errorContainer,
-                  padding: const EdgeInsets.all(AppTheme.spacingMd),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.error_outline_rounded,
-                          color: theme.colorScheme.error, size: 20),
-                      const AppSpacing.hmd(),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onErrorContainer,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
+            ),
+          ),
+        ),
+
+        if (widget.error != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: ClinicalPalette.coral.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: ClinicalPalette.coral.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.error_outline_rounded,
+                    color: ClinicalPalette.coral, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.error!,
+                    style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
                   ),
                 ),
               ],
-              const AppSpacing.vlg(),
-              AppButton(
-                label: _registerMode ? 'Create account' : 'Sign in',
-                icon: const Icon(Icons.login_rounded, size: 24),
-                isLoading: _isLoading,
-                onPressed: _busy ? null : _submit,
-                minHeight: 56,
-              ),
-            ],
+            ),
           ),
-        ),
-        const AppSpacing.vlg(),
-        Row(children: [
-          const Expanded(child: AppDivider()),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacingMd),
-            child: Text('or',
-                style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant)),
-          ),
-          const Expanded(child: AppDivider()),
-        ]),
-        const AppSpacing.vlg(),
-        AppOutlinedButton(
-          label: 'Continue with Google',
-          icon: Icon(Icons.g_mobiledata_rounded,
-              size: 28, color: theme.colorScheme.primary),
-          isLoading: _googleLoading,
-          onPressed: _busy ? null : _google,
-          borderColor: theme.colorScheme.outline,
-          foregroundColor: theme.colorScheme.onSurface,
-          minHeight: 56,
-        ),
-        const AppSpacing.vsm(),
-        Text(
-          'Google needs an internet connection the first time. Email works '
-          'with no network at all.',
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
-        const AppSpacing.vlg(),
-        _buildFootnote(theme),
+        ],
+
+        const SizedBox(height: 20),
+        const _FooterNote(),
       ],
     );
   }
 
-  Widget _buildFootnote(ThemeData theme) {
+  Widget _buildPhoneForm(ThemeData theme, ColorScheme cs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          controller: widget.nameCtrl,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            labelText: 'Your name',
+            hintText: _roleNameHint(widget.role),
+            prefixIcon: const Icon(Icons.badge_rounded),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextFormField(
+          controller: widget.phoneCtrl,
+          keyboardType: TextInputType.phone,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(
+            labelText: 'Mobile number',
+            hintText: '98765 43210',
+            prefixIcon: const Icon(Icons.phone_android_rounded),
+            prefixText: '+91  ',
+            prefixStyle: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        FilledButton.icon(
+          icon: widget.loading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : const Icon(Icons.sms_rounded),
+          label: Text(widget.loading ? 'Sending OTP…' : 'Send OTP'),
+          onPressed: widget.loading ? null : widget.onSendOtp,
+        ),
+        const SizedBox(height: 16),
+        const _OrDivider(text: 'or'),
+        const SizedBox(height: 12),
+        _GoogleSignInButton(
+          onTap: widget.loading ? null : widget.onGoogle,
+          loading: widget.loading,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailForm(ThemeData theme, ColorScheme cs) {
+    return Form(
+      key: widget.formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(value: false, label: Text('Sign in')),
+              ButtonSegment(value: true, label: Text('Create account')),
+            ],
+            selected: {_registerMode},
+            onSelectionChanged: widget.loading
+                ? (_) {}
+                : (s) => setState(() => _registerMode = s.first),
+          ),
+          const SizedBox(height: 16),
+          if (_registerMode) ...[
+            TextFormField(
+              controller: widget.nameCtrl,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'Full name',
+                prefixIcon: Icon(Icons.badge_rounded),
+              ),
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? 'Name required' : null,
+            ),
+            const SizedBox(height: 12),
+          ],
+          TextFormField(
+            controller: widget.emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(
+              labelText: 'Email address',
+              hintText: _roleEmailHint(widget.role),
+              prefixIcon: const Icon(Icons.mail_outline_rounded),
+            ),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Email required';
+              if (!v.contains('@')) return 'Enter a valid email';
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: widget.passwordCtrl,
+            obscureText: widget.obscure,
+            decoration: InputDecoration(
+              labelText: 'Password',
+              hintText: _registerMode ? 'At least 6 characters' : '',
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
+              suffixIcon: IconButton(
+                icon: Icon(widget.obscure
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded),
+                onPressed: widget.onToggleObscure,
+              ),
+            ),
+            validator: (v) {
+              if (v == null || v.isEmpty) return 'Password required';
+              if (_registerMode && v.length < 6) {
+                return 'At least 6 characters';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            icon: widget.loading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
+                  )
+                : const Icon(Icons.login_rounded),
+            label: Text(_registerMode ? 'Create account' : 'Sign in'),
+            onPressed: widget.loading
+                ? null
+                : (_registerMode
+                    ? widget.onEmailRegister
+                    : widget.onEmailSignIn),
+          ),
+          const SizedBox(height: 16),
+          const _OrDivider(text: 'or'),
+          const SizedBox(height: 12),
+          _GoogleSignInButton(
+            onTap: widget.loading ? null : widget.onGoogle,
+            loading: widget.loading,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _roleTitle(UserRole role) => switch (role) {
+        UserRole.patient => 'Patient sign-in',
+        UserRole.clinician => 'Clinician sign-in',
+      };
+
+  String _roleSubtitle(UserRole role) => switch (role) {
+        UserRole.patient => 'Your records stay on this device.',
+        UserRole.clinician => 'Screen, triage, and refer patients.',
+      };
+
+  String _roleNameHint(UserRole role) => switch (role) {
+        UserRole.patient => 'Your full name',
+        UserRole.clinician => 'Dr. / nurse name',
+      };
+
+  String _roleEmailHint(UserRole role) => switch (role) {
+        UserRole.patient => 'you@example.com',
+        UserRole.clinician => 'doctor@hospital.in',
+      };
+}
+
+// ───────────────────────── ASHA quick login ─────────────────────────
+
+class _QuickLoginTile extends StatelessWidget {
+  final VoidCallback? onTap;
+  final bool loading;
+
+  const _QuickLoginTile({required this.onTap, required this.loading});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: theme.colorScheme.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: ClinicalPalette.teal.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: ClinicalPalette.teal.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: loading
+                    ? const Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: ClinicalPalette.teal),
+                        ),
+                      )
+                    : const Icon(Icons.bolt_rounded,
+                        color: ClinicalPalette.teal, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'One-tap field login',
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Works fully offline · no OTP needed',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: ClinicalPalette.muted(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: ClinicalPalette.faint(context)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ───────────────────────── Shared bits ─────────────────────────
+
+class _OrDivider extends StatelessWidget {
+  final String text;
+  const _OrDivider({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+            child: Divider(color: ClinicalPalette.hairline(context))),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            text,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: ClinicalPalette.muted(context)),
+          ),
+        ),
+        Expanded(
+            child: Divider(color: ClinicalPalette.hairline(context))),
+      ],
+    );
+  }
+}
+
+class _FooterNote extends StatelessWidget {
+  const _FooterNote();
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(Icons.lock_outline_rounded,
-            size: 14, color: theme.colorScheme.onSurfaceVariant),
-        const AppSpacing.hxs(),
+            size: 13, color: ClinicalPalette.faint(context)),
+        const SizedBox(width: 5),
         Flexible(
           child: Text(
-            'Passwords are never stored — only a salted hash on this device.',
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            'Records stored on this device · screening only, not a diagnosis',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: ClinicalPalette.muted(context)),
             textAlign: TextAlign.center,
           ),
         ),
@@ -427,71 +903,111 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-/// One role card. Full-width even when a second one sits below it — a 360 dp
-/// field phone has no business splitting this into columns.
-class _RoleCard extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
+class _GoogleSignInButton extends StatelessWidget {
   final VoidCallback? onTap;
+  final bool loading;
 
-  const _RoleCard({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.subtitle,
-    this.onTap,
+  const _GoogleSignInButton({
+    required this.onTap,
+    this.loading = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AppCard(
-      padding: EdgeInsets.zero,
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Material(
+      color: isDark ? const Color(0xFF1E1F20) : Colors.white,
+      borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacingLg),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color:
+                  isDark ? const Color(0xFF444746) : const Color(0xFFDADCE0),
+            ),
+          ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spacingMd),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                ),
-                child: Icon(icon, color: color, size: 32),
-              ),
-              const AppSpacing.hlg(),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const AppSpacing.vxs(),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+              if (loading)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else ...[
+                const _GoogleGIcon(),
+                const SizedBox(width: 12),
+              ],
+              Flexible(
+                child: Text(
+                  'Continue with Google',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color:
+                        isDark ? Colors.white : const Color(0xFF1F1F1F),
+                    letterSpacing: 0.2,
+                  ),
                 ),
               ),
-              const AppSpacing.hsm(),
-              Icon(Icons.chevron_right_rounded,
-                  color: theme.colorScheme.onSurfaceVariant),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class _GoogleGIcon extends StatelessWidget {
+  const _GoogleGIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 22,
+      height: 22,
+      child: CustomPaint(painter: _GoogleLogoPainter()),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.2
+      ..strokeCap = StrokeCap.round;
+
+    final rect = Rect.fromLTWH(2, 2, size.width - 4, size.height - 4);
+
+    paint.color = const Color(0xFF4285F4);
+    canvas.drawArc(rect, -0.6, 1.4, false, paint);
+    canvas.drawLine(
+      Offset(size.width / 2, size.height / 2),
+      Offset(size.width - 1, size.height / 2),
+      paint..strokeCap = StrokeCap.butt,
+    );
+
+    paint.color = const Color(0xFF34A853);
+    canvas.drawArc(rect, 0.8, 1.2, false, paint..strokeCap = StrokeCap.round);
+
+    paint.color = const Color(0xFFFBBC05);
+    canvas.drawArc(rect, 2.0, 1.1, false, paint);
+
+    paint.color = const Color(0xFFEA4335);
+    canvas.drawArc(rect, 3.1, 1.5, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

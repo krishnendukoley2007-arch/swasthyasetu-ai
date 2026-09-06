@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
@@ -7,9 +8,18 @@ import 'package:swasthyasetu_ai/core/services/fall_alarm_coordinator.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/l10n/generated/app_localizations.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  ErrorHandlerService.initialize();
+  try {
+    await Firebase.initializeApp();
+  } catch (e, st) {
+    debugPrint('Firebase initialization warning (running in offline/local mode): $e\n$st');
+  }
+  try {
+    ErrorHandlerService.initialize();
+  } catch (e, st) {
+    debugPrint('ErrorHandlerService initialization error: $e\n$st');
+  }
   runApp(const ProviderScope(child: SwasthyaSetuApp()));
 }
 

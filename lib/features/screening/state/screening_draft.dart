@@ -23,7 +23,6 @@ class ScreeningDraft {
 
   final String deviceId;
   final String deviceName;
-  final bool isDemoDevice;
 
   final HealthSample? sample;
 
@@ -42,6 +41,10 @@ class ScreeningDraft {
   /// Set once the row has been written, so revisiting triage does not create a
   /// second record for the same reading.
   final String? savedScreeningId;
+
+  /// Explicit provenance tracking: true if the screening used a demo device,
+  /// a synthetic/generated trace, or a demo health sample.
+  final bool isDemoDevice;
 
   const ScreeningDraft({
     this.patient,
@@ -114,6 +117,7 @@ class ScreeningDraftController extends StateNotifier<ScreeningDraft> {
   }) {
     state = state.copyWith(
       sample: sample,
+      isDemoDevice: state.isDemoDevice || sample.isDemo,
       ecgSamples: ecgSamples,
       ecgSampleRate: ecgSampleRate,
       startedAt: state.startedAt ?? DateTime.now(),
@@ -130,11 +134,15 @@ class ScreeningDraftController extends StateNotifier<ScreeningDraft> {
   /// forces the draft to demo and cannot be undone here — provenance only ever
   /// moves towards "not a real reading", so a synthetic strip cannot launder a
   /// screening into looking measured.
-  void setEcg(List<int> samples, {int? sampleRate, bool generated = false}) {
+  void setEcg(
+    List<int> samples, {
+    int? sampleRate,
+    bool generated = false,
+  }) {
     state = state.copyWith(
       ecgSamples: samples,
       ecgSampleRate: sampleRate,
-      isDemoDevice: generated ? true : null,
+      isDemoDevice: state.isDemoDevice || generated,
       startedAt: state.startedAt ?? DateTime.now(),
     );
   }

@@ -49,6 +49,53 @@ class EnvironmentalRules {
       if (air != null) out.add(_airAdvisory(air, aqi, vulnerable));
     }
 
+    // Rain & Flood Hazard Evaluation
+    if (reading.isHeavyRainOrFloodRisk) {
+      out.add(EnvironmentAdvisory(
+        level: AdvisoryLevel.danger,
+        id: 'rain_flood_danger',
+        title: 'Heavy Rain & Flood Alert (${reading.weatherDescription})',
+        body: 'Heavy rainfall (${reading.precipitationMm > 0 ? '${reading.precipitationMm.toStringAsFixed(1)} mm' : reading.weatherDescription}) indicates high risk of flash floods and waterlogging. Avoid low-lying areas, keep drinking water stored, and stay indoors.',
+      ));
+    } else if (reading.isRainy) {
+      out.add(EnvironmentAdvisory(
+        level: AdvisoryLevel.info,
+        id: 'rain_info',
+        title: 'Rainy Weather (${reading.weatherDescription})',
+        body: 'Rainy conditions reported (${reading.precipitationMm > 0 ? '${reading.precipitationMm.toStringAsFixed(1)} mm rain' : 'active rainfall'}). Stay dry, keep warm, and avoid standing water.',
+      ));
+    }
+
+    // Thunderstorm Hazard Evaluation
+    if (reading.weatherCode == 95 || reading.weatherCode == 96 || reading.weatherCode == 99) {
+      out.add(EnvironmentAdvisory(
+        level: AdvisoryLevel.danger,
+        id: 'thunderstorm_warning',
+        title: 'Severe Thunderstorm Alert (${reading.weatherDescription})',
+        body: 'Thunderstorms and lightning reported. Stay indoors away from metallic structures, trees, and open ground. Unplug delicate electronics.',
+      ));
+    }
+
+    // Dense Fog / Low Visibility Evaluation
+    if (reading.weatherCode == 45 || reading.weatherCode == 48) {
+      out.add(EnvironmentAdvisory(
+        level: AdvisoryLevel.warning,
+        id: 'fog_warning',
+        title: 'Dense Fog & Low Visibility (${reading.weatherDescription})',
+        body: 'Dense fog lowers visibility and traps surface pollutants. Drive slowly with low beams and wear a mask if vulnerable to respiratory distress.',
+      ));
+    }
+
+    // Snow & Extreme Cold Evaluation
+    if (reading.temperatureC <= 5.0 || (reading.weatherCode >= 71 && reading.weatherCode <= 86)) {
+      out.add(EnvironmentAdvisory(
+        level: AdvisoryLevel.warning,
+        id: 'cold_snow_warning',
+        title: 'Cold Weather & Snow Alert (${reading.weatherDescription})',
+        body: 'Cold temperature (${reading.temperatureC.round()}°C) and snow conditions. Dress in warm layered clothing, protect extremities, and prevent hypothermia.',
+      ));
+    }
+
     // When heat AND air are both bad, one extra line on the combined risk is
     // worth more than a third card.
     if ((heat == AdvisoryLevel.danger || heat == AdvisoryLevel.warning) &&

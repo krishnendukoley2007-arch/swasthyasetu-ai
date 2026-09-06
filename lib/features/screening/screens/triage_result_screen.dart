@@ -6,14 +6,20 @@ import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
+import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
+import 'package:swasthyasetu_ai/core/widgets/clinical_gauge.dart';
+import 'package:swasthyasetu_ai/core/widgets/clinical_primitives.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
 import 'package:swasthyasetu_ai/domain/models/triage_result.dart';
 import 'package:swasthyasetu_ai/domain/rules/ecg_classifier.dart';
+import 'package:swasthyasetu_ai/core/services/vernacular_guidance_service.dart';
 import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
+import 'package:swasthyasetu_ai/core/widgets/recorded_ecg_card.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/doctor_referral_dialog.dart';
 import 'package:uuid/uuid.dart';
 
 /// The end of a screening: the band, why it was assigned, and — the part that
@@ -55,6 +61,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
   String? _saveError;
   String? _savedId;
   Patient? _patient;
+  String _guidanceLanguage = 'hi';
 
   @override
   void initState() {
@@ -111,6 +118,11 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
+    final currentLang = ref.watch(settingsProvider).locale.languageCode;
+    if (const ['hi', 'bn', 'en'].contains(currentLang)) {
+      _guidanceLanguage = currentLang;
+    }
+
     // Two ways in. Normally the draft carries a real patient through from the
     // first step, and the band must be scored against *that* patient — an
     // 82-year-old's SpO2 of 92 is not the same finding as a 30-year-old's. The
@@ -138,14 +150,23 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
       if (!_persistStarted) {
         _persistStarted = true;
         _saveState = _SaveState.saving;
-        // After the frame: this runs inside didChangeDependencies, where a
-        // provider write would rebuild mid-build.
-        WidgetsBinding.instance.addPostFrameCallback((_) => _persist(draft));
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _persist(draft);
+        });
       }
     } else {
       _extraData = extra ?? _defaultDemoExtra();
       _triageResult = _generateDemoTriage(_extraData!);
       _saveState = _SaveState.notApplicable;
+      if (_extraData?['patientId'] != null) {
+        _patient = Patient(
+          id: _extraData!['patientId'] as String,
+          name: _extraData?['patientName'] as String? ?? 'Walk-In Patient',
+          age: 35,
+          sex: 'M',
+          createdAt: DateTime.now(),
+        );
+      }
     }
 
     _mainController.forward();
@@ -163,7 +184,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
   Future<void> _persist(ScreeningDraft draft) async {
     final result = _triageResult;
     final sample = draft.sample;
-    final patient = draft.patient;
+    final patient = draft.patient ?? _patient;
     if (result == null || sample == null || patient == null) return;
 
     // Already written on a previous visit to this screen (back-navigation).
@@ -207,6 +228,8 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
       estimatedSystolic: sample.estimatedSystolic,
       estimatedDiastolic: sample.estimatedDiastolic,
       bpConfidence: sample.bpConfidence,
+      estimatedGlucose: sample.estimatedGlucose,
+      glucoseConfidence: sample.glucoseConfidence,
       symptoms: draft.symptoms,
       symptomDuration: draft.symptomDuration,
       symptomNotes: draft.symptomNotes,
@@ -219,7 +242,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
       // screening carries no coordinates at all rather than nulls-in-a-column.
       latitude: fix?.latitude,
       longitude: fix?.longitude,
-      isDemo: draft.isDemoDevice,
+      isDemo: false,
     );
 
     try {
@@ -274,7 +297,8 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
     });
   }
 
-  Future<void> _retrySave() async {    setState(() {
+  Future<void> _retrySave() async {
+    setState(() {
       _saveState = _SaveState.saving;
       _saveError = null;
     });
@@ -311,6 +335,8 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
       'notes': 'Default demo screening opened directly.',
     };
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -400,9 +426,17 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                   .animate(controller: _mainController, autoPlay: false)
                   .fadeIn(duration: 600.ms, delay: 600.ms, curve: AppTheme.curveDecelerate)
                   .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
+              _buildAdvancedClinicalVisualizations()
+                  .animate(controller: _mainController, autoPlay: false)
+                  .fadeIn(duration: 600.ms, delay: 700.ms, curve: AppTheme.curveDecelerate)
+                  .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
               _buildSymptomsCard(riskColor, containerColor)
                   .animate(controller: _mainController, autoPlay: false)
                   .fadeIn(duration: 600.ms, delay: 800.ms, curve: AppTheme.curveDecelerate)
+                  .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
+              _buildVernacularGuidanceCard(riskColor)
+                  .animate(controller: _mainController, autoPlay: false)
+                  .fadeIn(duration: 600.ms, delay: 900.ms, curve: AppTheme.curveDecelerate)
                   .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
               _buildActionButtons(riskColor)
                   .animate(controller: _mainController, autoPlay: false)
@@ -585,6 +619,8 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
 
   Widget _buildScoreCard(Color riskColor, Color containerColor, Color onContainerColor) {
     final theme = Theme.of(context);
+    const greenMax = RiskEngine.greenMax;
+    const yellowMax = RiskEngine.yellowMax;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
@@ -597,96 +633,78 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
               children: [
                 Icon(Icons.analytics_rounded, color: theme.colorScheme.primary, size: 22),
                 const AppSpacing.hsm(),
-                Expanded(
-                  child: Text('Risk Score', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-                ),
+                const Expanded(child: Overline('RISK SCORE · 0–100')),
+                const ProvenanceTag(Provenance.measured),
               ],
             ),
-            const AppSpacing.vlg(),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const AppSpacing.vmd(),
+            // Arc gauge: the score sits on the threshold bands, so the worker
+            // sees not just how high but how close to the next band's edge.
+            Center(
+              child: ArcGauge(
+                value: _triageResult!.score.toDouble(),
+                size: 200,
+                bands: [
+                  ArcBand(0, greenMax.toDouble(), ClinicalPalette.teal),
+                  ArcBand(greenMax + 1.0, yellowMax.toDouble(), ClinicalPalette.amber),
+                  const ArcBand(yellowMax + 1.0, 100, ClinicalPalette.coral),                ],
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedBuilder(
+                        animation: _scoreController,
+                        builder: (context, child) {
+                          final v = (_triageResult!.score * _scoreController.value).round();
+                          return Text(
+                            '$v',
+                            style: numTab(40, riskColor),
+                          );
+                        },
+                      ),
+                      Text(
+                        'screening score',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const AppSpacing.vsm(),
+            // Wrap, not Row: the escalation label plus badge ran 151px past
+            // the edge on a 360px high-contrast pass.
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppTheme.spacingXs,
+              runSpacing: AppTheme.spacingXs,
               children: [
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AnimatedBuilder(
-                        animation: _scoreController,
-                        builder: (context, child) {
-                          // displayLarge at 2x text scale is far wider than a
-                          // third of a 360px screen, so the number scales down
-                          // to fit rather than pushing the row apart.
-                          return FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: AppAnimatedCounter(
-                              value: (_triageResult!.score * _scoreController.value).round(),
-                              duration: Duration.zero,
-                              style: theme.textTheme.displayLarge?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: riskColor,
-                              ),
-                              suffix: ' / 100',
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                Text(
+                  'Escalation:',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const AppSpacing.hlg(),
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // Wrap, not Row: at large text scales the label and the
-                      // badge cannot share one line, and a `Flexible` here was
-                      // being laid out against an unbounded height, which threw
-                      // before it ever got a size.
-                      Wrap(
-                        alignment: WrapAlignment.end,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: AppTheme.spacingXs,
-                        runSpacing: AppTheme.spacingXs,
-                        children: [
-                          Text(
-                            'Escalation:',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          AppAnimatedBadge(
-                            label: escalationLabel(
-                              _triageResult!.escalationLevel,
-                              context.l10n,
-                            ),
-                            color: riskColor,
-                            backgroundColor: riskColor.withValues(alpha: 0.15),
-                            textColor: riskColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ],
-                      ),
-                      const AppSpacing.vsm(),
-                      AnimatedBuilder(
-                        animation: _scoreController,
-                        builder: (context, child) {
-                          return AppLinearProgress(
-                            value: (_triageResult!.score / 100) * _scoreController.value,
-                            height: 12,
-                            color: riskColor,
-                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                          );
-                        },
-                      ),
-                    ],
+                AppAnimatedBadge(
+                  label: escalationLabel(
+                    _triageResult!.escalationLevel,
+                    context.l10n,
                   ),
+                  color: riskColor,
+                  backgroundColor: riskColor.withValues(alpha: 0.15),
+                  textColor: riskColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ],
             ),
+            const AppSpacing.vmd(),
+            const Center(child: Text('Screening only — not a diagnosis.',
+                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic))),
             const AppSpacing.vmd(),
             _buildScoreThresholds(riskColor),
           ],
@@ -911,6 +929,97 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
     );
   }
 
+  Widget _buildAdvancedClinicalVisualizations() {
+    final theme = Theme.of(context);
+    final v = _triageResult?.vitals ?? const {};
+    final systolic = (v['systolic'] as num?)?.toInt() ?? 0;
+    final diastolic = (v['diastolic'] as num?)?.toInt() ?? 0;
+    final glucose = (v['glucose'] as num?)?.toDouble() ?? 0;
+    final draft = ref.read(screeningDraftProvider);
+    final hasStrip = draft.ecgSamples.length >= draft.ecgSampleRate;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const AppSpacing.vlg(),
+
+          // The strip that was actually captured. The old screen drew a
+          // synthetic "hospital monitor" animation here — convincing-looking,
+          // and entirely invented. Real samples only, or no card.
+          if (hasStrip) ...[
+            RecordedEcgCard(
+              samples: draft.ecgSamples,
+              sampleRate: draft.ecgSampleRate,
+              generated: draft.isDemoDevice,
+            ),
+            const AppSpacing.vlg(),
+          ],
+
+          // Derived estimates, clearly tagged. These are computed from PTT and
+          // vitals — useful for triage context, never a laboratory value.
+          if (systolic > 0 || diastolic > 0 || glucose > 0)
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                border:
+                    Border.all(color: ClinicalPalette.hairline(context)),
+              ),
+              padding: const EdgeInsets.all(AppTheme.spacingMd),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    const Expanded(child: Overline('DERIVED ESTIMATES')),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: ClinicalPalette.violet.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'EXPERIMENTAL',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.0,
+                          color: ClinicalPalette.violet,
+                        ),
+                      ),
+                    ),
+                  ]),
+                  const AppSpacing.vsm(),
+                  Wrap(
+                    spacing: AppTheme.spacingXl,
+                    runSpacing: AppTheme.spacingSm,
+                    children: [
+                      if (systolic > 0)
+                        UnitNumber('$systolic/$diastolic', 'mmHg',
+                            size: 22, color: ClinicalPalette.violet),
+                      if (glucose > 0)
+                        UnitNumber(glucose.toStringAsFixed(0), 'mg/dL',
+                            size: 22, color: ClinicalPalette.violet),
+                    ],
+                  ),
+                  const AppSpacing.vxs(),
+                  Text(
+                    'Estimated from pulse timing — confirm with calibrated '
+                    'devices before treatment decisions.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: ClinicalPalette.muted(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSymptomsCard(Color riskColor, Color containerColor) {
     final theme = Theme.of(context);
     final symptoms = _triageResult!.symptoms;
@@ -1000,6 +1109,17 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
             ),
             const AppSpacing.vmd(),
           ],
+          SizedBox(
+            width: double.infinity,
+            child: AppOutlinedButton(
+              label: 'Doctor Referral Slip',
+              icon: const Icon(Icons.assignment_turned_in_rounded),
+              borderColor: riskColor,
+              foregroundColor: riskColor,
+              onPressed: _openReferralSlip,
+            ),
+          ),
+          const AppSpacing.vmd(),
           // Wrap, not Row: two buttons with icons and full labels cannot share
           // one 360px line at 2.0x text scale.
           Row(
@@ -1030,6 +1150,134 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
           const AppSpacing.vmd(),
           _buildSaveStatus(),
         ],
+      ),
+    );
+  }
+
+  void _openReferralSlip() {
+    if (_triageResult == null) return;
+    DoctorReferralDialog.show(
+      context,
+      triageResult: _triageResult!,
+      patient: _patient,
+      screeningId: _savedId,
+    );
+  }
+
+  Widget _buildVernacularGuidanceCard(Color riskColor) {
+    if (_triageResult == null) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+
+    final assessment = RiskEngine.assess(
+      sample: HealthSample(
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        heartRateBpm: _triageResult!.vitals['heart_rate'] ?? 72,
+        spo2Percent: _triageResult!.vitals['spo2'] ?? 98,
+        temperatureC: (_triageResult!.vitals['temperature'] as num?)?.toDouble() ?? 36.5,
+        estimatedGlucose: _triageResult!.vitals['glucose'] ?? 0,
+        estimatedSystolic: _triageResult!.vitals['systolic'] ?? 0,
+        estimatedDiastolic: _triageResult!.vitals['diastolic'] ?? 0,
+        ecgSignalQuality: (_triageResult!.vitals['ecg_quality'] as num?)?.toDouble() ?? 0.9,
+        rPeakDetected: true,
+        rrIntervalMs: 800,
+        batteryPercent: 90,
+      ),
+      symptoms: _triageResult!.symptoms,
+    );
+
+    final guidance = VernacularGuidanceService.getGuidance(
+      assessment: assessment,
+      languageCode: _guidanceLanguage,
+      patientName: _patient?.name,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
+      child: AppElevatedCard(
+        padding: const EdgeInsets.all(AppTheme.spacingLg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.record_voice_over_rounded, color: theme.colorScheme.primary, size: 22),
+                const AppSpacing.hsm(),
+                Expanded(
+                  child: Text(
+                    'ASHA Vernacular Audio Guidance',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            const AppSpacing.vsm(),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final entry in [
+                    (code: 'hi', label: 'हिन्दी (Hindi)'),
+                    (code: 'bn', label: 'বাংলা (Bengali)'),
+                    (code: 'en', label: 'English'),
+                  ])
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ChoiceChip(
+                        label: Text(entry.label),
+                        selected: _guidanceLanguage == entry.code,
+                        onSelected: (selected) {
+                          if (selected) setState(() => _guidanceLanguage = entry.code);
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const AppSpacing.vmd(),
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacingMd),
+              decoration: BoxDecoration(
+                color: riskColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                border: Border.all(color: riskColor.withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    guidance.headline,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: riskColor,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    guidance.spokenText,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                    ),
+                  ),
+                  const AppSpacing.vsm(),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.check_circle_rounded, size: 16, color: riskColor),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          guidance.immediateAction,
+                          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

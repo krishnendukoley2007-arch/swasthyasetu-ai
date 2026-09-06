@@ -84,6 +84,10 @@ abstract final class RuleId {
   static const ecgIrregular = 'ecg_irregular';
   static const ecgPoorQuality = 'ecg_poor_quality';
   static const bpHigh = 'bp_high';
+  static const bpExperimentalAdvisory = 'bp_experimental_advisory';
+  static const glucoseHypoglycemia = 'glucose_hypoglycemia';
+  static const glucoseHyperglycemiaHigh = 'glucose_hyperglycemia_high';
+  static const glucoseHyperglycemiaCritical = 'glucose_hyperglycemia_critical';
   static const respiratorySymptoms = 'respiratory_symptoms';
   static const redFlagSymptoms = 'red_flag_symptoms';
   static const multipleSymptoms = 'multiple_symptoms';
@@ -251,6 +255,7 @@ class RiskEngine {
     _evaluateSepsisScreen(sample, thresholds, fired);
     _evaluateEcg(sample, fired);
     _evaluateBloodPressure(sample, fired);
+    _evaluateGlucose(sample, fired);
     _evaluateSymptoms(symptoms, fired);
     _evaluateVulnerability(effectiveFlags, fired);
 
@@ -506,7 +511,31 @@ class RiskEngine {
   /// warning but never a critical. It must not be the reason someone is sent to
   /// hospital on its own.
   static void _evaluateBloodPressure(HealthSample s, List<FiredRule> out) {
-    if (s.estimatedSystolic <= 0 || s.bpConfidence == 'EXPERIMENTAL') return;
+    if (s.estimatedSystolic <= 0) return;
+
+    if (s.bpConfidence == 'EXPERIMENTAL') {
+      if (s.estimatedSystolic >= 180 || s.estimatedDiastolic >= 110) {
+        out.add(FiredRule(
+          id: RuleId.bpExperimentalAdvisory,
+          severity: RuleSeverity.advisory,
+          points: 0,
+          title: 'Estimated blood pressure very high (Advisory)',
+          detail: 'Estimated ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg. '
+              'This is an uncalibrated optical estimate — confirm with a manual '
+              'sphygmomanometer cuff before acting on it.',
+        ));
+      } else if (s.estimatedSystolic >= 140 || s.estimatedDiastolic >= 90) {
+        out.add(FiredRule(
+          id: RuleId.bpExperimentalAdvisory,
+          severity: RuleSeverity.advisory,
+          points: 0,
+          title: 'Estimated blood pressure elevated (Advisory)',
+          detail: 'Estimated ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg '
+              '(optical estimate). Confirm with a standard blood pressure cuff.',
+        ));
+      }
+      return;
+    }
 
     if (s.estimatedSystolic >= 180 || s.estimatedDiastolic >= 110) {
       out.add(FiredRule(
@@ -517,6 +546,39 @@ class RiskEngine {
         detail: 'Estimated ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg. '
             'This is an uncalibrated estimate — confirm with a cuff before '
             'acting on it.',
+      ));
+    }
+  }
+
+  static void _evaluateGlucose(HealthSample s, List<FiredRule> out) {
+    if (s.estimatedGlucose <= 0) return;
+
+    if (s.estimatedGlucose < 70) {
+      out.add(FiredRule(
+        id: RuleId.glucoseHypoglycemia,
+        severity: RuleSeverity.critical,
+        points: 30,
+        title: 'Estimated blood glucose low (Hypoglycemia)',
+        detail: 'Estimated ${s.estimatedGlucose} mg/dL, below the 70 mg/dL '
+            'safety threshold. Confirm with a blood test.',
+      ));
+    } else if (s.estimatedGlucose >= 250) {
+      out.add(FiredRule(
+        id: RuleId.glucoseHyperglycemiaCritical,
+        severity: RuleSeverity.critical,
+        points: 30,
+        title: 'Estimated blood glucose critically high',
+        detail: 'Estimated ${s.estimatedGlucose} mg/dL, at or above 250 mg/dL. '
+            'Confirm with a blood glucose meter.',
+      ));
+    } else if (s.estimatedGlucose >= 180) {
+      out.add(FiredRule(
+        id: RuleId.glucoseHyperglycemiaHigh,
+        severity: RuleSeverity.warning,
+        points: 15,
+        title: 'Estimated blood glucose elevated',
+        detail: 'Estimated ${s.estimatedGlucose} mg/dL, above the expected '
+            '140 mg/dL upper normal limit.',
       ));
     }
   }
@@ -686,6 +748,15 @@ class RiskEngine {
     RuleId.bpHigh:
         'A very high blood-pressure estimate should be confirmed with a cuff '
             'before any action is taken.',
+    RuleId.glucoseHypoglycemia:
+        'Low blood glucose estimates suggest hypoglycemia. Fasting or symptomatic '
+            'low sugar requires verification with a blood test.',
+    RuleId.glucoseHyperglycemiaHigh:
+        'Elevated blood glucose estimates suggest hyperglycemia. High sugar levels '
+            'should be monitored and confirmed.',
+    RuleId.glucoseHyperglycemiaCritical:
+        'Critically high blood glucose estimates require prompt clinical review '
+            'and confirmation with a blood glucose meter.',
     RuleId.respiratorySymptoms:
         'Breathing symptoms alongside abnormal vitals raise the concern for a '
             'chest infection.',

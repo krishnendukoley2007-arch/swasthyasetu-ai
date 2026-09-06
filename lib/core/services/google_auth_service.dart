@@ -54,7 +54,7 @@ class GoogleAuthService {
   /// `--dart-define=GOOGLE_SERVER_CLIENT_ID=…` still overrides it, which is how
   /// a different Cloud project builds this app without editing source.
   static const String defaultServerClientId =
-      '431266496612-3kjd9eis0qc23a8fjvdlb954oardhr5e.apps.googleusercontent.com';
+      '140036989123-hna6a7l3gfd008kvuhii770g7okfh1ce.apps.googleusercontent.com';
 
   final String _serverClientId;
   bool _initialized = false;
@@ -95,8 +95,11 @@ class GoogleAuthService {
       );
     } on GoogleSignInException catch (e) {
       throw switch (e.code) {
-        GoogleSignInExceptionCode.canceled => const AuthException(
+        GoogleSignInExceptionCode.canceled => AuthException(
             AuthFailure.googleCancelled,
+            e.description ??
+                'Google Sign-In was cancelled or rejected by Google Play Services. '
+                'Please ensure the Web Client ID and SHA-1 in Firebase Console match your build.',
           ),
         GoogleSignInExceptionCode.clientConfigurationError => AuthException(
             AuthFailure.googleUnavailable,
@@ -106,9 +109,15 @@ class GoogleAuthService {
           ),
         _ => AuthException(
             AuthFailure.googleUnavailable,
-            e.description ?? 'Google sign-in failed.',
+            e.description ?? 'Google sign-in failed (${e.code}).',
           ),
       };
+    } catch (e) {
+      if (e is AuthException) rethrow;
+      throw AuthException(
+        AuthFailure.googleUnavailable,
+        'Google sign-in encountered an error: $e. You can sign in using Phone OTP or email.',
+      );
     }
   }
 

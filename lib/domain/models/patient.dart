@@ -178,6 +178,8 @@ class Screening {
   final int estimatedDiastolic;
   final String bpConfidence;
   final DateTime? bpCalibratedAt;
+  final int estimatedGlucose;
+  final String glucoseConfidence;
 
   final List<String> symptoms;
   final String? symptomDuration;
@@ -216,6 +218,8 @@ class Screening {
     this.estimatedDiastolic = 0,
     this.bpConfidence = 'EXPERIMENTAL',
     this.bpCalibratedAt,
+    this.estimatedGlucose = 0,
+    this.glucoseConfidence = 'EXPERIMENTAL',
     this.symptoms = const [],
     this.symptomDuration,
     this.symptomNotes,
@@ -236,6 +240,8 @@ class Screening {
   bool get hasLocation => latitude != null && longitude != null;
 
   bool get hasBpEstimate => estimatedSystolic > 0 && estimatedDiastolic > 0;
+
+  bool get hasGlucoseEstimate => estimatedGlucose > 0;
 
   bool get isEcgTrustworthy => ecgQualityScore >= 0.5;
 
@@ -267,6 +273,8 @@ class Screening {
     bpCalibratedAt: json['bpCalibratedAt'] != null
         ? DateTime.parse(json['bpCalibratedAt'] as String)
         : null,
+    estimatedGlucose: json['estimatedGlucose'] as int? ?? 0,
+    glucoseConfidence: json['glucoseConfidence'] as String? ?? 'EXPERIMENTAL',
     symptoms: (json['symptoms'] as List<dynamic>?)?.cast<String>() ?? const [],
     symptomDuration: json['symptomDuration'] as String?,
     symptomNotes: json['symptomNotes'] as String?,
@@ -301,6 +309,8 @@ class Screening {
     'estimatedDiastolic': estimatedDiastolic,
     'bpConfidence': bpConfidence,
     'bpCalibratedAt': bpCalibratedAt?.toIso8601String(),
+    'estimatedGlucose': estimatedGlucose,
+    'glucoseConfidence': glucoseConfidence,
     'symptoms': symptoms,
     'symptomDuration': symptomDuration,
     'symptomNotes': symptomNotes,
@@ -334,6 +344,8 @@ class Screening {
     int? estimatedDiastolic,
     String? bpConfidence,
     DateTime? bpCalibratedAt,
+    int? estimatedGlucose,
+    String? glucoseConfidence,
     List<String>? symptoms,
     String? symptomDuration,
     String? symptomNotes,
@@ -365,6 +377,8 @@ class Screening {
     estimatedDiastolic: estimatedDiastolic ?? this.estimatedDiastolic,
     bpConfidence: bpConfidence ?? this.bpConfidence,
     bpCalibratedAt: bpCalibratedAt ?? this.bpCalibratedAt,
+    estimatedGlucose: estimatedGlucose ?? this.estimatedGlucose,
+    glucoseConfidence: glucoseConfidence ?? this.glucoseConfidence,
     symptoms: symptoms ?? this.symptoms,
     symptomDuration: symptomDuration ?? this.symptomDuration,
     symptomNotes: symptomNotes ?? this.symptomNotes,

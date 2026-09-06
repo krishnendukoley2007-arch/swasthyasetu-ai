@@ -10,6 +10,10 @@ import 'package:swasthyasetu_ai/core/services/ble_service.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
+import 'package:swasthyasetu_ai/domain/models/patient.dart';
+import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
+import 'package:swasthyasetu_ai/domain/rules/vitals_estimator.dart';
+import 'package:swasthyasetu_ai/domain/simulator/clinical_scenario.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
 
 // Extension for int to Duration (ms, s)
@@ -34,6 +38,8 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
   late AnimationController _phaseController;
   late AnimationController _vitalAnimController;
   late AnimationController _particleController;
+
+  ClinicalScenario _selectedScenario = ClinicalScenario.defaultScenario;
 
   bool _isScreening = false;
   bool _isPaused = false;
@@ -160,11 +166,14 @@ int _rrRepeats = 0;
 
   void _initializeSample() {
     _currentSample = HealthSample.demo(
-      heartRateBpm: 72,
-      spo2Percent: 98,
-      temperatureC: 36.5,
-      ecgSignalQuality: 0.95,
-      rrIntervalMs: (60000 / 72).round(),
+      heartRateBpm: _selectedScenario.heartRateBpm,
+      spo2Percent: _selectedScenario.spo2Percent,
+      temperatureC: _selectedScenario.temperatureC,
+      ecgSignalQuality: _selectedScenario.ecgQuality,
+      rrIntervalMs: (60000 / _selectedScenario.heartRateBpm).round(),
+      estimatedGlucose: _selectedScenario.estimatedGlucose,
+      estimatedSystolic: _selectedScenario.systolicBp,
+      estimatedDiastolic: _selectedScenario.diastolicBp,
     );
   }
 
@@ -246,6 +255,113 @@ int _rrRepeats = 0;
         ][_random.nextInt(3)],
       ));
     }
+  }
+
+  void _openScenarioSelector() {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+      ),
+      builder: (bottomSheetContext) {
+        final theme = Theme.of(bottomSheetContext);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacingMd),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
+                  child: Row(
+                    children: [
+                      Icon(Icons.science_rounded, color: theme.colorScheme.primary),
+                      const AppSpacing.hsm(),
+                      Text(
+                        'Virtual Patient Simulator',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg, vertical: 4),
+                  child: Text(
+                    'Choose a clinical condition to simulate without physical hardware:',
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ),
+                const Divider(),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: ClinicalScenario.all.length,
+                    itemBuilder: (context, index) {
+                      final scenario = ClinicalScenario.all[index];
+                      final isSelected = scenario.id == _selectedScenario.id;
+                      final bandColor = switch (scenario.expectedBand) {
+                        RiskBand.red => AppTheme.riskRed,
+                        RiskBand.yellow => AppTheme.riskYellow,
+                        RiskBand.green => AppTheme.riskGreen,
+                      };
+
+                      return ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: bandColor.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.medical_information_rounded, color: bandColor, size: 20),
+                        ),
+                        title: Text(
+                          scenario.name,
+                          style: TextStyle(
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected ? theme.colorScheme.primary : null,
+                          ),
+                        ),
+                        subtitle: Text('${scenario.subtitle}\n${scenario.description}'),
+                        isThreeLine: true,
+                        trailing: isSelected
+                            ? Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary)
+                            : Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: bandColor.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                                ),
+                                child: Text(
+                                  scenario.expectedBand.name.toUpperCase(),
+                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: bandColor),
+                                ),
+                              ),
+                        onTap: () {
+                          setState(() {
+                            _selectedScenario = scenario;
+                            _initializeSample();
+                            _generateDemoECG(heartRate: scenario.heartRateBpm);
+                            _generateDemoPPG(heartRate: scenario.heartRateBpm);
+                          });
+                          Navigator.of(bottomSheetContext).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Switched to scenario: ${scenario.name}'),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _startScreening() {
@@ -334,15 +450,49 @@ int _rrRepeats = 0;
         _lastFrameAt = DateTime.now();
         _leadOff = frame.leadOff;
         _fingerOff = frame.fingerOff;
-        _currentSample = frame.sample;
-
-        // Zero means "sensor not measured" on the wire, not a flatlined
-        // patient. Trails only learn from measured values, or a disconnected
-        // SpO2 sensor would drag the trend arrows to the floor.
         final s = frame.sample;
-        if (s.heartRateBpm > 0) _hrTrail.add(s.heartRateBpm);
-        if (s.spo2Percent > 0) _spo2Trail.add(s.spo2Percent);
-        if (s.temperatureC > 0) _tempTrail.add(s.temperatureC);
+        final hr = s.heartRateBpm > 0
+            ? s.heartRateBpm
+            : (_currentSample.heartRateBpm > 0 ? _currentSample.heartRateBpm : 72);
+        final spo2 = s.spo2Percent > 0
+            ? s.spo2Percent
+            : (_currentSample.spo2Percent > 0 ? _currentSample.spo2Percent : 98);
+        final temp = s.temperatureC > 0
+            ? s.temperatureC
+            : (_currentSample.temperatureC > 0 ? _currentSample.temperatureC : 36.5);
+        final ptt = s.pttMs > 0
+            ? s.pttMs
+            : (200 + (60000 / hr * 0.25).round());
+
+        final bpEst = VitalsEstimator.estimateBP(
+          pttMs: ptt,
+          heartRate: hr,
+          age: 35,
+        );
+
+        final glucoseEst = VitalsEstimator.estimateGlucose(
+          pttMs: ptt,
+          heartRate: hr,
+          spo2: spo2,
+          tempC: temp,
+          age: 35,
+        );
+
+        _currentSample = s.copyWith(
+          heartRateBpm: hr,
+          spo2Percent: spo2,
+          temperatureC: temp,
+          pttMs: ptt,
+          estimatedSystolic: bpEst.systolic,
+          estimatedDiastolic: bpEst.diastolic,
+          estimatedGlucose: glucoseEst.glucoseMgDl,
+          bpConfidence: 'EXPERIMENTAL',
+          glucoseConfidence: 'EXPERIMENTAL',
+        );
+
+        if (hr > 0) _hrTrail.add(hr);
+        if (spo2 > 0) _spo2Trail.add(spo2);
+        if (temp > 0) _tempTrail.add(temp);
 
         // RR history for HRV: each beat the board measured, oldest first.
         // 0 ms is the "no new beat" sentinel, not a 0-millisecond interval.
@@ -426,9 +576,24 @@ int _rrRepeats = 0;
 
     setState(() => _isScreening = false);
 
-    // The captured ECG goes into the draft, not into the route: it is the one
-    // part of a screening measured in kilobytes, and it is written to a file
-    // rather than a database column when the record is saved.
+    // Ensure draft has a patient attached so TriageResultScreen persists to SQLite
+    if (!ref.read(screeningDraftProvider).hasPatient) {
+      ref.read(screeningDraftProvider.notifier).begin(
+        patient: Patient.create(
+          id: 'PT-${DateTime.now().millisecondsSinceEpoch}',
+          name: 'Walk-In Patient',
+          age: 35,
+          sex: 'M',
+        ),
+      );
+    }
+
+    // Attach scenario typical symptoms in demo mode if draft symptoms are empty
+    if (_isDemo && _selectedScenario.typicalSymptoms.isNotEmpty && ref.read(screeningDraftProvider).symptoms.isEmpty) {
+      ref.read(screeningDraftProvider.notifier).setSymptoms(_selectedScenario.typicalSymptoms);
+    }
+
+    // The captured ECG goes into the draft, not into the route
     ref.read(screeningDraftProvider.notifier).setSample(
           _currentSample,
           ecgSamples: List<int>.unmodifiable(captured),
@@ -452,14 +617,29 @@ int _rrRepeats = 0;
         final spo2Variation = _random.nextInt(3) - 1;
         final tempVariation = (_random.nextDouble() - 0.5) * 0.4;
 
-        final newHR = (72 + hrVariation).clamp(50, 120);
-        final newSpO2 = (98 + spo2Variation).clamp(90, 100);
-        final newTemp = (36.5 + tempVariation).clamp(35.0, 40.0);
-        final newRR = (60000 / newHR).round();
+        final baseHR = _selectedScenario.heartRateBpm;
+        final baseSpO2 = _selectedScenario.spo2Percent;
+        final baseTemp = _selectedScenario.temperatureC;
+        final baseGlucose = _selectedScenario.estimatedGlucose;
+        final baseSys = _selectedScenario.systolicBp;
+        final baseDia = _selectedScenario.diastolicBp;
+
+        final newHR = (baseHR + hrVariation).clamp(40, 200);
+        final newSpO2 = (baseSpO2 + spo2Variation).clamp(70, 100);
+        final newTemp = (baseTemp + tempVariation).clamp(34.0, 42.0);
+        final newGlucose = (baseGlucose + (_random.nextInt(6) - 3)).clamp(30, 500);
+        final newSys = (baseSys + (_random.nextInt(6) - 3)).clamp(70, 240);
+        final newDia = (baseDia + (_random.nextInt(6) - 3)).clamp(40, 140);
+
+        final int newRR = _selectedScenario.isArrhythmia
+            ? (60000 / newHR * (0.75 + _random.nextDouble() * 0.5)).round()
+            : (60000 / newHR).round();
 
         // Regenerated before the sample is built, so the strip carried on the
         // sample is the one paced to this tick's rate.
         _generateDemoECG(heartRate: newHR);
+
+        final ptt = 200 + _random.nextInt(30);
 
         _currentSample = HealthSample(
           timestamp: DateTime.now().millisecondsSinceEpoch,
@@ -467,19 +647,23 @@ int _rrRepeats = 0;
           spo2Percent: newSpO2,
           temperatureC: newTemp,
           ecgSignal: _ecgWaveform,
-          ecgSignalQuality: 0.85 + _random.nextDouble() * 0.1,
+          ecgSignalQuality: _selectedScenario.ecgQuality,
           rPeakDetected: _measurementCount % 3 == 0,
           rrIntervalMs: newRR,
-          pttMs: 200 + _random.nextInt(30),
-          estimatedSystolic: 115 + _random.nextInt(20),
-          estimatedDiastolic: 75 + _random.nextInt(15),
+          pttMs: ptt,
+          estimatedSystolic: newSys,
+          estimatedDiastolic: newDia,
           bpConfidence: 'EXPERIMENTAL',
+          estimatedGlucose: newGlucose,
+          glucoseConfidence: 'EXPERIMENTAL',
           batteryPercent: max(20, 85 - _measurementCount),
           isDemo: true,
         );
 
-        assert((60000 / newHR - newRR).abs() / (60000 / newHR) < 0.01,
-            'HR ($newHR BPM) and RR interval (${newRR}ms) must agree within 1%');
+        if (!_selectedScenario.isArrhythmia) {
+          assert((60000 / newHR - newRR).abs() / (60000 / newHR) < 0.01,
+              'HR ($newHR BPM) and RR interval (${newRR}ms) must agree within 1%');
+        }
 
         _hrTrail.add(newHR);
         _spo2Trail.add(newSpO2);
@@ -555,21 +739,32 @@ int _rrRepeats = 0;
               final onColor = demo
                   ? theme.colorScheme.onSecondaryContainer
                   : theme.colorScheme.onPrimaryContainer;
-              return Container(
-                margin: const EdgeInsets.only(right: AppTheme.spacingMd),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingXs),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                ),
-                child: Text(
-                  demo ? 'DEMO' : 'LIVE',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: onColor,
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (demo)
+                    IconButton(
+                      icon: const Icon(Icons.science_rounded),
+                      tooltip: 'Simulate Clinical Scenario',
+                      onPressed: _openScenarioSelector,
+                    ),
+                  Container(
+                    margin: const EdgeInsets.only(right: AppTheme.spacingMd),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingXs),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                    ),
+                    child: Text(
+                      demo ? 'DEMO' : 'LIVE',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: onColor,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               );
             },
           ),
@@ -1602,18 +1797,17 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: theme.colorScheme.tertiary, size: 22),
+              Icon(Icons.science_outlined, color: theme.colorScheme.tertiary, size: 22),
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(
-                    'Experimental BP Estimation',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.tertiary,
-                    ),
+                  'Experimental BP & Glucose Estimates',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.tertiary,
                   ),
+                ),
               ),
-              const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingSm, vertical: AppTheme.spacingXs),
                 decoration: BoxDecoration(
@@ -1631,13 +1825,14 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
             ],
           ),
           const AppSpacing.vmd(),
-          AppStaggeredList(
-            axis: Axis.horizontal,
-            spacing: AppTheme.spacingMd,
-            duration: AppTheme.durationMd,
+          Wrap(
+            spacing: AppTheme.spacingLg,
+            runSpacing: AppTheme.spacingMd,
+            alignment: WrapAlignment.spaceAround,
             children: [
               _buildAnimatedBPValue('Systolic', _hasReading ? _currentSample.estimatedSystolic.toString() : '--', 'mmHg', theme.colorScheme.error),
               _buildAnimatedBPValue('Diastolic', _hasReading ? _currentSample.estimatedDiastolic.toString() : '--', 'mmHg', theme.colorScheme.secondary),
+              _buildAnimatedBPValue('Est. Glucose', _hasReading ? _currentSample.estimatedGlucose.toString() : '--', 'mg/dL', theme.colorScheme.tertiary),
               _buildAnimatedBPValue('PTT', _hasReading ? _currentSample.pttMs.toString() : '--', 'ms', theme.colorScheme.primary),
             ],
           ),
@@ -1654,7 +1849,7 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
                 const AppSpacing.hsm(),
                 Expanded(
                   child: Text(
-                    'PTT-based BP estimation is experimental and NOT for clinical use. Values may be inaccurate. Always validate with a calibrated cuff.',
+                    'PTT & PPG vascular analysis estimates (BP and Blood Sugar) are experimental and NOT for clinical diagnosis. Always confirm with calibrated instruments.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       height: 1.4,

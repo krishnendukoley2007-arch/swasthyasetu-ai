@@ -313,11 +313,12 @@ class BleService {
   bool get isCapturing => _capturing;
 
   /// Start accumulating waveform samples. Called when a screening begins.
-  void beginCapture() {
+  void beginCapture({int mode = 1}) {
     _capturedEcg.clear();
     _lastEcgSequence = null;
     _capturing = true;
     _emit(_state.copyWith(droppedEcgFrames: 0));
+    setMode(mode); // Wake up ESP32 in requested mode (1=SpO2, 2=ECG, 3=Temp)
   }
 
   /// Stop accumulating and hand back what was captured. The buffer is cleared
@@ -590,7 +591,7 @@ class BleService {
       if (_controlChar != null) {
         try {
           await _controlChar!.write(
-            BleProtocol.startStreamCommand,
+            BleProtocol.setModeIdleCommand,
             withoutResponse: false,
           );
         } catch (_) {
@@ -661,7 +662,7 @@ class BleService {
 
     if (_controlChar != null) {
       try {
-        await _controlChar!.write(BleProtocol.stopStreamCommand);
+        await _controlChar!.write(BleProtocol.setModeIdleCommand);
       } catch (_) {
         // Best effort: the board idles its sensors on link loss anyway.
       }
@@ -687,6 +688,32 @@ class BleService {
           compatibility: _state.compatibility,
         ),
       );
+    }
+  }
+
+  /// Ask the board to switch into a specific mutually exclusive hardware mode.
+  /// 0 = Idle, 1 = SpO2, 2 = ECG, 3 = Temp
+  Future<void> setMode(int mode) async {
+    if (_controlChar == null || !_state.isLive) return;
+    List<int> command;
+    switch (mode) {
+      case 1:
+        command = BleProtocol.setModeSpO2Command;
+        break;
+      case 2:
+        command = BleProtocol.setModeEcgCommand;
+        break;
+      case 3:
+        command = BleProtocol.setModeTempCommand;
+        break;
+      default:
+        command = BleProtocol.setModeIdleCommand;
+        break;
+    }
+    try {
+      await _controlChar!.write(command, withoutResponse: false);
+    } catch (_) {
+      // Best effort
     }
   }
 

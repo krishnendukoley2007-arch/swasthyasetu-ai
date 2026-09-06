@@ -12,6 +12,7 @@
 /// doorway with a phone in one hand.
 library;
 
+import 'package:swasthyasetu_ai/domain/models/patient.dart';
 import 'package:swasthyasetu_ai/domain/models/triage_result.dart';
 import 'package:swasthyasetu_ai/domain/rules/guideline_retriever.dart';
 import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
@@ -63,9 +64,18 @@ class OfflineExplainer {
 
   static String _summary(TriageAssessment assessment, String who) {
     final s = assessment.sample;
-    final vitals = 'heart rate ${s.heartRateBpm} beats per minute, '
-        'oxygen ${s.spo2Percent}%, '
-        'temperature ${s.temperatureC.toStringAsFixed(1)}°C';
+    final vitalsList = <String>[
+      'heart rate ${s.heartRateBpm} beats per minute',
+      'oxygen ${s.spo2Percent}%',
+      'temperature ${s.temperatureC.toStringAsFixed(1)}°C',
+    ];
+    if (s.estimatedGlucose > 0) {
+      vitalsList.add('blood glucose ${s.estimatedGlucose} mg/dL');
+    }
+    if (s.estimatedSystolic > 0 && s.estimatedDiastolic > 0) {
+      vitalsList.add('blood pressure ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg');
+    }
+    final vitals = vitalsList.join(', ');
 
     final scoring = assessment.scoringRules;
 
@@ -93,6 +103,8 @@ class OfflineExplainer {
             '${assessment.thresholds.hrHighWarning} beats per minute',
         '• Temperature below '
             '${assessment.thresholds.tempFever.toStringAsFixed(1)}°C',
+        if (assessment.sample.estimatedGlucose > 0)
+          '• Blood glucose inside expected range (70–140 mg/dL)',
       ];
       return lines.join('\n');
     }
@@ -131,6 +143,20 @@ class OfflineExplainer {
     List<RetrievedChunk> retrieved,
   ) {
     final steps = <String>[assessment.recommendedAction];
+
+    final ids = assessment.ruleIds.toSet();
+    if (ids.contains(RuleId.glucoseHypoglycemia)) {
+      steps.add('\nImmediate Hypoglycemia Guidance:\n'
+          'If the person is conscious and able to swallow, give 15–20g of fast-acting sugar immediately '
+          '(e.g., 3–4 teaspoons of sugar in water, sweet tea, or fruit juice). Re-check in 15 minutes. '
+          'If unconscious, do NOT force food or fluids — transfer immediately to emergency medical care.');
+    } else if (ids.contains(RuleId.glucoseHyperglycemiaCritical) ||
+        ids.contains(RuleId.glucoseHyperglycemiaHigh)) {
+      steps.add('\nImmediate Hyperglycemia Guidance:\n'
+          'Ensure hydration with plain water if conscious. Check for diabetic crisis signs '
+          '(frequent urination, deep rapid breathing, vomiting, fruity breath odor, confusion). '
+          'Urgent referral to Community Health Centre / Medical Officer for blood test confirmation.');
+    }
 
     // Guideline text goes in verbatim rather than paraphrased. Paraphrasing
     // clinical instructions offline, with no reviewer, is exactly the failure
@@ -184,9 +210,12 @@ class OfflineExplainer {
     if (ids.any((id) => id.startsWith('hr_'))) {
       questions.add('Any racing heart, dizziness on standing, or fainting?');
     }
-    if (ids.contains('bp_high')) {
+    if (ids.contains(RuleId.bpHigh) || ids.contains(RuleId.bpExperimentalAdvisory)) {
       questions.add('Ever been told the blood pressure was high, and is there '
           'medicine for it?');
+    }
+    if (ids.any((id) => id.startsWith('glucose'))) {
+      questions.add('When was the last meal or sugary drink taken, and is there any history of diabetes or medication?');
     }
     if (assessment.flags.contains(Vulnerability.pregnant)) {
       questions.add('How many months pregnant, and has there been any bleeding '
@@ -210,4 +239,40 @@ class OfflineExplainer {
         Vulnerability.chronic => 'a long-term condition',
         Vulnerability.immunocompromised => 'weakened immunity',
       };
+
+  /// A neutral fallback for the open chat when the online model is unavailable.
+  ///
+  /// The triage flow above gives assessment-bound guidance; the chat instead
+  /// answers whatever the worker asked. With no assessment to anchor on, the
+  /// safest on-device reply acknowledges that, points at what the phone does
+  /// know (the latest screening, if any), and steers back to a clinician. This
+  /// is never the primary path — the [GeminiService] only calls it when
+  /// [GeminiService.generalChat] returns `null`.
+  static String chatFallback({Screening? latest, bool grounded = false}) {
+    final buf = StringBuffer();
+    if (latest == null) {
+      buf.write(
+        'The online AI could not answer that right now, and this phone does not '
+        'have a screening on file to draw on.\n\n',
+      );
+    } else {
+      buf.write(
+        'The online AI could not answer that right now. What this phone does '
+        'have on file is the latest screening: HR ${latest.heartRate} bpm, '
+        'SpO2 ${latest.spo2}%, temp ${latest.temperature.toStringAsFixed(1)}°C, '
+        'risk band ${latest.riskLevel} (score ${latest.riskScore}/100)'
+        '${latest.symptoms.isEmpty ? '' : '; symptoms: ${latest.symptoms.join(', ')}'}.\n\n',
+      );
+    }
+    buf.write(
+      'General guidance:\n'
+      '- For danger signs (trouble breathing, blue lips, chest pain, '
+      'confusion, a fit, or unable to keep fluids down) refer now, whatever '
+      'any tool says.\n'
+      '- Re-screen when symptoms change.\n'
+      '- For medicine doses and unfamiliar symptoms, defer to a clinician; '
+      'the on-device rules cover screening bands, not treatment.',
+    );
+    return buf.toString();
+  }
 }

@@ -4,9 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
+import 'package:swasthyasetu_ai/core/services/waveform_store.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
+import 'package:swasthyasetu_ai/core/utils/ecg_rr.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
+import 'package:swasthyasetu_ai/core/widgets/recorded_ecg_card.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/poincare_plot_widget.dart';
 import 'package:swasthyasetu_ai/domain/models/screening.dart';
 
 /// Resolves the stored screening, then hands a non-null record to the view.
@@ -119,6 +123,8 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
             _buildVitalsCard().animate().fadeIn(duration: 300.ms, delay: 100.ms).slideY(begin: 0.1),
             const AppSpacing.vmd(),
             _buildECGAndBPCard().animate().fadeIn(duration: 300.ms, delay: 200.ms).slideY(begin: 0.1),
+            const AppSpacing.vmd(),
+            _RecordedStripSection(screening: _screening),
             const AppSpacing.vmd(),
             _buildSymptomsCard().animate().fadeIn(duration: 300.ms, delay: 300.ms).slideY(begin: 0.1),
             const AppSpacing.vmd(),
@@ -344,7 +350,7 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'ECG & Experimental BP',
+            'ECG & Experimental Estimates',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const AppSpacing.vlg(),
@@ -354,7 +360,7 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
               Expanded(child: _buildInfoItem('Rhythm', ecgRhythmLabel(_screening.ecgRhythm, context.l10n), Icons.timeline_rounded, theme.colorScheme.primary)),
             ],
           ),
-          if (_screening.pttMs > 0) ...[
+          if (_screening.pttMs > 0 || _screening.hasGlucoseEstimate) ...[
             const AppSpacing.vlg(),
             AppCard(
               color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.2),
@@ -365,30 +371,38 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded, color: theme.colorScheme.tertiary, size: 18),
+                      Icon(Icons.science_outlined, color: theme.colorScheme.tertiary, size: 18),
                       const AppSpacing.hsm(),
                       Expanded(
                         child: Text(
-                            'Experimental BP Estimation',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.tertiary,
-                            ),
+                          'Experimental BP & Glucose Estimates',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.tertiary,
                           ),
+                        ),
                       ),
                     ],
                   ),
                   const AppSpacing.vmd(),
-                  Row(
+                  Wrap(
+                    spacing: AppTheme.spacingMd,
+                    runSpacing: AppTheme.spacingMd,
+                    alignment: WrapAlignment.spaceAround,
                     children: [
-                      Expanded(child: _buildBPDetail('Systolic', '${_screening.estimatedSystolic} mmHg', theme.colorScheme.error)),
-                      Expanded(child: _buildBPDetail('Diastolic', '${_screening.estimatedDiastolic} mmHg', theme.colorScheme.secondary)),
-                      Expanded(child: _buildBPDetail('PTT', '${_screening.pttMs} ms', theme.colorScheme.primary)),
+                      if (_screening.hasBpEstimate) ...[
+                        _buildBPDetail('Systolic', '${_screening.estimatedSystolic} mmHg', theme.colorScheme.error),
+                        _buildBPDetail('Diastolic', '${_screening.estimatedDiastolic} mmHg', theme.colorScheme.secondary),
+                      ],
+                      if (_screening.hasGlucoseEstimate)
+                        _buildBPDetail('Est. Glucose', '${_screening.estimatedGlucose} mg/dL', theme.colorScheme.tertiary),
+                      if (_screening.pttMs > 0)
+                        _buildBPDetail('PTT', '${_screening.pttMs} ms', theme.colorScheme.primary),
                     ],
                   ),
                   const AppSpacing.vsm(),
                   Text(
-                    'NOT FOR CLINICAL USE - PTT-based estimation is experimental',
+                    'NOT FOR CLINICAL USE — Estimates are experimental and not for diagnosis.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.tertiary,
                       fontWeight: FontWeight.w500,
@@ -689,5 +703,60 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
   String _monthName(int month) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return months[month - 1];
+  }
+}
+
+/// The ECG strips saved with this screening, drawn from the on-disk waveform
+/// blob. Nothing is synthesised here: no blob, no card.
+class _RecordedStripSection extends ConsumerWidget {
+  const _RecordedStripSection({required this.screening});
+
+  final Screening screening;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder<WaveformData?>(
+      future: ref.read(waveformStoreProvider).load(screening.id, 'ecg'),
+      builder: (context, snap) {
+        final data = snap.data;
+        if (snap.connectionState != ConnectionState.done ||
+            data == null ||
+            data.samples.length < data.sampleRate) {
+          return const SizedBox.shrink();
+        }
+        // Envelope blobs store [min, max, avg] triplets; draw the average so
+        // the trace stays a single honest line.
+        final samples = data.isEnvelope
+            ? [for (var i = 2; i < data.samples.length; i += 3)
+                data.samples[i]]
+            : data.samples.toList();
+
+        // The Poincaré plot gets its tachogram from the stored strip itself.
+        // No simulated RR series: fewer than 3 intervals means no plot.
+        final rr = rrIntervalsFromEcg(samples, data.sampleRate);
+        final meanRr = rr.isEmpty
+            ? 0
+            : (rr.reduce((a, b) => a + b) / rr.length).round();
+        final checkr = screening.ecgRhythm.toUpperCase();
+
+        return Column(
+          children: [
+            RecordedEcgCard(
+              samples: samples,
+              sampleRate: data.sampleRate,
+              generated: screening.isDemo,
+            ),
+            if (rr.length >= 3) ...[
+              const SizedBox(height: 16),
+              PoincarePlotWidget(
+                rrIntervalsMs: rr,
+                heartRateBpm: meanRr > 0 ? 60000 / meanRr : 0,
+                hasArrhythmia: checkr == 'IRREGULAR',
+              ),
+            ],
+          ],
+        );
+      },
+    );
   }
 }

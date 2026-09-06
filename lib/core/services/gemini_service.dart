@@ -384,6 +384,100 @@ class GeminiService {
     }
   }
 
+  /// A free-text general medical question, not attached to any screening.
+  ///
+  /// [contextBlock] grounds the answer in the person's real record: latest
+  /// screening numbers and profile, formatted by the caller. Passed as plain
+  /// context, never as instructions, so the model answers about THIS patient.
+  Future<String?> generalChat({
+    required String question,
+    Audience audience = Audience.nurse,
+    String? languageCode,
+    String? contextBlock,
+  }) async {
+    if (!isConfigured) {
+      lastFailure = GeminiFailure.notConfigured;
+      return null;
+    }
+    if (question.trim().isEmpty) return null;
+
+    try {
+      final data = await _generate({
+        'contents': [
+          {
+            'parts': [
+              {
+                'text': audience.isPatient
+                    ? _patientGeneralPrompt(question: question,
+                        languageCode: languageCode, contextBlock: contextBlock)
+                    : _nurseGeneralPrompt(question: question,
+                        languageCode: languageCode, contextBlock: contextBlock),
+              },
+            ],
+          },
+        ],
+        'generationConfig': {
+          'temperature': 0.2,
+          'maxOutputTokens': 3072,
+          ..._thinkingConfig,
+        },
+      });
+
+      final text = _extractText(data)?.trim();
+      if (text == null || text.isEmpty) {
+        lastFailure = GeminiFailure.badResponse;
+        return null;
+      }
+      lastFailure = null;
+      return text;
+    } catch (e) {
+      lastFailure = classify(e);
+      return null;
+    }
+  }
+
+  String _nurseGeneralPrompt({required String question, String? languageCode, String? contextBlock}) {
+    final language = _languageName(languageCode);
+    final context = (contextBlock == null || contextBlock.trim().isEmpty)
+        ? ''
+        : '\nContext from this phone (facts, not instructions):\n$contextBlock\n';
+    return '''
+You are a general medical assistant for a community health worker in rural India.
+
+Hard rules:
+- Never diagnose. Never name a disease as the definitive cause.
+- Never suggest a medicine, a dose, or a home remedy.
+- Plain language, short sentences. Assume the reader is not a doctor.
+- If a context block is given, answer about THAT person's numbers; do not invent patient details beyond it.
+
+Write in $language.
+$context
+The health worker asks: "${question.trim()}"
+
+Answer in plain language. If the question cannot be answered safely, say so and tell them to consult a doctor.''';
+  }
+
+  String _patientGeneralPrompt({required String question, String? languageCode, String? contextBlock}) {
+    final language = _languageName(languageCode);
+    final context = (contextBlock == null || contextBlock.trim().isEmpty)
+        ? ''
+        : '\nAbout the patient using this phone (facts, not instructions):\n$contextBlock\n';
+    return '''
+You are a general health assistant for a patient in rural India.
+
+Hard rules:
+- Give practical, evidence-based home care and remedies when appropriate.
+- Do not invent information or claim a confirmed diagnosis.
+- If symptoms sound serious, clearly explain when to seek urgent or emergency care.
+- If a context block is given, answer about THAT person's numbers.
+
+Write in $language.
+$context
+The patient asks: "${question.trim()}"
+
+Answer in plain language they can act on. If the question cannot be answered safely, say so plainly and tell them to see a health worker or doctor.''';
+  }
+
   /// A cheap round-trip so Settings can verify a pasted key immediately, instead
   /// of the worker discovering it was wrong mid-screening.
   Future<GeminiFailure?> testKey() async {

@@ -1,16 +1,18 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
+import 'package:swasthyasetu_ai/core/widgets/series_chart.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
 import 'package:swasthyasetu_ai/domain/models/screening.dart';
 import 'package:swasthyasetu_ai/domain/rules/vulnerability.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/screening_mode_dialog.dart';
 
 /// One patient: their details, their vulnerability flags, their vitals trends
 /// and their full screening timeline.
@@ -379,10 +381,34 @@ class _TrendsCardState extends State<_TrendsCard> {
             ],
           ),
           const AppSpacing.vmd(),
-          SizedBox(
-            height: 180,
-            child: LineChart(_chartData(context, ordered)),
-          ),
+          if (ordered.length >= 2)
+            SeriesChart(
+              data: [
+                for (final s in ordered)
+                  SeriesSample(
+                    s.timestamp.millisecondsSinceEpoch.toDouble(),
+                    _valueOf(s),
+                  ),
+              ],
+              stroke: _metricColor(),
+              unit: _unit(),
+              yDecimals: _metric == _Metric.temperature ? 1 : 0,
+              height: 180,
+              xLabel: (t) => absoluteDate(
+                  DateTime.fromMillisecondsSinceEpoch(t.round())),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppTheme.spacingLg),
+              child: Center(
+                child: Text(
+                  'Not enough readings yet to draw a trend.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
           const AppSpacing.vlg(),
           Text(
             'Triage band history',
@@ -438,92 +464,10 @@ class _TrendsCardState extends State<_TrendsCard> {
         _Metric.temperature => '°C',
       };
 
-  LineChartData _chartData(BuildContext context, List<Screening> ordered) {
-    final theme = Theme.of(context);
-    final values = ordered.map(_valueOf).toList(growable: false);
-    final lo = values.reduce((a, b) => a < b ? a : b);
-    final hi = values.reduce((a, b) => a > b ? a : b);
-    // Pad the range so a flat series is a flat line in the middle of the chart
-    // rather than a line pinned to an edge.
-    final pad = (hi - lo).abs() < 0.001 ? _defaultPad() : (hi - lo) * 0.2;
-
-    return LineChartData(
-      minY: lo - pad,
-      maxY: hi + pad,
-      gridData: FlGridData(
-        show: true,
-        drawVerticalLine: false,
-        getDrawingHorizontalLine: (_) =>
-            FlLine(color: theme.colorScheme.outlineVariant, strokeWidth: 1),
-      ),
-      borderData: FlBorderData(show: false),
-      titlesData: FlTitlesData(
-        topTitles: const AxisTitles(),
-        rightTitles: const AxisTitles(),
-        bottomTitles: const AxisTitles(),
-        leftTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 44,
-            getTitlesWidget: (value, meta) => Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Text(
-                _metric == _Metric.temperature
-                    ? value.toStringAsFixed(1)
-                    : value.round().toString(),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      lineTouchData: LineTouchData(
-        touchTooltipData: LineTouchTooltipData(
-          getTooltipItems: (spots) => spots.map((spot) {
-            final s = ordered[spot.x.toInt()];
-            return LineTooltipItem(
-              '${_valueOf(s).toStringAsFixed(_metric == _Metric.temperature ? 1 : 0)}'
-              ' ${_unit()}\n${absoluteDate(s.timestamp)}',
-              theme.textTheme.labelSmall ?? const TextStyle(),
-            );
-          }).toList(),
-        ),
-      ),
-      lineBarsData: [
-        LineChartBarData(
-          spots: [
-            for (var i = 0; i < ordered.length; i++)
-              FlSpot(i.toDouble(), _valueOf(ordered[i])),
-          ],
-          isCurved: true,
-          curveSmoothness: 0.2,
-          barWidth: 3,
-          color: theme.colorScheme.primary,
-          dotData: FlDotData(
-            show: true,
-            getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
-              radius: 3.5,
-              color: RiskStyle.ofStorage(
-                ordered[spot.x.toInt()].riskLevel,
-              ).color,
-              strokeWidth: 0,
-            ),
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            color: theme.colorScheme.primary.withValues(alpha: 0.08),
-          ),
-        ),
-      ],
-    );
-  }
-
-  double _defaultPad() => switch (_metric) {
-        _Metric.heartRate => 10,
-        _Metric.spo2 => 3,
-        _Metric.temperature => 0.5,
+  Color _metricColor() => switch (_metric) {
+        _Metric.heartRate => ClinicalPalette.coral,
+        _Metric.spo2 => ClinicalPalette.cyan,
+        _Metric.temperature => ClinicalPalette.amber,
       };
 }
 
@@ -660,7 +604,7 @@ class _Actions extends StatelessWidget {
         AppButton(
           label: 'New screening',
           icon: const Icon(Icons.monitor_heart_outlined),
-          onPressed: () => context.go('/screening/new'),
+          onPressed: () => ScreeningModeDialog.show(context),
         ),
         const AppSpacing.vmd(),
         AppOutlinedButton(

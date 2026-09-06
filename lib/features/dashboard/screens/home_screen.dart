@@ -4,14 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:swasthyasetu_ai/core/constants/app_constants.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
+import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
-import 'package:swasthyasetu_ai/domain/models/device.dart';
 import 'package:swasthyasetu_ai/domain/models/environment.dart';
 import 'package:swasthyasetu_ai/domain/models/screening.dart';
 import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/environment/state/environment_providers.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/screening_mode_dialog.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -30,8 +31,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   late Animation<double> _devicePulseAnimation;
   late Animation<double> _backgroundFloatAnimation;
-
-  final Device _demoDevice = Device.demo();
 
   /// Counted from rows on this phone, never held as a literal. The dashboard
   /// previously carried `_todayScreenings = 3` and `_totalPatients = 12` as
@@ -98,7 +97,11 @@ void _initializeAnimations() {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isConnected = _demoDevice.isConnected;
+    // The card previously rendered a hardcoded demo device — disconnected or
+    // not, the worker always saw the same fake unit with a fake battery. Now
+    // it mirrors the actual BLE link: no link, no device claimed.
+    final link = ref.watch(bleLinkProvider);
+    final isConnected = link.isLive;
 
     return AppPageScaffold(
       appBar: AppBar(
@@ -110,8 +113,16 @@ void _initializeAnimations() {
           _buildNotificationButton(),
           _buildProfileButton(),
         ],
+        bottom: const TopQuickAccessBar(),
         elevation: 0,
         scrolledUnderElevation: AppTheme.elevationLevel1,
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/general-chat'),
+        icon: const Icon(Icons.chat_bubble_outline_rounded),
+        label: const Text('AI Chat'),
+        backgroundColor: theme.colorScheme.tertiaryContainer,
+        foregroundColor: theme.colorScheme.onTertiaryContainer,
       ),
       body: RefreshIndicator(
         onRefresh: _refreshData,
@@ -138,8 +149,7 @@ void _initializeAnimations() {
                             controller: _heroController,
                             delay: const Duration(milliseconds: 0),
                             child: _buildHeroSection(isConnected),
-                          ),
-                          _buildAnimatedWidget(
+                          ),                          _buildAnimatedWidget(
                             controller: _statsController,
                             delay: const Duration(milliseconds: 200),
                             child: _buildStatsSection(),
@@ -323,6 +333,8 @@ void _initializeAnimations() {
 
   Widget _buildDeviceStatusCard(bool isConnected) {
     final theme = Theme.of(context);
+    final link = ref.watch(bleLinkProvider);
+    final battery = link.batteryPercent;
 
     final identity = Row(
       children: [
@@ -395,25 +407,23 @@ void _initializeAnimations() {
                 ),
                 const AppSpacing.vxs(),
                 Text(
-                  _demoDevice.name,
+                  isConnected
+                      ? (link.deviceName ?? 'Sensor board')
+                      : 'No device linked',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const AppSpacing.vxs(),
-                Row(
-                  children: [
-                    // Flexible at the call site, because the battery indicator
-                    // is itself a Row with a flexible label: without a bound
-                    // from here it is measured against infinite width and its
-                    // own flex child can never be laid out.
-                    Flexible(child: _buildBatteryIndicator()),
-                    if (_demoDevice.isDemo) ...[
-                      const AppSpacing.hsm(),
-                      _buildDemoBadge(),
+                // Battery only exists when the board reports it; the demo
+                // badge is gone — the card never claims a device that is not
+                // on the link.
+                if (battery != null)
+                  Row(
+                    children: [
+                      Flexible(child: _buildBatteryIndicator(battery)),
                     ],
-                  ],
-                ),
+                  ),
               ],
             ),
           ),
@@ -496,7 +506,7 @@ void _initializeAnimations() {
       label: 'New Screening',
       icon: const Icon(Icons.add_rounded, size: 24),
       isExpanded: false,
-      onPressed: () => context.go('/screening/new'),
+      onPressed: () => ScreeningModeDialog.show(context),
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(160, 56),
         padding: const EdgeInsets.symmetric(
@@ -858,7 +868,7 @@ void _initializeAnimations() {
           AppButton(
             label: context.l10n.navScreening,
             icon: const Icon(Icons.add_rounded, size: 24),
-            onPressed: () => context.go('/screening/new'),
+            onPressed: () => ScreeningModeDialog.show(context),
             isExpanded: false,
             minWidth: 160,
             minHeight: 56,
@@ -942,10 +952,18 @@ void _initializeAnimations() {
             title: l10n.homeQuickActions,
           ),
           const AppSpacing.vsm(),
-          AppStaggeredList(
-            duration: AppTheme.durationMd,
-            delay: const Duration(milliseconds: 100),
-            children: actions.map((action) => _buildActionButton(action)).toList(),
+          // Two-column grid: a wall of full-width cards made the dashboard a
+          // scroll marathon; the actions are glanceable tiles now.
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: AppTheme.spacingMd,
+            mainAxisSpacing: AppTheme.spacingMd,
+            // 1.05 not 1.45: a square-ish cell leaves vertical room for the
+            // icon chip + two label lines at 2.0x text scale.
+            childAspectRatio: 1.05,
+            children: actions.map(_buildActionButton).toList(),
           ),
         ],
       ),
@@ -956,45 +974,42 @@ Widget _buildActionButton(_ActionData action) {
     final theme = Theme.of(context);
 
     return AppCard(
-      padding: const EdgeInsets.all(AppTheme.spacingLg),
+      padding: const EdgeInsets.all(AppTheme.spacingMd),
       child: Stack(
         children: [
-          InkWell(
-            onTap: () => action.usePush
-                ? context.push(action.route)
-                : context.go(action.route),
-            borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spacingXl),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        action.color.withValues(alpha: 0.15),
-                        action.color.withValues(alpha: 0.1)
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+          Positioned.fill(
+            child: InkWell(
+              onTap: () => action.usePush
+                  ? context.push(action.route)
+                  : context.go(action.route),
+              borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppTheme.spacingSm),
+                    decoration: BoxDecoration(
+                      color: action.color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                     ),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                    child: Icon(action.icon, color: action.color, size: 24),
                   ),
-                  child: Icon(action.icon, color: action.color, size: 32),
-                ),
-                const AppSpacing.vmd(),
-                Text(
-                  action.label,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
+                  const AppSpacing.vsm(),
+                  Flexible(
+                    child: Text(
+                      action.label,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           if (action.hasBadge)
@@ -1121,9 +1136,8 @@ Widget _buildDisclaimerCard() {
     );
   }
 
-  Widget _buildBatteryIndicator() {
+  Widget _buildBatteryIndicator(int battery) {
     final theme = Theme.of(context);
-    final battery = _demoDevice.batteryPercent;
     final isLow = battery <= 20;
 
     return Row(
@@ -1151,22 +1165,30 @@ Widget _buildDisclaimerCard() {
     );
   }
 
-  Widget _buildDemoBadge() {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacingSm, vertical: AppTheme.spacingXs),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-      ),
-      child: Text(
-        'DEMO',
-        style: theme.textTheme.labelSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: theme.colorScheme.onSecondaryContainer,
-        ),
+  Widget _buildNotificationButton() {
+    // The dot says something exists to act on. Before this it was glued on,
+    // so a worker with a fully synced queue still saw a red alarm.
+    final pending = ref.watch(pendingSyncCountProvider);
+    return IconButton(
+      onPressed: () => context.go('/sync'),
+      tooltip: pending > 0 ? '$pending waiting to upload' : 'Sync',
+      icon: Stack(
+        children: [
+          const Icon(Icons.notifications_outlined),
+          if (pending > 0)
+            Positioned(
+              right: 4,
+              top: 4,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: ClinicalPalette.coral,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -1178,7 +1200,8 @@ Widget _buildDisclaimerCard() {
           ? Icons.settings_rounded
           : Icons.bluetooth_searching_rounded, size: 24),
       isExpanded: false,
-      onPressed: () => context.go('/devices/scan'),
+      onPressed: () => context
+          .go(isConnected ? '/devices/diagnostics' : '/devices/scan'),
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(140, 52),
         padding: const EdgeInsets.symmetric(
@@ -1188,29 +1211,6 @@ Widget _buildDisclaimerCard() {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         ),
-      ),
-    );
-  }
-
-  Widget _buildNotificationButton() {
-    return IconButton(
-      onPressed: () => context.go('/sync'),
-      icon: Stack(
-        children: [
-          const Icon(Icons.notifications_outlined),
-          Positioned(
-            right: 4,
-            top: 4,
-            child: Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

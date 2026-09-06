@@ -40,14 +40,13 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
     // Use the live screening sample if available, otherwise use a normal baseline demo sample.
     // Vitals come from sensors (live screening), symptoms from patient report.
     // RiskEngine combines both deterministically. No symptom→vitals coupling.
-    final sample = _liveSample ??
-        HealthSample.demo(
-          heartRateBpm: 72,
-          spo2Percent: 98,
-          temperatureC: 36.5,
-          ecgSignalQuality: 0.95,
-          rrIntervalMs: (60000 / 72).round(),
-        );
+    if (_liveSample == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: No health sample found. Please complete the screening.')),
+      );
+      return;
+    }
+    final sample = _liveSample!;
 
     final notes = _notesController.text.trim();
     ref.read(screeningDraftProvider.notifier).setSymptoms(
@@ -69,8 +68,6 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
     _liveSample = extra?['liveSample'] as HealthSample?;
 
@@ -89,23 +86,7 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/screening/live'),
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: AppTheme.spacingMd),
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingXs),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-            ),
-            child: Text(
-              'DEMO',
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.onSecondaryContainer,
-              ),
-            ),
-          ),
-        ],
+        actions: const [],
       ),
       body: Column(
         children: [

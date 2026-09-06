@@ -383,11 +383,10 @@ class AppCenteredScrollView extends StatelessWidget {
         return SingleChildScrollView(
           padding: padding,
           child: ConstrainedBox(
-            // minHeight is what does the centring: the column is given the full
-            // viewport to centre within, and only exceeds it — and so scrolls —
-            // when its content genuinely does not fit. The padding comes off
-            // first, or the view would always be a few pixels scrollable.
             constraints: BoxConstraints(
+              minWidth: constraints.hasBoundedWidth
+                  ? (constraints.maxWidth - insets.horizontal).clamp(0.0, double.infinity)
+                  : 0,
               minHeight: constraints.hasBoundedHeight
                   ? (constraints.maxHeight - insets.vertical).clamp(0.0, double.infinity)
                   : 0,

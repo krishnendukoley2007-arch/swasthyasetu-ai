@@ -790,6 +790,9 @@ class $ScreeningsTable extends Screenings
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES patients (id)',
+    ),
   );
   static const VerificationMeta _deviceIdMeta = const VerificationMeta(
     'deviceId',
@@ -937,6 +940,31 @@ class $ScreeningsTable extends Screenings
         true,
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
+      );
+  static const VerificationMeta _estimatedGlucoseMeta = const VerificationMeta(
+    'estimatedGlucose',
+  );
+  @override
+  late final GeneratedColumn<int> estimatedGlucose = GeneratedColumn<int>(
+    'estimated_glucose',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _glucoseConfidenceMeta = const VerificationMeta(
+    'glucoseConfidence',
+  );
+  @override
+  late final GeneratedColumn<String> glucoseConfidence =
+      GeneratedColumn<String>(
+        'glucose_confidence',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('EXPERIMENTAL'),
       );
   static const VerificationMeta _symptomsMeta = const VerificationMeta(
     'symptoms',
@@ -1107,6 +1135,8 @@ class $ScreeningsTable extends Screenings
     estimatedDiastolic,
     bpConfidence,
     bpCalibratedAt,
+    estimatedGlucose,
+    glucoseConfidence,
     symptoms,
     symptomDuration,
     symptomNotes,
@@ -1250,6 +1280,24 @@ class $ScreeningsTable extends Screenings
         bpCalibratedAt.isAcceptableOrUnknown(
           data['bp_calibrated_at']!,
           _bpCalibratedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('estimated_glucose')) {
+      context.handle(
+        _estimatedGlucoseMeta,
+        estimatedGlucose.isAcceptableOrUnknown(
+          data['estimated_glucose']!,
+          _estimatedGlucoseMeta,
+        ),
+      );
+    }
+    if (data.containsKey('glucose_confidence')) {
+      context.handle(
+        _glucoseConfidenceMeta,
+        glucoseConfidence.isAcceptableOrUnknown(
+          data['glucose_confidence']!,
+          _glucoseConfidenceMeta,
         ),
       );
     }
@@ -1419,6 +1467,14 @@ class $ScreeningsTable extends Screenings
         DriftSqlType.dateTime,
         data['${effectivePrefix}bp_calibrated_at'],
       ),
+      estimatedGlucose: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}estimated_glucose'],
+      )!,
+      glucoseConfidence: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}glucose_confidence'],
+      )!,
       symptoms: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}symptoms'],
@@ -1496,6 +1552,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
   final int estimatedDiastolic;
   final String bpConfidence;
   final DateTime? bpCalibratedAt;
+  final int estimatedGlucose;
+  final String glucoseConfidence;
   final String symptoms;
   final String? symptomDuration;
   final String? symptomNotes;
@@ -1525,6 +1583,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
     required this.estimatedDiastolic,
     required this.bpConfidence,
     this.bpCalibratedAt,
+    required this.estimatedGlucose,
+    required this.glucoseConfidence,
     required this.symptoms,
     this.symptomDuration,
     this.symptomNotes,
@@ -1559,6 +1619,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
     if (!nullToAbsent || bpCalibratedAt != null) {
       map['bp_calibrated_at'] = Variable<DateTime>(bpCalibratedAt);
     }
+    map['estimated_glucose'] = Variable<int>(estimatedGlucose);
+    map['glucose_confidence'] = Variable<String>(glucoseConfidence);
     map['symptoms'] = Variable<String>(symptoms);
     if (!nullToAbsent || symptomDuration != null) {
       map['symptom_duration'] = Variable<String>(symptomDuration);
@@ -1602,6 +1664,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
       bpCalibratedAt: bpCalibratedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(bpCalibratedAt),
+      estimatedGlucose: Value(estimatedGlucose),
+      glucoseConfidence: Value(glucoseConfidence),
       symptoms: Value(symptoms),
       symptomDuration: symptomDuration == null && nullToAbsent
           ? const Value.absent()
@@ -1647,6 +1711,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
       estimatedDiastolic: serializer.fromJson<int>(json['estimatedDiastolic']),
       bpConfidence: serializer.fromJson<String>(json['bpConfidence']),
       bpCalibratedAt: serializer.fromJson<DateTime?>(json['bpCalibratedAt']),
+      estimatedGlucose: serializer.fromJson<int>(json['estimatedGlucose']),
+      glucoseConfidence: serializer.fromJson<String>(json['glucoseConfidence']),
       symptoms: serializer.fromJson<String>(json['symptoms']),
       symptomDuration: serializer.fromJson<String?>(json['symptomDuration']),
       symptomNotes: serializer.fromJson<String?>(json['symptomNotes']),
@@ -1681,6 +1747,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
       'estimatedDiastolic': serializer.toJson<int>(estimatedDiastolic),
       'bpConfidence': serializer.toJson<String>(bpConfidence),
       'bpCalibratedAt': serializer.toJson<DateTime?>(bpCalibratedAt),
+      'estimatedGlucose': serializer.toJson<int>(estimatedGlucose),
+      'glucoseConfidence': serializer.toJson<String>(glucoseConfidence),
       'symptoms': serializer.toJson<String>(symptoms),
       'symptomDuration': serializer.toJson<String?>(symptomDuration),
       'symptomNotes': serializer.toJson<String?>(symptomNotes),
@@ -1713,6 +1781,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
     int? estimatedDiastolic,
     String? bpConfidence,
     Value<DateTime?> bpCalibratedAt = const Value.absent(),
+    int? estimatedGlucose,
+    String? glucoseConfidence,
     String? symptoms,
     Value<String?> symptomDuration = const Value.absent(),
     Value<String?> symptomNotes = const Value.absent(),
@@ -1744,6 +1814,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
     bpCalibratedAt: bpCalibratedAt.present
         ? bpCalibratedAt.value
         : this.bpCalibratedAt,
+    estimatedGlucose: estimatedGlucose ?? this.estimatedGlucose,
+    glucoseConfidence: glucoseConfidence ?? this.glucoseConfidence,
     symptoms: symptoms ?? this.symptoms,
     symptomDuration: symptomDuration.present
         ? symptomDuration.value
@@ -1791,6 +1863,12 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
       bpCalibratedAt: data.bpCalibratedAt.present
           ? data.bpCalibratedAt.value
           : this.bpCalibratedAt,
+      estimatedGlucose: data.estimatedGlucose.present
+          ? data.estimatedGlucose.value
+          : this.estimatedGlucose,
+      glucoseConfidence: data.glucoseConfidence.present
+          ? data.glucoseConfidence.value
+          : this.glucoseConfidence,
       symptoms: data.symptoms.present ? data.symptoms.value : this.symptoms,
       symptomDuration: data.symptomDuration.present
           ? data.symptomDuration.value
@@ -1839,6 +1917,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
           ..write('estimatedDiastolic: $estimatedDiastolic, ')
           ..write('bpConfidence: $bpConfidence, ')
           ..write('bpCalibratedAt: $bpCalibratedAt, ')
+          ..write('estimatedGlucose: $estimatedGlucose, ')
+          ..write('glucoseConfidence: $glucoseConfidence, ')
           ..write('symptoms: $symptoms, ')
           ..write('symptomDuration: $symptomDuration, ')
           ..write('symptomNotes: $symptomNotes, ')
@@ -1873,6 +1953,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
     estimatedDiastolic,
     bpConfidence,
     bpCalibratedAt,
+    estimatedGlucose,
+    glucoseConfidence,
     symptoms,
     symptomDuration,
     symptomNotes,
@@ -1906,6 +1988,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
           other.estimatedDiastolic == this.estimatedDiastolic &&
           other.bpConfidence == this.bpConfidence &&
           other.bpCalibratedAt == this.bpCalibratedAt &&
+          other.estimatedGlucose == this.estimatedGlucose &&
+          other.glucoseConfidence == this.glucoseConfidence &&
           other.symptoms == this.symptoms &&
           other.symptomDuration == this.symptomDuration &&
           other.symptomNotes == this.symptomNotes &&
@@ -1937,6 +2021,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
   final Value<int> estimatedDiastolic;
   final Value<String> bpConfidence;
   final Value<DateTime?> bpCalibratedAt;
+  final Value<int> estimatedGlucose;
+  final Value<String> glucoseConfidence;
   final Value<String> symptoms;
   final Value<String?> symptomDuration;
   final Value<String?> symptomNotes;
@@ -1967,6 +2053,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
     this.estimatedDiastolic = const Value.absent(),
     this.bpConfidence = const Value.absent(),
     this.bpCalibratedAt = const Value.absent(),
+    this.estimatedGlucose = const Value.absent(),
+    this.glucoseConfidence = const Value.absent(),
     this.symptoms = const Value.absent(),
     this.symptomDuration = const Value.absent(),
     this.symptomNotes = const Value.absent(),
@@ -1998,6 +2086,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
     this.estimatedDiastolic = const Value.absent(),
     this.bpConfidence = const Value.absent(),
     this.bpCalibratedAt = const Value.absent(),
+    this.estimatedGlucose = const Value.absent(),
+    this.glucoseConfidence = const Value.absent(),
     this.symptoms = const Value.absent(),
     this.symptomDuration = const Value.absent(),
     this.symptomNotes = const Value.absent(),
@@ -2036,6 +2126,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
     Expression<int>? estimatedDiastolic,
     Expression<String>? bpConfidence,
     Expression<DateTime>? bpCalibratedAt,
+    Expression<int>? estimatedGlucose,
+    Expression<String>? glucoseConfidence,
     Expression<String>? symptoms,
     Expression<String>? symptomDuration,
     Expression<String>? symptomNotes,
@@ -2067,6 +2159,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
       if (estimatedDiastolic != null) 'estimated_diastolic': estimatedDiastolic,
       if (bpConfidence != null) 'bp_confidence': bpConfidence,
       if (bpCalibratedAt != null) 'bp_calibrated_at': bpCalibratedAt,
+      if (estimatedGlucose != null) 'estimated_glucose': estimatedGlucose,
+      if (glucoseConfidence != null) 'glucose_confidence': glucoseConfidence,
       if (symptoms != null) 'symptoms': symptoms,
       if (symptomDuration != null) 'symptom_duration': symptomDuration,
       if (symptomNotes != null) 'symptom_notes': symptomNotes,
@@ -2100,6 +2194,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
     Value<int>? estimatedDiastolic,
     Value<String>? bpConfidence,
     Value<DateTime?>? bpCalibratedAt,
+    Value<int>? estimatedGlucose,
+    Value<String>? glucoseConfidence,
     Value<String>? symptoms,
     Value<String?>? symptomDuration,
     Value<String?>? symptomNotes,
@@ -2131,6 +2227,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
       estimatedDiastolic: estimatedDiastolic ?? this.estimatedDiastolic,
       bpConfidence: bpConfidence ?? this.bpConfidence,
       bpCalibratedAt: bpCalibratedAt ?? this.bpCalibratedAt,
+      estimatedGlucose: estimatedGlucose ?? this.estimatedGlucose,
+      glucoseConfidence: glucoseConfidence ?? this.glucoseConfidence,
       symptoms: symptoms ?? this.symptoms,
       symptomDuration: symptomDuration ?? this.symptomDuration,
       symptomNotes: symptomNotes ?? this.symptomNotes,
@@ -2196,6 +2294,12 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
     if (bpCalibratedAt.present) {
       map['bp_calibrated_at'] = Variable<DateTime>(bpCalibratedAt.value);
     }
+    if (estimatedGlucose.present) {
+      map['estimated_glucose'] = Variable<int>(estimatedGlucose.value);
+    }
+    if (glucoseConfidence.present) {
+      map['glucose_confidence'] = Variable<String>(glucoseConfidence.value);
+    }
     if (symptoms.present) {
       map['symptoms'] = Variable<String>(symptoms.value);
     }
@@ -2259,6 +2363,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
           ..write('estimatedDiastolic: $estimatedDiastolic, ')
           ..write('bpConfidence: $bpConfidence, ')
           ..write('bpCalibratedAt: $bpCalibratedAt, ')
+          ..write('estimatedGlucose: $estimatedGlucose, ')
+          ..write('glucoseConfidence: $glucoseConfidence, ')
           ..write('symptoms: $symptoms, ')
           ..write('symptomDuration: $symptomDuration, ')
           ..write('symptomNotes: $symptomNotes, ')
@@ -6583,6 +6689,17 @@ class $AuthAccountsTable extends AuthAccounts
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _phoneNumberMeta = const VerificationMeta(
+    'phoneNumber',
+  );
+  @override
+  late final GeneratedColumn<String> phoneNumber = GeneratedColumn<String>(
+    'phone_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -6623,6 +6740,7 @@ class $AuthAccountsTable extends AuthAccounts
     problems,
     profileComplete,
     patientId,
+    phoneNumber,
     createdAt,
     lastLoginAt,
   ];
@@ -6753,6 +6871,15 @@ class $AuthAccountsTable extends AuthAccounts
         patientId.isAcceptableOrUnknown(data['patient_id']!, _patientIdMeta),
       );
     }
+    if (data.containsKey('phone_number')) {
+      context.handle(
+        _phoneNumberMeta,
+        phoneNumber.isAcceptableOrUnknown(
+          data['phone_number']!,
+          _phoneNumberMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -6845,6 +6972,10 @@ class $AuthAccountsTable extends AuthAccounts
         DriftSqlType.string,
         data['${effectivePrefix}patient_id'],
       ),
+      phoneNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phone_number'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -6900,6 +7031,10 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
 
   /// The Patients row this account screens itself as. Null for clinicians.
   final String? patientId;
+
+  /// E.164 phone number, e.g. +919876543210. Set for Phone OTP accounts;
+  /// null for email and Google accounts.
+  final String? phoneNumber;
   final DateTime createdAt;
   final DateTime lastLoginAt;
   const AuthAccountRow({
@@ -6919,6 +7054,7 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
     this.problems,
     required this.profileComplete,
     this.patientId,
+    this.phoneNumber,
     required this.createdAt,
     required this.lastLoginAt,
   });
@@ -6957,6 +7093,9 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
     if (!nullToAbsent || patientId != null) {
       map['patient_id'] = Variable<String>(patientId);
     }
+    if (!nullToAbsent || phoneNumber != null) {
+      map['phone_number'] = Variable<String>(phoneNumber);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['last_login_at'] = Variable<DateTime>(lastLoginAt);
     return map;
@@ -6994,6 +7133,9 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
       patientId: patientId == null && nullToAbsent
           ? const Value.absent()
           : Value(patientId),
+      phoneNumber: phoneNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phoneNumber),
       createdAt: Value(createdAt),
       lastLoginAt: Value(lastLoginAt),
     );
@@ -7021,6 +7163,7 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
       problems: serializer.fromJson<String?>(json['problems']),
       profileComplete: serializer.fromJson<bool>(json['profileComplete']),
       patientId: serializer.fromJson<String?>(json['patientId']),
+      phoneNumber: serializer.fromJson<String?>(json['phoneNumber']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastLoginAt: serializer.fromJson<DateTime>(json['lastLoginAt']),
     );
@@ -7045,6 +7188,7 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
       'problems': serializer.toJson<String?>(problems),
       'profileComplete': serializer.toJson<bool>(profileComplete),
       'patientId': serializer.toJson<String?>(patientId),
+      'phoneNumber': serializer.toJson<String?>(phoneNumber),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastLoginAt': serializer.toJson<DateTime>(lastLoginAt),
     };
@@ -7067,6 +7211,7 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
     Value<String?> problems = const Value.absent(),
     bool? profileComplete,
     Value<String?> patientId = const Value.absent(),
+    Value<String?> phoneNumber = const Value.absent(),
     DateTime? createdAt,
     DateTime? lastLoginAt,
   }) => AuthAccountRow(
@@ -7086,6 +7231,7 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
     problems: problems.present ? problems.value : this.problems,
     profileComplete: profileComplete ?? this.profileComplete,
     patientId: patientId.present ? patientId.value : this.patientId,
+    phoneNumber: phoneNumber.present ? phoneNumber.value : this.phoneNumber,
     createdAt: createdAt ?? this.createdAt,
     lastLoginAt: lastLoginAt ?? this.lastLoginAt,
   );
@@ -7117,6 +7263,9 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
           ? data.profileComplete.value
           : this.profileComplete,
       patientId: data.patientId.present ? data.patientId.value : this.patientId,
+      phoneNumber: data.phoneNumber.present
+          ? data.phoneNumber.value
+          : this.phoneNumber,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       lastLoginAt: data.lastLoginAt.present
           ? data.lastLoginAt.value
@@ -7143,6 +7292,7 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
           ..write('problems: $problems, ')
           ..write('profileComplete: $profileComplete, ')
           ..write('patientId: $patientId, ')
+          ..write('phoneNumber: $phoneNumber, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastLoginAt: $lastLoginAt')
           ..write(')'))
@@ -7167,6 +7317,7 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
     problems,
     profileComplete,
     patientId,
+    phoneNumber,
     createdAt,
     lastLoginAt,
   );
@@ -7190,6 +7341,7 @@ class AuthAccountRow extends DataClass implements Insertable<AuthAccountRow> {
           other.problems == this.problems &&
           other.profileComplete == this.profileComplete &&
           other.patientId == this.patientId &&
+          other.phoneNumber == this.phoneNumber &&
           other.createdAt == this.createdAt &&
           other.lastLoginAt == this.lastLoginAt);
 }
@@ -7211,6 +7363,7 @@ class AuthAccountsCompanion extends UpdateCompanion<AuthAccountRow> {
   final Value<String?> problems;
   final Value<bool> profileComplete;
   final Value<String?> patientId;
+  final Value<String?> phoneNumber;
   final Value<DateTime> createdAt;
   final Value<DateTime> lastLoginAt;
   final Value<int> rowid;
@@ -7231,6 +7384,7 @@ class AuthAccountsCompanion extends UpdateCompanion<AuthAccountRow> {
     this.problems = const Value.absent(),
     this.profileComplete = const Value.absent(),
     this.patientId = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastLoginAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -7252,6 +7406,7 @@ class AuthAccountsCompanion extends UpdateCompanion<AuthAccountRow> {
     this.problems = const Value.absent(),
     this.profileComplete = const Value.absent(),
     this.patientId = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
     required DateTime createdAt,
     required DateTime lastLoginAt,
     this.rowid = const Value.absent(),
@@ -7279,6 +7434,7 @@ class AuthAccountsCompanion extends UpdateCompanion<AuthAccountRow> {
     Expression<String>? problems,
     Expression<bool>? profileComplete,
     Expression<String>? patientId,
+    Expression<String>? phoneNumber,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? lastLoginAt,
     Expression<int>? rowid,
@@ -7300,6 +7456,7 @@ class AuthAccountsCompanion extends UpdateCompanion<AuthAccountRow> {
       if (problems != null) 'problems': problems,
       if (profileComplete != null) 'profile_complete': profileComplete,
       if (patientId != null) 'patient_id': patientId,
+      if (phoneNumber != null) 'phone_number': phoneNumber,
       if (createdAt != null) 'created_at': createdAt,
       if (lastLoginAt != null) 'last_login_at': lastLoginAt,
       if (rowid != null) 'rowid': rowid,
@@ -7323,6 +7480,7 @@ class AuthAccountsCompanion extends UpdateCompanion<AuthAccountRow> {
     Value<String?>? problems,
     Value<bool>? profileComplete,
     Value<String?>? patientId,
+    Value<String?>? phoneNumber,
     Value<DateTime>? createdAt,
     Value<DateTime>? lastLoginAt,
     Value<int>? rowid,
@@ -7344,6 +7502,7 @@ class AuthAccountsCompanion extends UpdateCompanion<AuthAccountRow> {
       problems: problems ?? this.problems,
       profileComplete: profileComplete ?? this.profileComplete,
       patientId: patientId ?? this.patientId,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       rowid: rowid ?? this.rowid,
@@ -7401,6 +7560,9 @@ class AuthAccountsCompanion extends UpdateCompanion<AuthAccountRow> {
     if (patientId.present) {
       map['patient_id'] = Variable<String>(patientId.value);
     }
+    if (phoneNumber.present) {
+      map['phone_number'] = Variable<String>(phoneNumber.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -7432,6 +7594,7 @@ class AuthAccountsCompanion extends UpdateCompanion<AuthAccountRow> {
           ..write('problems: $problems, ')
           ..write('profileComplete: $profileComplete, ')
           ..write('patientId: $patientId, ')
+          ..write('phoneNumber: $phoneNumber, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastLoginAt: $lastLoginAt, ')
           ..write('rowid: $rowid')
@@ -7509,6 +7672,29 @@ typedef $$PatientsTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
+final class $$PatientsTableReferences
+    extends BaseReferences<_$AppDatabase, $PatientsTable, PatientRow> {
+  $$PatientsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$ScreeningsTable, List<ScreeningRow>>
+  _screeningsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.screenings,
+    aliasName: $_aliasNameGenerator(db.patients.id, db.screenings.patientId),
+  );
+
+  $$ScreeningsTableProcessedTableManager get screeningsRefs {
+    final manager = $$ScreeningsTableTableManager(
+      $_db,
+      $_db.screenings,
+    ).filter((f) => f.patientId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_screeningsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
 class $$PatientsTableFilterComposer
     extends Composer<_$AppDatabase, $PatientsTable> {
   $$PatientsTableFilterComposer({
@@ -7582,6 +7768,31 @@ class $$PatientsTableFilterComposer
     column: $table.retryCount,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> screeningsRefs(
+    Expression<bool> Function($$ScreeningsTableFilterComposer f) f,
+  ) {
+    final $$ScreeningsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.screenings,
+      getReferencedColumn: (t) => t.patientId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ScreeningsTableFilterComposer(
+            $db: $db,
+            $table: $db.screenings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PatientsTableOrderingComposer
@@ -7714,6 +7925,31 @@ class $$PatientsTableAnnotationComposer
     column: $table.retryCount,
     builder: (column) => column,
   );
+
+  Expression<T> screeningsRefs<T extends Object>(
+    Expression<T> Function($$ScreeningsTableAnnotationComposer a) f,
+  ) {
+    final $$ScreeningsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.screenings,
+      getReferencedColumn: (t) => t.patientId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ScreeningsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.screenings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PatientsTableTableManager
@@ -7727,12 +7963,9 @@ class $$PatientsTableTableManager
           $$PatientsTableAnnotationComposer,
           $$PatientsTableCreateCompanionBuilder,
           $$PatientsTableUpdateCompanionBuilder,
-          (
-            PatientRow,
-            BaseReferences<_$AppDatabase, $PatientsTable, PatientRow>,
-          ),
+          (PatientRow, $$PatientsTableReferences),
           PatientRow,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool screeningsRefs})
         > {
   $$PatientsTableTableManager(_$AppDatabase db, $PatientsTable table)
     : super(
@@ -7810,9 +8043,42 @@ class $$PatientsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PatientsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({screeningsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (screeningsRefs) db.screenings],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (screeningsRefs)
+                    await $_getPrefetchedData<
+                      PatientRow,
+                      $PatientsTable,
+                      ScreeningRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$PatientsTableReferences
+                          ._screeningsRefsTable(db),
+                      managerFromTypedResult: (p0) => $$PatientsTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).screeningsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.patientId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -7827,9 +8093,9 @@ typedef $$PatientsTableProcessedTableManager =
       $$PatientsTableAnnotationComposer,
       $$PatientsTableCreateCompanionBuilder,
       $$PatientsTableUpdateCompanionBuilder,
-      (PatientRow, BaseReferences<_$AppDatabase, $PatientsTable, PatientRow>),
+      (PatientRow, $$PatientsTableReferences),
       PatientRow,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool screeningsRefs})
     >;
 typedef $$ScreeningsTableCreateCompanionBuilder =
     ScreeningsCompanion Function({
@@ -7848,6 +8114,8 @@ typedef $$ScreeningsTableCreateCompanionBuilder =
       Value<int> estimatedDiastolic,
       Value<String> bpConfidence,
       Value<DateTime?> bpCalibratedAt,
+      Value<int> estimatedGlucose,
+      Value<String> glucoseConfidence,
       Value<String> symptoms,
       Value<String?> symptomDuration,
       Value<String?> symptomNotes,
@@ -7880,6 +8148,8 @@ typedef $$ScreeningsTableUpdateCompanionBuilder =
       Value<int> estimatedDiastolic,
       Value<String> bpConfidence,
       Value<DateTime?> bpCalibratedAt,
+      Value<int> estimatedGlucose,
+      Value<String> glucoseConfidence,
       Value<String> symptoms,
       Value<String?> symptomDuration,
       Value<String?> symptomNotes,
@@ -7896,6 +8166,30 @@ typedef $$ScreeningsTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
+final class $$ScreeningsTableReferences
+    extends BaseReferences<_$AppDatabase, $ScreeningsTable, ScreeningRow> {
+  $$ScreeningsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PatientsTable _patientIdTable(_$AppDatabase db) =>
+      db.patients.createAlias(
+        $_aliasNameGenerator(db.screenings.patientId, db.patients.id),
+      );
+
+  $$PatientsTableProcessedTableManager get patientId {
+    final $_column = $_itemColumn<String>('patient_id')!;
+
+    final manager = $$PatientsTableTableManager(
+      $_db,
+      $_db.patients,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_patientIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
 class $$ScreeningsTableFilterComposer
     extends Composer<_$AppDatabase, $ScreeningsTable> {
   $$ScreeningsTableFilterComposer({
@@ -7907,11 +8201,6 @@ class $$ScreeningsTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get patientId => $composableBuilder(
-    column: $table.patientId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7980,6 +8269,16 @@ class $$ScreeningsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get estimatedGlucose => $composableBuilder(
+    column: $table.estimatedGlucose,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get glucoseConfidence => $composableBuilder(
+    column: $table.glucoseConfidence,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get symptoms => $composableBuilder(
     column: $table.symptoms,
     builder: (column) => ColumnFilters(column),
@@ -8044,6 +8343,29 @@ class $$ScreeningsTableFilterComposer
     column: $table.isDemo,
     builder: (column) => ColumnFilters(column),
   );
+
+  $$PatientsTableFilterComposer get patientId {
+    final $$PatientsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.patientId,
+      referencedTable: $db.patients,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PatientsTableFilterComposer(
+            $db: $db,
+            $table: $db.patients,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$ScreeningsTableOrderingComposer
@@ -8057,11 +8379,6 @@ class $$ScreeningsTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get patientId => $composableBuilder(
-    column: $table.patientId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -8130,6 +8447,16 @@ class $$ScreeningsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get estimatedGlucose => $composableBuilder(
+    column: $table.estimatedGlucose,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get glucoseConfidence => $composableBuilder(
+    column: $table.glucoseConfidence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get symptoms => $composableBuilder(
     column: $table.symptoms,
     builder: (column) => ColumnOrderings(column),
@@ -8194,6 +8521,29 @@ class $$ScreeningsTableOrderingComposer
     column: $table.isDemo,
     builder: (column) => ColumnOrderings(column),
   );
+
+  $$PatientsTableOrderingComposer get patientId {
+    final $$PatientsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.patientId,
+      referencedTable: $db.patients,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PatientsTableOrderingComposer(
+            $db: $db,
+            $table: $db.patients,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$ScreeningsTableAnnotationComposer
@@ -8207,9 +8557,6 @@ class $$ScreeningsTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get patientId =>
-      $composableBuilder(column: $table.patientId, builder: (column) => column);
 
   GeneratedColumn<String> get deviceId =>
       $composableBuilder(column: $table.deviceId, builder: (column) => column);
@@ -8261,6 +8608,16 @@ class $$ScreeningsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get bpCalibratedAt => $composableBuilder(
     column: $table.bpCalibratedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get estimatedGlucose => $composableBuilder(
+    column: $table.estimatedGlucose,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get glucoseConfidence => $composableBuilder(
+    column: $table.glucoseConfidence,
     builder: (column) => column,
   );
 
@@ -8316,6 +8673,29 @@ class $$ScreeningsTableAnnotationComposer
 
   GeneratedColumn<bool> get isDemo =>
       $composableBuilder(column: $table.isDemo, builder: (column) => column);
+
+  $$PatientsTableAnnotationComposer get patientId {
+    final $$PatientsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.patientId,
+      referencedTable: $db.patients,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PatientsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.patients,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$ScreeningsTableTableManager
@@ -8329,12 +8709,9 @@ class $$ScreeningsTableTableManager
           $$ScreeningsTableAnnotationComposer,
           $$ScreeningsTableCreateCompanionBuilder,
           $$ScreeningsTableUpdateCompanionBuilder,
-          (
-            ScreeningRow,
-            BaseReferences<_$AppDatabase, $ScreeningsTable, ScreeningRow>,
-          ),
+          (ScreeningRow, $$ScreeningsTableReferences),
           ScreeningRow,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool patientId})
         > {
   $$ScreeningsTableTableManager(_$AppDatabase db, $ScreeningsTable table)
     : super(
@@ -8364,6 +8741,8 @@ class $$ScreeningsTableTableManager
                 Value<int> estimatedDiastolic = const Value.absent(),
                 Value<String> bpConfidence = const Value.absent(),
                 Value<DateTime?> bpCalibratedAt = const Value.absent(),
+                Value<int> estimatedGlucose = const Value.absent(),
+                Value<String> glucoseConfidence = const Value.absent(),
                 Value<String> symptoms = const Value.absent(),
                 Value<String?> symptomDuration = const Value.absent(),
                 Value<String?> symptomNotes = const Value.absent(),
@@ -8394,6 +8773,8 @@ class $$ScreeningsTableTableManager
                 estimatedDiastolic: estimatedDiastolic,
                 bpConfidence: bpConfidence,
                 bpCalibratedAt: bpCalibratedAt,
+                estimatedGlucose: estimatedGlucose,
+                glucoseConfidence: glucoseConfidence,
                 symptoms: symptoms,
                 symptomDuration: symptomDuration,
                 symptomNotes: symptomNotes,
@@ -8426,6 +8807,8 @@ class $$ScreeningsTableTableManager
                 Value<int> estimatedDiastolic = const Value.absent(),
                 Value<String> bpConfidence = const Value.absent(),
                 Value<DateTime?> bpCalibratedAt = const Value.absent(),
+                Value<int> estimatedGlucose = const Value.absent(),
+                Value<String> glucoseConfidence = const Value.absent(),
                 Value<String> symptoms = const Value.absent(),
                 Value<String?> symptomDuration = const Value.absent(),
                 Value<String?> symptomNotes = const Value.absent(),
@@ -8456,6 +8839,8 @@ class $$ScreeningsTableTableManager
                 estimatedDiastolic: estimatedDiastolic,
                 bpConfidence: bpConfidence,
                 bpCalibratedAt: bpCalibratedAt,
+                estimatedGlucose: estimatedGlucose,
+                glucoseConfidence: glucoseConfidence,
                 symptoms: symptoms,
                 symptomDuration: symptomDuration,
                 symptomNotes: symptomNotes,
@@ -8472,9 +8857,54 @@ class $$ScreeningsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ScreeningsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({patientId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (patientId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.patientId,
+                                referencedTable: $$ScreeningsTableReferences
+                                    ._patientIdTable(db),
+                                referencedColumn: $$ScreeningsTableReferences
+                                    ._patientIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
         ),
       );
 }
@@ -8489,12 +8919,9 @@ typedef $$ScreeningsTableProcessedTableManager =
       $$ScreeningsTableAnnotationComposer,
       $$ScreeningsTableCreateCompanionBuilder,
       $$ScreeningsTableUpdateCompanionBuilder,
-      (
-        ScreeningRow,
-        BaseReferences<_$AppDatabase, $ScreeningsTable, ScreeningRow>,
-      ),
+      (ScreeningRow, $$ScreeningsTableReferences),
       ScreeningRow,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool patientId})
     >;
 typedef $$WaveformBlobsTableCreateCompanionBuilder =
     WaveformBlobsCompanion Function({
@@ -10604,6 +11031,7 @@ typedef $$AuthAccountsTableCreateCompanionBuilder =
       Value<String?> problems,
       Value<bool> profileComplete,
       Value<String?> patientId,
+      Value<String?> phoneNumber,
       required DateTime createdAt,
       required DateTime lastLoginAt,
       Value<int> rowid,
@@ -10626,6 +11054,7 @@ typedef $$AuthAccountsTableUpdateCompanionBuilder =
       Value<String?> problems,
       Value<bool> profileComplete,
       Value<String?> patientId,
+      Value<String?> phoneNumber,
       Value<DateTime> createdAt,
       Value<DateTime> lastLoginAt,
       Value<int> rowid,
@@ -10717,6 +11146,11 @@ class $$AuthAccountsTableFilterComposer
 
   ColumnFilters<String> get patientId => $composableBuilder(
     column: $table.patientId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10820,6 +11254,11 @@ class $$AuthAccountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -10898,6 +11337,11 @@ class $$AuthAccountsTableAnnotationComposer
   GeneratedColumn<String> get patientId =>
       $composableBuilder(column: $table.patientId, builder: (column) => column);
 
+  GeneratedColumn<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -10954,6 +11398,7 @@ class $$AuthAccountsTableTableManager
                 Value<String?> problems = const Value.absent(),
                 Value<bool> profileComplete = const Value.absent(),
                 Value<String?> patientId = const Value.absent(),
+                Value<String?> phoneNumber = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> lastLoginAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -10974,6 +11419,7 @@ class $$AuthAccountsTableTableManager
                 problems: problems,
                 profileComplete: profileComplete,
                 patientId: patientId,
+                phoneNumber: phoneNumber,
                 createdAt: createdAt,
                 lastLoginAt: lastLoginAt,
                 rowid: rowid,
@@ -10996,6 +11442,7 @@ class $$AuthAccountsTableTableManager
                 Value<String?> problems = const Value.absent(),
                 Value<bool> profileComplete = const Value.absent(),
                 Value<String?> patientId = const Value.absent(),
+                Value<String?> phoneNumber = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime lastLoginAt,
                 Value<int> rowid = const Value.absent(),
@@ -11016,6 +11463,7 @@ class $$AuthAccountsTableTableManager
                 problems: problems,
                 profileComplete: profileComplete,
                 patientId: patientId,
+                phoneNumber: phoneNumber,
                 createdAt: createdAt,
                 lastLoginAt: lastLoginAt,
                 rowid: rowid,

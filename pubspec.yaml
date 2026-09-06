@@ -1,7 +1,7 @@
 name: swasthyasetu_ai
 description: AI-Powered Smart Health Monitoring & Community Early-Warning Platform
 publish_to: 'none'
-version: 1.4.1+6
+version: 1.5.0+7
 
 environment:
   sdk: '>=3.9.0 <4.0.0'
@@ -24,14 +24,17 @@ dependencies:
   path_provider: ^2.1.2
   # BLE
   flutter_blue_plus: ^1.31.2
-  # Sign-in: Google identity (7.x = Credential Manager on Android). Deliberately
-  # NOT firebase_auth: this build must keep working with no google-services.json,
-  # so accounts fall back to salted-hash local credentials when Google is not
-  # configured for this package signature.
+  # Firebase — Phone OTP auth + cloud data persistence
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.9
+  # Google Sign-In (kept for doctor convenience)
   google_sign_in: ^7.2.0
   # PBKDF2-HMAC-SHA256 for local email passwords — pure Dart, no native build
   # cost, and the same primitive on every device.
   crypto: ^3.0.3
+  # intl_phone_number_input for country-code phone picker
+  intl_phone_number_input: ^0.7.4
   # Network
   dio: ^5.4.0
   connectivity_plus: ^6.0.5
@@ -39,8 +42,8 @@ dependencies:
   uuid: ^4.3.3
   intl: ^0.20.2
   collection: ^1.18.0
-  # Charts
-  fl_chart: ^0.66.0
+  # Charts — all time-series now rendered by the in-house SeriesChart
+  # (lib/core/widgets/series_chart.dart); no chart package dependency.
   # Animations
   flutter_animate: ^4.5.0
   # Permissions
@@ -53,6 +56,9 @@ dependencies:
   sensors_plus: ^6.1.1
   # Consent-gated screening geotag
   geolocator: ^11.0.0
+  # Clinical export & ABHA QR code
+  qr_flutter: ^4.1.0
+  pdf: ^3.13.0
 
 dev_dependencies:
   flutter_test:
@@ -62,7 +68,7 @@ dev_dependencies:
   drift_dev: ^2.31.0
   # Pinned high on purpose: analyzer <10 lacks visitDotShorthandPropertyAccess
   # and crashes the whole codegen run on Dart 3.13 sources.
-  analyzer: ^10.1.0
+  analyzer: ^10.0.1
 
 flutter:
   uses-material-design: true

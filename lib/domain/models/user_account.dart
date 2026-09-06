@@ -1,19 +1,25 @@
 import 'dart:convert';
 
-/// How the identity was proven. `email` accounts verified a password against
-/// the local salted hash; `google` accounts came back from Google's sign-in
-/// and hold no credential on the device.
+/// How the identity was proven.
+/// - `email`: local salted-hash password check
+/// - `google`: Google Sign-In identity token
+/// - `phone`: Firebase Phone OTP — the preferred method for Indian users
 enum AuthAccountProvider {
   email,
-  google;
+  google,
+  phone;
 
   String get storageValue => switch (this) {
         AuthAccountProvider.email => 'email',
         AuthAccountProvider.google => 'google',
+        AuthAccountProvider.phone => 'phone',
       };
 
-  static AuthAccountProvider fromStorage(String? raw) =>
-      raw == 'google' ? AuthAccountProvider.google : AuthAccountProvider.email;
+  static AuthAccountProvider fromStorage(String? raw) => switch (raw) {
+        'google' => AuthAccountProvider.google,
+        'phone' => AuthAccountProvider.phone,
+        _ => AuthAccountProvider.email,
+      };
 }
 
 /// Who is holding the phone.
@@ -52,6 +58,7 @@ class UserAccount {
   final UserRole role;
   final AuthAccountProvider provider;
   final String? photoUrl;
+  final String? phoneNumber;  // E.164 format, e.g. +919876543210
 
   final int? age;
   final String sex;
@@ -75,6 +82,7 @@ class UserAccount {
     required this.role,
     required this.provider,
     this.photoUrl,
+    this.phoneNumber,
     this.age,
     this.sex = '',
     this.heightCm,
@@ -174,6 +182,7 @@ class UserAccount {
     UserRole? role,
     AuthAccountProvider? provider,
     String? photoUrl,
+    String? phoneNumber,
     int? age,
     String? sex,
     double? heightCm,
@@ -192,6 +201,7 @@ class UserAccount {
         role: role ?? this.role,
         provider: provider ?? this.provider,
         photoUrl: photoUrl ?? this.photoUrl,
+        phoneNumber: phoneNumber ?? this.phoneNumber,
         age: age ?? this.age,
         sex: sex ?? this.sex,
         heightCm: heightCm ?? this.heightCm,

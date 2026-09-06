@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:swasthyasetu_ai/core/providers/providers.dart';
+import 'package:swasthyasetu_ai/core/services/ble_service.dart';
+import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/user_account.dart';
 import 'package:swasthyasetu_ai/features/auth/screens/splash_screen.dart';
@@ -21,7 +25,7 @@ import 'package:swasthyasetu_ai/features/patients/screens/patient_list_screen.da
 import 'package:swasthyasetu_ai/features/patients/screens/add_patient_screen.dart';
 import 'package:swasthyasetu_ai/features/patients/screens/patient_profile_screen.dart';
 import 'package:swasthyasetu_ai/features/screening/screens/new_screening_screen.dart';
-import 'package:swasthyasetu_ai/features/screening/screens/live_vitals_screen.dart';
+import 'package:swasthyasetu_ai/features/screening/screens/mutually_exclusive_screening_screen.dart';
 import 'package:swasthyasetu_ai/features/screening/screens/ecg_live_screen.dart';
 import 'package:swasthyasetu_ai/features/screening/screens/symptoms_screen.dart';
 import 'package:swasthyasetu_ai/features/screening/screens/triage_result_screen.dart';
@@ -32,6 +36,156 @@ import 'package:swasthyasetu_ai/features/sync/screens/pending_sync_screen.dart';
 import 'package:swasthyasetu_ai/features/settings/screens/settings_screen.dart';
 import 'package:swasthyasetu_ai/features/settings/screens/storage_settings_screen.dart';
 import 'package:swasthyasetu_ai/features/debug/screens/ui_showcase_screen.dart';
+import 'package:swasthyasetu_ai/features/dashboard/screens/general_ai_chat_screen.dart';
+
+/// The tab bar used by both role shells: a hairline-topped bar with a teal
+/// sliding pill behind the active tab. Tabs tick the haptic engine on change
+/// — navigation is physical, not implied. A teal dot rides on a destination
+/// that holds something live (e.g. a streaming device).
+class _ClinicalNavBar extends StatelessWidget {
+  const _ClinicalNavBar({
+    required this.destinations,
+    required this.currentIndex,
+    required this.onSelected,
+    this.liveDotIndex,
+  });
+
+  final List<({IconData icon, String label})> destinations;
+  final int currentIndex;
+  final ValueChanged<int> onSelected;
+
+  /// Tab that holds a live connection; gets the small teal dot.
+  final int? liveDotIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final surface = theme.colorScheme.surface;
+    final ink = theme.colorScheme.onSurface;
+    final n = destinations.length;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: surface,
+        border: Border(top: BorderSide(color: ClinicalPalette.hairline(context))),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64,
+          child: LayoutBuilder(builder: (context, cons) {
+            final slot = cons.maxWidth / n;
+            return Stack(children: [
+              // Sliding pill behind the active tab.
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 340),
+                curve: const Cubic(0.34, 1.25, 0.64, 1),
+                left: slot * currentIndex + 8,
+                width: slot - 16,
+                top: 10,
+                height: 44,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    color: ClinicalPalette.teal.withValues(
+                        alpha: theme.brightness == Brightness.dark
+                            ? 0.16
+                            : 0.10),
+                    border: Border.all(
+                        color: ClinicalPalette.teal.withValues(alpha: 0.28)),
+                  ),
+                ),
+              ),
+              Row(children: [
+                for (var i = 0; i < n; i++)
+                  Expanded(
+                    child: _NavTab(
+                      icon: destinations[i].icon,
+                      label: destinations[i].label,
+                      selected: i == currentIndex,
+                      liveDot: i == liveDotIndex,
+                      ink: ink,
+                      onTap: () {
+                        if (i != currentIndex) {
+                          HapticFeedback.selectionClick();
+                        }
+                        onSelected(i);
+                      },
+                    ),
+                  ),
+              ]),
+            ]);
+          }),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavTab extends StatelessWidget {
+  const _NavTab({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.liveDot,
+    required this.ink,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final bool liveDot;
+  final Color ink;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        selected ? ClinicalPalette.teal : ink.withValues(alpha: 0.55);
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Stack(children: [
+            Padding(
+              padding: const EdgeInsets.all(3),
+              child: Icon(icon, size: 21, color: color),
+            ),
+            if (liveDot)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: ClinicalPalette.tealBright,
+                    border: Border.all(
+                        color: Theme.of(context).colorScheme.surface,
+                        width: 1.5),
+                  ),
+                ),
+              ),
+          ]),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              letterSpacing: 0.3,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// Persistent bottom navigation shell for clinician mode.
 class _ClinicianShell extends ConsumerWidget {
@@ -40,35 +194,23 @@ class _ClinicianShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pending = ref.watch(pendingSyncCountProvider);
     return Scaffold(
       body: shell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: shell.currentIndex,
-        onDestinationSelected: (i) =>
+      bottomNavigationBar: _ClinicalNavBar(
+        currentIndex: shell.currentIndex,
+        onSelected: (i) =>
             // Re-tapping the current tab pops that branch back to its root,
             // which is what every Android user expects from a bottom bar.
             shell.goBranch(i, initialLocation: i == shell.currentIndex),
+        // History carries the live dot while rows sit in the sync queue —
+        // the tab holds pending work, not just a list.
+        liveDotIndex: pending > 0 ? 2 : null,
         destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_rounded),
-            selectedIcon: Icon(Icons.home_rounded, fill: 1.0),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_alt_rounded),
-            selectedIcon: Icon(Icons.people_alt_rounded, fill: 1.0),
-            label: 'Patients',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history_rounded),
-            selectedIcon: Icon(Icons.history_rounded, fill: 1.0),
-            label: 'History',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.groups_rounded),
-            selectedIcon: Icon(Icons.groups_rounded, fill: 1.0),
-            label: 'Community',
-          ),
+          (icon: Icons.space_dashboard_rounded, label: 'Home'),
+          (icon: Icons.people_alt_rounded, label: 'Patients'),
+          (icon: Icons.history_rounded, label: 'History'),
+          (icon: Icons.groups_rounded, label: 'Community'),
         ],
       ),
     );
@@ -82,35 +224,21 @@ class _PatientShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The device tab shows the teal dot while a board is streaming — the tab
+    // is live, not just reachable.
+    final streaming = ref.watch(bleLinkProvider).status == BleLinkStatus.streaming;
     return Scaffold(
       body: shell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: shell.currentIndex,
-        onDestinationSelected: (i) =>
-            // Re-tapping the current tab pops that branch back to its root,
-            // which is what every Android user expects from a bottom bar.
+      bottomNavigationBar: _ClinicalNavBar(
+        currentIndex: shell.currentIndex,
+        onSelected: (i) =>
             shell.goBranch(i, initialLocation: i == shell.currentIndex),
+        liveDotIndex: streaming ? 2 : null,
         destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.favorite_rounded),
-            selectedIcon: Icon(Icons.favorite_rounded, fill: 1.0),
-            label: 'My Health',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.wb_sunny_rounded),
-            selectedIcon: Icon(Icons.wb_sunny_rounded, fill: 1.0),
-            label: 'Advisories',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bluetooth_searching_rounded),
-            selectedIcon: Icon(Icons.bluetooth_searching_rounded, fill: 1.0),
-            label: 'My Device',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.call_rounded),
-            selectedIcon: Icon(Icons.call_rounded, fill: 1.0),
-            label: 'Help',
-          ),
+          (icon: Icons.favorite_rounded, label: 'My Health'),
+          (icon: Icons.wb_sunny_rounded, label: 'Advisories'),
+          (icon: Icons.developer_board_rounded, label: 'Device'),
+          (icon: Icons.call_rounded, label: 'Help'),
         ],
       ),
     );
@@ -292,7 +420,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/screening/live',
-        builder: (context, state) => const LiveVitalsScreen(),
+        builder: (context, state) => const MutuallyExclusiveScreeningScreen(),
       ),
       GoRoute(
         path: '/screening/ecg',
@@ -309,6 +437,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/screening/ai-explanation',
         builder: (context, state) => const AiExplanationScreen(),
+      ),
+      GoRoute(
+        path: '/general-chat',
+        builder: (context, state) => const GeneralAiChatScreen(),
       ),
       GoRoute(
         path: '/sync',
@@ -399,6 +531,12 @@ String? _guard(AuthState auth, GoRouterState state) {
       case '/login':
       case '/home':
         return '/my-health';
+      case '/register/patient':
+        // The registration page doubles as "edit profile". A completed
+        // profile being re-SAVED flips auth state while sitting here, so
+        // this redirect sends the refresh onward to home instead of leaving
+        // the worker stranded on a form that already saved.
+        return account.profileComplete ? '/my-health' : null;
       case '/patients':
       case '/patients/add':
       case '/community':

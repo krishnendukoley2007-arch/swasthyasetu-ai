@@ -1,12 +1,14 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/widgets/offline_tile_map.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
+import 'package:swasthyasetu_ai/core/widgets/clinical_primitives.dart';
+import 'package:swasthyasetu_ai/core/widgets/series_chart.dart';
 import 'package:swasthyasetu_ai/data/repositories/screening_repository.dart';
 
 /// This worker's own screening activity, in aggregate.
@@ -39,7 +41,16 @@ class CommunityDashboardScreen extends ConsumerWidget {
         ],
       ),
       body: aggregate.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView(
+          padding: const EdgeInsets.all(AppTheme.spacingMd),
+          children: const [
+            ClinicalSkeleton(height: 90, radius: 16),
+            AppSpacing.vmd(),
+            ClinicalSkeleton(height: 64, radius: 16),
+            AppSpacing.vmd(),
+            ClinicalSkeleton(height: 190, radius: 16),
+          ],
+        ),
         error: (e, _) => AppErrorState(
           message: 'Could not compute the overview.',
           onRetry: () => ref.invalidate(communityAggregateProvider),
@@ -440,11 +451,6 @@ class _DailyTrendCard extends StatelessWidget {
     final days = data.dailyCounts;
     if (days.length < 2) return const SizedBox.shrink();
 
-    final maxY = days
-        .map((d) => d.total)
-        .fold<int>(1, (a, b) => a > b ? a : b)
-        .toDouble();
-
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,71 +473,45 @@ class _DailyTrendCard extends StatelessWidget {
             ],
           ),
           const AppSpacing.vmd(),
-          SizedBox(
-            height: 160,
-            child: LineChart(
-              LineChartData(
-                minY: 0,
-                maxY: maxY * 1.2,
-                // Axis labels and the grid are dropped: on a 360 px card they
-                // are unreadable, and the shape is the information here.
-                gridData: const FlGridData(show: false),
-                titlesData: const FlTitlesData(show: false),
-                borderData: FlBorderData(show: false),
-                lineTouchData: const LineTouchData(enabled: false),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: [
-                      for (var i = 0; i < days.length; i++)
-                        FlSpot(i.toDouble(), days[i].total.toDouble()),
-                    ],
-                    isCurved: true,
-                    barWidth: 3,
-                    color: theme.colorScheme.primary,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                    ),
-                  ),
-                  LineChartBarData(
-                    spots: [
-                      for (var i = 0; i < days.length; i++)
-                        FlSpot(i.toDouble(), days[i].high.toDouble()),
-                    ],
-                    isCurved: true,
-                    barWidth: 2,
-                    color: theme.colorScheme.error,
-                    dotData: const FlDotData(show: false),
-                  ),
-                ],
-              ),
-            ),
+          SeriesChart(
+            data: [
+              for (var i = 0; i < days.length; i++)
+                SeriesSample(
+                    days[i].day.millisecondsSinceEpoch.toDouble(),
+                    days[i].total.toDouble()),
+            ],
+            stroke: ClinicalPalette.teal,
+            overlay: [
+              for (var i = 0; i < days.length; i++)
+                SeriesSample(
+                    days[i].day.millisecondsSinceEpoch.toDouble(),
+                    days[i].high.toDouble()),
+            ],
+            overlayStroke: ClinicalPalette.coral,
+            unit: 'screenings',
+            yDecimals: 0,
+            height: 170,
+            xLabel: (t) {
+              final d = DateTime.fromMillisecondsSinceEpoch(t.round());
+              return '${d.day}/${d.month}';
+            },
           ),
           const AppSpacing.vsm(),
           Wrap(
             spacing: AppTheme.spacingSm,
             runSpacing: AppTheme.spacingXs,
-            children: [
+            children: const [
               AppPillLabel(
                 label: 'All screenings',
                 leadingIcon: Icons.circle,
-                color: theme.colorScheme.primary,
+                color: ClinicalPalette.teal,
               ),
               AppPillLabel(
                 label: 'High risk',
                 leadingIcon: Icons.circle,
-                color: theme.colorScheme.error,
+                color: ClinicalPalette.coral,
               ),
             ],
-          ),
-          const AppSpacing.vxs(),
-          Text(
-            '${days.first.day.day}/${days.first.day.month} '
-            '→ ${days.last.day.day}/${days.last.day.month}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
           ),
         ],
       ),

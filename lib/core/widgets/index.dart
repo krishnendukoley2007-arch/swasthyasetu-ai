@@ -8,3 +8,4 @@ export 'app_animations.dart' hide AppSkeleton, AppSkeletonList;
 export 'app_bars.dart';
 export 'app_text.dart';
 export 'screening_step_indicator.dart';
+export 'top_quick_access_bar.dart';

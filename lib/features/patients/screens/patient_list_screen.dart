@@ -223,7 +223,7 @@ class _PatientCard extends StatelessWidget {
     // sparkline column drops out entirely rather than squeezing the name.
     final showTrend = MediaQuery.textScalerOf(context).scale(14) < 22;
 
-    return AppCard(
+    final card = AppCard(
       margin: const EdgeInsets.only(bottom: AppTheme.spacingMd),
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       onTap: () => context.go('/patients/${patient.id}'),
@@ -300,6 +300,28 @@ class _PatientCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+
+    // Risk rides on the card's left edge as a 4 px strip — scannable in a
+    // long list without forcing the eye to open every card.
+    if (risk == null) return card;
+    return Stack(
+      children: [
+        card,
+        Positioned(
+          left: 0,
+          top: 2,
+          bottom: AppTheme.spacingMd + 2,
+          width: 4,
+          child: Container(
+            decoration: BoxDecoration(
+              color: risk.color,
+              borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(AppTheme.radiusSm)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

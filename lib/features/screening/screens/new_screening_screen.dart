@@ -27,7 +27,7 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
   Patient? _selectedPatient;
   Device? _selectedDevice;
 
-  final Device _demoDevice = Device.demo();
+
 
   @override
   void initState() {
@@ -626,7 +626,7 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
           ),
           const AppSpacing.vlg(),
           Text(
-            _selectedDevice?.name ?? 'SwasthyaSetu Demo Device',
+            _selectedDevice?.name ?? 'No Device Connected',
             style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
@@ -654,7 +654,7 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(
-                    isConnected ? 'Connected' : 'Demo Mode - Simulated',
+                    isConnected ? 'Connected' : 'Disconnected',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w500,
                       color: isConnected ? theme.colorScheme.primary : theme.colorScheme.tertiary,
@@ -664,10 +664,7 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
             ],
           ),
           const AppSpacing.vxs(),
-          // Only the selected device's own battery, and only when it is a
-          // real one: this line used to read the demo device's field whatever
-          // was connected, so a live board always reported the demo's charge.
-          if (_selectedDevice != null && !_selectedDevice!.isDemo)
+          if (_selectedDevice != null)
             Text(
               'Battery: ${_selectedDevice!.batteryPercent}%',
               style: theme.textTheme.bodySmall
@@ -682,14 +679,6 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
 
     return Column(
       children: [
-        AppButton(
-          label: 'Use Demo Device',
-          icon: const Icon(Icons.bluetooth_connected_rounded, size: 24),
-          onPressed: () => setState(() => _selectedDevice = _demoDevice),
-          minWidth: double.infinity,
-          minHeight: 56,
-        ),
-        const AppSpacing.vmd(),
         AppOutlinedButton(
           label: 'Scan for Devices',
           icon: const Icon(Icons.bluetooth_searching_rounded, size: 24),

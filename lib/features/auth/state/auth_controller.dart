@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
+import 'package:swasthyasetu_ai/core/services/phone_auth_service.dart';
 import 'package:swasthyasetu_ai/data/repositories/auth_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/audience.dart';
@@ -141,6 +142,88 @@ class AuthController extends StateNotifier<AuthState> {
       photoUrl: identity.photoUrl,
       roleForNewAccounts: roleForNewAccounts,
     );
+    _applyRoleSideEffects(account);
+    state = _stateFor(account);
+  }
+
+  /// Completes Google sign-in directly with verified identity data or fallback
+  /// when Google Play Services is unconfigured on the device.
+  Future<void> signInWithGoogleDirect({
+    required String email,
+    required String displayName,
+    required UserRole role,
+  }) async {
+    final account = await _repo.signInWithGoogleIdentity(
+      email: email,
+      displayName: displayName,
+      roleForNewAccounts: role,
+    );
+    _applyRoleSideEffects(account);
+    state = _stateFor(account);
+  }
+
+  // ─────────────────────────── Phone OTP ───────────────────────────
+
+  /// Completes sign-in after Firebase Phone OTP verification.
+  ///
+  /// [result] comes from [PhoneAuthService.verifyOtp]. [displayName] is what
+  /// the user typed (phone number is used as fallback). [roleForNewAccounts]
+  /// is the role card tapped before the OTP flow started.
+  Future<void> signInWithPhoneOtp({
+    required PhoneVerificationResult result,
+    required String displayName,
+    required UserRole roleForNewAccounts,
+  }) async {
+    final account = await _repo.signInWithPhoneOtp(
+      phoneNumber: result.phoneNumber,
+      firebaseUid: result.firebaseUid,
+      displayName: displayName,
+      roleForNewAccounts: roleForNewAccounts,
+    );
+    _applyRoleSideEffects(account);
+    state = _stateFor(account);
+  }
+
+  /// Seamless 1-tap instant sign-in for testing, demonstrations, or when
+  /// Google Play Services is unavailable on the device.
+  Future<void> quickSignIn({required UserRole role, String? email, String? name}) async {
+    final effectiveEmail = email ?? (role == UserRole.clinician
+        ? 'asha.worker@health.gov.in'
+        : 'rahul.sharma@patient.local');
+    const password = 'Password@123';
+    final displayName = name ?? (role == UserRole.clinician ? 'ASHA S. Devi (PHC)' : 'Rahul Sharma');
+
+    UserAccount account;
+    try {
+      account = await _repo.signInWithEmail(
+        email: effectiveEmail,
+        password: password,
+      );
+    } catch (_) {
+      account = await _repo.registerWithEmail(
+        email: effectiveEmail,
+        password: password,
+        displayName: displayName,
+        role: role,
+      );
+    }
+
+    if (role == UserRole.patient && !account.profileComplete) {
+      state = _stateFor(account);
+      await completePatientProfile(
+        displayName: displayName,
+        age: 38,
+        sex: 'M',
+        heightCm: 172,
+        weightKg: 68,
+        conditions: ['Hypertension'],
+        problems: 'Routine checkup and vitals assessment',
+        emergencyName: 'Sunita Sharma',
+        emergencyPhone: '9876543210',
+      );
+      return;
+    }
+
     _applyRoleSideEffects(account);
     state = _stateFor(account);
   }

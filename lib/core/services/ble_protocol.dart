@@ -206,16 +206,11 @@ class BleProtocol {
         : '${match.group(1)}.${match.group(2)}.$patch';
   }
 
-  /// The single-byte command that asks the board to begin streaming.
-  ///
-  /// Written to the control characteristic after subscription rather than
-  /// before: the board starts sending on receipt, and notifications that arrive
-  /// before the subscription exists are dropped by the OS.
-  static List<int> get startStreamCommand => const [0xA1];
-
-  /// Ask the board to stop streaming and idle its sensors. Sent on a clean
-  /// disconnect so the LED goes out and the battery lasts the rest of the shift.
-  static List<int> get stopStreamCommand => const [0xA0];
+  /// Specific mode control commands for the new mutually exclusive architecture.
+  static List<int> get setModeIdleCommand => const [0x00];
+  static List<int> get setModeSpO2Command => const [0x01];
+  static List<int> get setModeEcgCommand => const [0x02];
+  static List<int> get setModeTempCommand => const [0x03];
 }
 
 /// One decoded live-vitals frame: the reading, plus the sensor-state bits that

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -322,15 +323,15 @@ class _CountdownCard extends StatelessWidget {
           ),
           const AppSpacing.vmd(),
           SizedBox(
-            width: 140,
-            height: 140,
+            width: 190,
+            height: 190,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 SizedBox.expand(
                   child: CircularProgressIndicator(
                     value: progress,
-                    strokeWidth: 8,
+                    strokeWidth: 11,
                     backgroundColor:
                         theme.colorScheme.error.withValues(alpha: 0.15),
                     valueColor:
@@ -339,6 +340,8 @@ class _CountdownCard extends StatelessWidget {
                 ),
                 // FittedBox, so the numeral shrinks to the ring instead of
                 // overflowing it when the system font is scaled to 2.0x.
+                // Tabular figures: the numeral holds its width as it ticks
+                // down, so the ring doesn't judder under a falling watch.
                 FittedBox(
                   child: Padding(
                     padding: const EdgeInsets.all(AppTheme.spacingLg),
@@ -347,6 +350,8 @@ class _CountdownCard extends StatelessWidget {
                       style: theme.textTheme.displayLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.error,
+                        fontSize: 76,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ),

@@ -172,6 +172,34 @@ class EnvironmentService {
     }
   }
 
+  String _describeWeatherCode(int code) {
+    return switch (code) {
+      0 => 'Clear Sky',
+      1 => 'Mainly Clear',
+      2 => 'Partly Cloudy',
+      3 => 'Overcast',
+      45 || 48 => 'Dense Fog',
+      51 => 'Light Drizzle',
+      53 => 'Moderate Drizzle',
+      55 => 'Dense Drizzle',
+      56 || 57 => 'Freezing Drizzle',
+      61 => 'Light Rain',
+      63 => 'Moderate Rain',
+      65 => 'Heavy Rain',
+      66 || 67 => 'Freezing Rain',
+      71 => 'Slight Snowfall',
+      73 => 'Moderate Snowfall',
+      75 || 77 => 'Heavy Snowfall',
+      80 => 'Slight Rain Showers',
+      81 => 'Moderate Rain Showers',
+      82 => 'Violent Rain Showers',
+      85 || 86 => 'Snow Showers',
+      95 => 'Thunderstorm',
+      96 || 99 => 'Severe Thunderstorm & Hail',
+      _ => 'Cloudy',
+    };
+  }
+
   Future<EnvironmentReading?> _fetch(double lat, double lng) async {
     final weather = await _dio.get<Map<String, dynamic>>(
       'https://api.open-meteo.com/v1/forecast',
@@ -179,7 +207,7 @@ class EnvironmentService {
         'latitude': lat,
         'longitude': lng,
         'current':
-            'temperature_2m,relative_humidity_2m,apparent_temperature',
+            'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,weather_code,wind_speed_10m',
         'timezone': 'auto',
       },
     );
@@ -189,6 +217,12 @@ class EnvironmentService {
     final apparent = (current['apparent_temperature'] as num?)?.toDouble();
     final humidity = (current['relative_humidity_2m'] as num?)?.toDouble();
     if (temp == null || apparent == null || humidity == null) return null;
+
+    final precipitation = (current['precipitation'] as num?)?.toDouble() ??
+        (current['rain'] as num?)?.toDouble() ?? 0.0;
+    final weatherCode = (current['weather_code'] as num?)?.toInt() ?? 0;
+    final weatherDesc = _describeWeatherCode(weatherCode);
+    final windSpeed = (current['wind_speed_10m'] as num?)?.toDouble() ?? 0.0;
 
     // Air quality is a separate API and a separate grid: a blank response
     // there must not sink a perfectly good weather reading.
@@ -219,6 +253,10 @@ class EnvironmentService {
       humidityPercent: humidity,
       aqiUs: aqi,
       pm25: pm25,
+      weatherCode: weatherCode,
+      weatherDescription: weatherDesc,
+      precipitationMm: precipitation,
+      windSpeedKmh: windSpeed,
       fetchedAt: DateTime.now(),
       source: 'live',
     );

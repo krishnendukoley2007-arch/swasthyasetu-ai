@@ -62,6 +62,9 @@ class Screenings extends Table {
   TextColumn get bpConfidence =>
       text().withDefault(const Constant('EXPERIMENTAL'))();
   DateTimeColumn get bpCalibratedAt => dateTime().nullable()();
+  IntColumn get estimatedGlucose => integer().withDefault(const Constant(0))();
+  TextColumn get glucoseConfidence =>
+      text().withDefault(const Constant('EXPERIMENTAL'))();
 
   // Reported symptoms
   TextColumn get symptoms => text().withDefault(const Constant('[]'))();
@@ -280,6 +283,10 @@ class AuthAccounts extends Table {
   /// The Patients row this account screens itself as. Null for clinicians.
   TextColumn get patientId => text().nullable()();
 
+  /// E.164 phone number, e.g. +919876543210. Set for Phone OTP accounts;
+  /// null for email and Google accounts.
+  TextColumn get phoneNumber => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get lastLoginAt => dateTime()();
 
@@ -309,17 +316,24 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async => m.createAll(),
         onUpgrade: (m, from, to) async {
-          // v2 adds the local account store. Existing installs keep every
-          // patient, screening and setting untouched — the only change is one
-          // new empty table.
+          // v2 adds the local account store.
           if (from < 2) {
             await m.createTable(authAccounts);
+          }
+          // v3 adds estimatedGlucose and glucoseConfidence columns to Screenings.
+          if (from < 3) {
+            await m.addColumn(screenings, screenings.estimatedGlucose);
+            await m.addColumn(screenings, screenings.glucoseConfidence);
+          }
+          // v4 adds phoneNumber to AuthAccounts for Phone OTP sign-in.
+          if (from < 4) {
+            await m.addColumn(authAccounts, authAccounts.phoneNumber);
           }
         },
         beforeOpen: (details) async {

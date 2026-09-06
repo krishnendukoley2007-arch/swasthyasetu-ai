@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
+import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/disaster_advisory.dart';
 import 'package:swasthyasetu_ai/domain/models/environment.dart';
@@ -133,25 +134,27 @@ class _AdvisoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // One palette everywhere: coral = danger/warning, amber = advice,
+    // teal = informational.
     final (color, container, icon) = switch (advisory.level) {
       AdvisoryLevel.danger => (
-          theme.colorScheme.onErrorContainer,
-          theme.colorScheme.errorContainer,
+          Colors.white,
+          ClinicalPalette.coral,
           Icons.warning_amber_rounded,
         ),
       AdvisoryLevel.warning => (
-          theme.colorScheme.onErrorContainer,
-          theme.colorScheme.errorContainer,
+          ClinicalPalette.coral,
+          ClinicalPalette.coral.withValues(alpha: 0.10),
           Icons.warning_amber_rounded,
         ),
       AdvisoryLevel.advice => (
-          theme.colorScheme.onTertiaryContainer,
-          theme.colorScheme.tertiaryContainer,
+          ClinicalPalette.amber,
+          ClinicalPalette.amber.withValues(alpha: 0.10),
           Icons.info_outline_rounded,
         ),
       AdvisoryLevel.info => (
-          theme.colorScheme.onPrimaryContainer,
-          theme.colorScheme.primaryContainer,
+          ClinicalPalette.teal,
+          ClinicalPalette.teal.withValues(alpha: 0.08),
           Icons.tips_and_updates_outlined,
         ),
     };

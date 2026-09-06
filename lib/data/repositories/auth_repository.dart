@@ -9,7 +9,7 @@ import 'package:swasthyasetu_ai/data/repositories/settings_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/user_account.dart';
 import 'package:uuid/uuid.dart';
 
-/// Why an email sign-in/registration failed, mapped to copy in the UI.
+/// Why a sign-in/registration failed, mapped to copy in the UI.
 enum AuthFailure {
   emailInUse,
   wrongCredentials,
@@ -17,6 +17,7 @@ enum AuthFailure {
   invalidEmail,
   googleUnavailable,
   googleCancelled,
+  phoneOtpFailed,
 }
 
 class AuthException implements Exception {
@@ -137,6 +138,57 @@ class AuthRepository {
     await _touchLogin(row.id);
     await _startSession(row.id);
     return _toAccount((await _db.getAuthAccount(row.id))!);
+  }
+
+  // ──────────────────────────── Phone OTP ────────────────────────────
+
+  /// Creates or reuses the account for a verified Firebase Phone OTP identity.
+  /// The phone number (E.164) is the primary key for lookup.
+  /// For new accounts, a synthetic email `{uid}@phone.swasthyasetu` is stored
+  /// so the rest of the codebase never needs a null-email guard.
+  Future<UserAccount> signInWithPhoneOtp({
+    required String phoneNumber, // E.164, e.g. +919876543210
+    required String firebaseUid,
+    required String displayName,
+    required UserRole roleForNewAccounts,
+  }) async {
+    // Check if an account already exists for this phone number
+    final existing = await (_db.select(_db.authAccounts)
+          ..where((t) => t.phoneNumber.equals(phoneNumber)))
+        .getSingleOrNull();
+    if (existing != null) {
+      await _touchLogin(existing.id);
+      await _startSession(existing.id);
+      return _toAccount((await _db.getAuthAccount(existing.id))!);
+    }
+    // New account
+    final now = DateTime.now();
+    final id = 'ACC-${_uuid.v4()}';
+    final syntheticEmail = '$firebaseUid@phone.swasthyasetu';
+    final account = AuthAccountRow(
+      id: id,
+      email: syntheticEmail,
+      displayName: displayName.trim().isEmpty ? phoneNumber : displayName.trim(),
+      role: roleForNewAccounts.storageValue,
+      provider: AuthAccountProvider.phone.storageValue,
+      passwordHash: null,
+      passwordSalt: null,
+      photoUrl: null,
+      phoneNumber: phoneNumber,
+      age: null,
+      sex: '',
+      heightCm: null,
+      weightKg: null,
+      conditions: '[]',
+      problems: null,
+      profileComplete: false,
+      patientId: null,
+      createdAt: now,
+      lastLoginAt: now,
+    );
+    await _db.upsertAuthAccount(account.toCompanion(true));
+    await _startSession(id);
+    return _toAccount(account);
   }
 
   // ──────────────────────────── Google ────────────────────────────
@@ -291,6 +343,7 @@ class AuthRepository {
         role: UserRole.fromStorage(r.role),
         provider: AuthAccountProvider.fromStorage(r.provider),
         photoUrl: r.photoUrl,
+        phoneNumber: r.phoneNumber,
         age: r.age,
         sex: r.sex,
         heightCm: r.heightCm,

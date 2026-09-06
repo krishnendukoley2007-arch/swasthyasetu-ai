@@ -216,6 +216,22 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
               spacing: AppTheme.spacingSm,
               runSpacing: AppTheme.spacingSm,
               children: [
+                if (r.imdAlertLevel != 'GREEN')
+                  AppBadge(
+                    label: r.imdAlertBadgeLabel,
+                    color: r.imdAlertLevel == 'RED'
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.tertiary,
+                  ),
+                AppBadge(
+                  label: r.weatherDescription,
+                  icon: _getWeatherIcon(r),
+                ),
+                if (r.precipitationMm > 0)
+                  AppBadge(
+                    label: '${r.precipitationMm.toStringAsFixed(1)} mm rain',
+                    icon: Icons.umbrella_rounded,
+                  ),
                 AppBadge(
                   label: 'Feels ${r.apparentTemperatureC.round()}°C',
                   icon: Icons.device_thermostat_rounded,
@@ -322,5 +338,27 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
         ],
       ),
     );
+  }
+
+  IconData _getWeatherIcon(EnvironmentReading r) {
+    if (r.weatherCode == 95 || r.weatherCode == 96 || r.weatherCode == 99) {
+      return Icons.thunderstorm_rounded;
+    }
+    if (r.weatherCode >= 71 && r.weatherCode <= 86) {
+      return Icons.ac_unit_rounded;
+    }
+    if (r.weatherCode == 45 || r.weatherCode == 48) {
+      return Icons.blur_on_rounded;
+    }
+    if (r.isRainy) {
+      return Icons.water_drop_rounded;
+    }
+    if (r.weatherCode == 1 || r.weatherCode == 2) {
+      return Icons.cloud_queue_rounded;
+    }
+    if (r.weatherCode == 3) {
+      return Icons.cloud_rounded;
+    }
+    return Icons.wb_sunny_rounded;
   }
 }

@@ -18,6 +18,8 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    - swasthya-setu-ai-private-main/**
+    - reserch paper/**
 
 linter:
   # The lint rules applied to this project can be customized in the
