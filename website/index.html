@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwasthyaSetu AI — Offline-First Health Screening for Community Health Workers</title>
+    <meta name="description" content="Record vitals, get triage, understand in plain language, act fast — with no internet, no cloud account, and no silent guessing. Built for India's 1.3M community health workers.">
+    <meta name="keywords" content="SwasthyaSetu, health screening, offline, community health, ASHA, ESP32, ECG, triage, SIH 2026">
+    <meta name="author" content="SwasthyaSetu AI Team">
+    <meta property="og:title" content="SwasthyaSetu AI — Offline-First Health Screening">
+    <meta property="og:description" content="Hardware + software health screening that works without internet. Built for community health workers.">
+    <meta property="og:type" content="website">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <!-- ══════════ NAV ══════════ -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <span class="logo-icon">🏥</span>
+                <span class="logo-text">SwasthyaSetu<span class="logo-ai">AI</span></span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="#live-dashboard">Live Dashboard</a>
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#hardware">Hardware</a>
+                <button id="themeToggleBtn" style="background: none; border: 1px solid var(--border-subtle); color: var(--text-primary); cursor: pointer; padding: 6px 12px; border-radius: 8px;">☀️ Outdoor Mode</button>
+                <a href="#download" class="nav-cta">Download APK</a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ══════════ HERO ══════════ -->
+    <section id="hero">
+        <canvas id="particleCanvas"></canvas>
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; position: relative; z-index: 2; padding-top: 60px;">
+                <div class="hero-content" style="text-align: left;">
+                    <div class="hero-badges" style="justify-content: flex-start;">
+                        <span class="badge badge-version">v2.2.0</span>
+                        <span class="badge badge-offline">Works Offline</span>
+                        <span class="badge badge-tests">428 Tests Passing</span>
+                    </div>
+                    <h1 style="text-align: left; font-size: clamp(2.2rem, 5vw, 4rem);">
+                        Health Screening<br>
+                        <span class="hero-gradient">Without the Internet</span>
+                    </h1>
+                    <p class="hero-subtitle" style="text-align: left;">
+                        Record vitals → Get triage → Understand in plain language → Act fast<br>
+                        <em>…with no internet, no cloud account, and no silent guessing.</em>
+                    </p>
+                    <div class="hero-actions" style="justify-content: flex-start;">
+                        <a href="#live-dashboard" class="btn btn-primary">
+                            <span class="btn-icon">📡</span> Connect Your ESP32
+                        </a>
+                        <a href="#how-it-works" class="btn btn-secondary">
+                            <span class="btn-icon">▶</span> See How It Works
+                        </a>
+                    </div>
+                    <div class="hero-stats" style="justify-content: flex-start;">
+                        <div class="stat">
+                            <span class="stat-number" data-target="428">0</span>
+                            <span class="stat-label">Unit Tests</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat">
+                            <span class="stat-number" data-target="250">0</span>
+                            <span class="stat-label">Samples/sec ECG</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat">
+                            <span class="stat-number">4</span>
+                            <span class="stat-label">Live Sensors</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-image-wrapper" style="position: relative;">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120%; height: 120%; background: radial-gradient(circle, rgba(37,99,235,0.2) 0%, transparent 60%); z-index: -1;"></div>
+                    <img src="assets/3d-enclosure-render.jpg" alt="SwasthyaSetu AI Device" style="width: 100%; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); transform: perspective(1000px) rotateY(-5deg); transition: transform 0.5s;">
+                </div>
+            </div>
+        </div>
+        <div class="hero-ecg" style="opacity: 0.3;">
+            <canvas id="ecgCanvas"></canvas>
+        </div>
+    </section>
+
+    <!-- ══════════ LIVE DASHBOARD ══════════ -->
+    <section id="live-dashboard" class="section section-dark">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Live Dashboard</span>
+                <h2>Connect Your Device.<br><span class="text-gradient">See Real-Time Vitals.</span></h2>
+                <p class="section-desc">Connect your SSAI-SENSE-01 via Web Bluetooth to stream live ECG, heart rate, SpO₂, and temperature directly in your browser.</p>
+            </div>
+
+            <!-- Connection Bar -->
+            <div class="connection-bar" id="connectionBar">
+                <div class="connection-left">
+                    <div class="connection-indicator" id="connectionDot"></div>
+                    <span class="connection-label" id="connectionLabel">DISCONNECTED</span>
+                    <span class="connection-device" id="connectionDevice"></span>
+                </div>
+                <div class="connection-right">
+                    <span class="connection-timer" id="connectionTimer"></span>
+                    <button class="btn btn-connect" id="connectBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5l11 11M6.5 17.5l4-4m-4-7l4 4m7 7l-4-4m4-7l-4 4"/></svg>
+                        Connect ESP32
+                    </button>
+                </div>
+            </div>
+
+            <!-- Vital Cards Grid -->
+            <div class="vitals-grid">
+                <div class="vital-card vital-hr" id="cardHR">
+                    <div class="vital-header">
+                        <span class="vital-icon">💓</span>
+                        <span class="vital-name">Heart Rate</span>
+                        <span class="vital-status" id="hrStatus">--</span>
+                    </div>
+                    <div class="vital-value-row">
+                        <span class="vital-big" id="vitalHR">--</span>
+                        <span class="vital-unit">bpm</span>
+                    </div>
+                    <div class="vital-detail">
+                        <span>RR: <strong id="vitalRR">--</strong> ms</span>
+                    </div>
+                </div>
+
+                <div class="vital-card vital-spo2" id="cardSpO2">
+                    <div class="vital-header">
+                        <span class="vital-icon">🫁</span>
+                        <span class="vital-name">SpO₂</span>
+                        <span class="vital-status" id="spo2Status">--</span>
+                    </div>
+                    <div class="vital-value-row">
+                        <span class="vital-big" id="vitalSpO2">--</span>
+                        <span class="vital-unit">%</span>
+                    </div>
+                    <div class="vital-ring-container">
+                        <svg class="vital-ring" viewBox="0 0 100 100">
+                            <circle class="ring-bg" cx="50" cy="50" r="42" stroke-width="6" fill="none"/>
+                            <circle class="ring-fill" id="spo2Ring" cx="50" cy="50" r="42" stroke-width="6" fill="none" stroke-dasharray="263.9" stroke-dashoffset="263.9"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="vital-card vital-temp" id="cardTemp">
+                    <div class="vital-header">
+                        <span class="vital-icon">🌡️</span>
+                        <span class="vital-name">Temperature</span>
+                        <span class="vital-status" id="tempStatus">--</span>
+                    </div>
+                    <div class="vital-value-row">
+                        <span class="vital-big" id="vitalTemp">--</span>
+                        <span class="vital-unit">°C</span>
+                    </div>
+                </div>
+
+                <div class="vital-card vital-batt" id="cardBatt">
+                    <div class="vital-header">
+                        <span class="vital-icon">🔋</span>
+                        <span class="vital-name">Battery</span>
+                    </div>
+                    <div class="vital-value-row">
+                        <span class="vital-big" id="vitalBatt">--</span>
+                        <span class="vital-unit">%</span>
+                    </div>
+                    <div class="battery-bar">
+                        <div class="battery-fill" id="battFill" style="width:0%"></div>
+                    </div>
+                    <div class="vital-detail">
+                        <span>Quality: <strong id="vitalQual">--</strong></span>
+                        <span>Leads: <strong id="vitalLeads">--</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ECG Waveform -->
+            <div class="ecg-panel">
+                <div class="ecg-panel-header">
+                    <div class="ecg-panel-left">
+                        <span class="ecg-panel-title">📊 ECG Waveform</span>
+                        <span class="ecg-panel-subtitle">Single-lead (Lead I) · 250 Hz · AD8232</span>
+                    </div>
+                    <div class="ecg-panel-right">
+                        <span class="ecg-live-dot" id="ecgLiveDot"></span>
+                        <span class="ecg-label" id="ecgLabel">DEMO</span>
+                        <select id="ecgSpeed" class="ecg-select">
+                            <option value="25">25 mm/s</option>
+                            <option value="50" selected>50 mm/s</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="ecg-canvas-wrap">
+                    <canvas id="ecgMainCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Vitals History Graphs -->
+            <div class="history-graphs-panel" style="margin-top: 28px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 20px; padding: 24px;">
+                <div class="vital-header" style="margin-bottom: 20px;">
+                    <span class="vital-icon">📈</span>
+                    <span class="vital-name">Historical Vitals Trends</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">HEART RATE (bpm)</p>
+                        <div class="vital-chart-container" style="height: 180px;">
+                            <canvas id="chartHR"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">TEMPERATURE (°C)</p>
+                        <div class="vital-chart-container" style="height: 180px;">
+                            <canvas id="chartTemp"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Measurement Button -->
+            <div class="measure-bar">
+                <button class="btn btn-measure" id="measureBtn" disabled>
+                    <span class="measure-icon">🩺</span>
+                    <span class="measure-text">Start 30s Measurement</span>
+                </button>
+                <div class="measure-progress" id="measureProgress" style="display:none">
+                    <div class="measure-bar-fill" id="measureFill"></div>
+                    <span class="measure-timer" id="measureTimer">30s remaining</span>
+                </div>
+
+                <!-- Triage Result Card (hidden until measurement completes) -->
+                <div class="triage-result-card" id="triageCard" style="display:none; margin-top: 20px; background: var(--bg-card); border: 2px solid var(--border-subtle); border-radius: 20px; padding: 28px; position: relative; overflow: hidden;">
+                    <div id="triageBandStrip" style="position: absolute; top: 0; left: 0; right: 0; height: 6px;"></div>
+                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                        <span id="triageBandIcon" style="font-size: 2.2rem;"></span>
+                        <div>
+                            <h3 id="triageBandLabel" style="margin: 0; font-size: 1.3rem;"></h3>
+                            <p id="triageScore" style="margin: 4px 0 0; font-size: 0.85rem; color: var(--text-muted);"></p>
+                        </div>
+                    </div>
+                    <p id="triageAction" style="font-size: 0.95rem; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px;"></p>
+                    <div id="triageRulesContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+            </div>
+
+            <!-- MPU6050 Motion / Fall Detection Visualizer -->
+            <div class="motion-panel" style="margin-top: 28px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 20px; padding: 24px;">
+                <div class="vital-header" style="margin-bottom: 20px;">
+                    <span class="vital-icon">🤸</span>
+                    <span class="vital-name">MPU6050 Motion & Fall Detection</span>
+                    <span class="vital-status" id="fallStatus" style="background: rgba(16,185,129,0.15); color: #10b981;">STABLE</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">ACCELEROMETER (g)</p>
+                        <div class="vital-chart-container" style="height: 120px;">
+                            <canvas id="chartAccel"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">GYROSCOPE (°/s)</p>
+                        <div class="vital-chart-container" style="height: 120px;">
+                            <canvas id="chartGyro"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient History (IndexedDB) -->
+            <div class="history-panel" style="margin-top: 28px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 20px; padding: 24px;">
+                <div class="vital-header" style="margin-bottom: 20px;">
+                    <span class="vital-icon">📋</span>
+                    <span class="vital-name">Local Patient History</span>
+                    <button id="exportPdfBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px; margin-left: auto;">Export PDF Report</button>
+                </div>
+                <div style="max-height: 200px; overflow-y: auto; padding-right: 10px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted);">
+                                <th style="padding: 10px 0;">Date</th>
+                                <th>HR (bpm)</th>
+                                <th>SpO₂ (%)</th>
+                                <th>Temp (°C)</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="5" style="padding: 20px 0; text-align: center; color: var(--text-muted);">No measurements saved yet. Click "Start 30s Measurement" to save one.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ FEATURES ══════════ -->
+    <section id="features" class="section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Features</span>
+                <h2>Everything a Health Worker Needs.<br><span class="text-gradient">In Their Pocket.</span></h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card feature-highlight">
+                    <div class="feature-icon">🩺</div>
+                    <h3>Real-Time Screening</h3>
+                    <p>Heart rate, SpO₂, temperature, and single-lead ECG over Bluetooth LE. 250 Hz sampling, hospital-style waveform.</p>
+                    <span class="feature-badge">✅ Offline</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Deterministic Triage</h3>
+                    <p>Fixed-threshold rule engine → 🟢 Routine / 🟡 Soon / 🔴 Urgent. Same vitals always produce the same band.</p>
+                    <span class="feature-badge">✅ Offline</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Two-Tier Explanation</h3>
+                    <p>Instant offline explanation from bundled corpus. Optional Gemini upgrade online. Always labelled which one you got.</p>
+                    <span class="feature-badge">✅ / 🌐</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Patient Management</h3>
+                    <p>Multiple profiles, full screening history, vulnerability flags, local SQLite database. Everything on-device.</p>
+                    <span class="feature-badge">✅ Offline</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🆘</div>
+                    <h3>Emergency SOS</h3>
+                    <p>Pre-fills SMS with triage result + location + vitals. Opens your messaging app — never sends automatically.</p>
+                    <span class="feature-badge">✅ Offline</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>30-Day Trends</h3>
+                    <p>Personal baselines — not population norms. Deviation highlighting: HR ±10 bpm, SpO₂ −2%, Temp +0.7°C.</p>
+                    <span class="feature-badge">✅ Offline</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ HOW IT WORKS ══════════ -->
+    <section id="how-it-works" class="section section-dark">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">How It Works</span>
+                <h2>From Chest to Screen.<br><span class="text-gradient">In Under a Second.</span></h2>
+            </div>
+            <div class="flow-timeline">
+                <div class="flow-step" data-step="1">
+                    <div class="flow-step-icon">💓</div>
+                    <div class="flow-step-content">
+                        <h3>Skin → Chip</h3>
+                        <p>Two electrodes capture a ~1 mV heart signal. The AD8232 amplifies it 100×, filters noise, outputs a clean 0–3.3V wave.</p>
+                    </div>
+                </div>
+                <div class="flow-step" data-step="2">
+                    <div class="flow-step-icon">⚡</div>
+                    <div class="flow-step-content">
+                        <h3>Sampled 250× per Second</h3>
+                        <p>A hardware timer fires every 4 ms — a metronome that cannot be distracted. Each tick reads the analog voltage as a 12-bit number.</p>
+                    </div>
+                </div>
+                <div class="flow-step" data-step="3">
+                    <div class="flow-step-icon">📦</div>
+                    <div class="flow-step-content">
+                        <h3>Packed into 20-Byte Envelopes</h3>
+                        <p>Every 8 samples are sealed into a BLE-friendly packet. 31.25 envelopes per second — a steady stream of postcards.</p>
+                    </div>
+                </div>
+                <div class="flow-step" data-step="4">
+                    <div class="flow-step-icon">📡</div>
+                    <div class="flow-step-content">
+                        <h3>Bluetooth LE Flight</h3>
+                        <p>ESP32's radio pushes each envelope wirelessly. No pairing dance, no cables. The phone subscribes once and data flows.</p>
+                    </div>
+                </div>
+                <div class="flow-step" data-step="5">
+                    <div class="flow-step-icon">🔍</div>
+                    <div class="flow-step-content">
+                        <h3>Phone Catches & Checks</h3>
+                        <p>The app validates every frame: wrong length → discard. Sequence gap → count it. Out-of-range vitals → reject.</p>
+                    </div>
+                </div>
+                <div class="flow-step" data-step="6">
+                    <div class="flow-step-icon">🎯</div>
+                    <div class="flow-step-content">
+                        <h3>Triage & Explanation</h3>
+                        <p>Rule engine evaluates thresholds → risk band → plain-language explanation. Offline-first, labelled honestly, actionable.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ IMPACT ══════════ -->
+    <section id="impact" class="section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Impact in the Field</span>
+                <h2>Real Voices.<br><span class="text-gradient">Real Lives Saved.</span></h2>
+                <p class="section-desc">See how SwasthyaSetu AI is transforming rural healthcare delivery across India's remote villages.</p>
+            </div>
+            <div class="impact-grid">
+                <div class="impact-card">
+                    <div class="impact-quote">"Before this, I had to travel 15km to the nearest PHC just to check my heart. Now the ASHA worker comes to my home and tells me instantly."</div>
+                    <div class="impact-author">
+                        <div class="impact-avatar" style="background: var(--accent-cyan)">R</div>
+                        <div class="impact-info">
+                            <h4>Ramesh Kumar</h4>
+                            <p>Patient, Odisha</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-quote">"The offline explanations are a game-changer. I don't just see numbers; I see exactly what is wrong and what I need to do next, even when there is no signal."</div>
+                    <div class="impact-author">
+                        <div class="impact-avatar" style="background: var(--accent-purple)">S</div>
+                        <div class="impact-info">
+                            <h4>Sunita Devi</h4>
+                            <p>ASHA Worker, Bihar</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-quote">"The SOS feature saved my grandfather's life. The app detected the abnormal ECG and immediately sent the pre-filled message to the doctor."</div>
+                    <div class="impact-author">
+                        <div class="impact-avatar" style="background: var(--accent-green)">A</div>
+                        <div class="impact-info">
+                            <h4>Ananya Singh</h4>
+                            <p>Relative, Jharkhand</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ HARDWARE ══════════ -->
+    <section id="hardware" class="section section-dark">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">The Hardware</span>
+                <h2>SSAI-SENSE-01.<br><span class="text-gradient">Hospital Screening in Your Pocket.</span></h2>
+                <p class="section-desc">A custom sensor board with cross-shaped 3D-printed enclosure. Under ₹6,000 total cost.</p>
+            </div>
+            
+            <div class="hardware-3d-viewer" style="height: 400px; width: 100%; border-radius: 20px; overflow: hidden; position: relative; margin-bottom: 40px; background: radial-gradient(circle at center, rgba(37,99,235,0.15) 0%, transparent 70%);">
+                <canvas id="threeCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
+                <div style="position: absolute; bottom: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; pointer-events: none;">Drag to rotate • Scroll to zoom</div>
+            </div>
+
+            <div class="hardware-specs-grid">
+                <div class="hw-card">
+                    <div class="hw-icon">📡</div>
+                    <h4>ESP32-WROOM-32</h4>
+                    <p>Dual-core MCU, 250 Hz sampling, R-peak detection, BLE radio, FreeRTOS dual-core task split</p>
+                </div>
+                <div class="hw-card">
+                    <div class="hw-icon">📊</div>
+                    <h4>AD8232</h4>
+                    <p>Single-lead ECG front end — amplifies 1 mV heart signal with lead-off detection</p>
+                </div>
+                <div class="hw-card">
+                    <div class="hw-icon">💓</div>
+                    <h4>MAX30102</h4>
+                    <p>Pulse oximetry — HR + SpO₂ via reflectance PPG on separate I²C bus</p>
+                </div>
+                <div class="hw-card">
+                    <div class="hw-icon">🌡️</div>
+                    <h4>MLX90614</h4>
+                    <p>Contactless IR temperature — ±0.2°C with +2°C core compensation</p>
+                </div>
+                <div class="hw-card">
+                    <div class="hw-icon">🤸</div>
+                    <h4>MPU6050</h4>
+                    <p>6-axis IMU — fall detection surviving screen-off</p>
+                </div>
+                <div class="hw-card">
+                    <div class="hw-icon">🔋</div>
+                    <h4>TPS63020 Buck-Boost</h4>
+                    <p>Flat 3.3V across entire Li-ion discharge. 19.8h streaming / 11mo fall-watch</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ DOWNLOAD ══════════ -->
+    <section id="download" class="section section-dark">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Get Started</span>
+                <h2>Download & Install.<br><span class="text-gradient">No Account Needed.</span></h2>
+            </div>
+            <div class="download-cards">
+                <div class="download-card download-recommended">
+                    <div class="download-ribbon">Recommended</div>
+                    <div class="download-icon">🆕</div>
+                    <h3>Universal APK</h3>
+                    <p class="download-desc">Works on every Android phone. Latest build with all features.</p>
+                    <div class="download-meta">
+                        <span>~74 MB</span>
+                        <span>Android 7.0+</span>
+                    </div>
+                    <a href="https://github.com/krishnendukoley2007-arch/swasthyasetu-ai/releases/latest" class="btn btn-primary btn-full" target="_blank" rel="noopener">
+                        ⬇️ Download from GitHub
+                    </a>
+                </div>
+                <div class="download-card">
+                    <div class="download-icon">⚡</div>
+                    <h3>ARM64 APK</h3>
+                    <p class="download-desc">Smaller download. Works on most phones since 2018.</p>
+                    <div class="download-meta">
+                        <span>~32 MB</span>
+                        <span>64-bit ARM only</span>
+                    </div>
+                    <a href="https://github.com/krishnendukoley2007-arch/swasthyasetu-ai/releases/latest" class="btn btn-secondary btn-full" target="_blank" rel="noopener">
+                        ⬇️ Download
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ FOOTER ══════════ -->
+    <footer id="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">🏥</span>
+                    <span class="logo-text">SwasthyaSetu<span class="logo-ai">AI</span></span>
+                    <p class="footer-tagline">Built for community health workers everywhere.</p>
+                </div>
+                <div class="footer-links-group">
+                    <div class="footer-col">
+                        <h4>Project</h4>
+                        <a href="https://github.com/krishnendukoley2007-arch/swasthyasetu-ai" target="_blank" rel="noopener">GitHub Repo</a>
+                        <a href="https://github.com/krishnendukoley2007-arch/swasthyasetu-ai/releases" target="_blank" rel="noopener">Releases</a>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Resources</h4>
+                        <a href="#features">Features</a>
+                        <a href="#hardware">Hardware</a>
+                        <a href="#live-dashboard">Live Dashboard</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-disclaimer">
+                <p>⚠️ <strong>Medical Disclaimer:</strong> This software is a screening and triage-support tool for trained community health workers. It does <strong>not</strong> diagnose, treat, or prescribe. Do not use as sole basis for care decisions.</p>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 SwasthyaSetu AI · SIH 26181 · MIT License</p>
+                <div class="footer-badges">
+                    <span>Flutter</span>
+                    <span>ESP32</span>
+                    <span>Dart</span>
+                    <span>Arduino</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="risk-engine.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

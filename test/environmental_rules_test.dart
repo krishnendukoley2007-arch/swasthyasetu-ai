@@ -81,6 +81,23 @@ void main() {
       expect(adv.single.level, AdvisoryLevel.warning);
     });
 
+    test('AQI above 300 is hazardous, not merely unhealthy', () {
+      final adv = EnvironmentalRules.evaluate(reading(aqi: 350));
+      expect(adv.single.id, 'air_hazardous');
+      expect(adv.single.level, AdvisoryLevel.danger);
+    });
+
+    test('a hazardous reading stays hazardous for a chronic patient', () {
+      final adv = EnvironmentalRules.evaluate(
+        reading(aqi: 350),
+        vulnerability: const {Vulnerability.chronic},
+      );
+      // A chronic patient also picks up a heat line at the default temperature,
+      // so assert on the worst-first head rather than a single entry.
+      expect(adv.first.id, 'air_hazardous');
+      expect(adv.first.level, AdvisoryLevel.danger);
+    });
+
     test('null AQI (off-grid location) is not a reading', () {
       expect(EnvironmentalRules.evaluate(reading()), isEmpty);
     });

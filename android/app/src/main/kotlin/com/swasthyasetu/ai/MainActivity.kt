@@ -1,4 +1,4 @@
-package com.orbitx2026.swasthyasetu_ai
+package com.swasthyasetu.ai
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -203,7 +203,7 @@ class PatientHomeScreen extends ConsumerWidget {
                 ? null
                 : () => isLive
                     ? _startSelfCheck(context, ref, patient, demo: false)
-                    : context.push('/devices/scan'),
+                    : context.go('/my-device'),
             minHeight: 56,
           ),
           if (!isLive) ...[

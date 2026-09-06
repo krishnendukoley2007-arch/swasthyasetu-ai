@@ -44,7 +44,10 @@ class _ClinicianShell extends ConsumerWidget {
       body: shell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: shell.currentIndex,
-        onDestinationSelected: (i) => shell.goBranch(i),
+        onDestinationSelected: (i) =>
+            // Re-tapping the current tab pops that branch back to its root,
+            // which is what every Android user expects from a bottom bar.
+            shell.goBranch(i, initialLocation: i == shell.currentIndex),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_rounded),
@@ -83,7 +86,10 @@ class _PatientShell extends ConsumerWidget {
       body: shell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: shell.currentIndex,
-        onDestinationSelected: (i) => shell.goBranch(i),
+        onDestinationSelected: (i) =>
+            // Re-tapping the current tab pops that branch back to its root,
+            // which is what every Android user expects from a bottom bar.
+            shell.goBranch(i, initialLocation: i == shell.currentIndex),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.favorite_rounded),
@@ -222,28 +228,14 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // My Device
+          // My Device — the patient's own tab. The shared /devices/* routes
+          // live top-level (below) because clinicians and demo users reach
+          // them too, and they must not inherit the patient tab bar.
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/devices/scan',
+                path: '/my-device',
                 builder: (context, state) => const DeviceScanScreen(),
-              ),
-              GoRoute(
-                path: '/devices/connect',
-                builder: (context, state) {
-                  final extra = state.extra;
-                  final args = extra is Map ? extra : const <Object?, Object?>{};
-                  return DeviceConnectionScreen(
-                    remoteId: args['remoteId'] as String?,
-                    deviceName: args['name'] as String?,
-                    demo: args['demo'] == true,
-                  );
-                },
-              ),
-              GoRoute(
-                path: '/devices/diagnostics',
-                builder: (context, state) => const DeviceDiagnosticsScreen(),
               ),
             ],
           ),
@@ -251,7 +243,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/emergency/contacts',
+                path: '/my-help',
                 builder: (context, state) => const EmergencyContactsScreen(),
               ),
             ],
@@ -260,6 +252,34 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // ─── All other routes (top-level, no persistent bottom bar) ───
+      // Device setup is shared by every role, so it cannot sit inside a
+      // role-specific shell: a clinician tapping "Connect device" on Home was
+      // landing here wearing the patient tab bar, and the guard then bounced
+      // them back out when they tapped one of those patient tabs.
+      GoRoute(
+        path: '/devices/scan',
+        builder: (context, state) => const DeviceScanScreen(),
+      ),
+      GoRoute(
+        path: '/devices/connect',
+        builder: (context, state) {
+          final extra = state.extra;
+          final args = extra is Map ? extra : const <Object?, Object?>{};
+          return DeviceConnectionScreen(
+            remoteId: args['remoteId'] as String?,
+            deviceName: args['name'] as String?,
+            demo: args['demo'] == true,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/devices/diagnostics',
+        builder: (context, state) => const DeviceDiagnosticsScreen(),
+      ),
+      GoRoute(
+        path: '/emergency/contacts',
+        builder: (context, state) => const EmergencyContactsScreen(),
+      ),
       GoRoute(
         path: '/trends',
         builder: (context, state) => TrendsScreen(
@@ -362,6 +382,9 @@ String? _guard(AuthState auth, GoRouterState state) {
   if (auth.status == AuthStatus.demo) {
     if (loc == '/splash' || loc == '/login' || loc == '/') return '/home';
     if (loc == '/my-health' || loc == '/register/patient') return '/home';
+    // Patient-shell tabs: reaching them would show the patient bottom bar
+    // over a demo session that has no patient identity behind it.
+    if (loc == '/my-device' || loc == '/my-help') return '/home';
     return null;
   }
 
@@ -405,6 +428,8 @@ String? _guard(AuthState auth, GoRouterState state) {
     case '/login':
       return '/home';
     case '/my-health':
+    case '/my-device':
+    case '/my-help':
     case '/register/patient':
       return '/home';
     default:

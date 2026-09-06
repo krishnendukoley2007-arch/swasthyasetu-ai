@@ -1,7 +1,7 @@
 name: swasthyasetu_ai
 description: AI-Powered Smart Health Monitoring & Community Early-Warning Platform
 publish_to: 'none'
-version: 1.4.0+5
+version: 1.4.1+6
 
 environment:
   sdk: '>=3.9.0 <4.0.0'

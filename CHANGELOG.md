@@ -3,6 +3,27 @@
 All notable changes to SwasthyaSetu AI are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.4.1] — 2026-08-31
+
+### Fixed
+- **Hazardous air was never announced** — the AQI 300+ ("Hazardous"/"Severe" on
+  the CPCB and US-EPA scales) advisory was unreachable: every lower band matched
+  first, so a Delhi-winter reading of 350 showed the same "Unhealthy air — avoid
+  outdoor exercise" copy as 151. The severe band is now checked first, carries
+  its own `danger` level, and no longer collides with the warning advisory's id.
+- **Shared device and emergency screens no longer wear the patient tab bar** —
+  `/devices/scan`, `/devices/connect`, `/devices/diagnostics` and
+  `/emergency/contacts` are reached from clinician and demo surfaces too, but sat
+  inside the patient shell. A clinician tapping "Connect device" on Home got the
+  patient bottom bar, and tapping one of its tabs bounced them back to Home. They
+  are top-level routes again; the patient keeps dedicated `/my-device` and
+  `/my-help` tabs, which clinician and demo sessions are guarded away from.
+- Re-tapping the current bottom-bar tab now pops that branch back to its root
+  instead of doing nothing.
+
+### Changed
+- Version bumped to `1.4.1+6`
+
 ## [1.4.0] — 2026-08-31
 
 ### Added

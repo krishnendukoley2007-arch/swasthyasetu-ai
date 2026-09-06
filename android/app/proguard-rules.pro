@@ -55,3 +55,7 @@
 -dontwarn retrofit2.**
 -dontwarn okhttp3.**
 -dontwarn okio.**
+-dontwarn com.squareup.okhttp.**
+-dontwarn io.grpc.**
+-dontwarn java.lang.reflect.**
+-dontwarn com.google.common.**

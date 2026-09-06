@@ -196,6 +196,10 @@ class EnvironmentalRules {
 
   static AdvisoryLevel? _airLevel(int aqi, bool vulnerable) {
     if (aqi <= 50) return null;
+    // CPCB/US-EPA put "Hazardous"/"Severe" at 301+. This has to be checked
+    // first: every branch below it also matches an AQI of 350, so a Delhi
+    // winter reading was coming out as the same "Unhealthy air" copy as 151.
+    if (aqi > 300) return AdvisoryLevel.danger;
     if (vulnerable && aqi > 100) return AdvisoryLevel.warning;
     if (aqi > 150) return AdvisoryLevel.warning;
     if (aqi > 100) return AdvisoryLevel.advice;
@@ -210,8 +214,8 @@ class EnvironmentalRules {
         : '';
     return switch (level) {
       AdvisoryLevel.danger => EnvironmentAdvisory(
-          level: AdvisoryLevel.warning,
-          id: 'air_bad',
+          level: level,
+          id: 'air_hazardous',
           title: 'Hazardous air (AQI $aqi)',
           body: 'Stay indoors, use air purifiers if available, avoid all '
               'outdoor activity, and use your reliever inhaler as prescribed '
