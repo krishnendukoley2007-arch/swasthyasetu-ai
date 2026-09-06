@@ -4,11 +4,8 @@ import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
-import 'package:swasthyasetu_ai/core/widgets/offline_tile_map.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
-import 'package:swasthyasetu_ai/core/widgets/clinical_primitives.dart';
-import 'package:swasthyasetu_ai/core/widgets/series_chart.dart';
 import 'package:swasthyasetu_ai/data/repositories/screening_repository.dart';
 
 /// This worker's own screening activity, in aggregate.

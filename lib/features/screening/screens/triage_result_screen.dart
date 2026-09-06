@@ -7,8 +7,6 @@ import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
-import 'package:swasthyasetu_ai/core/widgets/clinical_gauge.dart';
-import 'package:swasthyasetu_ai/core/widgets/clinical_primitives.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
@@ -18,7 +16,6 @@ import 'package:swasthyasetu_ai/domain/rules/ecg_classifier.dart';
 import 'package:swasthyasetu_ai/core/services/vernacular_guidance_service.dart';
 import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
-import 'package:swasthyasetu_ai/core/widgets/recorded_ecg_card.dart';
 import 'package:swasthyasetu_ai/features/screening/widgets/doctor_referral_dialog.dart';
 import 'package:uuid/uuid.dart';
 

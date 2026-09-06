@@ -8,7 +8,6 @@ import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
-import 'package:swasthyasetu_ai/core/widgets/series_chart.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
 import 'package:swasthyasetu_ai/domain/models/screening.dart';
 import 'package:swasthyasetu_ai/domain/rules/vulnerability.dart';

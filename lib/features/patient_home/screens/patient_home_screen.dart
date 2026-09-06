@@ -6,7 +6,6 @@ import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/services/ble_service.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
-import 'package:swasthyasetu_ai/core/widgets/clinical_primitives.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/device.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';

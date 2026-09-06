@@ -9,7 +9,6 @@ import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/utils/ecg_rr.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
-import 'package:swasthyasetu_ai/core/widgets/recorded_ecg_card.dart';
 import 'package:swasthyasetu_ai/features/screening/widgets/poincare_plot_widget.dart';
 import 'package:swasthyasetu_ai/domain/models/screening.dart';
 

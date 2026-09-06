@@ -2,6 +2,12 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+/// Application chrome theme.
+///
+/// RULE: [AppTheme] is for CHROME — surfaces, typography, buttons, brand
+/// greens. [ClinicalPalette] (core/theme/clinical_palette.dart) is for
+/// MEANING — status colours and data-visualisation encoding. Screens must
+/// not invent ad-hoc semantic colours; reach for the palette instead.
 class AppTheme {
   const AppTheme();
 
@@ -11,13 +17,9 @@ class AppTheme {
   static const Color primaryGreenContainer = Color(0xFFBBF3D0);
   static const Color onPrimaryGreenContainer = Color(0xFF00210E);
   static const Color accentAmber = Color(0xFFFF8F00);
-  static const Color accentRed = Color(0xFFC62828);
-  static const Color backgroundWhite = Color(0xFFFFFFFF);
   static const Color backgroundLight = Color(0xFFF1F8F3);
-  static const Color textPrimary = Color(0xFF1A1D1A);
   static const Color textSecondary = Color(0xFF5E6A5E);
   static const Color dividerColor = Color(0xFFE0E8E3);
-  static const Color cardBackground = Color(0xFFFFFFFF);
   static const Color errorRed = Color(0xFFBA1A1A);
   static const Color errorContainer = Color(0xFFFFDAD6);
   static const Color onErrorContainer = Color(0xFF410002);
@@ -54,12 +56,10 @@ class AppTheme {
 
   static const Color surfaceLight = Color(0xFFFAFDFA);
   static const Color onSurfaceLight = Color(0xFF1A1D1A);
-  static const Color onBackgroundLight = Color(0xFF1A1D1A);
 
   static const Color surfaceDark = Color(0xFF1A1D1A);
   static const Color onSurfaceDark = Color(0xFFE4E8E4);
   static const Color backgroundDark = Color(0xFF151815);
-  static const Color onBackgroundDark = Color(0xFFE4E8E4);
   static const Color surfaceVariantDark = Color(0xFF3F4A43);
   static const Color onSurfaceVariantDark = Color(0xFFC0CAC4);
   static const Color outlineDark = Color(0xFF8A948E);

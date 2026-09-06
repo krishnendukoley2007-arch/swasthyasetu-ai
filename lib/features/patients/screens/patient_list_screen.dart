@@ -7,7 +7,6 @@ import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
-import 'package:swasthyasetu_ai/core/widgets/risk_sparkline.dart';
 import 'package:swasthyasetu_ai/data/repositories/patient_repository.dart';
 import 'package:swasthyasetu_ai/domain/rules/vulnerability.dart';
 

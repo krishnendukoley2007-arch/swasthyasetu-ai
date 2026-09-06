@@ -32,24 +32,24 @@ class ClinicalPalette {
   /// Derived or experimental values (glucose / BP estimates).
   static const Color violet = Color(0xFF7C3AED);
 
+  /// The one ink source for this brightness.
+  static Color _ink(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFFE7EEF8)
+        : const Color(0xFF0F1B2D);
+  }
+
   /// Hairline border colour for the current brightness.
   static Color hairline(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final ink = dark ? const Color(0xFFE7EEF8) : const Color(0xFF0F1B2D);
-    return ink.withValues(alpha: dark ? 0.14 : 0.10);
+    return _ink(context).withValues(alpha: dark ? 0.14 : 0.10);
   }
 
   /// Muted label ink.
-  static Color muted(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final ink = dark ? const Color(0xFFE7EEF8) : const Color(0xFF0F1B2D);
-    return ink.withValues(alpha: 0.60);
-  }
+  static Color muted(BuildContext context) =>
+      _ink(context).withValues(alpha: 0.60);
 
   /// Faint ink for disabled / "no data" states.
-  static Color faint(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final ink = dark ? const Color(0xFFE7EEF8) : const Color(0xFF0F1B2D);
-    return ink.withValues(alpha: 0.33);
-  }
+  static Color faint(BuildContext context) =>
+      _ink(context).withValues(alpha: 0.33);
 }
