@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwasthyaSetu AI — App</title>
+  <meta name="description" content="Clinical screening dashboard: connect the ESP32 sensor board, view live vitals and ECG, save screenings.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="webapp.css">
+</head>
+<body>
+
+  <!-- ══ Top bar ══ -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">SS</span>
+      <div class="brand-text">
+        <span class="brand-name">SwasthyaSetu AI</span>
+        <span class="brand-sub">Screening only — not a diagnosis</span>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="#monitor" class="navlink active">Monitor</a>
+      <a href="#history" class="navlink">Screenings</a>
+    </nav>
+    <div class="auth-area">
+      <span id="authUser" class="auth-user"></span>
+      <button id="authBtn" class="btn btn-outline">Sign in with Google</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ══ Monitor ══ -->
+    <section id="monitor" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Live Monitor</h2>
+          <p class="muted">Lead I · 250 Hz · Web Bluetooth (Chrome / Edge)</p>
+        </div>
+        <div class="conn-group">
+          <span id="connChip" class="chip chip-muted"><span class="dot"></span>No device</span>
+          <button id="connectBtn" class="btn btn-accent">Connect board</button>
+        </div>
+      </div>
+
+      <div id="bannerMsg" class="banner hidden"></div>
+
+      <!-- Vital tiles -->
+      <div class="tile-grid">
+        <div class="tile">
+          <div class="tile-label">Heart rate</div>
+          <div class="tile-value"><span id="vHR" class="num">—</span><span class="unit">bpm</span></div>
+          <div class="tile-foot"><span id="hrStatus" class="chip chip-muted">—</span></div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">SpO₂</div>
+          <div class="tile-value"><span id="vSpO2" class="num">—</span><span class="unit">%</span></div>
+          <div class="tile-foot"><span id="spo2Status" class="chip chip-muted">—</span></div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Skin temp</div>
+          <div class="tile-value"><span id="vTemp" class="num">—</span><span class="unit">°C</span></div>
+          <div class="tile-foot"><span id="tempStatus" class="chip chip-muted">—</span></div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">RR interval</div>
+          <div class="tile-value"><span id="vRR" class="num">—</span><span class="unit">ms</span></div>
+          <div class="tile-foot"><span id="fallStatus" class="chip chip-muted">—</span></div>
+        </div>
+      </div>
+
+      <!-- ECG strip -->
+      <div class="card">
+        <div class="card-head">
+          <span class="overline">ECG — recorded strip</span>
+          <span id="ecgProv" class="tag tag-amber">LIVE · waiting</span>
+        </div>
+        <canvas id="ecgCanvas" height="220"></canvas>
+        <div class="capture-row">
+          <button id="captureBtn" class="btn btn-outline" disabled>Record 10 s strip</button>
+          <span id="captureState" class="muted"></span>
+        </div>
+      </div>
+
+      <!-- Save screening -->
+      <div class="card">
+        <div class="card-head">
+          <span class="overline">Save screening</span>
+        </div>
+        <div class="save-grid">
+          <label class="field">Patient name
+            <input id="pName" type="text" placeholder="Full name" autocomplete="off">
+          </label>
+          <label class="field">Age
+            <input id="pAge" type="number" min="1" max="120" placeholder="Years">
+          </label>
+          <label class="field">Sex
+            <select id="pSex">
+              <option value="F">Female</option>
+              <option value="M">Male</option>
+              <option value="O">Other</option>
+            </select>
+          </label>
+          <label class="field">Symptoms
+            <input id="pSymptoms" type="text" placeholder="e.g. fever, dizziness">
+          </label>
+        </div>
+        <div class="save-actions">
+          <button id="saveBtn" class="btn btn-accent" disabled>Save screening</button>
+          <span id="saveHint" class="muted">Triage is scored when the screening saves.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ Screenings history ══ -->
+    <section id="history" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Saved screenings</h2>
+          <p class="muted">Stored in Firestore when signed in · on this browser otherwise</p>
+        </div>
+        <button id="refreshList" class="btn btn-outline">Refresh</button>
+      </div>
+      <div id="screeningList" class="list">
+        <p class="muted empty-note">No screenings yet. Connect the board and save one.</p>
+      </div>
+    </section>
+
+    <footer class="foot">
+      SwasthyaSetu AI · screening aid · confirm results with a qualified clinician
+    </footer>
+  </main>
+
+  <script src="firebase-config.js"></script>
+  <script type="module" src="webapp.js"></script>
+</body>
+</html>

@@ -1,54 +1,113 @@
-# Python
+# ==========================================
+# SwasthyaSetu AI - Consolidated GitIgnore
+# Prepared for Team Collaboration & Private Repo
+# ==========================================
+
+# Flutter & Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+*.aof
+*.mvit
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Java & Android Build Caches / Memory Dumps
+*.hprof
+java_pid*.hprof
+*.pid
+.gradle/
+android/.gradle/
+android/.kotlin/
+android/app/build/
+android/local.properties
+android/captures/
+android/.cxx/
+
+# iOS & macOS Ephemeral Outputs
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/Flutter/flutter_export_environment.sh
+ios/Runner.xcworkspace/xcuserdata/
+ios/Runner.xcodeproj/xcuserdata/
+macos/Pods/
+**/Flutter/ephemeral/
+**/DerivedData/
+
+# Windows & Linux Desktop Ephemeral Outputs
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+x64/
+x86/
+
+# C++ / Embedded Firmware / PlatformIO / Arduino
+.pio/
+.pioenvs/
+.piolibdeps/
+.clang-format
+
+# Binaries & Executables (Releases & APKs)
+*.apk
+*.aab
+*.exe
+*.dll
+*.so
+*.dylib
+releases/
+ai_context_bundle/
+
+# Python & Backend Caches
 backend/venv/
+venv/
+env/
+ENV/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .pytest_cache/
 
-# Build artifacts
-*.apk
-*.aab
-*.exe
-*.dll
-*.so
-
-# IDE
+# IDE & Editor Project Settings
 .idea/
 .vscode/
+*.iml
+*.ipr
+*.iws
 *.swp
 *.swo
+*~
 
-# OS
+# Operating System Files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
 
-# Flutter
-build/
-.dart_tool/
-.packages
-.pub-cache/
-
-# PlatformIO
-.pio/
-
-# Android SDK
-android-sdk/
-
-# Flutter SDK
-flutter/
-
-# Local scripts
-*.ps1
-
-# AI context bundle
-ai_context_bundle/
-
-# APKs
-*.apk
-releases/
-
-# Environment Variables
+# Credentials, Keys & Sensitive Environment Files
 .env
 .env.*
 !.env.example
+key.properties
+*.keystore
+*.jks
+*.p12
+*.pem
+
