@@ -81,4 +81,20 @@ extension AppVocabulary on AppLocalizations {
         // Free-typed or legacy values are shown as stored rather than dropped.
         _ => raw,
       };
+
+  String symptomText(String raw) => switch (raw) {
+        'Fever' => symptomFever,
+        'Cough' => symptomCough,
+        'Dizziness' => symptomDizziness,
+        'Headache' => symptomHeadache,
+        'Breathlessness' => symptomBreathlessness,
+        'Chest discomfort' => symptomChestDiscomfort,
+        'Fatigue' => symptomFatigue,
+        'Vomiting' => symptomVomiting,
+        'Diarrhea' => symptomDiarrhea,
+        'Body pain' => symptomBodyPain,
+        'Sore throat' => symptomSoreThroat,
+        'Other' => symptomOther,
+        _ => raw,
+      };
 }

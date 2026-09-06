@@ -158,7 +158,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
       if (_extraData?['patientId'] != null) {
         _patient = Patient(
           id: _extraData!['patientId'] as String,
-          name: _extraData?['patientName'] as String? ?? 'Walk-In Patient',
+          name: _extraData?['patientName'] as String? ?? context.l10n.patientWalkIn,
           age: 35,
           sex: 'M',
           createdAt: DateTime.now(),
@@ -349,12 +349,12 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
 
     return AppPageScaffold(
       appBar: AppBar(
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Triage Result'),
-            SizedBox(height: 2),
-            ScreeningStepIndicator(current: 4),
+            Text(context.l10n.triageTitle),
+            const SizedBox(height: 2),
+            const ScreeningStepIndicator(current: 4),
           ],
         ),
         bottom: const ScreeningStepBar(current: 4),
@@ -371,7 +371,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
               ),
               child: Text(
-                'DEMO',
+                context.l10n.screeningDemoBadge,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSecondaryContainer,
@@ -600,7 +600,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                 ),
                 child: Text(
-                  'Demo mode — simulated result',
+                  context.l10n.triageDemoMode,
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.onSecondaryContainer,
@@ -630,7 +630,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
               children: [
                 Icon(Icons.analytics_rounded, color: theme.colorScheme.primary, size: 22),
                 const AppSpacing.hsm(),
-                const Expanded(child: Overline('RISK SCORE · 0–100')),
+                Expanded(child: Overline(context.l10n.triageRiskScore)),
                 const ProvenanceTag(Provenance.measured),
               ],
             ),
@@ -661,7 +661,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                         },
                       ),
                       Text(
-                        'screening score',
+                        context.l10n.triageScoreCaption,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -681,7 +681,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
               runSpacing: AppTheme.spacingXs,
               children: [
                 Text(
-                  'Escalation:',
+                  context.l10n.triageEscalation,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -700,8 +700,8 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
               ],
             ),
             const AppSpacing.vmd(),
-            const Center(child: Text('Screening only — not a diagnosis.',
-                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic))),
+            Center(child: Text(context.l10n.triageNotADiagnosis,
+                style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic))),
             const AppSpacing.vmd(),
             _buildScoreThresholds(riskColor),
           ],
@@ -724,9 +724,9 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
       duration: AppTheme.durationMd,
       delay: const Duration(milliseconds: 80),
       children: [
-        _buildThresholdItem('0-$greenMax', 'Green', theme.colorScheme.primary, _triageResult!.score <= greenMax),
-        _buildThresholdItem('${greenMax + 1}-$yellowMax', 'Yellow', theme.colorScheme.tertiary, _triageResult!.score > greenMax && _triageResult!.score <= yellowMax),
-        _buildThresholdItem('${yellowMax + 1}-100', 'Red', theme.colorScheme.error, _triageResult!.score > yellowMax),
+        _buildThresholdItem('0-$greenMax', context.l10n.triageBandGreen, theme.colorScheme.primary, _triageResult!.score <= greenMax),
+        _buildThresholdItem('${greenMax + 1}-$yellowMax', context.l10n.triageBandYellow, theme.colorScheme.tertiary, _triageResult!.score > greenMax && _triageResult!.score <= yellowMax),
+        _buildThresholdItem('${yellowMax + 1}-100', context.l10n.triageBandRed, theme.colorScheme.error, _triageResult!.score > yellowMax),
       ],
     );
   }
@@ -772,7 +772,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
               const AppSpacing.hmd(),
               Expanded(
                 child: Text(
-                  'No risk rules triggered. All vitals within normal screening thresholds.',
+                  context.l10n.triageRulesNone,
                   style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
               ),
@@ -796,7 +796,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                 Icon(Icons.flag_rounded, color: riskColor, size: 22),
                 const AppSpacing.hsm(),
                 Expanded(
-                  child: Text('Triggered Rules', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: riskColor)),
+                  child: Text(context.l10n.triageRulesTriggered, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: riskColor)),
                 ),
               ],
             ),
@@ -855,11 +855,11 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
     final vitals = _triageResult!.vitals;
 
     final vitalItems = [
-      _VitalSummaryItem('Heart Rate', '${vitals['heart_rate'] ?? 0} BPM', Icons.favorite_rounded, theme.colorScheme.primary, alert: (vitals['heart_rate'] ?? 0) > 100 || (vitals['heart_rate'] ?? 0) < 50),
-      _VitalSummaryItem('SpO\u2082', '${vitals['spo2'] ?? 0}%', Icons.air_rounded, theme.colorScheme.secondary, alert: (vitals['spo2'] ?? 100) < 95),
-      _VitalSummaryItem('Temperature', '${vitals['temperature'] ?? 0}\u00b0C', Icons.thermostat_rounded, theme.colorScheme.tertiary, alert: (vitals['temperature'] ?? 0) >= 38.0),
+      _VitalSummaryItem(context.l10n.vitalHeartRate, '${vitals['heart_rate'] ?? 0} BPM', Icons.favorite_rounded, theme.colorScheme.primary, alert: (vitals['heart_rate'] ?? 0) > 100 || (vitals['heart_rate'] ?? 0) < 50),
+      _VitalSummaryItem(context.l10n.vitalSpo2, '${vitals['spo2'] ?? 0}%', Icons.air_rounded, theme.colorScheme.secondary, alert: (vitals['spo2'] ?? 100) < 95),
+      _VitalSummaryItem(context.l10n.vitalTemperature, '${vitals['temperature'] ?? 0}°C', Icons.thermostat_rounded, theme.colorScheme.tertiary, alert: (vitals['temperature'] ?? 0) >= 38.0),
       if (vitals['ecg_quality'] != null)
-        _VitalSummaryItem('ECG Quality', '${(vitals['ecg_quality'] * 100).round()}%', Icons.monitor_heart_rounded, theme.colorScheme.primary.withValues(alpha: 0.8), alert: (vitals['ecg_quality'] ?? 1.0) < 0.5),
+        _VitalSummaryItem(context.l10n.vitalEcgQuality, '${(vitals['ecg_quality'] * 100).round()}%', Icons.monitor_heart_rounded, theme.colorScheme.primary.withValues(alpha: 0.8), alert: (vitals['ecg_quality'] ?? 1.0) < 0.5),
     ];
 
     return Padding(
@@ -874,7 +874,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                 Icon(Icons.monitor_heart_rounded, color: theme.colorScheme.primary, size: 22),
                 const AppSpacing.hsm(),
                 Expanded(
-                  child: Text('Measured Vitals', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  child: Text(context.l10n.triageMeasuredVitals, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
@@ -918,7 +918,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingSm, vertical: AppTheme.spacingXs),
               decoration: BoxDecoration(color: theme.colorScheme.errorContainer, borderRadius: BorderRadius.circular(AppTheme.radiusFull)),
-              child: Text('Out of range', style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.onErrorContainer)),
+              child: Text(context.l10n.vitalOutOfRange, style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.onErrorContainer)),
             ),
           ],
         ],
@@ -969,7 +969,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
-                    const Expanded(child: Overline('DERIVED ESTIMATES')),
+                    Expanded(child: Overline(context.l10n.triageDerivedEstimates)),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 3),
@@ -977,9 +977,9 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                         color: ClinicalPalette.violet.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
-                        'EXPERIMENTAL',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.triageExperimental.toUpperCase(),
+                        style: const TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.0,
@@ -1003,8 +1003,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                   ),
                   const AppSpacing.vxs(),
                   Text(
-                    'Estimated from pulse timing — confirm with calibrated '
-                    'devices before treatment decisions.',
+                    context.l10n.triageDerivedDisclaimer,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: ClinicalPalette.muted(context),
                     ),
@@ -1037,7 +1036,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                 Icon(Icons.healing_rounded, color: riskColor, size: 22),
                 const AppSpacing.hsm(),
                 Expanded(
-                  child: Text('Reported Symptoms', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: riskColor)),
+                  child: Text(context.l10n.triageReportedSymptoms, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: riskColor)),
                 ),
               ],
             ),
@@ -1049,7 +1048,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                 final index = entry.key;
                 final symptom = entry.value;
                 return Chip(
-                  label: Text(symptom),
+                  label: Text(context.l10n.symptomText(symptom)),
                   avatar: CircleAvatar(radius: 10, backgroundColor: riskColor.withValues(alpha: 0.2), child: Text('${index + 1}', style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700, color: riskColor, fontSize: 10))),
                   backgroundColor: riskColor.withValues(alpha: 0.1),
                   labelStyle: TextStyle(color: riskColor, fontWeight: FontWeight.w500),
@@ -1082,7 +1081,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
             SizedBox(
               width: double.infinity,
               child: AppButton(
-                label: 'Send emergency SOS',
+                label: context.l10n.triageSendSos,
                 icon: const Icon(Icons.sos_rounded),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 56),
@@ -1097,8 +1096,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
             ),
             const AppSpacing.vsm(),
             Text(
-              'You will get ${settings.sosCountdownSeconds} seconds to cancel '
-              'before anything is sent.',
+              context.l10n.triageSosCancelNote(settings.sosCountdownSeconds),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1109,7 +1107,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
           SizedBox(
             width: double.infinity,
             child: AppOutlinedButton(
-              label: 'Doctor Referral Slip',
+              label: context.l10n.triageDoctorReferral,
               icon: const Icon(Icons.assignment_turned_in_rounded),
               borderColor: riskColor,
               foregroundColor: riskColor,
@@ -1123,7 +1121,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
             children: [
               Expanded(
                 child: AppOutlinedButton(
-                  label: 'Explain this',
+                  label: context.l10n.triageExplainThis,
                   icon: const Icon(Icons.psychology_rounded),
                   onPressed: _openExplanation,
                   borderColor: theme.colorScheme.primary,
@@ -1136,8 +1134,8 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                   // Named for what it does. The record is written the moment
                   // this screen opens; this button only leaves.
                   label: _saveState == _SaveState.notApplicable
-                      ? 'Finish'
-                      : 'Done',
+                      ? context.l10n.triageFinish
+                      : context.l10n.actionDone,
                   icon: const Icon(Icons.check_rounded),
                   onPressed: _finish,
                 ),
@@ -1201,7 +1199,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                 const AppSpacing.hsm(),
                 Expanded(
                   child: Text(
-                    'ASHA Vernacular Audio Guidance',
+                    context.l10n.triageAshaGuidance,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -1213,9 +1211,9 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
               child: Row(
                 children: [
                   for (final entry in [
-                    (code: 'hi', label: 'हिन्दी (Hindi)'),
-                    (code: 'bn', label: 'বাংলা (Bengali)'),
-                    (code: 'en', label: 'English'),
+                    (code: 'hi', label: context.l10n.settingsLanguageHindi),
+                    (code: 'bn', label: context.l10n.settingsLanguageBengali),
+                    (code: 'en', label: context.l10n.settingsLanguageEnglish),
                   ])
                     Padding(
                       padding: const EdgeInsets.only(right: 6),

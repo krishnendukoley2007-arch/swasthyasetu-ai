@@ -12,6 +12,7 @@ import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
+import 'package:swasthyasetu_ai/l10n/generated/app_localizations.dart';
 
 /// The emergency screen: arm, count down, send.
 ///
@@ -249,8 +250,7 @@ class _ArmCard extends StatelessWidget {
           const AppSpacing.vsm(),
           Text(
             hasRecipients
-                ? 'Works without internet. You get a countdown to cancel, then '
-                    'your messaging app opens with everything filled in.'
+                ? context.l10n.sosHowItWorks
                 : context.l10n.sosNoContactsBody,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -274,7 +274,7 @@ class _ArmCard extends StatelessWidget {
             )
           else
             AppOutlinedButton(
-              label: 'Add a contact',
+              label: context.l10n.sosAddContact,
               icon: const Icon(Icons.person_add_alt_rounded),
               minHeight: 56,
               onPressed: () => context.push('/emergency/contacts'),
@@ -361,7 +361,7 @@ class _CountdownCard extends StatelessWidget {
           ),
           const AppSpacing.vmd(),
           Text(
-            'Sending in $secondsLeft second${secondsLeft == 1 ? '' : 's'}',
+            context.l10n.sosCountdown(secondsLeft),
             style: theme.textTheme.titleMedium
                 ?.copyWith(fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
@@ -420,10 +420,8 @@ class _ResultCard extends StatelessWidget {
           const AppSpacing.vsm(),
           Text(
             ok
-                ? 'Press send in your messaging app to deliver it to '
-                    '${result.recipients.length} contact'
-                    '${result.recipients.length == 1 ? '' : 's'}. '
-                    'This attempt is recorded in the SOS log either way.'
+                ? '${context.l10n.sosPressSendToRecipients(result.recipients.length)} '
+                    '${context.l10n.sosRecordedEitherWay}'
                 : result.failureReason,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -476,7 +474,7 @@ class _RecipientsCard extends StatelessWidget {
           const AppSpacing.vsm(),
           if (recipients.isEmpty)
             Text(
-              'No contacts configured.',
+              context.l10n.sosNoContacts,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.error,
               ),
@@ -577,7 +575,7 @@ class _SosHistorySection extends ConsumerWidget {
       error: (_, __) => Padding(
         padding: const EdgeInsets.all(AppTheme.spacingLg),
         child: Text(
-          'Could not read the SOS log.',
+          context.l10n.sosLogReadError,
           style: theme.textTheme.bodyMedium
               ?.copyWith(color: theme.colorScheme.error),
         ),
@@ -586,7 +584,7 @@ class _SosHistorySection extends ConsumerWidget {
         if (list.isEmpty) {
           return AppCard(
             child: Text(
-              'No SOS has been raised on this device.',
+              context.l10n.sosNoneRaised,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -650,7 +648,7 @@ class _SosEventTile extends StatelessWidget {
                 ),
                 const AppSpacing.vxs(),
                 Text(
-                  _formatWhen(event.triggeredAt),
+                  _formatWhen(event.triggeredAt, context.l10n),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -684,12 +682,12 @@ class _SosEventTile extends StatelessWidget {
     );
   }
 
-  static String _formatWhen(DateTime at) {
+  static String _formatWhen(DateTime at, AppLocalizations l10n) {
     final now = DateTime.now();
     final diff = now.difference(at);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes} min ago';
-    if (diff.inDays < 1) return '${diff.inHours} h ago';
+    if (diff.inMinutes < 1) return l10n.timeJustNow;
+    if (diff.inHours < 1) return l10n.timeMinutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.timeHoursAgo(diff.inHours);
     final hh = at.hour.toString().padLeft(2, '0');
     final mm = at.minute.toString().padLeft(2, '0');
     return '${at.day}/${at.month}/${at.year} at $hh:$mm';

@@ -185,6 +185,10 @@ class AppLocalizationsBn extends AppLocalizations {
       'কোনো সেন্সর বোর্ড যুক্ত নেই, তাই এই সংখ্যাগুলো অ্যাপের তৈরি। এগুলো কোনো রোগীর রিডিং নয়।';
 
   @override
+  String get screeningNoSample =>
+      'ত্রুটি: কোনো স্বাস্থ্য রিডিং পাওয়া যায়নি। অনুগ্রহ করে আগে স্ক্রিনিং সম্পূর্ণ করুন।';
+
+  @override
   String get screeningDemoBadge => 'ডেমো';
 
   @override
@@ -216,6 +220,42 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get symptomsTitle => 'উপসর্গ';
+
+  @override
+  String get symptomFever => 'জ্বর';
+
+  @override
+  String get symptomCough => 'কাশি';
+
+  @override
+  String get symptomDizziness => 'মাথা ঘোরা';
+
+  @override
+  String get symptomHeadache => 'মাথাব্যথা';
+
+  @override
+  String get symptomBreathlessness => 'শ্বাসকষ্ট';
+
+  @override
+  String get symptomChestDiscomfort => 'বুকে অস্বস্তি';
+
+  @override
+  String get symptomFatigue => 'ক্লান্তি';
+
+  @override
+  String get symptomVomiting => 'বমি';
+
+  @override
+  String get symptomDiarrhea => 'ডায়রিয়া';
+
+  @override
+  String get symptomBodyPain => 'শরীর ব্যথা';
+
+  @override
+  String get symptomSoreThroat => 'গলা ব্যথা';
+
+  @override
+  String get symptomOther => 'অন্যান্য';
 
   @override
   String get symptomsSelectTitle => 'উপসর্গ বাছুন';
@@ -289,6 +329,67 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get triageSaved => 'স্ক্রিনিং এই ফোনে সংরক্ষিত হয়েছে';
+
+  @override
+  String get triageDemoMode => 'ডেমো মোড - অনুকরণ করা ফলাফল';
+
+  @override
+  String get triageRiskScore => 'ঝুঁকি স্কোর - 0 থেকে 100';
+
+  @override
+  String get triageScoreCaption => 'স্ক্রিনিং স্কোর';
+
+  @override
+  String get triageEscalation => 'এস্কেলেশন:';
+
+  @override
+  String get triageRulesNone =>
+      'কোনো ঝুঁকি নিয়ম সক্রিয় হয়নি। সব ভাইটালস স্বাভাবিক স্ক্রিনিং সীমার মধ্যে আছে।';
+
+  @override
+  String get triageRulesTriggered => 'সক্রিয় নিয়ম';
+
+  @override
+  String get triageDerivedEstimates => 'অনুমান করা মান';
+
+  @override
+  String get triageExperimental => 'পরীক্ষামূলক';
+
+  @override
+  String get triageDerivedDisclaimer =>
+      'পালস টাইমিং থেকে অনুমান করা - চিকিৎসার আগে ক্যালিব্রেট করা যন্ত্র দিয়ে নিশ্চিত করুন।';
+
+  @override
+  String get triageReportedSymptoms => 'জানানো লক্ষণ';
+
+  @override
+  String get triageSendSos => 'জরুরি SOS পাঠান';
+
+  @override
+  String triageSosCancelNote(int seconds) {
+    return 'কিছু পাঠানোর আগে বাতিল করতে আপনি $seconds সেকেন্ড পাবেন।';
+  }
+
+  @override
+  String get triageDoctorReferral => 'ডাক্তার রেফারেল স্লিপ';
+
+  @override
+  String get triageFinish => 'সমাপ্ত';
+
+  @override
+  String get vitalEcgQuality => 'ECG মান';
+
+  @override
+  String get vitalOutOfRange => 'সীমার বাইরে';
+
+  @override
+  String get patientWalkIn => 'ওয়াক-ইন রোগী';
+
+  @override
+  String get triageMeasuredVitals => 'Measured vitals';
+
+  @override
+  String get triageAshaGuidance => 'ASHA vernacular audio guidance';
 
   @override
   String get triageNotADiagnosis =>
@@ -401,6 +502,14 @@ class AppLocalizationsBn extends AppLocalizations {
       'যাই হোক, এই চেষ্টা SOS লগে নথিভুক্ত থাকে।';
 
   @override
+  String get sosLogReadError => 'SOS লগ পড়া গেল না।';
+
+  @override
+  String sosPressSendToRecipients(int count) {
+    return 'এটি $count জন পরিচিতির কাছে পৌঁছে দিতে আপনার মেসেজিং অ্যাপে পাঠান চাপুন।';
+  }
+
+  @override
   String get sosRecentActivity => 'সাম্প্রতিক SOS কার্যকলাপ';
 
   @override
@@ -504,4 +613,17 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get settingsCancelWindowBody =>
       'স্বয়ংক্রিয় SOS থামাতে আপনি কতটা সময় পান';
+
+  @override
+  String get timeJustNow => 'এইমাত্র';
+
+  @override
+  String timeMinutesAgo(int minutes) {
+    return '$minutes মিনিট আগে';
+  }
+
+  @override
+  String timeHoursAgo(int hours) {
+    return '$hours ঘণ্টা আগে';
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:swasthyasetu_ai/core/constants/app_constants.dart';
+import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
@@ -42,7 +43,7 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
     // RiskEngine combines both deterministically. No symptom→vitals coupling.
     if (_liveSample == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: No health sample found. Please complete the screening.')),
+        SnackBar(content: Text(context.l10n.screeningNoSample)),
       );
       return;
     }
@@ -70,15 +71,16 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
   Widget build(BuildContext context) {
     final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
     _liveSample = extra?['liveSample'] as HealthSample?;
+    final l10n = context.l10n;
 
     return AppPageScaffold(
       appBar: AppBar(
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Symptoms'),
-            SizedBox(height: 2),
-            ScreeningStepIndicator(current: 3),
+            Text(l10n.symptomsTitle),
+            const SizedBox(height: 2),
+            const ScreeningStepIndicator(current: 3),
           ],
         ),
         bottom: const ScreeningStepBar(current: 3),
@@ -97,8 +99,8 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildStepHeader(
-                    'Select Symptoms',
-                    'Check all that apply for this screening',
+                    l10n.symptomsSelectTitle,
+                    l10n.symptomsSelectSubtitle,
                     Icons.healing_rounded,
                   ),
                   const AppSpacing.vxl(),
@@ -106,15 +108,15 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
                       .map((symptom) => _buildSymptomChip(symptom))
                       ,
                   const AppSpacing.vxl(),
-                  _buildSectionHeader('Duration'),
+                  _buildSectionHeader(l10n.symptomsDuration),
                   const AppSpacing.vmd(),
                   _buildDurationChips(),
                   const AppSpacing.vxl(),
-                  _buildSectionHeader('Additional Notes (Optional)'),
+                  _buildSectionHeader(l10n.symptomsNotes),
                   const AppSpacing.vmd(),
                   AppTextField(
                     controller: _notesController,
-                    hint: 'Any other relevant information...',
+                    hint: l10n.symptomsNotesHint,
                     prefixIcon: Icons.note_outlined,
                     maxLines: 3,
                   ),
@@ -180,7 +182,7 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacingSm),
       child: FilterChip(
-        label: Text(symptom),
+        label: Text(context.l10n.symptomText(symptom)),
         selected: isSelected,
         onSelected: (_) => _toggleSymptom(symptom),
         selectedColor: color.withValues(alpha: 0.15),
@@ -216,7 +218,7 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
       children: durations.map((duration) {
         final isSelected = _selectedDuration == duration;
         return FilterChip(
-          label: Text(duration),
+          label: Text(context.l10n.symptomDurationText(duration)),
           selected: isSelected,
           onSelected: (_) => setState(() => _selectedDuration = duration),
           selectedColor: theme.colorScheme.primaryContainer,
@@ -269,14 +271,14 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
         children: [
           Expanded(
             child: AppOutlinedButton(
-              label: 'Back',
+              label: context.l10n.actionBack,
               onPressed: () => context.go('/screening/live'),
             ),
           ),
           const AppSpacing.hmd(),
           Expanded(
             child: AppButton(
-              label: 'Continue to Triage',
+              label: context.l10n.symptomsContinue,
               icon: const Icon(Icons.arrow_forward_rounded),
               onPressed: _selectedSymptoms.isEmpty ? null : _proceedToTriage,
             ),
