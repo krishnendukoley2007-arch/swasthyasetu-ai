@@ -453,16 +453,18 @@ int _rrRepeats = 0;
         final s = frame.sample;
         final hr = s.heartRateBpm > 0
             ? s.heartRateBpm
-            : (_currentSample.heartRateBpm > 0 ? _currentSample.heartRateBpm : 72);
+            : (_currentSample.heartRateBpm > 0 ? _currentSample.heartRateBpm : 0);
         final spo2 = s.spo2Percent > 0
             ? s.spo2Percent
-            : (_currentSample.spo2Percent > 0 ? _currentSample.spo2Percent : 98);
+            : (_currentSample.spo2Percent > 0 ? _currentSample.spo2Percent : 0);
         final temp = s.temperatureC > 0
             ? s.temperatureC
-            : (_currentSample.temperatureC > 0 ? _currentSample.temperatureC : 36.5);
+            : (_currentSample.temperatureC > 0 ? _currentSample.temperatureC : 0.0);
+        // No PTT without a real heart rate: 60000/0 is not a number, and a
+        // fabricated PTT would feed fabricated BP and glucose estimates.
         final ptt = s.pttMs > 0
             ? s.pttMs
-            : (200 + (60000 / hr * 0.25).round());
+            : (hr > 0 ? 200 + (60000 / hr * 0.25).round() : 0);
 
         final bpEst = VitalsEstimator.estimateBP(
           pttMs: ptt,

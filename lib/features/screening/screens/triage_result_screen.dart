@@ -1173,9 +1173,9 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
     final assessment = RiskEngine.assess(
       sample: HealthSample(
         timestamp: DateTime.now().millisecondsSinceEpoch,
-        heartRateBpm: _triageResult!.vitals['heart_rate'] ?? 72,
-        spo2Percent: _triageResult!.vitals['spo2'] ?? 98,
-        temperatureC: (_triageResult!.vitals['temperature'] as num?)?.toDouble() ?? 36.5,
+        heartRateBpm: _triageResult!.vitals['heart_rate'] ?? 0,
+        spo2Percent: _triageResult!.vitals['spo2'] ?? 0,
+        temperatureC: (_triageResult!.vitals['temperature'] as num?)?.toDouble() ?? 0,
         estimatedGlucose: _triageResult!.vitals['glucose'] ?? 0,
         estimatedSystolic: _triageResult!.vitals['systolic'] ?? 0,
         estimatedDiastolic: _triageResult!.vitals['diastolic'] ?? 0,
