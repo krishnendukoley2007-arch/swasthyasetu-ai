@@ -17,6 +17,7 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <esp_adc_cal.h>
 #include <math.h>
 
 // ---------------------------------------------------------
@@ -102,6 +103,24 @@ uint16_t current_spo2 = 0;
 float current_temp = 0.0;
 float current_battery_v = 0;
 int battery_percent = 0;
+
+// ADC calibration: the bare (3.3/4095)*2 formula reads ~0.2 V low on typical
+// boards because the ADC reference and divider are both nominal. esp_adc_cal
+// removes the silicon part; BATTERY_CORRECTION_V removes the board part —
+// measure once against a multimeter and set it here.
+esp_adc_cal_characteristics_t adcChars;
+#define BATTERY_CORRECTION_V  0.20f   // adjust after first multimeter check
+#define BATTERY_DIVIDER       2.0f    // R_top == R_bottom divider
+
+/// eFuse-calibrated battery read: 8-sample average against the calibrated
+/// ADC, divider reversed, then the board correction applied. Returns volts.
+float readBatteryVoltage() {
+    uint32_t raw = 0;
+    for (int i = 0; i < 8; i++) raw += analogRead(BATTERY_PIN);
+    raw /= 8;
+    float v = esp_adc_cal_raw_to_voltage(raw, &adcChars) / 1000.0f; // mV -> V
+    return v * BATTERY_DIVIDER + BATTERY_CORRECTION_V;
+}
 
 // ECG DSP
 double b_n = 0, f_fast = 0, f_slow = 0;
@@ -582,7 +601,7 @@ void core1TaskFunction(void * pvParameters) {
         if (current_time - last_telemetry >= 250) { 
             last_telemetry = current_time;
             
-            current_battery_v = analogRead(BATTERY_PIN) * (3.3 / 4095.0) * 2.0;
+            current_battery_v = readBatteryVoltage();
             battery_percent = (int)((current_battery_v - 3.2) / (4.2 - 3.2) * 100);
             if(battery_percent > 100) battery_percent = 100;
             if(battery_percent < 0) battery_percent = 0;
@@ -694,6 +713,12 @@ void setup() {
     pinMode(ECG_LO_PLUS_PIN, INPUT);
     pinMode(ECG_LO_MINUS_PIN, INPUT);
     pinMode(BATTERY_PIN, INPUT);
+    // Calibrate the ADC from the factory eFuse values. GPIO35 is ADC1_CH7;
+    // 11 dB attenuation spans ~0..3.1 V at the pin, i.e. 0..6.2 V after the
+    // divider — comfortably covering a 4.2 V cell.
+    analogSetPinAttenuation(BATTERY_PIN, ADC_11db);
+    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12,
+                             1100, &adcChars);
     pinMode(LED_PIN, OUTPUT);
     pinMode(TOUCH_PIN_1, INPUT);
     pinMode(TOUCH_PIN_2, INPUT);
