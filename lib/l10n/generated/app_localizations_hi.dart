@@ -390,6 +390,28 @@ class AppLocalizationsHi extends AppLocalizations {
   String get triageAshaGuidance => 'ASHA vernacular audio guidance';
 
   @override
+  String get todayNoCheck => 'Am I okay today?';
+
+  @override
+  String get todayNoCheckBody =>
+      'No check yet today. A one-minute reading answers that.';
+
+  @override
+  String get todayStartCheck => 'Start today\'s check';
+
+  @override
+  String get todayOk => 'You\'re okay today';
+
+  @override
+  String get todayAttention => 'Something needs attention today';
+
+  @override
+  String get todayUrgent => 'Get help today';
+
+  @override
+  String get todayViewResult => 'See full result';
+
+  @override
   String get screeningExitTitle => 'Leave this screening?';
 
   @override

@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/services/ble_service.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
+import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/device.dart';
@@ -12,6 +13,7 @@ import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
 import 'package:swasthyasetu_ai/domain/models/user_account.dart';
 import 'package:swasthyasetu_ai/domain/rules/health_report.dart';
+import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
 import 'package:swasthyasetu_ai/domain/rules/trend_engine.dart';
 import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/environment/state/environment_providers.dart';
@@ -83,6 +85,10 @@ class PatientHomeScreen extends ConsumerWidget {
               children: [
                 _buildGreeting(context, account),
                 const AppSpacing.vlg(),
+                // The single primary state of the whole app: is this patient
+                // okay TODAY. Everything else on this page is secondary.
+                _buildTodayCard(context, ref, patient),
+                const AppSpacing.vlg(),
                 const EnvironmentCard(),
                 const AppSpacing.vlg(),
                 _buildDeviceCard(context, ref, patient),
@@ -133,6 +139,139 @@ class PatientHomeScreen extends ConsumerWidget {
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
       ],
+    );
+  }
+
+  // ───────────────────────────── Today's answer ───────────────────────────
+
+  /// The home screen's one primary state: am I okay TODAY.
+  ///
+  /// Everything else on this page is history, settings, or navigation. This
+  /// card answers the question a patient opens the app with, and offers the
+  /// single action that answers it when nothing has been recorded yet.
+  Widget _buildTodayCard(BuildContext context, WidgetRef ref, Patient patient) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final screenings =
+        ref.watch(patientScreeningsProvider(patient.id)).valueOrNull;
+    final now = DateTime.now();
+    Screening? today;
+    if (screenings != null) {
+      for (final s in screenings) {
+        final t = s.timestamp;
+        if (t.year == now.year && t.month == now.month && t.day == now.day) {
+          today = s;
+          break;
+        }
+      }
+    }
+
+    if (today == null) {
+      return AppElevatedCard(
+        padding: const EdgeInsets.all(AppTheme.spacingLg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.todayNoCheck,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const AppSpacing.vxs(),
+            Text(
+              l10n.todayNoCheckBody,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+            const AppSpacing.vmd(),
+            AppButton(
+              label: l10n.todayStartCheck,
+              icon: const Icon(Icons.play_arrow_rounded),
+              minHeight: 60,
+              onPressed: () => _startSelfCheck(context, ref, patient,
+                  demo: false),
+            ),
+            Center(
+              child: AppTextButton(
+                label: l10n.screeningUseDemoDevice,
+                onPressed: () => _startSelfCheck(context, ref, patient,
+                    demo: true),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final style = RiskStyle.ofStorage(today.riskLevel, l10n);
+    final band = RiskBand.fromStorage(today.riskLevel);
+    final headline = switch (band) {
+      RiskBand.green => l10n.todayOk,
+      RiskBand.yellow => l10n.todayAttention,
+      RiskBand.red => l10n.todayUrgent,
+    };
+    final icon = switch (band) {
+      RiskBand.green => Icons.check_circle_rounded,
+      RiskBand.yellow => Icons.warning_amber_rounded,
+      RiskBand.red => Icons.emergency_rounded,
+    };
+
+    return AppElevatedCard(
+      padding: const EdgeInsets.all(AppTheme.spacingLg),
+      color: style.containerColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: style.color, size: 28),
+              const AppSpacing.hsm(),
+              Expanded(
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    headline,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: style.color,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const AppSpacing.vxs(),
+          Text(
+            '${style.label} · ${relativeTime(today.timestamp)}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const AppSpacing.vmd(),
+          if (band == RiskBand.red)
+            AppButton(
+              label: l10n.triageSendSos,
+              icon: const Icon(Icons.sos_rounded),
+              minHeight: 60,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.error,
+                foregroundColor: theme.colorScheme.onError,
+              ),
+              onPressed: () => context.push(
+                  '/emergency/sos?patientId=${patient.id}&screeningId=${today!.id}'),
+            )
+          else
+            AppButton(
+              label: l10n.todayViewResult,
+              icon: const Icon(Icons.chevron_right_rounded),
+              minHeight: 56,
+              onPressed: () => context.push('/history/${today!.id}'),
+            ),
+        ],
+      ),
     );
   }
 

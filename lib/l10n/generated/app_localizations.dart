@@ -838,6 +838,48 @@ abstract class AppLocalizations {
   /// **'ASHA vernacular audio guidance'**
   String get triageAshaGuidance;
 
+  /// No description provided for @todayNoCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Am I okay today?'**
+  String get todayNoCheck;
+
+  /// No description provided for @todayNoCheckBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No check yet today. A one-minute reading answers that.'**
+  String get todayNoCheckBody;
+
+  /// No description provided for @todayStartCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Start today\'s check'**
+  String get todayStartCheck;
+
+  /// No description provided for @todayOk.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re okay today'**
+  String get todayOk;
+
+  /// No description provided for @todayAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Something needs attention today'**
+  String get todayAttention;
+
+  /// No description provided for @todayUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Get help today'**
+  String get todayUrgent;
+
+  /// No description provided for @todayViewResult.
+  ///
+  /// In en, this message translates to:
+  /// **'See full result'**
+  String get todayViewResult;
+
   /// No description provided for @screeningExitTitle.
   ///
   /// In en, this message translates to:
