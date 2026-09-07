@@ -269,7 +269,7 @@ class PatientHomeScreen extends ConsumerWidget {
     ref
         .read(screeningDraftProvider.notifier)
         .begin(patient: patient, device: device);
-    context.go('/screening/live');
+    context.push('/screening/live');
   }
 
   // ───────────────────────────── Latest result ─────────────────────────────

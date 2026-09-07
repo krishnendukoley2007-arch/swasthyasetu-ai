@@ -136,6 +136,10 @@
   "patientWalkIn": "Walk-in patient",
   "triageMeasuredVitals": "Measured vitals",
   "triageAshaGuidance": "ASHA vernacular audio guidance",
+  "screeningExitTitle": "Leave this screening?",
+  "screeningExitBody": "Nothing is saved until the result screen. Leaving now discards the captured readings.",
+  "screeningExitLeave": "Leave",
+  "screeningExitStay": "Stay",
   "triageNotADiagnosis": "This is a triage aid based on fixed rules, not a diagnosis.",
 
   "escalationEmergency": "Seek care now",

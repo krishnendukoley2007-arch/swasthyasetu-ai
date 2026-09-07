@@ -7,6 +7,7 @@ import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/screening_exit_button.dart';
 
 class SymptomsScreen extends ConsumerStatefulWidget {
   const SymptomsScreen({super.key});
@@ -88,7 +89,7 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/screening/live'),
         ),
-        actions: const [],
+        actions: const [ScreeningExitButton()],
       ),
       body: Column(
         children: [

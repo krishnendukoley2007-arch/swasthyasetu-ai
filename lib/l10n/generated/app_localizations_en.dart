@@ -391,6 +391,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get triageAshaGuidance => 'ASHA vernacular audio guidance';
 
   @override
+  String get screeningExitTitle => 'Leave this screening?';
+
+  @override
+  String get screeningExitBody =>
+      'Nothing is saved until the result screen. Leaving now discards the captured readings.';
+
+  @override
+  String get screeningExitLeave => 'Leave';
+
+  @override
+  String get screeningExitStay => 'Stay';
+
+  @override
   String get triageNotADiagnosis =>
       'This is a triage aid based on fixed rules, not a diagnosis.';
 

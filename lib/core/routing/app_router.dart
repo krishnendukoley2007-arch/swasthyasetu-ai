@@ -1,3 +1,21 @@
+/// ROUTING RULES (project-wide, not negotiable per screen):
+///
+/// * `context.go(...)` — shell/branch switches and guard-driven redirects
+///   only. Never for a destination the user might want to go BACK from.
+/// * `context.push(...)` — anything the user should be able to back out of:
+///   detail screens, /settings, /sync, /devices/*, SOS, chat, trends, and
+///   entering the screening funnel.
+/// * The screening funnel (/screening/*) is deliberately full-screen — no
+///   bottom bar — but every wizard step carries the trailing
+///   ScreeningExitButton as its one consistent exit. Back arrows between
+///   steps still use go() because a funnel step is a sibling of the next,
+///   not a child to return to.
+/// * Role-neutral destinations (/devices/*, /settings, /sync, /emergency/*)
+///   live at top level so they never wear the wrong role's tab bar — see the
+///   comment above those routes. A route belongs in a shell only if it is
+///   genuinely role-specific.
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

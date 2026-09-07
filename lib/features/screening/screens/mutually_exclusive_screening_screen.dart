@@ -13,6 +13,7 @@ import 'package:swasthyasetu_ai/domain/rules/vitals_estimator.dart';
 import 'package:swasthyasetu_ai/domain/simulator/clinical_scenario.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
 import 'package:swasthyasetu_ai/features/screening/widgets/dual_waveform_sweep_monitor.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/screening_exit_button.dart';
 
 // Let's implement our own simple ECG painter to be safe, since it's private in live_vitals_screen.dart
 
@@ -370,6 +371,7 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
           },
         ),
         actions: [
+          const ScreeningExitButton(),
           if (inDemo) ...[
             IconButton(
               icon: const Icon(Icons.science_rounded),

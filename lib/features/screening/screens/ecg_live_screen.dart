@@ -13,6 +13,7 @@ import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/rules/ecg_classifier.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/screening_exit_button.dart';
 
 /// Where the samples on the strip came from.
 ///
@@ -536,20 +537,14 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('ECG Live View'),
-            SizedBox(height: 2),
-            ScreeningStepIndicator(current: 2),
-          ],
-        ),
+        title: Text(context.l10n.screeningEcgTitle),
         bottom: const ScreeningStepBar(current: 2),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/screening/live'),
         ),
         actions: [
+          const ScreeningExitButton(),
           _buildSourceBadge(onBoard),
           _buildLeadControl(onBoard),
         ],

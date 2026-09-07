@@ -838,6 +838,30 @@ abstract class AppLocalizations {
   /// **'ASHA vernacular audio guidance'**
   String get triageAshaGuidance;
 
+  /// No description provided for @screeningExitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this screening?'**
+  String get screeningExitTitle;
+
+  /// No description provided for @screeningExitBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is saved until the result screen. Leaving now discards the captured readings.'**
+  String get screeningExitBody;
+
+  /// No description provided for @screeningExitLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get screeningExitLeave;
+
+  /// No description provided for @screeningExitStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay'**
+  String get screeningExitStay;
+
   /// No description provided for @triageNotADiagnosis.
   ///
   /// In en, this message translates to:

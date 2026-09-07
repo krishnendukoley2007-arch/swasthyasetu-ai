@@ -8,6 +8,7 @@ import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/device.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/screening_exit_button.dart';
 
 class NewScreeningScreen extends ConsumerStatefulWidget {
   const NewScreeningScreen({super.key});
@@ -131,6 +132,7 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
           onPressed: () => context.go('/home'),
         ),
         actions: [
+          const ScreeningExitButton(),
           Container(
             margin: const EdgeInsets.only(right: AppTheme.spacingMd),
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingXs),
