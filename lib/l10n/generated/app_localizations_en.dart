@@ -413,6 +413,111 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todayViewResult => 'See full result';
 
   @override
+  String get patientHomeTitle => 'My Health';
+
+  @override
+  String get aiChat => 'AI Chat';
+
+  @override
+  String get greetingMorning => 'Good morning';
+
+  @override
+  String get greetingAfternoon => 'Good afternoon';
+
+  @override
+  String get greetingEvening => 'Good evening';
+
+  @override
+  String get patientHomeTagline =>
+      'Run a check any time - it takes about a minute.';
+
+  @override
+  String get deviceConnecting => 'Connecting.';
+
+  @override
+  String get deviceNotConnected => 'Device not connected';
+
+  @override
+  String deviceReadyBattery(int percent) {
+    return 'Ready - battery $percent%';
+  }
+
+  @override
+  String get deviceKeepNearby => 'Keep the device nearby';
+
+  @override
+  String get deviceConnectHint => 'Connect the ESP32 sensor to start';
+
+  @override
+  String get startHealthCheck => 'Start health check';
+
+  @override
+  String get connectMyDevice => 'Connect my device';
+
+  @override
+  String get tryWithDemoData => 'No device handy? Try with demo data';
+
+  @override
+  String get myLatestResult => 'My latest result';
+
+  @override
+  String get noChecksYet => 'No checks yet';
+
+  @override
+  String get noChecksYetBody =>
+      'Your first reading appears here, with a plain-words explanation of what it means - and what you can safely do at home.';
+
+  @override
+  String get vitalGlucose => 'Glucose';
+
+  @override
+  String get explainMeaning => 'What does this mean for me?';
+
+  @override
+  String get fullReport => 'Full report';
+
+  @override
+  String get shareWithDoctor => 'Share with doctor';
+
+  @override
+  String get myTrends => 'My trends';
+
+  @override
+  String get healthGuides => 'Health guides';
+
+  @override
+  String get myProfile => 'My profile';
+
+  @override
+  String get sexFemale => 'Female';
+
+  @override
+  String get sexMale => 'Male';
+
+  @override
+  String get sexOther => 'Other';
+
+  @override
+  String get feelingUnwell => 'Feeling seriously unwell?';
+
+  @override
+  String get sosExplainer =>
+      'Alerts your emergency contact and shows the fastest help steps.';
+
+  @override
+  String get patientHomeDisclaimer =>
+      'This app screens - it does not diagnose. Home-care suggestions apply only when your result is not serious; a red result means seek a nurse or doctor now.';
+
+  @override
+  String get profileLoadError => 'Could not load your profile.';
+
+  @override
+  String get editMyProfile => 'Edit my profile';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
   String get screeningExitTitle => 'Leave this screening?';
 
   @override

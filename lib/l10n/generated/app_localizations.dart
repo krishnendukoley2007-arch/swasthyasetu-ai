@@ -880,6 +880,204 @@ abstract class AppLocalizations {
   /// **'See full result'**
   String get todayViewResult;
 
+  /// No description provided for @patientHomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Health'**
+  String get patientHomeTitle;
+
+  /// No description provided for @aiChat.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Chat'**
+  String get aiChat;
+
+  /// No description provided for @greetingMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get greetingMorning;
+
+  /// No description provided for @greetingAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get greetingAfternoon;
+
+  /// No description provided for @greetingEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get greetingEvening;
+
+  /// No description provided for @patientHomeTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Run a check any time - it takes about a minute.'**
+  String get patientHomeTagline;
+
+  /// No description provided for @deviceConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting.'**
+  String get deviceConnecting;
+
+  /// No description provided for @deviceNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Device not connected'**
+  String get deviceNotConnected;
+
+  /// No description provided for @deviceReadyBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready - battery {percent}%'**
+  String deviceReadyBattery(int percent);
+
+  /// No description provided for @deviceKeepNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the device nearby'**
+  String get deviceKeepNearby;
+
+  /// No description provided for @deviceConnectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect the ESP32 sensor to start'**
+  String get deviceConnectHint;
+
+  /// No description provided for @startHealthCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Start health check'**
+  String get startHealthCheck;
+
+  /// No description provided for @connectMyDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect my device'**
+  String get connectMyDevice;
+
+  /// No description provided for @tryWithDemoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No device handy? Try with demo data'**
+  String get tryWithDemoData;
+
+  /// No description provided for @myLatestResult.
+  ///
+  /// In en, this message translates to:
+  /// **'My latest result'**
+  String get myLatestResult;
+
+  /// No description provided for @noChecksYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No checks yet'**
+  String get noChecksYet;
+
+  /// No description provided for @noChecksYetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first reading appears here, with a plain-words explanation of what it means - and what you can safely do at home.'**
+  String get noChecksYetBody;
+
+  /// No description provided for @vitalGlucose.
+  ///
+  /// In en, this message translates to:
+  /// **'Glucose'**
+  String get vitalGlucose;
+
+  /// No description provided for @explainMeaning.
+  ///
+  /// In en, this message translates to:
+  /// **'What does this mean for me?'**
+  String get explainMeaning;
+
+  /// No description provided for @fullReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Full report'**
+  String get fullReport;
+
+  /// No description provided for @shareWithDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with doctor'**
+  String get shareWithDoctor;
+
+  /// No description provided for @myTrends.
+  ///
+  /// In en, this message translates to:
+  /// **'My trends'**
+  String get myTrends;
+
+  /// No description provided for @healthGuides.
+  ///
+  /// In en, this message translates to:
+  /// **'Health guides'**
+  String get healthGuides;
+
+  /// No description provided for @myProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'My profile'**
+  String get myProfile;
+
+  /// No description provided for @sexFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get sexFemale;
+
+  /// No description provided for @sexMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get sexMale;
+
+  /// No description provided for @sexOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get sexOther;
+
+  /// No description provided for @feelingUnwell.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeling seriously unwell?'**
+  String get feelingUnwell;
+
+  /// No description provided for @sosExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts your emergency contact and shows the fastest help steps.'**
+  String get sosExplainer;
+
+  /// No description provided for @patientHomeDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This app screens - it does not diagnose. Home-care suggestions apply only when your result is not serious; a red result means seek a nurse or doctor now.'**
+  String get patientHomeDisclaimer;
+
+  /// No description provided for @profileLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your profile.'**
+  String get profileLoadError;
+
+  /// No description provided for @editMyProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit my profile'**
+  String get editMyProfile;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
   /// No description provided for @screeningExitTitle.
   ///
   /// In en, this message translates to:

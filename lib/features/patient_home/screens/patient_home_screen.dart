@@ -40,7 +40,7 @@ class PatientHomeScreen extends ConsumerWidget {
     return AppPageScaffold(
       appBar: AppBar(
         title: Text(
-          'My Health',
+          context.l10n.patientHomeTitle,
           style:
               theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
@@ -50,7 +50,7 @@ class PatientHomeScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/general-chat'),
         icon: const Icon(Icons.chat_bubble_outline_rounded),
-        label: const Text('AI Chat'),
+        label: Text(context.l10n.aiChat),
         backgroundColor: theme.colorScheme.tertiaryContainer,
         foregroundColor: theme.colorScheme.onTertiaryContainer,
       ),
@@ -117,10 +117,10 @@ class PatientHomeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final hour = DateTime.now().hour;
     final greeting = hour < 12
-        ? 'Good morning'
+        ? context.l10n.greetingMorning
         : hour < 17
-            ? 'Good afternoon'
-            : 'Good evening';
+            ? context.l10n.greetingAfternoon
+            : context.l10n.greetingEvening;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,7 +134,7 @@ class PatientHomeScreen extends ConsumerWidget {
         ),
         const AppSpacing.vxs(),
         Text(
-          'Run a check any time — it takes about a minute.',
+          context.l10n.patientHomeTagline,
           style: theme.textTheme.bodyMedium
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
@@ -327,8 +327,8 @@ class PatientHomeScreen extends ConsumerWidget {
                       isLive
                           ? (link.deviceName ?? 'SwasthyaSetu device')
                           : isBusy
-                              ? 'Connecting…'
-                              : 'Device not connected',
+                              ? context.l10n.deviceConnecting
+                              : context.l10n.deviceNotConnected,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w700),
                       maxLines: 2,
@@ -337,10 +337,12 @@ class PatientHomeScreen extends ConsumerWidget {
                     const AppSpacing.vxs(),
                     Text(
                       isLive
-                          ? 'Ready${link.batteryPercent != null ? ' · battery ${link.batteryPercent}%' : ''}'
+                          ? (link.batteryPercent != null
+                              ? context.l10n.deviceReadyBattery(link.batteryPercent!)
+                              : context.l10n.deviceKeepNearby)
                           : isBusy
-                              ? 'Keep the device nearby'
-                              : 'Connect the ESP32 sensor to start',
+                              ? context.l10n.deviceKeepNearby
+                              : context.l10n.deviceConnectHint,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -352,7 +354,7 @@ class PatientHomeScreen extends ConsumerWidget {
           ),
           const AppSpacing.vlg(),
           AppButton(
-            label: isLive ? 'Start Health Check' : 'Connect my device',
+            label: isLive ? context.l10n.startHealthCheck : context.l10n.connectMyDevice,
             icon: Icon(
                 isLive
                     ? Icons.monitor_heart_rounded
@@ -369,7 +371,7 @@ class PatientHomeScreen extends ConsumerWidget {
             const AppSpacing.vsm(),
             Center(
               child: AppTextButton(
-                label: 'No device handy? Try with demo data',
+                label: context.l10n.tryWithDemoData,
                 onPressed: () => _startSelfCheck(context, ref, patient,
                     demo: true),
               ),
@@ -425,8 +427,8 @@ class PatientHomeScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppSectionHeader(
-          title: 'My latest result',
+        AppSectionHeader(
+          title: context.l10n.myLatestResult,
           padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         ),
         const AppSpacing.vsm(),
@@ -439,15 +441,13 @@ class PatientHomeScreen extends ConsumerWidget {
                         size: 42, color: theme.colorScheme.onSurfaceVariant),
                     const AppSpacing.vmd(),
                     Text(
-                      'No checks yet',
+                      context.l10n.noChecksYet,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const AppSpacing.vxs(),
                     Text(
-                      'Your first reading appears here, with a plain-words '
-                      'explanation of what it means — and what you can safely '
-                      'do at home.',
+                      context.l10n.noChecksYetBody,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                         height: 1.4,
@@ -481,24 +481,24 @@ class PatientHomeScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                            child: _vital(context, 'Heart rate',
+                            child: _vital(context, context.l10n.vitalHeartRate,
                                 latest.heartRate, 'bpm', Icons.favorite_rounded)),
                         Expanded(
-                            child: _vital(context, 'SpO₂', latest.spo2, '%',
+                            child: _vital(context, context.l10n.vitalSpo2, latest.spo2, '%',
                                 Icons.air_rounded)),
                         Expanded(
-                            child: _vital(context, 'Temp', latest.temperature,
+                            child: _vital(context, context.l10n.vitalTemperature, latest.temperature,
                                 '°C', Icons.thermostat_rounded,
                                 digits: 1)),
                         if (latest.hasGlucoseEstimate)
                           Expanded(
-                              child: _vital(context, 'Glucose', latest.estimatedGlucose,
+                              child: _vital(context, context.l10n.vitalGlucose, latest.estimatedGlucose,
                                   'mg/dL', Icons.water_drop_outlined)),
                       ],
                     ),
                     const AppSpacing.vlg(),
                     AppButton(
-                      label: 'What does this mean for me?',
+                      label: context.l10n.explainMeaning,
                       icon: const Icon(Icons.auto_awesome_rounded, size: 22),
                       onPressed: () => _explain(context, ref, patient, latest),
                       minHeight: 52,
@@ -508,7 +508,7 @@ class PatientHomeScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: AppOutlinedButton(
-                            label: 'Full report',
+                            label: context.l10n.fullReport,
                             icon: const Icon(Icons.description_outlined,
                                 size: 20),
                             onPressed: () =>
@@ -519,7 +519,7 @@ class PatientHomeScreen extends ConsumerWidget {
                         const AppSpacing.hmd(),
                         Expanded(
                           child: AppOutlinedButton(
-                            label: 'Share with doctor',
+                            label: context.l10n.shareWithDoctor,
                             icon: const Icon(Icons.share_rounded, size: 20),
                             onPressed: () => _shareReport(
                                 ref, patient, screenings ?? const [], latest),
@@ -622,7 +622,7 @@ class PatientHomeScreen extends ConsumerWidget {
       children: [
         Expanded(
           child: AppOutlinedButton(
-            label: 'My trends',
+            label: context.l10n.myTrends,
             icon: const Icon(Icons.show_chart_rounded, size: 22),
             onPressed: () =>
                 context.push('/trends?patientId=${patient.id}'),
@@ -632,7 +632,7 @@ class PatientHomeScreen extends ConsumerWidget {
         const AppSpacing.hmd(),
         Expanded(
           child: AppOutlinedButton(
-            label: 'Health guides',
+            label: context.l10n.healthGuides,
             icon: const Icon(Icons.health_and_safety_outlined, size: 22),
             onPressed: () => context.push('/advisories'),
             minHeight: 52,
@@ -659,7 +659,7 @@ class PatientHomeScreen extends ConsumerWidget {
     );
     await SharePlus.instance.share(ShareParams(
       text: text,
-      subject: 'Health summary — ${patient.name}',
+      subject: 'Health summary — ${patient.name}', // share-sheet only, not UI copy
     ));
   }
 
@@ -685,7 +685,7 @@ class PatientHomeScreen extends ConsumerWidget {
                   color: theme.colorScheme.primary, size: 22),
               const AppSpacing.hsm(),
               Expanded(
-                child: Text('My profile',
+                child: Text(context.l10n.myProfile,
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w700)),
               ),
@@ -701,7 +701,7 @@ class PatientHomeScreen extends ConsumerWidget {
               if (account.age != null)
                 AppBadge(label: '${account.age} yrs'),
               if (account.sex.isNotEmpty)
-                AppBadge(label: account.sex == 'F' ? 'Female' : account.sex == 'M' ? 'Male' : 'Other'),
+                AppBadge(label: account.sex == 'F' ? context.l10n.sexFemale : account.sex == 'M' ? context.l10n.sexMale : context.l10n.sexOther),
               if (account.heightCm != null)
                 AppBadge(label: '${account.heightCm!.toStringAsFixed(0)} cm'),
               if (account.weightKg != null)
@@ -736,7 +736,7 @@ class PatientHomeScreen extends ConsumerWidget {
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(
-                  'Feeling seriously unwell?',
+                  context.l10n.feelingUnwell,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.onSurface,
@@ -747,20 +747,21 @@ class PatientHomeScreen extends ConsumerWidget {
           ),
           const AppSpacing.vxs(),
           Text(
-            'Alerts your emergency contact and shows the fastest help steps.',
+            context.l10n.sosExplainer,
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           const AppSpacing.vmd(),
           AppButton(
-            label: 'Emergency SOS',
+            label: context.l10n.navSos,
             icon: const Icon(Icons.sos_rounded, size: 24),
             onPressed: () =>
                 context.push('/emergency/sos?patientId=${patient.id}'),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.error,
               foregroundColor: theme.colorScheme.onError,
-              minimumSize: const Size(double.infinity, 52),
+              // SOS is the largest touch target on this screen, by design.
+              minimumSize: const Size(double.infinity, 64),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               ),
@@ -783,9 +784,7 @@ class PatientHomeScreen extends ConsumerWidget {
           const AppSpacing.hmd(),
           Expanded(
             child: Text(
-              'This app screens — it does not diagnose. Home-care suggestions '
-              'apply only when your result is not serious; a red result means '
-              'seek a nurse or doctor now.',
+              context.l10n.patientHomeDisclaimer,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 height: 1.4,
@@ -804,10 +803,10 @@ class PatientHomeScreen extends ConsumerWidget {
         children: [
           const Icon(Icons.error_outline_rounded, size: 48),
           const AppSpacing.vlg(),
-          const Text('Could not load your profile.'),
+          Text(context.l10n.profileLoadError),
           const AppSpacing.vmd(),
           AppOutlinedButton(
-            label: 'Try again',
+            label: context.l10n.actionRetry,
             onPressed: () => ref.invalidate(myPatientProvider),
             isExpanded: false,
           ),
@@ -835,29 +834,29 @@ class PatientHomeScreen extends ConsumerWidget {
             break;
         }
       },
-      itemBuilder: (context) => const [
+      itemBuilder: (context) => [
         PopupMenuItem(
           value: 'profile',
           child: Row(children: [
-            Icon(Icons.edit_outlined, size: 20),
-            SizedBox(width: 12),
-            Text('Edit my profile'),
+            const Icon(Icons.edit_outlined, size: 20),
+            const SizedBox(width: 12),
+            Text(context.l10n.editMyProfile),
           ]),
         ),
         PopupMenuItem(
           value: 'settings',
           child: Row(children: [
-            Icon(Icons.settings_rounded, size: 20),
-            SizedBox(width: 12),
-            Text('Settings'),
+            const Icon(Icons.settings_rounded, size: 20),
+            const SizedBox(width: 12),
+            Text(context.l10n.settingsTitle),
           ]),
         ),
         PopupMenuItem(
           value: 'signout',
           child: Row(children: [
-            Icon(Icons.logout_rounded, size: 20),
-            SizedBox(width: 12),
-            Text('Sign out'),
+            const Icon(Icons.logout_rounded, size: 20),
+            const SizedBox(width: 12),
+            Text(context.l10n.signOut),
           ]),
         ),
       ],
