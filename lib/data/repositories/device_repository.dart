@@ -45,7 +45,7 @@ class DeviceRepository {
   /// range still connects — it just gets a compatibility warning, because
   /// refusing to work in the field is worse than degrading.
   static const int minSupportedFirmwareMajor = 1;
-  static const int maxSupportedFirmwareMajor = 1;
+  static const int maxSupportedFirmwareMajor = 3;
 
   Future<List<Device>> getAll() async =>
       (await _db.getAllDevices()).map((r) => r.toModel()).toList();
