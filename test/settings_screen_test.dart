@@ -11,6 +11,7 @@ import 'package:swasthyasetu_ai/domain/models/audience.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
 import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/settings/screens/settings_screen.dart';
+import 'package:swasthyasetu_ai/l10n/generated/app_localizations.dart';
 
 /// Settings is the screen most likely to overflow: it is nothing but rows of
 /// label-plus-control, and the label is the part that grows when a worker turns
@@ -178,7 +179,11 @@ void main() {
           size: const Size(360, 690),
           textScaler: TextScaler.linear(textScale),
         ),
-        child: const MaterialApp(home: SettingsScreen()),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SettingsScreen(),
+        ),
       ),
     );
   }

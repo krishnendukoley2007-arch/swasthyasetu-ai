@@ -12,6 +12,8 @@ import 'package:swasthyasetu_ai/data/repositories/device_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/settings_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/audience.dart';
 import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
+import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
+import 'package:swasthyasetu_ai/l10n/generated/app_localizations.dart';
 
 /// The one screen where the app's behaviour is actually configured.
 ///
@@ -32,7 +34,7 @@ class SettingsScreen extends ConsumerWidget {
 
     return AppPageScaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(context.l10n.settingsTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/home'),
@@ -44,47 +46,47 @@ class SettingsScreen extends ConsumerWidget {
           const _WorkerCard(),
           const AppSpacing.vlg(),
 
-          _Section('Who is using this app', [
+          _Section(context.l10n.settingsWhoUsesApp, [
             _AudienceTile(selected: settings.audience),
           ]),
 
-          _Section('Language', [
+          _Section(context.l10n.settingsSectionLanguage, [
             _ChoiceTile(
               icon: Icons.language_rounded,
-              title: 'App language',
+              title: context.l10n.settingsLanguage,
               value: _AppLanguage.of(settings.locale).nativeName,
               onTap: () => _pickLanguage(context, ref, settings.locale),
             ),
           ]),
 
-          _Section('Display', [
+          _Section(context.l10n.settingsDisplay, [
             _ThemeTile(mode: settings.themeMode),
             _Toggle(
               icon: Icons.contrast_rounded,
-              title: 'High contrast',
+              title: context.l10n.settingsHighContrast,
               // The real reason this exists, stated plainly so nobody removes it
               // as a duplicate of dark mode.
-              subtitle: 'Stronger borders and darker text for direct sunlight',
+              subtitle: context.l10n.settingsHighContrastBody,
               value: settings.highContrast,
               onChanged: (v) =>
                   ref.read(settingsProvider.notifier).setHighContrast(v),
             ),
             _Toggle(
               icon: Icons.motion_photos_off_rounded,
-              title: 'Reduce motion',
-              subtitle: 'Turns off animated transitions and pulsing indicators',
+              title: context.l10n.settingsReduceMotion,
+              subtitle: context.l10n.settingsReduceMotionBody,
               value: settings.reducedMotion,
               onChanged: (v) =>
                   ref.read(settingsProvider.notifier).setReducedMotion(v),
             ),
           ]),
 
-          _Section('Device', [
+          _Section(context.l10n.navDevices, [
             const _DeviceTile(),
             _Toggle(
               icon: Icons.science_outlined,
-              title: 'Demo mode',
-              subtitle: 'Simulated vitals, so the app is usable with no hardware',
+              title: context.l10n.settingsDemoMode,
+              subtitle: context.l10n.settingsDemoModeBody,
               value: settings.demoMode,
               onChanged: (v) =>
                   ref.read(settingsProvider.notifier).setDemoMode(v),
@@ -92,59 +94,59 @@ class SettingsScreen extends ConsumerWidget {
             const _CalibrationTile(),
             _NavTile(
               icon: Icons.build_rounded,
-              title: 'Run diagnostics',
-              subtitle: 'Check each sensor and the BLE link',
+              title: context.l10n.settingsRunDiagnostics,
+              subtitle: context.l10n.settingsRunDiagnosticsBody,
               onTap: () => context.push('/devices/diagnostics'),
             ),
           ]),
 
-          _Section('Emergency', [
+          _Section(context.l10n.settingsEmergency, [
             const _ContactsTile(),
             _Toggle(
               icon: Icons.personal_injury_outlined,
-              title: 'Fall detection',
-              subtitle: 'Watch the accelerometer and raise an SOS after a fall',
+              title: context.l10n.settingsFallDetection,
+              subtitle: context.l10n.settingsFallBody,
               value: settings.fallDetection,
               onChanged: (v) =>
                   ref.read(settingsProvider.notifier).setFallDetection(v),
             ),
             _Toggle(
               icon: Icons.crisis_alert_rounded,
-              title: 'Offer SOS on high risk',
-              subtitle: 'Suggest — never send — an SOS after a red triage band',
+              title: context.l10n.settingsOfferSosOnHighRisk,
+              subtitle: context.l10n.settingsOfferSosOnHighRiskBody,
               value: settings.autoSuggestSos,
               onChanged: (v) =>
                   ref.read(settingsProvider.notifier).setAutoSuggestSos(v),
             ),
             _ChoiceTile(
               icon: Icons.timer_outlined,
-              title: 'Cancel window',
+              title: context.l10n.settingsCancelWindow,
               value: '${settings.sosCountdownSeconds} seconds',
-              subtitle: 'How long you get to stop an automatic SOS',
+              subtitle: context.l10n.settingsCancelWindowBody,
               onTap: () =>
                   _pickCountdown(context, ref, settings.sosCountdownSeconds),
             ),
           ]),
 
-          _Section('Data & privacy', [
+          _Section(context.l10n.settingsDataPrivacy, [
             const _StorageTile(),
             _NavTile(
               icon: Icons.cloud_upload_outlined,
-              title: 'Pending uploads',
-              subtitle: 'Screenings waiting for a connection',
+              title: context.l10n.settingsPendingUploads,
+              subtitle: context.l10n.settingsPendingUploadsBody,
               onTap: () => context.push('/sync'),
             ),
             _Toggle(
               icon: Icons.sync_rounded,
-              title: 'Upload screenings',
-              subtitle: 'Send clinical records to the server when online',
+              title: context.l10n.settingsUploadScreenings,
+              subtitle: context.l10n.settingsUploadScreeningsBody,
               value: settings.syncConsent,
               onChanged: (v) =>
                   ref.read(settingsProvider.notifier).setSyncConsent(v),
             ),
             _Toggle(
               icon: Icons.my_location_rounded,
-              title: 'Tag screenings with location',
+              title: context.l10n.settingsTagLocation,
               // Off by default. Saying so is part of the consent.
               subtitle: 'Off by default. Adds a coordinate to new screenings '
                   'and to any SOS you send',
@@ -154,7 +156,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             _Toggle(
               icon: Icons.cloud_outlined,
-              title: 'Online AI explanations',
+              title: context.l10n.settingsOnlineAi,
               subtitle: 'When off, explanations come from the on-device '
                   'guideline library instead',
               value: settings.aiConsent,
@@ -164,23 +166,23 @@ class SettingsScreen extends ConsumerWidget {
             const _GeminiKeyTile(),
           ]),
 
-          _Section('About', [
-            const _InfoTile(
+          _Section(context.l10n.settingsAbout, [
+            _InfoTile(
               icon: Icons.info_outline_rounded,
-              title: 'Version',
+              title: context.l10n.settingsVersion,
               value: '${AppConstants.appVersion} '
                   '(build ${AppConstants.appBuildNumber})',
             ),
             _NavTile(
               icon: Icons.tune_rounded,
-              title: 'Triage thresholds',
-              subtitle: 'The fixed rules that decide the risk band',
+              title: context.l10n.settingsTriageThresholds,
+              subtitle: context.l10n.settingsTriageThresholdsBody,
               onTap: () => _showThresholds(context),
             ),
             _NavTile(
               icon: Icons.description_outlined,
-              title: 'Open source licences',
-              subtitle: 'Third-party packages in this build',
+              title: context.l10n.settingsOpenSourceLicences,
+              subtitle: context.l10n.settingsThirdPartyBody,
               onTap: () => showLicensePage(
                 context: context,
                 applicationName: AppConstants.appName,
@@ -208,7 +210,7 @@ class SettingsScreen extends ConsumerWidget {
       isScrollControlled: true,
       showDragHandle: true,
       builder: (sheetContext) => _PickerSheet(
-        title: 'App language',
+        title: context.l10n.settingsLanguage,
         children: [
           for (final lang in _AppLanguage.values)
             _OptionTile(
@@ -238,9 +240,9 @@ class SettingsScreen extends ConsumerWidget {
       isScrollControlled: true,
       showDragHandle: true,
       builder: (sheetContext) => _PickerSheet(
-        title: 'Cancel window',
-        blurb: 'A detected fall waits this long before the SOS goes out, so a '
-            'dropped phone does not alarm the family.',
+        title: context.l10n.settingsCancelWindow,
+        blurb: context.l10n.settingsCancelWindowBody2,
+            
         children: [
           for (final seconds in options)
             _OptionTile(
@@ -264,7 +266,7 @@ class SettingsScreen extends ConsumerWidget {
       builder: (dialogContext) {
         final theme = Theme.of(dialogContext);
         return AlertDialog(
-          title: const Text('Triage thresholds'),
+          title: Text(context.l10n.settingsTriageThresholds),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusXl),
           ),
@@ -274,8 +276,7 @@ class SettingsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Fixed in this build. The rules engine decides the band; the '
-                  'AI only explains it.',
+                  context.l10n.settingsFixedInBuild,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -314,7 +315,7 @@ class SettingsScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Close'),
+              child: Text(context.l10n.actionClose),
             ),
           ],
         );
@@ -821,8 +822,7 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
     setState(() {
       _testing = false;
       _result = failure == null
-          ? 'Key works. Online explanations and follow-up questions are '
-              'available.'
+          ? context.l10n.settingsKeyWorks
           : '${failure.label}. ${failure.detail}';
       if (failure == null) _editing = false;
     });
@@ -837,11 +837,10 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
 
     final subtitle = switch (true) {
       _ when active.isEmpty =>
-        'Not set. Explanations will come from the on-device guideline library.',
+        context.l10n.settingsNotSet,
       _ when stored.isEmpty =>
-        'Using the key built into this app (${_mask(active)}). Paste your own to '
-            'replace it.',
-      _ => 'Your key: ${_mask(stored)}',
+        context.l10n.settingsKeyBuiltin(_mask(active)),
+      _ => context.l10n.settingsKeyCustom(_mask(stored)),
     };
 
     return Column(
@@ -851,7 +850,7 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
           leading: Icon(Icons.key_rounded, color: theme.colorScheme.primary),
-          title: Text('Gemini API key', style: theme.textTheme.bodyLarge),
+          title: Text(context.l10n.settingsGeminiKey, style: theme.textTheme.bodyLarge),
           subtitle: Text(
             subtitle,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -860,7 +859,7 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
           ),
           trailing: TextButton(
             onPressed: () => setState(() => _editing = !_editing),
-            child: Text(_editing ? 'Cancel' : 'Change'),
+            child: Text(_editing ? context.l10n.actionCancel : context.l10n.actionChange),
           ),
         ),
         if (service.keyIsLegacyStandard && !_editing)
@@ -897,11 +896,10 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
                   autocorrect: false,
                   enableSuggestions: false,
                   style: theme.textTheme.bodyMedium,
-                  decoration: const InputDecoration(
-                    labelText: 'Paste key',
-                    hintText: 'AQ.…',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.settingsPasteKey,
+                    hintText: 'AQ..',
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const AppSpacing.vsm(),
@@ -914,11 +912,11 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
                   children: [
                     TextButton(
                       onPressed: _testing ? null : _save,
-                      child: const Text('Save'),
+                      child: Text(context.l10n.actionSave),
                     ),
                     FilledButton(
                       onPressed: _testing ? null : _test,
-                      child: Text(_testing ? 'Testing…' : 'Save & test'),
+                      child: Text(_testing ? context.l10n.settingsTesting : context.l10n.actionSave),
                     ),
                   ],
                 ),
@@ -963,9 +961,9 @@ class _ThemeTile extends ConsumerWidget {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
           leading: Icon(Icons.palette_outlined, color: theme.colorScheme.primary),
-          title: Text('Theme', style: theme.textTheme.bodyLarge),
+          title: Text(context.l10n.settingsTheme, style: theme.textTheme.bodyLarge),
           subtitle: Text(
-            'Light, dark, or follow the phone',
+            context.l10n.settingsThemeBody,
             style: theme.textTheme.bodySmall,
           ),
         ),
@@ -978,21 +976,21 @@ class _ThemeTile extends ConsumerWidget {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: AppSegmentedButton<ThemeMode>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: ThemeMode.light,
-                  label: Text('Light'),
-                  icon: Icon(Icons.light_mode_rounded, size: 18),
+                  label: Text(context.l10n.settingsThemeLight),
+                  icon: const Icon(Icons.light_mode_rounded, size: 18),
                 ),
                 ButtonSegment(
                   value: ThemeMode.dark,
-                  label: Text('Dark'),
-                  icon: Icon(Icons.dark_mode_rounded, size: 18),
+                  label: Text(context.l10n.settingsThemeDark),
+                  icon: const Icon(Icons.dark_mode_rounded, size: 18),
                 ),
                 ButtonSegment(
                   value: ThemeMode.system,
-                  label: Text('System'),
-                  icon: Icon(Icons.brightness_auto_rounded, size: 18),
+                  label: Text(context.l10n.settingsThemeSystem),
+                  icon: const Icon(Icons.brightness_auto_rounded, size: 18),
                 ),
               ],
               selected: {mode},
@@ -1035,7 +1033,7 @@ class _WorkerCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  named ? settings.workerName : 'Health worker',
+                  named ? settings.workerName : context.l10n.settingsWorkerName,
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w600),
                 ),
@@ -1044,7 +1042,7 @@ class _WorkerCard extends ConsumerWidget {
                   [
                     if (settings.workerId.trim().isNotEmpty) settings.workerId,
                     if (settings.facility.trim().isNotEmpty) settings.facility,
-                  ].join(' · ').ifEmpty('Add your name so it appears on an SOS'),
+                  ].join(' · ').ifEmpty(context.l10n.settingsNameEmpty),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -1054,7 +1052,7 @@ class _WorkerCard extends ConsumerWidget {
           ),
           const AppSpacing.hsm(),
           IconButton(
-            tooltip: 'Edit',
+            tooltip: context.l10n.settingsEdit,
             icon: const Icon(Icons.edit_outlined),
             onPressed: () => _edit(context, ref, settings),
           ),
@@ -1089,15 +1087,15 @@ class _WorkerCard extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const _SheetTitle('Your details'),
-              AppTextField(controller: name, label: 'Name'),
+              _SheetTitle(context.l10n.settingsYourDetails),
+              AppTextField(controller: name, label: context.l10n.settingsName),
               const AppSpacing.vmd(),
-              AppTextField(controller: id, label: 'Worker ID'),
+              AppTextField(controller: id, label: context.l10n.settingsWorkerId),
               const AppSpacing.vmd(),
-              AppTextField(controller: facility, label: 'Facility'),
+              AppTextField(controller: facility, label: context.l10n.settingsFacility),
               const AppSpacing.vlg(),
               AppButton(
-                label: 'Save',
+                label: context.l10n.actionSave,
                 onPressed: () => Navigator.pop(sheetContext, true),
               ),
               const AppSpacing.vmd(),
@@ -1128,13 +1126,13 @@ class _StorageTile extends ConsumerWidget {
     final usage = ref.watch(storageUsageProvider);
     return _NavTile(
       icon: Icons.storage_rounded,
-      title: 'Storage, export & deletion',
+      title: context.l10n.settingsStorageDeletion,
       subtitle: usage.when(
         data: (u) => '${formatBytes(u.total)} used · '
             '${u.screeningCount} screenings',
         loading: () => 'Measuring…',
         // A failed measurement must not read as "0 bytes used".
-        error: (_, __) => 'Usage unavailable',
+        error: (_, __) => context.l10n.settingsUsageUnavailable,
       ),
       onTap: () => context.push('/settings/storage'),
     );
@@ -1149,15 +1147,15 @@ class _DeviceTile extends ConsumerWidget {
     final devices = ref.watch(pairedDevicesProvider);
     return _NavTile(
       icon: Icons.devices_rounded,
-      title: 'Paired devices',
+      title: context.l10n.settingsPatientsTitle,
       subtitle: devices.when(
         data: (list) => switch (list.length) {
-          0 => 'None paired yet',
+          0 => context.l10n.settingsNonePaired,
           1 => list.first.name,
           final n => '$n devices',
         },
         loading: () => 'Loading…',
-        error: (_, __) => 'Could not read paired devices',
+        error: (_, __) => context.l10n.settingsCouldNotReadDevices,
       ),
       onTap: () => context.push('/devices/scan'),
     );
@@ -1175,16 +1173,16 @@ class _ContactsTile extends ConsumerWidget {
 
     return _NavTile(
       icon: Icons.contact_phone_outlined,
-      title: 'Emergency contacts',
+      title: context.l10n.settingsEmergencyContacts,
       subtitle: count == 0
           ? 'None yet — an SOS has nowhere to go'
-          : '$count ${count == 1 ? 'contact' : 'contacts'} saved',
+          : context.l10n.settingsContactsSaved(count),
       // A warning rather than a silent zero: a worker who thinks SOS is armed
       // when it is not is worse off than one who knows it is not.
       badge: reachable
           ? null
           : AppPillLabel(
-              label: 'SOS not armed',
+              label: context.l10n.settingsSosNotArmed,
               leadingIcon: Icons.warning_amber_rounded,
               color: Theme.of(context).colorScheme.error,
             ),
@@ -1201,38 +1199,38 @@ class _CalibrationTile extends ConsumerWidget {
     final calibration = ref.watch(bpCalibrationProvider);
 
     return calibration.when(
-      loading: () => const _InfoTile(
+      loading: () => _InfoTile(
         icon: Icons.monitor_heart_outlined,
-        title: 'BP calibration',
-        value: 'Checking…',
+        title: context.l10n.settingsBpCalibration,
+        value: context.l10n.settingsChecking,
       ),
-      error: (_, __) => const _InfoTile(
+      error: (_, __) => _InfoTile(
         icon: Icons.monitor_heart_outlined,
-        title: 'BP calibration',
-        value: 'Unavailable',
+        title: context.l10n.settingsBpCalibration,
+        value: context.l10n.settingsUnavailable,
       ),
       data: (c) => _InfoTile(
         icon: Icons.monitor_heart_outlined,
-        title: 'BP calibration',
+        title: context.l10n.settingsBpCalibration,
         // c.label is already humanised ('Not calibrated' / 'Calibration
         // expired'), so the enum never reaches the screen.
         value: switch (c.state) {
           CalibrationState.never =>
             '${c.label} — cuffless BP stays hidden until it is',
           CalibrationState.valid =>
-            '${c.label} · ${_ago(c.daysSince!)} · ${c.systolic}/${c.diastolic}',
+            '${c.label} - ${_ago(c.daysSince!, context.l10n)} - ${c.systolic}/${c.diastolic}',
           CalibrationState.stale =>
-            '${c.label} · last done ${_ago(c.daysSince!)}',
+            '${c.label} - ${context.l10n.settingsLastDoneAgo(_ago(c.daysSince!, context.l10n))}',
         },
       ),
     );
   }
 
-  static String _ago(int days) => switch (days) {
-        0 => 'today',
-        1 => 'yesterday',
-        final d when d < 30 => '$d days ago',
-        final d => '${d ~/ 30} months ago',
+  static String _ago(int days, AppLocalizations l10n) => switch (days) {
+        0 => l10n.settingsToday,
+        1 => l10n.settingsYesterday,
+        final d when d < 30 => l10n.settingsDaysAgo(d),
+        final d => l10n.settingsMonthsAgo(d ~/ 30),
       };
 }
 
@@ -1257,7 +1255,7 @@ class _DisclaimerCard extends StatelessWidget {
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(
-                  'What this app is not',
+                  context.l10n.settingsWhatThisAppIsNot,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.tertiary,
@@ -1268,12 +1266,7 @@ class _DisclaimerCard extends StatelessWidget {
           ),
           const AppSpacing.vmd(),
           Text(
-            'SwasthyaSetu AI is a screening and decision-support tool. It is not '
-            'a certified medical device and it does not diagnose. The '
-            'deterministic rules engine decides the risk band; the AI only puts '
-            'that result into words. Cuffless blood pressure is experimental and '
-            'is not clinically validated. Every result needs a qualified '
-            'clinician to confirm it.',
+            context.l10n.settingsDisclaimerBody,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.5,

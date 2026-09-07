@@ -1533,6 +1533,414 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{hours} h ago'**
   String timeHoursAgo(int hours);
+
+  /// No description provided for @settingsWhoUsesApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is using this app'**
+  String get settingsWhoUsesApp;
+
+  /// No description provided for @settingsSectionLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsSectionLanguage;
+
+  /// No description provided for @settingsKeyBuiltin.
+  ///
+  /// In en, this message translates to:
+  /// **'Using the key built into this app ({key}). Paste your own to replace it.'**
+  String settingsKeyBuiltin(String key);
+
+  /// No description provided for @settingsKeyCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Your key: {key}'**
+  String settingsKeyCustom(String key);
+
+  /// No description provided for @settingsRunDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Run diagnostics'**
+  String get settingsRunDiagnostics;
+
+  /// No description provided for @settingsRunDiagnosticsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check each sensor and the BLE link'**
+  String get settingsRunDiagnosticsBody;
+
+  /// No description provided for @settingsDemoMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo mode'**
+  String get settingsDemoMode;
+
+  /// No description provided for @settingsDemoModeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulated vitals, so the app is usable with no hardware'**
+  String get settingsDemoModeBody;
+
+  /// No description provided for @settingsReduceMotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce motion'**
+  String get settingsReduceMotion;
+
+  /// No description provided for @settingsReduceMotionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Turns off animated transitions and pulsing indicators'**
+  String get settingsReduceMotionBody;
+
+  /// No description provided for @settingsOfferSosOnHighRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer SOS on high risk'**
+  String get settingsOfferSosOnHighRisk;
+
+  /// No description provided for @settingsOfferSosOnHighRiskBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest - never send - an SOS after a red triage band'**
+  String get settingsOfferSosOnHighRiskBody;
+
+  /// No description provided for @settingsDataPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Data & privacy'**
+  String get settingsDataPrivacy;
+
+  /// No description provided for @settingsPendingUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending uploads'**
+  String get settingsPendingUploads;
+
+  /// No description provided for @settingsPendingUploadsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenings waiting for a connection'**
+  String get settingsPendingUploadsBody;
+
+  /// No description provided for @settingsUploadScreenings.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload screenings'**
+  String get settingsUploadScreenings;
+
+  /// No description provided for @settingsUploadScreeningsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Send clinical records to the server when online'**
+  String get settingsUploadScreeningsBody;
+
+  /// No description provided for @settingsTagLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag screenings with location'**
+  String get settingsTagLocation;
+
+  /// No description provided for @settingsTagLocationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Off by default. Adds a coordinate to new screenings and to any SOS you send.'**
+  String get settingsTagLocationBody;
+
+  /// No description provided for @settingsOnlineAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Online AI explanations'**
+  String get settingsOnlineAi;
+
+  /// No description provided for @settingsOnlineAiBody.
+  ///
+  /// In en, this message translates to:
+  /// **'When off, explanations come from the on-device guideline library instead.'**
+  String get settingsOnlineAiBody;
+
+  /// No description provided for @settingsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
+
+  /// No description provided for @settingsVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsVersion;
+
+  /// No description provided for @settingsTriageThresholds.
+  ///
+  /// In en, this message translates to:
+  /// **'Triage thresholds'**
+  String get settingsTriageThresholds;
+
+  /// No description provided for @settingsTriageThresholdsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The fixed rules that decide the risk band'**
+  String get settingsTriageThresholdsBody;
+
+  /// No description provided for @settingsOpenSourceLicences.
+  ///
+  /// In en, this message translates to:
+  /// **'Open source licences'**
+  String get settingsOpenSourceLicences;
+
+  /// No description provided for @settingsThirdPartyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Third-party packages in this build'**
+  String get settingsThirdPartyBody;
+
+  /// No description provided for @settingsFallBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch the accelerometer and raise an SOS after a fall'**
+  String get settingsFallBody;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsThemeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Light, dark, or follow the phone'**
+  String get settingsThemeBody;
+
+  /// No description provided for @settingsThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeLight;
+
+  /// No description provided for @settingsThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeDark;
+
+  /// No description provided for @settingsThemeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsThemeSystem;
+
+  /// No description provided for @settingsGeminiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini API key'**
+  String get settingsGeminiKey;
+
+  /// No description provided for @settingsNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set. Explanations will come from the on-device guideline library.'**
+  String get settingsNotSet;
+
+  /// No description provided for @settingsKeyWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'Key works. Online explanations and follow-up questions are available.'**
+  String get settingsKeyWorks;
+
+  /// No description provided for @settingsChangeKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace it.'**
+  String get settingsChangeKey;
+
+  /// No description provided for @settingsOldKeyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This is an old-style AIza Standard key. Google stops accepting those for the Gemini API in September 2026. Make a replacement at aistudio.google.com/apikey - new keys start AQ. - and paste it here.'**
+  String get settingsOldKeyNotice;
+
+  /// No description provided for @settingsPasteKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste key'**
+  String get settingsPasteKey;
+
+  /// No description provided for @settingsTesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing.'**
+  String get settingsTesting;
+
+  /// No description provided for @settingsCancelWindowBody2.
+  ///
+  /// In en, this message translates to:
+  /// **'A detected fall waits this long before the SOS goes out, so a dropped phone does not alarm the family.'**
+  String get settingsCancelWindowBody2;
+
+  /// No description provided for @settingsFixedInBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed in this build. The rules engine decides the band; the AI only explains it.'**
+  String get settingsFixedInBuild;
+
+  /// No description provided for @settingsPatientsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paired devices'**
+  String get settingsPatientsTitle;
+
+  /// No description provided for @settingsEmergencyContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency contacts'**
+  String get settingsEmergencyContacts;
+
+  /// No description provided for @settingsChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking.'**
+  String get settingsChecking;
+
+  /// No description provided for @settingsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get settingsUnavailable;
+
+  /// No description provided for @settingsWorkerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Health worker'**
+  String get settingsWorkerName;
+
+  /// No description provided for @settingsNameEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your name so it appears on an SOS'**
+  String get settingsNameEmpty;
+
+  /// No description provided for @settingsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get settingsEdit;
+
+  /// No description provided for @settingsYourDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details'**
+  String get settingsYourDetails;
+
+  /// No description provided for @settingsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get settingsName;
+
+  /// No description provided for @settingsWorkerId.
+  ///
+  /// In en, this message translates to:
+  /// **'Worker ID'**
+  String get settingsWorkerId;
+
+  /// No description provided for @settingsFacility.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility'**
+  String get settingsFacility;
+
+  /// No description provided for @settingsStorageDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage, export & deletion'**
+  String get settingsStorageDeletion;
+
+  /// No description provided for @settingsMeasuring.
+  ///
+  /// In en, this message translates to:
+  /// **'Measuring.'**
+  String get settingsMeasuring;
+
+  /// No description provided for @settingsUsageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage unavailable'**
+  String get settingsUsageUnavailable;
+
+  /// No description provided for @settingsNonePaired.
+  ///
+  /// In en, this message translates to:
+  /// **'None paired yet'**
+  String get settingsNonePaired;
+
+  /// No description provided for @settingsCouldNotReadDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read paired devices'**
+  String get settingsCouldNotReadDevices;
+
+  /// No description provided for @settingsSosNotArmed.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS not armed'**
+  String get settingsSosNotArmed;
+
+  /// No description provided for @settingsBpCalibration.
+  ///
+  /// In en, this message translates to:
+  /// **'BP calibration'**
+  String get settingsBpCalibration;
+
+  /// No description provided for @settingsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get settingsToday;
+
+  /// No description provided for @settingsYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday'**
+  String get settingsYesterday;
+
+  /// No description provided for @settingsWhatThisAppIsNot.
+  ///
+  /// In en, this message translates to:
+  /// **'What this app is not'**
+  String get settingsWhatThisAppIsNot;
+
+  /// No description provided for @settingsDisclaimerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'SwasthyaSetu AI is a screening and decision-support tool. It is not a certified medical device and it does not diagnose. The deterministic rules engine decides the risk band; the AI only puts that result into words. Cuffless blood pressure is experimental and is not clinically validated. Every result needs a qualified clinician to confirm it.'**
+  String get settingsDisclaimerBody;
+
+  /// No description provided for @settingsContactsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 contact saved} other{{count} contacts saved}}'**
+  String settingsContactsSaved(int count);
+
+  /// No description provided for @settingsLastDoneAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'last done {when}'**
+  String settingsLastDoneAgo(String when);
+
+  /// No description provided for @settingsDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days ago'**
+  String settingsDaysAgo(int days);
+
+  /// No description provided for @settingsMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} months ago'**
+  String settingsMonthsAgo(int months);
 }
 
 class _AppLocalizationsDelegate

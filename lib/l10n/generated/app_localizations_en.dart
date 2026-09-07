@@ -766,4 +766,241 @@ class AppLocalizationsEn extends AppLocalizations {
   String timeHoursAgo(int hours) {
     return '$hours h ago';
   }
+
+  @override
+  String get settingsWhoUsesApp => 'Who is using this app';
+
+  @override
+  String get settingsSectionLanguage => 'Language';
+
+  @override
+  String settingsKeyBuiltin(String key) {
+    return 'Using the key built into this app ($key). Paste your own to replace it.';
+  }
+
+  @override
+  String settingsKeyCustom(String key) {
+    return 'Your key: $key';
+  }
+
+  @override
+  String get settingsRunDiagnostics => 'Run diagnostics';
+
+  @override
+  String get settingsRunDiagnosticsBody => 'Check each sensor and the BLE link';
+
+  @override
+  String get settingsDemoMode => 'Demo mode';
+
+  @override
+  String get settingsDemoModeBody =>
+      'Simulated vitals, so the app is usable with no hardware';
+
+  @override
+  String get settingsReduceMotion => 'Reduce motion';
+
+  @override
+  String get settingsReduceMotionBody =>
+      'Turns off animated transitions and pulsing indicators';
+
+  @override
+  String get settingsOfferSosOnHighRisk => 'Offer SOS on high risk';
+
+  @override
+  String get settingsOfferSosOnHighRiskBody =>
+      'Suggest - never send - an SOS after a red triage band';
+
+  @override
+  String get settingsDataPrivacy => 'Data & privacy';
+
+  @override
+  String get settingsPendingUploads => 'Pending uploads';
+
+  @override
+  String get settingsPendingUploadsBody =>
+      'Screenings waiting for a connection';
+
+  @override
+  String get settingsUploadScreenings => 'Upload screenings';
+
+  @override
+  String get settingsUploadScreeningsBody =>
+      'Send clinical records to the server when online';
+
+  @override
+  String get settingsTagLocation => 'Tag screenings with location';
+
+  @override
+  String get settingsTagLocationBody =>
+      'Off by default. Adds a coordinate to new screenings and to any SOS you send.';
+
+  @override
+  String get settingsOnlineAi => 'Online AI explanations';
+
+  @override
+  String get settingsOnlineAiBody =>
+      'When off, explanations come from the on-device guideline library instead.';
+
+  @override
+  String get settingsAbout => 'About';
+
+  @override
+  String get settingsVersion => 'Version';
+
+  @override
+  String get settingsTriageThresholds => 'Triage thresholds';
+
+  @override
+  String get settingsTriageThresholdsBody =>
+      'The fixed rules that decide the risk band';
+
+  @override
+  String get settingsOpenSourceLicences => 'Open source licences';
+
+  @override
+  String get settingsThirdPartyBody => 'Third-party packages in this build';
+
+  @override
+  String get settingsFallBody =>
+      'Watch the accelerometer and raise an SOS after a fall';
+
+  @override
+  String get settingsTheme => 'Theme';
+
+  @override
+  String get settingsThemeBody => 'Light, dark, or follow the phone';
+
+  @override
+  String get settingsThemeLight => 'Light';
+
+  @override
+  String get settingsThemeDark => 'Dark';
+
+  @override
+  String get settingsThemeSystem => 'System';
+
+  @override
+  String get settingsGeminiKey => 'Gemini API key';
+
+  @override
+  String get settingsNotSet =>
+      'Not set. Explanations will come from the on-device guideline library.';
+
+  @override
+  String get settingsKeyWorks =>
+      'Key works. Online explanations and follow-up questions are available.';
+
+  @override
+  String get settingsChangeKey => 'Replace it.';
+
+  @override
+  String get settingsOldKeyNotice =>
+      'This is an old-style AIza Standard key. Google stops accepting those for the Gemini API in September 2026. Make a replacement at aistudio.google.com/apikey - new keys start AQ. - and paste it here.';
+
+  @override
+  String get settingsPasteKey => 'Paste key';
+
+  @override
+  String get settingsTesting => 'Testing.';
+
+  @override
+  String get settingsCancelWindowBody2 =>
+      'A detected fall waits this long before the SOS goes out, so a dropped phone does not alarm the family.';
+
+  @override
+  String get settingsFixedInBuild =>
+      'Fixed in this build. The rules engine decides the band; the AI only explains it.';
+
+  @override
+  String get settingsPatientsTitle => 'Paired devices';
+
+  @override
+  String get settingsEmergencyContacts => 'Emergency contacts';
+
+  @override
+  String get settingsChecking => 'Checking.';
+
+  @override
+  String get settingsUnavailable => 'Unavailable';
+
+  @override
+  String get settingsWorkerName => 'Health worker';
+
+  @override
+  String get settingsNameEmpty => 'Add your name so it appears on an SOS';
+
+  @override
+  String get settingsEdit => 'Edit';
+
+  @override
+  String get settingsYourDetails => 'Your details';
+
+  @override
+  String get settingsName => 'Name';
+
+  @override
+  String get settingsWorkerId => 'Worker ID';
+
+  @override
+  String get settingsFacility => 'Facility';
+
+  @override
+  String get settingsStorageDeletion => 'Storage, export & deletion';
+
+  @override
+  String get settingsMeasuring => 'Measuring.';
+
+  @override
+  String get settingsUsageUnavailable => 'Usage unavailable';
+
+  @override
+  String get settingsNonePaired => 'None paired yet';
+
+  @override
+  String get settingsCouldNotReadDevices => 'Could not read paired devices';
+
+  @override
+  String get settingsSosNotArmed => 'SOS not armed';
+
+  @override
+  String get settingsBpCalibration => 'BP calibration';
+
+  @override
+  String get settingsToday => 'today';
+
+  @override
+  String get settingsYesterday => 'yesterday';
+
+  @override
+  String get settingsWhatThisAppIsNot => 'What this app is not';
+
+  @override
+  String get settingsDisclaimerBody =>
+      'SwasthyaSetu AI is a screening and decision-support tool. It is not a certified medical device and it does not diagnose. The deterministic rules engine decides the risk band; the AI only puts that result into words. Cuffless blood pressure is experimental and is not clinically validated. Every result needs a qualified clinician to confirm it.';
+
+  @override
+  String settingsContactsSaved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count contacts saved',
+      one: '1 contact saved',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLastDoneAgo(String when) {
+    return 'last done $when';
+  }
+
+  @override
+  String settingsDaysAgo(int days) {
+    return '$days days ago';
+  }
+
+  @override
+  String settingsMonthsAgo(int months) {
+    return '$months months ago';
+  }
 }
