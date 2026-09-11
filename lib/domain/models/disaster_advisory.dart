@@ -28,9 +28,10 @@ class DisasterAdvisory {
   });
 
   factory DisasterAdvisory.fromJson(Map<String, dynamic> json) {
-    List<String> steps(String key) => ((json[key] as List<dynamic>?) ?? const [])
-        .whereType<String>()
-        .toList(growable: false);
+    List<String> steps(String key) =>
+        ((json[key] as List<dynamic>?) ?? const []).whereType<String>().toList(
+          growable: false,
+        );
     return DisasterAdvisory(
       id: json['id'] as String,
       title: json['title'] as String,
@@ -46,8 +47,9 @@ class DisasterAdvisory {
 /// Loaded lazily and parsed once per read — a few KB of JSON, the parse cost
 /// is noise compared to the comfort of never caching wrongly.
 Future<List<DisasterAdvisory>> loadDisasterAdvisories() async {
-  final raw =
-      await rootBundle.loadString('assets/guidelines/disaster_advisories.json');
+  final raw = await rootBundle.loadString(
+    'assets/guidelines/disaster_advisories.json',
+  );
   final decoded = jsonDecode(raw);
   if (decoded is! Map<String, dynamic>) return const [];
   final list = (decoded['advisories'] as List<dynamic>?) ?? const [];

@@ -138,8 +138,8 @@ class WaveformStore {
     return WaveformData(
       samples: samples,
       sampleRate: meta?.sampleRate ?? defaultSampleRate,
-      durationMs: meta?.durationMs ??
-          (samples.length * 1000 ~/ defaultSampleRate),
+      durationMs:
+          meta?.durationMs ?? (samples.length * 1000 ~/ defaultSampleRate),
       isEnvelope: meta?.isDownsampled ?? false,
     );
   }

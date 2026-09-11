@@ -25,17 +25,21 @@ class PhoneFallSimulatorSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppTheme.radiusXl),
+        ),
       ),
       builder: (_) => const PhoneFallSimulatorSheet(),
     );
   }
 
   @override
-  ConsumerState<PhoneFallSimulatorSheet> createState() => _PhoneFallSimulatorSheetState();
+  ConsumerState<PhoneFallSimulatorSheet> createState() =>
+      _PhoneFallSimulatorSheetState();
 }
 
-class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorSheet> {
+class _PhoneFallSimulatorSheetState
+    extends ConsumerState<PhoneFallSimulatorSheet> {
   StreamSubscription<AccelerometerEvent>? _sub;
   final FallDetector _detector = FallDetector();
 
@@ -58,42 +62,50 @@ class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorShee
 
   void _startListening() {
     try {
-      _sub = accelerometerEventStream(samplingPeriod: const Duration(milliseconds: 40))
-          .listen((event) {
-        if (!mounted) return;
-        final mag = math.sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
-        final g = mag / 9.81;
+      _sub =
+          accelerometerEventStream(
+            samplingPeriod: const Duration(milliseconds: 40),
+          ).listen(
+            (event) {
+              if (!mounted) return;
+              final mag = math.sqrt(
+                event.x * event.x + event.y * event.y + event.z * event.z,
+              );
+              final g = mag / 9.81;
 
-        final isFall = _detector.addSample(mag, DateTime.now());
+              final isFall = _detector.addSample(mag, DateTime.now());
 
-        setState(() {
-          _x = event.x;
-          _y = event.y;
-          _z = event.z;
-          _magnitude = mag;
-          _peakG = math.max(_peakG, g);
+              setState(() {
+                _x = event.x;
+                _y = event.y;
+                _z = event.z;
+                _magnitude = mag;
+                _peakG = math.max(_peakG, g);
 
-          _history.removeAt(0);
-          _history.add(mag);
+                _history.removeAt(0);
+                _history.add(mag);
 
-          if (_detector.phase == FallPhase.freeFall) {
-            _statusText = '⚠️ FREE FALL DETECTED (< 0.4 g)';
-          } else if (_detector.phase == FallPhase.awaitingImpact) {
-            _statusText = '⚡ Awaiting Impact Spike...';
-          } else if (isFall) {
-            _fallTriggered = true;
-            _statusText = '🚨 FALL CONFIRMED! Impact: ${g.toStringAsFixed(1)} g';
-          } else if (!_fallTriggered) {
-            _statusText = 'Normal motion. Shake or simulate drop.';
-          }
-        });
-      }, onError: (err) {
-        if (mounted) {
-          setState(() {
-            _statusText = 'Sensors unavailable on this platform ($err)';
-          });
-        }
-      });
+                if (_detector.phase == FallPhase.freeFall) {
+                  _statusText = '⚠️ FREE FALL DETECTED (< 0.4 g)';
+                } else if (_detector.phase == FallPhase.awaitingImpact) {
+                  _statusText = '⚡ Awaiting Impact Spike...';
+                } else if (isFall) {
+                  _fallTriggered = true;
+                  _statusText =
+                      '🚨 FALL CONFIRMED! Impact: ${g.toStringAsFixed(1)} g';
+                } else if (!_fallTriggered) {
+                  _statusText = 'Normal motion. Shake or simulate drop.';
+                }
+              });
+            },
+            onError: (err) {
+              if (mounted) {
+                setState(() {
+                  _statusText = 'Sensors unavailable on this platform ($err)';
+                });
+              }
+            },
+          );
     } catch (e) {
       _statusText = 'Accelerometer sensor uninitialized: $e';
     }
@@ -115,7 +127,10 @@ class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorShee
     _detector.addSample(1.2, now.add(const Duration(milliseconds: 40)));
     _detector.addSample(0.8, now.add(const Duration(milliseconds: 90)));
     _detector.addSample(2.1, now.add(const Duration(milliseconds: 140)));
-    final detected = _detector.addSample(34.5, now.add(const Duration(milliseconds: 220)));
+    final detected = _detector.addSample(
+      34.5,
+      now.add(const Duration(milliseconds: 220)),
+    );
 
     setState(() {
       _peakG = 3.5;
@@ -156,7 +171,9 @@ class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorShee
                 Expanded(
                   child: Text(
                     'Phone IMU Fall Detector Simulator',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -168,7 +185,9 @@ class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorShee
             const AppSpacing.vsm(),
             Text(
               'Tests the onboard phone accelerometer for elderly & lone-worker fall detection (Zero Hardware Required).',
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             const AppSpacing.vmd(),
 
@@ -178,10 +197,14 @@ class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorShee
               decoration: BoxDecoration(
                 color: isCritical
                     ? AppTheme.riskRedContainer
-                    : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    : theme.colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.5,
+                      ),
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                 border: Border.all(
-                  color: isCritical ? AppTheme.riskRed : theme.colorScheme.outlineVariant,
+                  color: isCritical
+                      ? AppTheme.riskRed
+                      : theme.colorScheme.outlineVariant,
                   width: isCritical ? 2 : 1,
                 ),
               ),
@@ -190,9 +213,16 @@ class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorShee
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Current G-Force', style: theme.textTheme.labelMedium),
-                      Text('Peak: ${_peakG.toStringAsFixed(2)} g',
-                          style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700)),
+                      Text(
+                        'Current G-Force',
+                        style: theme.textTheme.labelMedium,
+                      ),
+                      Text(
+                        'Peak: ${_peakG.toStringAsFixed(2)} g',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -200,12 +230,16 @@ class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorShee
                     '${gForce.toStringAsFixed(2)} g',
                     style: theme.textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: isCritical ? AppTheme.riskRed : theme.colorScheme.primary,
+                      color: isCritical
+                          ? AppTheme.riskRed
+                          : theme.colorScheme.primary,
                     ),
                   ),
                   Text(
                     '|a| = ${_magnitude.toStringAsFixed(1)} m/s² (X: ${_x.toStringAsFixed(1)}, Y: ${_y.toStringAsFixed(1)}, Z: ${_z.toStringAsFixed(1)})',
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   LinearProgressIndicator(
@@ -221,9 +255,28 @@ class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorShee
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('0.0g (Freefall)', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant)),
-                      Text('1.0g (Rest)', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant)),
-                      Text('2.6g+ (Impact)', style: TextStyle(fontSize: 10, color: theme.colorScheme.error, fontWeight: FontWeight.bold)),
+                      Text(
+                        '0.0g (Freefall)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        '1.0g (Rest)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        '2.6g+ (Impact)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: theme.colorScheme.error,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -234,19 +287,30 @@ class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorShee
 
             // Live status banner
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingMd,
+                vertical: 8,
+              ),
               decoration: BoxDecoration(
-                color: _fallTriggered ? AppTheme.riskRedContainer : theme.colorScheme.surface,
+                color: _fallTriggered
+                    ? AppTheme.riskRedContainer
+                    : theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 border: Border.all(
-                  color: _fallTriggered ? AppTheme.riskRed : theme.colorScheme.outlineVariant,
+                  color: _fallTriggered
+                      ? AppTheme.riskRed
+                      : theme.colorScheme.outlineVariant,
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
-                    _fallTriggered ? Icons.warning_rounded : Icons.info_outline_rounded,
-                    color: _fallTriggered ? AppTheme.riskRed : theme.colorScheme.primary,
+                    _fallTriggered
+                        ? Icons.warning_rounded
+                        : Icons.info_outline_rounded,
+                    color: _fallTriggered
+                        ? AppTheme.riskRed
+                        : theme.colorScheme.primary,
                     size: 18,
                   ),
                   const SizedBox(width: 8),
@@ -255,7 +319,9 @@ class _PhoneFallSimulatorSheetState extends ConsumerState<PhoneFallSimulatorShee
                       _statusText,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: _fallTriggered ? AppTheme.riskRed : theme.colorScheme.onSurface,
+                        color: _fallTriggered
+                            ? AppTheme.riskRed
+                            : theme.colorScheme.onSurface,
                       ),
                     ),
                   ),

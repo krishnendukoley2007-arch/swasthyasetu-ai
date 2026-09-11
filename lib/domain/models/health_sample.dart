@@ -170,10 +170,22 @@ class HealthSample {
 
   @override
   int get hashCode => Object.hash(
-    timestamp, heartRateBpm, spo2Percent, temperatureC, ecgSignal,
-    ecgSignalQuality, rPeakDetected, rrIntervalMs, pttMs,
-    estimatedSystolic, estimatedDiastolic, bpConfidence,
-    estimatedGlucose, glucoseConfidence, batteryPercent, isDemo
+    timestamp,
+    heartRateBpm,
+    spo2Percent,
+    temperatureC,
+    ecgSignal,
+    ecgSignalQuality,
+    rPeakDetected,
+    rrIntervalMs,
+    pttMs,
+    estimatedSystolic,
+    estimatedDiastolic,
+    bpConfidence,
+    estimatedGlucose,
+    glucoseConfidence,
+    batteryPercent,
+    isDemo,
   );
 }
 
@@ -268,5 +280,13 @@ class VitalSigns {
           isDemo == other.isDemo;
 
   @override
-  int get hashCode => Object.hash(heartRate, spo2, temperature, ecgQuality, battery, isConnected, isDemo);
+  int get hashCode => Object.hash(
+    heartRate,
+    spo2,
+    temperature,
+    ecgQuality,
+    battery,
+    isConnected,
+    isDemo,
+  );
 }

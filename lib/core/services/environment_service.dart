@@ -26,27 +26,27 @@ enum EnvFailure {
   network;
 
   String get title => switch (this) {
-        EnvFailure.locationServicesOff => 'Location is switched off',
-        EnvFailure.permissionBlocked => 'Android blocked location access',
-        EnvFailure.noFix => 'Could not find your location',
-        EnvFailure.network => 'Could not reach the weather service',
-      };
+    EnvFailure.locationServicesOff => 'Location is switched off',
+    EnvFailure.permissionBlocked => 'Android blocked location access',
+    EnvFailure.noFix => 'Could not find your location',
+    EnvFailure.network => 'Could not reach the weather service',
+  };
 
   String get detail => switch (this) {
-        EnvFailure.locationServicesOff =>
-          'Heat and air-quality alerts need your phone\'s location switched '
-              'on. Turn it on once and this card fills in — your screenings '
-              'are unaffected either way.',
-        EnvFailure.permissionBlocked =>
-          'Enable location for SwasthyaSetu in system settings to get heat '
-              'and air-quality alerts for your area.',
-        EnvFailure.noFix =>
-          'Your phone could not get a location fix — this usually means being '
-              'indoors. Near a window or outdoors it takes a few seconds.',
-        EnvFailure.network =>
-          'You appear to be online but the weather service did not answer. '
-              'It is a free public service and is occasionally busy.',
-      };
+    EnvFailure.locationServicesOff =>
+      'Heat and air-quality alerts need your phone\'s location switched '
+          'on. Turn it on once and this card fills in — your screenings '
+          'are unaffected either way.',
+    EnvFailure.permissionBlocked =>
+      'Enable location for SwasthyaSetu in system settings to get heat '
+          'and air-quality alerts for your area.',
+    EnvFailure.noFix =>
+      'Your phone could not get a location fix — this usually means being '
+          'indoors. Near a window or outdoors it takes a few seconds.',
+    EnvFailure.network =>
+      'You appear to be online but the weather service did not answer. '
+          'It is a free public service and is occasionally busy.',
+  };
 }
 
 /// Local weather + air quality for the environment card and advisories.
@@ -67,10 +67,12 @@ class EnvironmentService {
   EnvironmentService(this._db);
 
   final AppDatabase _db;
-  final Dio _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 8),
-    receiveTimeout: const Duration(seconds: 8),
-  ));
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 8),
+      receiveTimeout: const Duration(seconds: 8),
+    ),
+  );
 
   /// Why the last [refresh] produced no fresh reading. Null after a success, or
   /// before any attempt. Read by the card to choose its words.
@@ -112,7 +114,9 @@ class EnvironmentService {
       }
 
       await _db.setSetting(
-          SettingKeys.envLastReading, jsonEncode(reading.toJson()));
+        SettingKeys.envLastReading,
+        jsonEncode(reading.toJson()),
+      );
       return reading;
     } catch (_) {
       lastFailure ??= EnvFailure.network;
@@ -218,8 +222,10 @@ class EnvironmentService {
     final humidity = (current['relative_humidity_2m'] as num?)?.toDouble();
     if (temp == null || apparent == null || humidity == null) return null;
 
-    final precipitation = (current['precipitation'] as num?)?.toDouble() ??
-        (current['rain'] as num?)?.toDouble() ?? 0.0;
+    final precipitation =
+        (current['precipitation'] as num?)?.toDouble() ??
+        (current['rain'] as num?)?.toDouble() ??
+        0.0;
     final weatherCode = (current['weather_code'] as num?)?.toInt() ?? 0;
     final weatherDesc = _describeWeatherCode(weatherCode);
     final windSpeed = (current['wind_speed_10m'] as num?)?.toDouble() ?? 0.0;

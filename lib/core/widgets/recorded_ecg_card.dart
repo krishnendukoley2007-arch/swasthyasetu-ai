@@ -24,8 +24,7 @@ class RecordedEcgCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final seconds = samples.length / sampleRate;
-    final traceColor =
-        generated ? ClinicalPalette.amber : ClinicalPalette.teal;
+    final traceColor = generated ? ClinicalPalette.amber : ClinicalPalette.teal;
 
     return Container(
       decoration: BoxDecoration(
@@ -40,8 +39,7 @@ class RecordedEcgCard extends StatelessWidget {
           Row(
             children: [
               const Expanded(child: Overline('ECG · RECORDED STRIP')),
-              ProvenanceTag(
-                  generated ? Provenance.demo : Provenance.measured),
+              ProvenanceTag(generated ? Provenance.demo : Provenance.measured),
             ],
           ),
           const SizedBox(height: 4),
@@ -56,7 +54,10 @@ class RecordedEcgCard extends StatelessWidget {
             height: 160,
             width: double.infinity,
             child: CustomPaint(
-              painter: _RecordedStripPainter(samples: samples, color: traceColor),
+              painter: _RecordedStripPainter(
+                samples: samples,
+                color: traceColor,
+              ),
             ),
           ),
         ],

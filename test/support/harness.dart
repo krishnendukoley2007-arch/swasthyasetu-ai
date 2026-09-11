@@ -82,7 +82,10 @@ class TestHarness {
       routes: [
         GoRoute(path: '/', builder: (_, __) => builder()),
         // Anything the screen navigates to lands here rather than throwing.
-        GoRoute(path: '/:rest(.*)', builder: (_, __) => const SizedBox.shrink()),
+        GoRoute(
+          path: '/:rest(.*)',
+          builder: (_, __) => const SizedBox.shrink(),
+        ),
       ],
       initialExtra: extra,
     );
@@ -96,8 +99,9 @@ class TestHarness {
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(textScale)),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
           child: child!,
         ),
       ),
@@ -144,7 +148,9 @@ Future<void> expectNoOverflow(
   FlutterError.onError = (details) {
     final text = details.exceptionAsString();
     if (text.contains('overflowed')) {
-      captured.add('${text.split('\n').first.trim()}  ←  ${_creatorOf(details)}');
+      captured.add(
+        '${text.split('\n').first.trim()}  ←  ${_creatorOf(details)}',
+      );
     } else {
       previous?.call(details);
     }
@@ -176,17 +182,20 @@ Future<void> expectNoOverflow(
 String _creatorOf(FlutterErrorDetails details) {
   final raw = details.informationCollector?.call();
   if (raw == null) return 'unknown location';
-  final info = debugTransformDebugCreator(raw)
-      .map((node) => node.toStringDeep())
-      .join(' ');
+  final info = debugTransformDebugCreator(
+    raw,
+  ).map((node) => node.toStringDeep()).join(' ');
   final matches = RegExp(r'(?:packages|lib)/([\w/]+\.dart):(\d+):\d+')
       .allMatches(info)
       .map((m) => '${m.group(1)!.split('/').last}:${m.group(2)}')
       // Effect wrappers from the animation package sit between the screen and
       // the box that actually overflowed; they are never the fix site.
-      .where((s) => !s.startsWith('slide_effect') &&
-          !s.startsWith('fade_effect') &&
-          !s.startsWith('builder.dart'))
+      .where(
+        (s) =>
+            !s.startsWith('slide_effect') &&
+            !s.startsWith('fade_effect') &&
+            !s.startsWith('builder.dart'),
+      )
       .toSet();
   return matches.isEmpty ? 'unknown location' : matches.take(3).join(' < ');
 }

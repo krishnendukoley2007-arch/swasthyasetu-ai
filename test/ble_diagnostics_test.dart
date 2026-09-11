@@ -73,23 +73,22 @@ TelemetryFrame frame({
   bool plausible = true,
   bool leadOff = false,
   bool fingerOff = false,
-}) =>
-    TelemetryFrame(
-      sample: HealthSample(
-        timestamp: 1700000000000,
-        heartRateBpm: heartRate,
-        spo2Percent: spo2,
-        temperatureC: temperatureC,
-        ecgSignalQuality: 0.9,
-        rPeakDetected: true,
-        batteryPercent: battery,
-      ),
-      fallDetected: false,
-      leadOff: leadOff,
-      fingerOff: fingerOff,
-      plausible: plausible,
-      deviceUptimeMs: 120000,
-    );
+}) => TelemetryFrame(
+  sample: HealthSample(
+    timestamp: 1700000000000,
+    heartRateBpm: heartRate,
+    spo2Percent: spo2,
+    temperatureC: temperatureC,
+    ecgSignalQuality: 0.9,
+    rPeakDetected: true,
+    batteryPercent: battery,
+  ),
+  fallDetected: false,
+  leadOff: leadOff,
+  fingerOff: fingerOff,
+  plausible: plausible,
+  deviceUptimeMs: 120000,
+);
 
 /// Run the pass over a short window and return the final report.
 ///
@@ -126,35 +125,45 @@ DiagnosticCheck check(DiagnosticReport report, String id) =>
 
 void main() {
   group('BleDiagnostics with no radio', () {
-    test('an unsupported phone fails the radio check and skips the rest',
-        () async {
-      final service = _FakeBleService(availability: BleLinkStatus.unsupported);
-      final report = await runDiagnostics(service);
+    test(
+      'an unsupported phone fails the radio check and skips the rest',
+      () async {
+        final service = _FakeBleService(
+          availability: BleLinkStatus.unsupported,
+        );
+        final report = await runDiagnostics(service);
 
-      expect(check(report, 'radio').outcome, DiagnosticOutcome.fail);
-      // The property that matters: nothing downstream is allowed to pass.
-      expect(report.passed, 0);
-      expect(
-        report.checks.where((c) => c.outcome == DiagnosticOutcome.pass),
-        isEmpty,
-      );
-      await service.close();
-    });
+        expect(check(report, 'radio').outcome, DiagnosticOutcome.fail);
+        // The property that matters: nothing downstream is allowed to pass.
+        expect(report.passed, 0);
+        expect(
+          report.checks.where((c) => c.outcome == DiagnosticOutcome.pass),
+          isEmpty,
+        );
+        await service.close();
+      },
+    );
 
-    test('Bluetooth switched off is a failure with an actionable reason',
-        () async {
-      final service = _FakeBleService(availability: BleLinkStatus.adapterOff);
-      final report = await runDiagnostics(service);
+    test(
+      'Bluetooth switched off is a failure with an actionable reason',
+      () async {
+        final service = _FakeBleService(availability: BleLinkStatus.adapterOff);
+        final report = await runDiagnostics(service);
 
-      expect(check(report, 'radio').detail, contains('switched off'));
-      expect(check(report, 'telemetry').outcome, DiagnosticOutcome.skipped);
-      expect(check(report, 'telemetry').detail, contains('Turn Bluetooth on'));
-      await service.close();
-    });
+        expect(check(report, 'radio').detail, contains('switched off'));
+        expect(check(report, 'telemetry').outcome, DiagnosticOutcome.skipped);
+        expect(
+          check(report, 'telemetry').detail,
+          contains('Turn Bluetooth on'),
+        );
+        await service.close();
+      },
+    );
 
     test('a denied permission is not reported as a missing radio', () async {
-      final service =
-          _FakeBleService(availability: BleLinkStatus.permissionDenied);
+      final service = _FakeBleService(
+        availability: BleLinkStatus.permissionDenied,
+      );
       final report = await runDiagnostics(service);
 
       expect(check(report, 'radio').detail, contains('permission'));
@@ -164,35 +173,40 @@ void main() {
   });
 
   group('BleDiagnostics with a radio but no board', () {
-    test('every check past the radio is skipped, and none of them pass',
-        () async {
-      final service = _FakeBleService(availability: BleLinkStatus.idle);
-      final report = await runDiagnostics(service);
+    test(
+      'every check past the radio is skipped, and none of them pass',
+      () async {
+        final service = _FakeBleService(availability: BleLinkStatus.idle);
+        final report = await runDiagnostics(service);
 
-      expect(check(report, 'radio').outcome, DiagnosticOutcome.pass);
-      expect(check(report, 'link').outcome, DiagnosticOutcome.fail);
-      expect(check(report, 'link').detail, contains('No board'));
+        expect(check(report, 'radio').outcome, DiagnosticOutcome.pass);
+        expect(check(report, 'link').outcome, DiagnosticOutcome.fail);
+        expect(check(report, 'link').detail, contains('No board'));
 
-      // This is the regression that motivated the whole file. The old screen
-      // reported eleven passes in exactly this state.
-      for (final id in [
-        'services',
-        'firmware',
-        'telemetry',
-        'plausible',
-        'pulse',
-        'temperature',
-        'ecg-channel',
-        'ecg-frames',
-        'ecg-leads',
-        'battery',
-      ]) {
-        expect(check(report, id).outcome, DiagnosticOutcome.skipped,
-            reason: '$id must not resolve without a board');
-      }
-      expect(report.passed, 1);
-      await service.close();
-    });
+        // This is the regression that motivated the whole file. The old screen
+        // reported eleven passes in exactly this state.
+        for (final id in [
+          'services',
+          'firmware',
+          'telemetry',
+          'plausible',
+          'pulse',
+          'temperature',
+          'ecg-channel',
+          'ecg-frames',
+          'ecg-leads',
+          'battery',
+        ]) {
+          expect(
+            check(report, id).outcome,
+            DiagnosticOutcome.skipped,
+            reason: '$id must not resolve without a board',
+          );
+        }
+        expect(report.passed, 1);
+        await service.close();
+      },
+    );
 
     test('the summary says so instead of implying an all-clear', () async {
       final service = _FakeBleService();
@@ -218,64 +232,76 @@ void main() {
   });
 
   group('BleDiagnostics with a healthy board', () {
-    test('frames arriving make the data checks pass with their measurements',
-        () async {
-      final service = _FakeBleService(
-        availability: BleLinkStatus.streaming,
-        link: _streaming,
-      );
-      final report = await runDiagnostics(service, during: (s) {
-        for (var i = 0; i < 3; i++) {
-          s.emit(frame());
-        }
-        s.emitEcg(const EcgFrame(sequence: 1, samples: [1, 2, 3, 4]));
-      });
+    test(
+      'frames arriving make the data checks pass with their measurements',
+      () async {
+        final service = _FakeBleService(
+          availability: BleLinkStatus.streaming,
+          link: _streaming,
+        );
+        final report = await runDiagnostics(
+          service,
+          during: (s) {
+            for (var i = 0; i < 3; i++) {
+              s.emit(frame());
+            }
+            s.emitEcg(const EcgFrame(sequence: 1, samples: [1, 2, 3, 4]));
+          },
+        );
 
-      expect(check(report, 'link').outcome, DiagnosticOutcome.pass);
-      expect(check(report, 'firmware').outcome, DiagnosticOutcome.pass);
-      expect(check(report, 'telemetry').outcome, DiagnosticOutcome.pass);
-      // The detail is the measurement, not a restatement of the check.
-      expect(check(report, 'telemetry').detail, contains('3 frames'));
-      expect(check(report, 'plausible').outcome, DiagnosticOutcome.pass);
-      expect(check(report, 'temperature').detail, contains('36.6'));
-      expect(check(report, 'battery').detail, contains('85%'));
-      expect(check(report, 'ecg-frames').outcome, DiagnosticOutcome.pass);
-      expect(check(report, 'ecg-frames').detail, contains('4 samples'));
-      expect(report.failed, 0);
-      await service.close();
-    });
+        expect(check(report, 'link').outcome, DiagnosticOutcome.pass);
+        expect(check(report, 'firmware').outcome, DiagnosticOutcome.pass);
+        expect(check(report, 'telemetry').outcome, DiagnosticOutcome.pass);
+        // The detail is the measurement, not a restatement of the check.
+        expect(check(report, 'telemetry').detail, contains('3 frames'));
+        expect(check(report, 'plausible').outcome, DiagnosticOutcome.pass);
+        expect(check(report, 'temperature').detail, contains('36.6'));
+        expect(check(report, 'battery').detail, contains('85%'));
+        expect(check(report, 'ecg-frames').outcome, DiagnosticOutcome.pass);
+        expect(check(report, 'ecg-frames').detail, contains('4 samples'));
+        expect(report.failed, 0);
+        await service.close();
+      },
+    );
 
-    test('a link with no frames on it fails rather than passing quietly',
-        () async {
-      final service = _FakeBleService(
-        availability: BleLinkStatus.streaming,
-        link: _streaming,
-      );
-      final report = await runDiagnostics(service);
+    test(
+      'a link with no frames on it fails rather than passing quietly',
+      () async {
+        final service = _FakeBleService(
+          availability: BleLinkStatus.streaming,
+          link: _streaming,
+        );
+        final report = await runDiagnostics(service);
 
-      expect(check(report, 'link').outcome, DiagnosticOutcome.pass);
-      expect(check(report, 'telemetry').outcome, DiagnosticOutcome.fail);
-      expect(check(report, 'telemetry').detail, contains('No vitals frames'));
-      // Derived checks are skipped, not failed: there is nothing to inspect,
-      // which is a different statement from "the sensor is broken".
-      expect(check(report, 'plausible').outcome, DiagnosticOutcome.skipped);
-      expect(check(report, 'temperature').outcome, DiagnosticOutcome.skipped);
-      await service.close();
-    });
+        expect(check(report, 'link').outcome, DiagnosticOutcome.pass);
+        expect(check(report, 'telemetry').outcome, DiagnosticOutcome.fail);
+        expect(check(report, 'telemetry').detail, contains('No vitals frames'));
+        // Derived checks are skipped, not failed: there is nothing to inspect,
+        // which is a different statement from "the sensor is broken".
+        expect(check(report, 'plausible').outcome, DiagnosticOutcome.skipped);
+        expect(check(report, 'temperature').outcome, DiagnosticOutcome.skipped);
+        await service.close();
+      },
+    );
 
-    test('a board with no ECG channel fails that check and skips its children',
-        () async {
-      final service = _FakeBleService(
-        availability: BleLinkStatus.streaming,
-        link: _streaming.copyWith(hasEcgChannel: false),
-      );
-      final report = await runDiagnostics(service, during: (s) => s.emit(frame()));
+    test(
+      'a board with no ECG channel fails that check and skips its children',
+      () async {
+        final service = _FakeBleService(
+          availability: BleLinkStatus.streaming,
+          link: _streaming.copyWith(hasEcgChannel: false),
+        );
+        final report = await runDiagnostics(
+          service,
+          during: (s) => s.emit(frame()),
+        );
 
-      expect(check(report, 'ecg-channel').outcome, DiagnosticOutcome.fail);
-      expect(check(report, 'ecg-frames').outcome, DiagnosticOutcome.skipped);
-      expect(check(report, 'ecg-leads').outcome, DiagnosticOutcome.skipped);
-      await service.close();
-    });
+        expect(check(report, 'ecg-channel').outcome, DiagnosticOutcome.fail);
+        expect(check(report, 'ecg-frames').outcome, DiagnosticOutcome.skipped);
+        expect(check(report, 'ecg-leads').outcome, DiagnosticOutcome.skipped);
+        await service.close();
+      },
+    );
   });
 
   group('BleDiagnostics reports faults it can see', () {
@@ -284,10 +310,13 @@ void main() {
         availability: BleLinkStatus.streaming,
         link: _streaming,
       );
-      final report = await runDiagnostics(service, during: (s) {
-        s.emit(frame(fingerOff: true));
-        s.emit(frame(fingerOff: true));
-      });
+      final report = await runDiagnostics(
+        service,
+        during: (s) {
+          s.emit(frame(fingerOff: true));
+          s.emit(frame(fingerOff: true));
+        },
+      );
 
       expect(check(report, 'pulse').outcome, DiagnosticOutcome.fail);
       expect(check(report, 'pulse').detail, contains('Rest a finger'));
@@ -299,8 +328,10 @@ void main() {
         availability: BleLinkStatus.streaming,
         link: _streaming,
       );
-      final report = await runDiagnostics(service,
-          during: (s) => s.emit(frame(leadOff: true)));
+      final report = await runDiagnostics(
+        service,
+        during: (s) => s.emit(frame(leadOff: true)),
+      );
 
       expect(check(report, 'ecg-leads').outcome, DiagnosticOutcome.fail);
       await service.close();
@@ -311,10 +342,13 @@ void main() {
         availability: BleLinkStatus.streaming,
         link: _streaming,
       );
-      final report = await runDiagnostics(service, during: (s) {
-        s.emit(frame());
-        s.emit(frame(heartRate: 250, plausible: false));
-      });
+      final report = await runDiagnostics(
+        service,
+        during: (s) {
+          s.emit(frame());
+          s.emit(frame(heartRate: 250, plausible: false));
+        },
+      );
 
       expect(check(report, 'telemetry').outcome, DiagnosticOutcome.pass);
       expect(check(report, 'plausible').outcome, DiagnosticOutcome.fail);
@@ -322,92 +356,111 @@ void main() {
       await service.close();
     });
 
-    test('a temperature outside the sensor range is not reported as a mean',
-        () async {
-      final service = _FakeBleService(
-        availability: BleLinkStatus.streaming,
-        link: _streaming,
-      );
-      // 5 °C is below BleProtocol.minTemperatureC — an open thermopile, not a
-      // hypothermic patient.
-      final report = await runDiagnostics(service,
-          during: (s) => s.emit(frame(temperatureC: 5, plausible: false)));
+    test(
+      'a temperature outside the sensor range is not reported as a mean',
+      () async {
+        final service = _FakeBleService(
+          availability: BleLinkStatus.streaming,
+          link: _streaming,
+        );
+        // 5 °C is below BleProtocol.minTemperatureC — an open thermopile, not a
+        // hypothermic patient.
+        final report = await runDiagnostics(
+          service,
+          during: (s) => s.emit(frame(temperatureC: 5, plausible: false)),
+        );
 
-      expect(check(report, 'temperature').outcome, DiagnosticOutcome.fail);
-      expect(check(report, 'temperature').detail, isNot(contains('Mean')));
-      await service.close();
-    });
+        expect(check(report, 'temperature').outcome, DiagnosticOutcome.fail);
+        expect(check(report, 'temperature').detail, isNot(contains('Mean')));
+        await service.close();
+      },
+    );
 
     test('a flat battery reading is called out as an ADC fault', () async {
       final service = _FakeBleService(
         availability: BleLinkStatus.streaming,
         link: _streaming,
       );
-      final report = await runDiagnostics(service,
-          during: (s) => s.emit(frame(battery: 0)));
+      final report = await runDiagnostics(
+        service,
+        during: (s) => s.emit(frame(battery: 0)),
+      );
 
       expect(check(report, 'battery').outcome, DiagnosticOutcome.fail);
       expect(check(report, 'battery').detail, contains('ADC'));
       await service.close();
     });
 
-    test('a nearly-flat battery fails before a screening round, not after',
-        () async {
-      final service = _FakeBleService(
-        availability: BleLinkStatus.streaming,
-        link: _streaming,
-      );
-      final report = await runDiagnostics(service,
-          during: (s) => s.emit(frame(battery: 15)));
+    test(
+      'a nearly-flat battery fails before a screening round, not after',
+      () async {
+        final service = _FakeBleService(
+          availability: BleLinkStatus.streaming,
+          link: _streaming,
+        );
+        final report = await runDiagnostics(
+          service,
+          during: (s) => s.emit(frame(battery: 15)),
+        );
 
-      expect(check(report, 'battery').outcome, DiagnosticOutcome.fail);
-      expect(check(report, 'battery').detail, contains('charge'));
-      await service.close();
-    });
+        expect(check(report, 'battery').outcome, DiagnosticOutcome.fail);
+        expect(check(report, 'battery').detail, contains('charge'));
+        await service.close();
+      },
+    );
 
     test('dropped ECG sequence numbers fail the stream check', () async {
       final service = _FakeBleService(
         availability: BleLinkStatus.streaming,
         link: _streaming,
       );
-      final report = await runDiagnostics(service, during: (s) {
-        s.emit(frame());
-        s.emitEcg(const EcgFrame(sequence: 1, samples: [1, 2]));
-        s.dropEcgFrames(2);
-        s.emitEcg(const EcgFrame(sequence: 4, samples: [3, 4]));
-      });
+      final report = await runDiagnostics(
+        service,
+        during: (s) {
+          s.emit(frame());
+          s.emitEcg(const EcgFrame(sequence: 1, samples: [1, 2]));
+          s.dropEcgFrames(2);
+          s.emitEcg(const EcgFrame(sequence: 4, samples: [3, 4]));
+        },
+      );
 
       expect(check(report, 'ecg-frames').outcome, DiagnosticOutcome.fail);
       expect(check(report, 'ecg-frames').detail, contains('2 dropped'));
       await service.close();
     });
 
-    test('unsupported firmware fails without stopping the rest of the pass',
-        () async {
-      final service = _FakeBleService(
-        availability: BleLinkStatus.streaming,
-        link: _streaming.copyWith(firmwareVersion: '9.0.0'),
-      );
-      final report = await runDiagnostics(service,
-          during: (s) => s.emit(frame()));
+    test(
+      'unsupported firmware fails without stopping the rest of the pass',
+      () async {
+        final service = _FakeBleService(
+          availability: BleLinkStatus.streaming,
+          link: _streaming.copyWith(firmwareVersion: '9.0.0'),
+        );
+        final report = await runDiagnostics(
+          service,
+          during: (s) => s.emit(frame()),
+        );
 
-      expect(check(report, 'firmware').outcome, DiagnosticOutcome.fail);
-      // The link still works; the pass carries on and reports real data.
-      expect(check(report, 'telemetry').outcome, DiagnosticOutcome.pass);
-      await service.close();
-    });
+        expect(check(report, 'firmware').outcome, DiagnosticOutcome.fail);
+        // The link still works; the pass carries on and reports real data.
+        expect(check(report, 'telemetry').outcome, DiagnosticOutcome.pass);
+        await service.close();
+      },
+    );
 
-    test('a board that reports no version is skipped, not assumed compatible',
-        () async {
-      final service = _FakeBleService(
-        availability: BleLinkStatus.streaming,
-        link: _streaming.copyWith(firmwareVersion: 'UNKNOWN'),
-      );
-      final report = await runDiagnostics(service);
+    test(
+      'a board that reports no version is skipped, not assumed compatible',
+      () async {
+        final service = _FakeBleService(
+          availability: BleLinkStatus.streaming,
+          link: _streaming.copyWith(firmwareVersion: 'UNKNOWN'),
+        );
+        final report = await runDiagnostics(service);
 
-      expect(check(report, 'firmware').outcome, DiagnosticOutcome.skipped);
-      await service.close();
-    });
+        expect(check(report, 'firmware').outcome, DiagnosticOutcome.skipped);
+        await service.close();
+      },
+    );
   });
 
   group('DiagnosticReport', () {
@@ -429,8 +482,10 @@ void main() {
         allPass.first.copyWith(outcome: DiagnosticOutcome.skipped),
       ];
       expect(DiagnosticReport(checks: oneSkipped).isConclusive, isFalse);
-      expect(DiagnosticReport(checks: oneSkipped).summary,
-          contains('could not be checked'));
+      expect(
+        DiagnosticReport(checks: oneSkipped).summary,
+        contains('could not be checked'),
+      );
     });
 
     test('every catalogue id is unique, so a check cannot shadow another', () {
@@ -441,11 +496,21 @@ void main() {
     test('no check claims to identify a sensor IC by name', () {
       // Nothing in the protocol enumerates chips. If a check name ever names
       // one again, it is inventing a fact.
-      const invented = ['MAX30102', 'MLX90614', 'AD8232', 'ESP32', 'I2C', 'OLED'];
+      const invented = [
+        'MAX30102',
+        'MLX90614',
+        'AD8232',
+        'ESP32',
+        'I2C',
+        'OLED',
+      ];
       for (final c in kDiagnosticChecks) {
         for (final chip in invented) {
-          expect(c.name.toUpperCase(), isNot(contains(chip)),
-              reason: '${c.id} names a part the board never reports');
+          expect(
+            c.name.toUpperCase(),
+            isNot(contains(chip)),
+            reason: '${c.id} names a part the board never reports',
+          );
         }
       }
     });

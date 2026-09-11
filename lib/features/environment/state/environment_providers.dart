@@ -32,10 +32,10 @@ class EnvironmentState {
   });
 
   const EnvironmentState.noConsent()
-      : consentGranted = false,
-        canLocate = false,
-        reading = null,
-        failure = null;
+    : consentGranted = false,
+      canLocate = false,
+      reading = null,
+      failure = null;
 }
 
 final environmentServiceProvider = Provider<EnvironmentService>(
@@ -49,7 +49,8 @@ final environmentServiceProvider = Provider<EnvironmentService>(
 /// (see the service), which is why this is a plain FutureProvider.
 final environmentProvider = FutureProvider<EnvironmentState>((ref) async {
   final consent = ref.watch(
-      settingsProvider.select((s) => s.envLocationConsent));
+    settingsProvider.select((s) => s.envLocationConsent),
+  );
   if (!consent) return const EnvironmentState.noConsent();
 
   final service = ref.watch(environmentServiceProvider);
@@ -82,30 +83,33 @@ final environmentProvider = FutureProvider<EnvironmentState>((ref) async {
 /// warning instead of two parallel cards neither of which adds up.
 final environmentAdvisoriesProvider =
     Provider<AsyncValue<List<EnvironmentAdvisory>>>((ref) {
-  final env = ref.watch(environmentProvider);
-  final account = ref.watch(authStateProvider).account;
-  final isPatient = account != null && account.role.isPatient;
-  final flags = isPatient
-      ? Vulnerability.parse(account.vulnerabilityFlags)
-      : const <Vulnerability>{};
+      final env = ref.watch(environmentProvider);
+      final account = ref.watch(authStateProvider).account;
+      final isPatient = account != null && account.role.isPatient;
+      final flags = isPatient
+          ? Vulnerability.parse(account.vulnerabilityFlags)
+          : const <Vulnerability>{};
 
-  // Watched so a fresh screening immediately re-evaluates combined insight.
-  final screenings = (isPatient && account.patientId != null)
-      ? ref.watch(patientScreeningsProvider(account.patientId!)).valueOrNull
-      : null;
+      // Watched so a fresh screening immediately re-evaluates combined insight.
+      final screenings = (isPatient && account.patientId != null)
+          ? ref.watch(patientScreeningsProvider(account.patientId!)).valueOrNull
+          : null;
 
-  return env.whenData((s) {
-    final reading = s.reading;
-    if (reading == null) return const <EnvironmentAdvisory>[];
-    final base = EnvironmentalRules.evaluate(reading, vulnerability: flags);
-    if (isPatient && screenings != null) {
-      return EnvironmentalRules.combineWithVitals(
-          base, TrendEngine.notes(screenings));
-    }
-    return base;
-  });
-});
+      return env.whenData((s) {
+        final reading = s.reading;
+        if (reading == null) return const <EnvironmentAdvisory>[];
+        final base = EnvironmentalRules.evaluate(reading, vulnerability: flags);
+        if (isPatient && screenings != null) {
+          return EnvironmentalRules.combineWithVitals(
+            base,
+            TrendEngine.notes(screenings),
+          );
+        }
+        return base;
+      });
+    });
 
 /// The offline disaster guides bundled with the app.
-final disasterAdvisoriesProvider =
-    FutureProvider<List<DisasterAdvisory>>((ref) => loadDisasterAdvisories());
+final disasterAdvisoriesProvider = FutureProvider<List<DisasterAdvisory>>(
+  (ref) => loadDisasterAdvisories(),
+);

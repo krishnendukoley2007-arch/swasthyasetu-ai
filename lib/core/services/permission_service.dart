@@ -29,7 +29,9 @@ class PermissionService {
     return status.isGranted;
   }
 
-  static Future<bool> isPermissionPermanentlyDenied(Permission permission) async {
+  static Future<bool> isPermissionPermanentlyDenied(
+    Permission permission,
+  ) async {
     final status = await permission.status;
     return status.isPermanentlyDenied;
   }
@@ -64,10 +66,7 @@ class PermissionService {
         content: Text(message),
         behavior: SnackBarBehavior.floating,
         action: onOpenSettings != null
-            ? SnackBarAction(
-                label: 'Open Settings',
-                onPressed: onOpenSettings,
-              )
+            ? SnackBarAction(label: 'Open Settings', onPressed: onOpenSettings)
             : null,
         duration: const Duration(seconds: 5),
       ),
@@ -96,7 +95,6 @@ class _PermissionDeniedDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return AlertDialog(
       title: Text(title),
       content: Text(message),
@@ -258,9 +256,9 @@ class _PermissionGateState extends State<PermissionGate> {
                 const SizedBox(height: 16),
                 Text(
                   '${_deniedPermissionName ?? 'Permission'} Required',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
@@ -268,8 +266,8 @@ class _PermissionGateState extends State<PermissionGate> {
                   widget.rationaleMessage ??
                       'This feature requires ${_deniedPermissionName?.toLowerCase() ?? 'permission'} access to work properly.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),

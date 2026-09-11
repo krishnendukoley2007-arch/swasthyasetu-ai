@@ -1,4 +1,5 @@
-export 'app_animations.dart' show AppProgressRing, AppSkeleton, AppSkeletonList, AppNumberTicker;
+export 'app_animations.dart'
+    show AppProgressRing, AppSkeleton, AppSkeletonList, AppNumberTicker;
 
 import 'package:flutter/material.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
@@ -36,7 +37,8 @@ class AppProgressIndicator extends StatelessWidget {
         valueColor: AlwaysStoppedAnimation<Color>(
           color ?? theme.colorScheme.primary,
         ),
-        backgroundColor: backgroundColor ?? theme.colorScheme.surfaceContainerHighest,
+        backgroundColor:
+            backgroundColor ?? theme.colorScheme.surfaceContainerHighest,
       ),
     );
   }
@@ -67,8 +69,10 @@ class AppLinearProgress extends StatelessWidget {
     final theme = Theme.of(context);
     final effectiveValue = value ?? 0;
     final effectiveColor = color ?? theme.colorScheme.primary;
-    final effectiveBackgroundColor = backgroundColor ?? theme.colorScheme.surfaceContainerHighest;
-    final effectiveBorderRadius = borderRadius ?? BorderRadius.circular(AppTheme.radiusFull);
+    final effectiveBackgroundColor =
+        backgroundColor ?? theme.colorScheme.surfaceContainerHighest;
+    final effectiveBorderRadius =
+        borderRadius ?? BorderRadius.circular(AppTheme.radiusFull);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,7 +149,8 @@ class AppStepProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final effectiveActiveColor = activeColor ?? theme.colorScheme.primary;
-    final effectiveInactiveColor = inactiveColor ?? theme.colorScheme.outlineVariant;
+    final effectiveInactiveColor =
+        inactiveColor ?? theme.colorScheme.outlineVariant;
 
     return Column(
       children: List.generate(totalSteps, (index) {
@@ -161,10 +166,14 @@ class AppStepProgress extends StatelessWidget {
                   width: circleSize,
                   height: circleSize,
                   decoration: BoxDecoration(
-                    color: isActive ? effectiveActiveColor : theme.colorScheme.surface,
+                    color: isActive
+                        ? effectiveActiveColor
+                        : theme.colorScheme.surface,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isActive ? effectiveActiveColor : effectiveInactiveColor,
+                      color: isActive
+                          ? effectiveActiveColor
+                          : effectiveInactiveColor,
                       width: 2,
                     ),
                   ),
@@ -210,7 +219,9 @@ class AppStepProgress extends StatelessWidget {
                       Text(
                         stepLabels![index],
                         style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: isActive
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                           color: isActive
                               ? theme.colorScheme.onSurface
                               : theme.colorScheme.onSurfaceVariant,
@@ -256,14 +267,22 @@ class AppSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveBaseColor = baseColor ?? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
-    final effectiveHighlightColor = highlightColor ?? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8);
+    final effectiveBaseColor =
+        baseColor ??
+        theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+    final effectiveHighlightColor =
+        highlightColor ??
+        theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8);
 
     return ShaderMask(
       blendMode: BlendMode.srcATop,
       shaderCallback: (bounds) {
         return LinearGradient(
-          colors: [effectiveBaseColor, effectiveHighlightColor, effectiveBaseColor],
+          colors: [
+            effectiveBaseColor,
+            effectiveHighlightColor,
+            effectiveBaseColor,
+          ],
           stops: const [0.1, 0.5, 0.9],
           begin: const Alignment(-1.0, -0.3),
           end: const Alignment(1.0, 0.3),
@@ -329,13 +348,17 @@ class AppLoadingOverlay extends StatelessWidget {
         child,
         if (isLoading)
           Container(
-            color: backgroundColor ?? theme.colorScheme.surface.withValues(alpha: 0.8),
+            color:
+                backgroundColor ??
+                theme.colorScheme.surface.withValues(alpha: 0.8),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.colorScheme.primary,
+                    ),
                   ),
                   if (message != null) ...[
                     const SizedBox(height: AppTheme.spacingMd),

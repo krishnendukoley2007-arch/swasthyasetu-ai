@@ -48,31 +48,37 @@ void main() {
       expect(assessment.hasCritical, isTrue);
     });
 
-    test('hyperglycemia DKA scenario triggers critical glucose rule and RED band', () {
-      final scenario = ClinicalScenario.findById('hyperglycemia_dka');
+    test(
+      'hyperglycemia DKA scenario triggers critical glucose rule and RED band',
+      () {
+        final scenario = ClinicalScenario.findById('hyperglycemia_dka');
 
-      final sample = HealthSample(
-        timestamp: 0,
-        heartRateBpm: scenario.heartRateBpm,
-        spo2Percent: scenario.spo2Percent,
-        temperatureC: scenario.temperatureC,
-        estimatedGlucose: scenario.estimatedGlucose,
-        estimatedSystolic: scenario.systolicBp,
-        estimatedDiastolic: scenario.diastolicBp,
-        ecgSignalQuality: scenario.ecgQuality,
-        rPeakDetected: true,
-        rrIntervalMs: (60000 / scenario.heartRateBpm).round(),
-        batteryPercent: 90,
-      );
+        final sample = HealthSample(
+          timestamp: 0,
+          heartRateBpm: scenario.heartRateBpm,
+          spo2Percent: scenario.spo2Percent,
+          temperatureC: scenario.temperatureC,
+          estimatedGlucose: scenario.estimatedGlucose,
+          estimatedSystolic: scenario.systolicBp,
+          estimatedDiastolic: scenario.diastolicBp,
+          ecgSignalQuality: scenario.ecgQuality,
+          rPeakDetected: true,
+          rrIntervalMs: (60000 / scenario.heartRateBpm).round(),
+          batteryPercent: 90,
+        );
 
-      final assessment = RiskEngine.assess(
-        sample: sample,
-        symptoms: scenario.typicalSymptoms,
-      );
+        final assessment = RiskEngine.assess(
+          sample: sample,
+          symptoms: scenario.typicalSymptoms,
+        );
 
-      expect(assessment.band, RiskBand.red);
-      expect(assessment.ruleIds, contains(RuleId.glucoseHyperglycemiaCritical));
-    });
+        expect(assessment.band, RiskBand.red);
+        expect(
+          assessment.ruleIds,
+          contains(RuleId.glucoseHyperglycemiaCritical),
+        );
+      },
+    );
 
     test('hypoglycemia shock scenario triggers hypoglycemia rule', () {
       final scenario = ClinicalScenario.findById('hypoglycemia_shock');
@@ -101,56 +107,80 @@ void main() {
   });
 
   group('OfflineExplainer Blood Glucose & BP Integration', () {
-    test('OfflineExplainer includes blood glucose and blood pressure in summary', () {
-      final sample = HealthSample(
-        timestamp: 0,
-        heartRateBpm: 72,
-        spo2Percent: 98,
-        temperatureC: 36.6,
-        estimatedGlucose: 110,
-        estimatedSystolic: 120,
-        estimatedDiastolic: 80,
-        ecgSignalQuality: 0.95,
-        rPeakDetected: true,
-        rrIntervalMs: 833,
-        batteryPercent: 90,
-      );
+    test(
+      'OfflineExplainer includes blood glucose and blood pressure in summary',
+      () {
+        const sample = HealthSample(
+          timestamp: 0,
+          heartRateBpm: 72,
+          spo2Percent: 98,
+          temperatureC: 36.6,
+          estimatedGlucose: 110,
+          estimatedSystolic: 120,
+          estimatedDiastolic: 80,
+          ecgSignalQuality: 0.95,
+          rPeakDetected: true,
+          rrIntervalMs: 833,
+          batteryPercent: 90,
+        );
 
-      final assessment = RiskEngine.assess(sample: sample, symptoms: const []);
-      final explanation = OfflineExplainer.build(assessment: assessment, patientName: 'Meena');
+        final assessment = RiskEngine.assess(
+          sample: sample,
+          symptoms: const [],
+        );
+        final explanation = OfflineExplainer.build(
+          assessment: assessment,
+          patientName: 'Meena',
+        );
 
-      expect(explanation.summary, contains('blood glucose 110 mg/dL'));
-      expect(explanation.summary, contains('blood pressure 120/80 mmHg'));
-      expect(explanation.whyThisLevel, contains('Blood glucose inside expected range'));
-    });
+        expect(explanation.summary, contains('blood glucose 110 mg/dL'));
+        expect(explanation.summary, contains('blood pressure 120/80 mmHg'));
+        expect(
+          explanation.whyThisLevel,
+          contains('Blood glucose inside expected range'),
+        );
+      },
+    );
 
-    test('OfflineExplainer provides hypoglycemia immediate dietary guidance', () {
-      final sample = HealthSample(
-        timestamp: 0,
-        heartRateBpm: 72,
-        spo2Percent: 98,
-        temperatureC: 36.6,
-        estimatedGlucose: 55,
-        estimatedSystolic: 110,
-        estimatedDiastolic: 70,
-        ecgSignalQuality: 0.95,
-        rPeakDetected: true,
-        rrIntervalMs: 833,
-        batteryPercent: 90,
-      );
+    test(
+      'OfflineExplainer provides hypoglycemia immediate dietary guidance',
+      () {
+        const sample = HealthSample(
+          timestamp: 0,
+          heartRateBpm: 72,
+          spo2Percent: 98,
+          temperatureC: 36.6,
+          estimatedGlucose: 55,
+          estimatedSystolic: 110,
+          estimatedDiastolic: 70,
+          ecgSignalQuality: 0.95,
+          rPeakDetected: true,
+          rrIntervalMs: 833,
+          batteryPercent: 90,
+        );
 
-      final assessment = RiskEngine.assess(sample: sample, symptoms: const []);
-      final explanation = OfflineExplainer.build(assessment: assessment);
+        final assessment = RiskEngine.assess(
+          sample: sample,
+          symptoms: const [],
+        );
+        final explanation = OfflineExplainer.build(assessment: assessment);
 
-      expect(explanation.safeNextSteps, contains('Immediate Hypoglycemia Guidance'));
-      expect(explanation.safeNextSteps, contains('fast-acting sugar'));
-      expect(explanation.questionsToAsk.any((q) => q.contains('sugary drink')), isTrue);
-    });
+        expect(
+          explanation.safeNextSteps,
+          contains('Immediate Hypoglycemia Guidance'),
+        );
+        expect(explanation.safeNextSteps, contains('fast-acting sugar'));
+        expect(
+          explanation.questionsToAsk.any((q) => q.contains('sugary drink')),
+          isTrue,
+        );
+      },
+    );
   });
 
   group('ASHA Vernacular Guidance Service', () {
     test('generates localized guidance across Hindi, Bengali, and English', () {
-      final sample = HealthSample(
+      const sample = HealthSample(
         timestamp: 0,
         heartRateBpm: 125,
         spo2Percent: 85,

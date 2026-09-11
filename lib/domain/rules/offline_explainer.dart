@@ -55,9 +55,9 @@ class OfflineExplainer {
       questionsToAsk: _questions(assessment),
       disclaimer: retrieved.isEmpty
           ? '$disclaimer\n\nOffline explanation — no internet was available, so '
-              'this was written from the app\'s built-in rules.'
+                'this was written from the app\'s built-in rules.'
           : '$disclaimer\n\nOffline explanation, drawn from: '
-              '${retrieved.map((r) => r.chunk.citation).join('; ')}.',
+                '${retrieved.map((r) => r.chunk.citation).join('; ')}.',
       isDemo: assessment.isDemo,
     );
   }
@@ -73,21 +73,26 @@ class OfflineExplainer {
       vitalsList.add('blood glucose ${s.estimatedGlucose} mg/dL');
     }
     if (s.estimatedSystolic > 0 && s.estimatedDiastolic > 0) {
-      vitalsList.add('blood pressure ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg');
+      vitalsList.add(
+        'blood pressure ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg',
+      );
     }
     final vitals = vitalsList.join(', ');
 
     final scoring = assessment.scoringRules;
 
     return switch (assessment.band) {
-      RiskBand.green => '$who screened as normal. Measured $vitals, and nothing '
-          'crossed a screening threshold.',
-      RiskBand.yellow => '$who needs attention, though not urgently. Measured '
-          '$vitals. ${scoring.length} finding${scoring.length == 1 ? '' : 's'} '
-          'pushed the score to ${assessment.score} out of 100.',
-      RiskBand.red => '$who needs urgent care. Measured $vitals, and the score '
-          'reached ${assessment.score} out of 100. '
-          '${assessment.hasCritical ? 'At least one reading is in the danger range.' : 'Several findings together put this in the urgent band.'}',
+      RiskBand.green =>
+        '$who screened as normal. Measured $vitals, and nothing '
+            'crossed a screening threshold.',
+      RiskBand.yellow =>
+        '$who needs attention, though not urgently. Measured '
+            '$vitals. ${scoring.length} finding${scoring.length == 1 ? '' : 's'} '
+            'pushed the score to ${assessment.score} out of 100.',
+      RiskBand.red =>
+        '$who needs urgent care. Measured $vitals, and the score '
+            'reached ${assessment.score} out of 100. '
+            '${assessment.hasCritical ? 'At least one reading is in the danger range.' : 'Several findings together put this in the urgent band.'}',
     };
   }
 
@@ -146,30 +151,38 @@ class OfflineExplainer {
 
     final ids = assessment.ruleIds.toSet();
     if (ids.contains(RuleId.glucoseHypoglycemia)) {
-      steps.add('\nImmediate Hypoglycemia Guidance:\n'
-          'If the person is conscious and able to swallow, give 15–20g of fast-acting sugar immediately '
-          '(e.g., 3–4 teaspoons of sugar in water, sweet tea, or fruit juice). Re-check in 15 minutes. '
-          'If unconscious, do NOT force food or fluids — transfer immediately to emergency medical care.');
+      steps.add(
+        '\nImmediate Hypoglycemia Guidance:\n'
+        'If the person is conscious and able to swallow, give 15–20g of fast-acting sugar immediately '
+        '(e.g., 3–4 teaspoons of sugar in water, sweet tea, or fruit juice). Re-check in 15 minutes. '
+        'If unconscious, do NOT force food or fluids — transfer immediately to emergency medical care.',
+      );
     } else if (ids.contains(RuleId.glucoseHyperglycemiaCritical) ||
         ids.contains(RuleId.glucoseHyperglycemiaHigh)) {
-      steps.add('\nImmediate Hyperglycemia Guidance:\n'
-          'Ensure hydration with plain water if conscious. Check for diabetic crisis signs '
-          '(frequent urination, deep rapid breathing, vomiting, fruity breath odor, confusion). '
-          'Urgent referral to Community Health Centre / Medical Officer for blood test confirmation.');
+      steps.add(
+        '\nImmediate Hyperglycemia Guidance:\n'
+        'Ensure hydration with plain water if conscious. Check for diabetic crisis signs '
+        '(frequent urination, deep rapid breathing, vomiting, fruity breath odor, confusion). '
+        'Urgent referral to Community Health Centre / Medical Officer for blood test confirmation.',
+      );
     }
 
     // Guideline text goes in verbatim rather than paraphrased. Paraphrasing
     // clinical instructions offline, with no reviewer, is exactly the failure
     // mode this design is trying to avoid.
     for (final hit in retrieved.where((r) => r.matchedRule)) {
-      steps.add('\n${hit.chunk.title} (${hit.chunk.source}):\n'
-          '${hit.chunk.body}');
+      steps.add(
+        '\n${hit.chunk.title} (${hit.chunk.source}):\n'
+        '${hit.chunk.body}',
+      );
     }
 
     if (retrieved.where((r) => r.matchedRule).isEmpty && retrieved.isNotEmpty) {
       final first = retrieved.first;
-      steps.add('\nRelated guidance — ${first.chunk.title} '
-          '(${first.chunk.source}):\n${first.chunk.body}');
+      steps.add(
+        '\nRelated guidance — ${first.chunk.title} '
+        '(${first.chunk.source}):\n${first.chunk.body}',
+      );
     }
 
     return steps.join('\n');
@@ -202,7 +215,9 @@ class OfflineExplainer {
     final ids = assessment.ruleIds.toSet();
 
     if (ids.any((id) => id.startsWith('spo2'))) {
-      questions.add('Is breathing harder than usual, or harder when lying flat?');
+      questions.add(
+        'Is breathing harder than usual, or harder when lying flat?',
+      );
     }
     if (ids.any((id) => id.startsWith('temp'))) {
       questions.add('Any shivering, sweating at night, or recent travel?');
@@ -210,20 +225,29 @@ class OfflineExplainer {
     if (ids.any((id) => id.startsWith('hr_'))) {
       questions.add('Any racing heart, dizziness on standing, or fainting?');
     }
-    if (ids.contains(RuleId.bpHigh) || ids.contains(RuleId.bpExperimentalAdvisory)) {
-      questions.add('Ever been told the blood pressure was high, and is there '
-          'medicine for it?');
+    if (ids.contains(RuleId.bpHigh) ||
+        ids.contains(RuleId.bpExperimentalAdvisory)) {
+      questions.add(
+        'Ever been told the blood pressure was high, and is there '
+        'medicine for it?',
+      );
     }
     if (ids.any((id) => id.startsWith('glucose'))) {
-      questions.add('When was the last meal or sugary drink taken, and is there any history of diabetes or medication?');
+      questions.add(
+        'When was the last meal or sugary drink taken, and is there any history of diabetes or medication?',
+      );
     }
     if (assessment.flags.contains(Vulnerability.pregnant)) {
-      questions.add('How many months pregnant, and has there been any bleeding '
-          'or reduced movement?');
+      questions.add(
+        'How many months pregnant, and has there been any bleeding '
+        'or reduced movement?',
+      );
     }
     if (assessment.flags.contains(Vulnerability.chronic)) {
-      questions.add('Which long-term condition, and has the usual medicine been '
-          'taken?');
+      questions.add(
+        'Which long-term condition, and has the usual medicine been '
+        'taken?',
+      );
     }
     if (assessment.symptoms.isEmpty) {
       questions.add('Does anything feel wrong, even if it seems small?');
@@ -233,12 +257,12 @@ class OfflineExplainer {
   }
 
   static String _flagLabel(Vulnerability flag) => switch (flag) {
-        Vulnerability.elderly => 'older age',
-        Vulnerability.infant => 'infant',
-        Vulnerability.pregnant => 'pregnancy',
-        Vulnerability.chronic => 'a long-term condition',
-        Vulnerability.immunocompromised => 'weakened immunity',
-      };
+    Vulnerability.elderly => 'older age',
+    Vulnerability.infant => 'infant',
+    Vulnerability.pregnant => 'pregnancy',
+    Vulnerability.chronic => 'a long-term condition',
+    Vulnerability.immunocompromised => 'weakened immunity',
+  };
 
   /// A neutral fallback for the open chat when the online model is unavailable.
   ///

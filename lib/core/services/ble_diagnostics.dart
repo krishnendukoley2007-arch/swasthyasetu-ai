@@ -43,16 +43,16 @@ enum DiagnosticOutcome {
 }
 
 extension DiagnosticOutcomeText on DiagnosticOutcome {
-  bool get isTerminal => this != DiagnosticOutcome.pending &&
-      this != DiagnosticOutcome.running;
+  bool get isTerminal =>
+      this != DiagnosticOutcome.pending && this != DiagnosticOutcome.running;
 
   String get label => switch (this) {
-        DiagnosticOutcome.pending => 'Waiting',
-        DiagnosticOutcome.running => 'Checking',
-        DiagnosticOutcome.pass => 'Pass',
-        DiagnosticOutcome.fail => 'Fail',
-        DiagnosticOutcome.skipped => 'Not checked',
-      };
+    DiagnosticOutcome.pending => 'Waiting',
+    DiagnosticOutcome.running => 'Checking',
+    DiagnosticOutcome.pass => 'Pass',
+    DiagnosticOutcome.fail => 'Fail',
+    DiagnosticOutcome.skipped => 'Not checked',
+  };
 }
 
 class DiagnosticCheck {
@@ -77,10 +77,7 @@ class DiagnosticCheck {
     this.detail = '',
   });
 
-  DiagnosticCheck copyWith({
-    DiagnosticOutcome? outcome,
-    String? detail,
-  }) =>
+  DiagnosticCheck copyWith({DiagnosticOutcome? outcome, String? detail}) =>
       DiagnosticCheck(
         id: id,
         name: name,
@@ -113,7 +110,8 @@ class DiagnosticReport {
   int get skipped =>
       checks.where((c) => c.outcome == DiagnosticOutcome.skipped).length;
 
-  bool get isComplete => !isRunning && checks.every((c) => c.outcome.isTerminal);
+  bool get isComplete =>
+      !isRunning && checks.every((c) => c.outcome.isTerminal);
 
   /// A run with nothing to measure is not a healthy device. Said plainly so the
   /// summary line cannot be mistaken for an all-clear.
@@ -150,7 +148,8 @@ const List<DiagnosticCheck> kDiagnosticChecks = [
     id: 'services',
     name: 'Vitals channel',
     category: 'Connection',
-    description: 'The board offers the vitals characteristic and notifications '
+    description:
+        'The board offers the vitals characteristic and notifications '
         'are subscribed',
   ),
   DiagnosticCheck(
@@ -264,8 +263,10 @@ class BleDiagnostics {
     void skipRest(String reason) {
       for (final id in checks.keys) {
         if (!checks[id]!.outcome.isTerminal) {
-          checks[id] = checks[id]!
-              .copyWith(outcome: DiagnosticOutcome.skipped, detail: reason);
+          checks[id] = checks[id]!.copyWith(
+            outcome: DiagnosticOutcome.skipped,
+            detail: reason,
+          );
         }
       }
       emit();
@@ -295,8 +296,11 @@ class BleDiagnostics {
     final availability = await service.refreshAvailability();
     switch (availability) {
       case BleLinkStatus.unsupported:
-        set('radio', DiagnosticOutcome.fail,
-            'This phone reports no Bluetooth Low Energy support.');
+        set(
+          'radio',
+          DiagnosticOutcome.fail,
+          'This phone reports no Bluetooth Low Energy support.',
+        );
         skipRest('No Bluetooth radio to check the board through.');
         await finish();
         return;
@@ -306,8 +310,11 @@ class BleDiagnostics {
         await finish();
         return;
       case BleLinkStatus.permissionDenied:
-        set('radio', DiagnosticOutcome.fail,
-            'Android has not granted the nearby-devices permission.');
+        set(
+          'radio',
+          DiagnosticOutcome.fail,
+          'Android has not granted the nearby-devices permission.',
+        );
         skipRest('Grant the nearby-devices permission and run again.');
         await finish();
         return;
@@ -330,18 +337,27 @@ class BleDiagnostics {
       await finish();
       return;
     }
-    set('link', DiagnosticOutcome.pass,
-        'Connected to ${link.deviceName ?? 'the board'}.');
+    set(
+      'link',
+      DiagnosticOutcome.pass,
+      'Connected to ${link.deviceName ?? 'the board'}.',
+    );
 
     // ── Discovered characteristics ──
-    set('services', DiagnosticOutcome.pass,
-        'Vitals characteristic found and subscribed.');
+    set(
+      'services',
+      DiagnosticOutcome.pass,
+      'Vitals characteristic found and subscribed.',
+    );
 
     // ── Firmware ──
     final firmware = link.firmwareVersion;
     if (firmware == null || firmware.isEmpty || firmware == 'UNKNOWN') {
-      set('firmware', DiagnosticOutcome.skipped,
-          'The board did not report a version.');
+      set(
+        'firmware',
+        DiagnosticOutcome.skipped,
+        'The board did not report a version.',
+      );
     } else {
       final compatibility = DeviceRepository.checkFirmware(firmware);
       set(
@@ -356,8 +372,11 @@ class BleDiagnostics {
     }
 
     if (!link.hasEcgChannel) {
-      set('ecg-channel', DiagnosticOutcome.fail,
-          'The board does not expose an ECG stream.');
+      set(
+        'ecg-channel',
+        DiagnosticOutcome.fail,
+        'The board does not expose an ECG stream.',
+      );
       set('ecg-frames', DiagnosticOutcome.skipped, 'No ECG channel.');
       set('ecg-leads', DiagnosticOutcome.skipped, 'No ECG channel.');
     } else {
@@ -367,8 +386,13 @@ class BleDiagnostics {
     }
 
     // ── Observation window ──
-    for (final id in ['telemetry', 'plausible', 'pulse', 'temperature',
-      'battery']) {
+    for (final id in [
+      'telemetry',
+      'plausible',
+      'pulse',
+      'temperature',
+      'battery',
+    ]) {
       set(id, DiagnosticOutcome.running, '');
     }
 
@@ -403,8 +427,11 @@ class BleDiagnostics {
     // ── Frame rate ──
     final rate = telemetry.length / windowSeconds;
     if (telemetry.isEmpty) {
-      set('telemetry', DiagnosticOutcome.fail,
-          'No vitals frames arrived in $windowLabel.');
+      set(
+        'telemetry',
+        DiagnosticOutcome.fail,
+        'No vitals frames arrived in $windowLabel.',
+      );
     } else {
       set(
         'telemetry',
@@ -439,31 +466,42 @@ class BleDiagnostics {
         withFinger > 0 ? DiagnosticOutcome.pass : DiagnosticOutcome.fail,
         withFinger == 0
             ? 'Every frame reported no finger on the sensor. Rest a finger on '
-                'it and run again.'
+                  'it and run again.'
             : 'Finger detected in $withFinger of ${telemetry.length} frames.',
       );
 
       // ── Temperature ──
       final temps = telemetry
           .map((f) => f.sample.temperatureC)
-          .where((t) =>
-              t >= BleProtocol.minTemperatureC &&
-              t <= BleProtocol.maxTemperatureC)
+          .where(
+            (t) =>
+                t >= BleProtocol.minTemperatureC &&
+                t <= BleProtocol.maxTemperatureC,
+          )
           .toList();
       if (temps.isEmpty) {
-        set('temperature', DiagnosticOutcome.fail,
-            'No temperature inside the measurable range arrived.');
+        set(
+          'temperature',
+          DiagnosticOutcome.fail,
+          'No temperature inside the measurable range arrived.',
+        );
       } else {
         final mean = temps.reduce((a, b) => a + b) / temps.length;
-        set('temperature', DiagnosticOutcome.pass,
-            'Mean ${mean.toStringAsFixed(1)} °C over ${temps.length} frames.');
+        set(
+          'temperature',
+          DiagnosticOutcome.pass,
+          'Mean ${mean.toStringAsFixed(1)} °C over ${temps.length} frames.',
+        );
       }
 
       // ── Battery ──
       final battery = telemetry.last.sample.batteryPercent;
       if (battery <= 0) {
-        set('battery', DiagnosticOutcome.fail,
-            'The board reported 0%, which usually means the ADC read nothing.');
+        set(
+          'battery',
+          DiagnosticOutcome.fail,
+          'The board reported 0%, which usually means the ADC read nothing.',
+        );
       } else {
         set(
           'battery',
@@ -479,8 +517,11 @@ class BleDiagnostics {
     if (link.hasEcgChannel) {
       final dropped = service.state.droppedEcgFrames - droppedBefore;
       if (ecg.isEmpty) {
-        set('ecg-frames', DiagnosticOutcome.fail,
-            'No ECG frames arrived in $windowLabel.');
+        set(
+          'ecg-frames',
+          DiagnosticOutcome.fail,
+          'No ECG frames arrived in $windowLabel.',
+        );
       } else {
         final samples = ecg.fold<int>(0, (n, f) => n + f.samples.length);
         set(
@@ -494,8 +535,11 @@ class BleDiagnostics {
 
       final leadsOn = telemetry.where((f) => !f.leadOff).length;
       if (telemetry.isEmpty) {
-        set('ecg-leads', DiagnosticOutcome.skipped,
-            'No frames reported electrode state.');
+        set(
+          'ecg-leads',
+          DiagnosticOutcome.skipped,
+          'No frames reported electrode state.',
+        );
       } else {
         set(
           'ecg-leads',

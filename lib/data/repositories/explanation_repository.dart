@@ -18,14 +18,14 @@ enum ExplanationSource {
   offline;
 
   String get storageValue => switch (this) {
-        ExplanationSource.gemini => 'gemini',
-        ExplanationSource.offline => 'offline',
-      };
+    ExplanationSource.gemini => 'gemini',
+    ExplanationSource.offline => 'offline',
+  };
 
   String get label => switch (this) {
-        ExplanationSource.gemini => 'Explained online',
-        ExplanationSource.offline => 'Explained offline',
-      };
+    ExplanationSource.gemini => 'Explained online',
+    ExplanationSource.offline => 'Explained offline',
+  };
 
   static ExplanationSource fromStorage(String raw) =>
       raw == 'gemini' ? ExplanationSource.gemini : ExplanationSource.offline;
@@ -161,8 +161,7 @@ class ExplanationRepository {
   Future<ExplanationResult?> cached(
     String screeningId, {
     Audience audience = Audience.nurse,
-  }) =>
-      _readCache(screeningId, audience);
+  }) => _readCache(screeningId, audience);
 
   /// The explanation the on-device corpus can produce, with nothing awaited over
   /// the network.
@@ -179,8 +178,9 @@ class ExplanationRepository {
     Audience audience = Audience.nurse,
   }) async {
     final retrieved = await relevantGuidelines(assessment);
-    final citations =
-        retrieved.map((r) => r.chunk.citation).toList(growable: false);
+    final citations = retrieved
+        .map((r) => r.chunk.citation)
+        .toList(growable: false);
 
     final offline = OfflineExplainer.build(
       assessment: assessment,
@@ -220,8 +220,9 @@ class ExplanationRepository {
     if (!_gemini.isConfigured) return null;
 
     final retrieved = await relevantGuidelines(assessment);
-    final citations =
-        retrieved.map((r) => r.chunk.citation).toList(growable: false);
+    final citations = retrieved
+        .map((r) => r.chunk.citation)
+        .toList(growable: false);
 
     final online = await _gemini.explain(
       assessment: assessment,
@@ -274,8 +275,8 @@ class ExplanationRepository {
   /// existed carry no marker and are read as nurse text, which is what they are.
   static Audience _audienceOf(String modelName) =>
       modelName.contains('audience:${Audience.patient.storageValue}')
-          ? Audience.patient
-          : Audience.nurse;
+      ? Audience.patient
+      : Audience.nurse;
 
   Future<ExplanationResult?> _readCache(
     String screeningId,
@@ -283,8 +284,11 @@ class ExplanationRepository {
   ) async {
     // Prefer the online one when both exist: it is the richer text, and the
     // offline row may have been written first while the signal was still down.
-    final row = await _db.getExplanation(screeningId,
-            source: ExplanationSource.gemini.storageValue) ??
+    final row =
+        await _db.getExplanation(
+          screeningId,
+          source: ExplanationSource.gemini.storageValue,
+        ) ??
         await _db.getExplanation(screeningId);
     if (row == null) return null;
 

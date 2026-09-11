@@ -38,7 +38,12 @@ class ErrorHandlerService {
     final error = details.exception;
     final stack = details.stack;
 
-    _log('FLUTTER_ERROR', error.toString(), stack: stack, context: details.context);
+    _log(
+      'FLUTTER_ERROR',
+      error.toString(),
+      stack: stack,
+      context: details.context,
+    );
 
     if (kReleaseMode) {
       _sendToCrashReporting(error, stack, details.context);
@@ -55,9 +60,15 @@ class ErrorHandlerService {
     }
   }
 
-  void _log(String type, String message, {StackTrace? stack, DiagnosticsNode? context}) {
+  void _log(
+    String type,
+    String message, {
+    StackTrace? stack,
+    DiagnosticsNode? context,
+  }) {
     final timestamp = DateTime.now().toIso8601String();
-    final logEntry = '''
+    final logEntry =
+        '''
 [$timestamp] [$type]
 $message
 ${stack != null ? 'Stack: $stack' : ''}
@@ -76,7 +87,11 @@ ${context != null ? 'Context: $context' : ''}
     // For now, we just print to console
   }
 
-  void _sendToCrashReporting(Object error, StackTrace? stack, DiagnosticsNode? context) {
+  void _sendToCrashReporting(
+    Object error,
+    StackTrace? stack,
+    DiagnosticsNode? context,
+  ) {
     // TODO: Integrate with crash reporting service (Sentry, Firebase Crashlytics, etc.)
     // Example:
     // Sentry.captureException(error, stackTrace: stack);
@@ -90,7 +105,10 @@ ${context != null ? 'Context: $context' : ''}
     }
   }
 
-  static Future<T> runGuarded<T>(Future<T> Function() action, {T? fallback}) async {
+  static Future<T> runGuarded<T>(
+    Future<T> Function() action, {
+    T? fallback,
+  }) async {
     try {
       return await action();
     } catch (error, stack) {
@@ -113,7 +131,8 @@ ${context != null ? 'Context: $context' : ''}
 
 class ErrorBoundary extends StatefulWidget {
   final Widget child;
-  final Widget Function(Object error, StackTrace? stack, VoidCallback onRetry)? fallbackBuilder;
+  final Widget Function(Object error, StackTrace? stack, VoidCallback onRetry)?
+  fallbackBuilder;
   final void Function(Object error, StackTrace? stack)? onError;
 
   const ErrorBoundary({
@@ -182,11 +201,7 @@ class _DefaultErrorFallback extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: theme.colorScheme.error,
-            ),
+            Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(
               'Something went wrong',
@@ -212,7 +227,9 @@ class _DefaultErrorFallback extends StatelessWidget {
                     stack.toString(),
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontFamily: 'monospace',
-                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      color: theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.7,
+                      ),
                     ),
                   ),
                 ),

@@ -62,7 +62,8 @@ class _PendingSyncScreenState extends ConsumerState<PendingSyncScreen> {
                         const AppEmptyState(
                           icon: Icons.cloud_done_rounded,
                           title: 'All caught up',
-                          subtitle: 'Every screening on this device has been '
+                          subtitle:
+                              'Every screening on this device has been '
                               'uploaded.',
                         ).animate().fadeIn(duration: 400.ms),
                       ],
@@ -79,9 +80,9 @@ class _PendingSyncScreenState extends ConsumerState<PendingSyncScreen> {
                         }
                         final screening = pending[index - 1];
                         return _PendingCard(
-                          screening: screening,
-                          onRetry: () => _retry(screening),
-                        )
+                              screening: screening,
+                              onRetry: () => _retry(screening),
+                            )
                             .animate()
                             .fadeIn(
                               duration: 300.ms,
@@ -176,17 +177,18 @@ class _Header extends StatelessWidget {
                   allClear
                       ? 'Nothing waiting'
                       : '$count record${count == 1 ? '' : 's'} waiting',
-                  style: theme.textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   maxLines: 2,
                 ),
                 const AppSpacing.vxs(),
                 Text(
                   allClear
                       ? 'Screenings upload automatically when a connection is '
-                          'available.'
+                            'available.'
                       : 'These are saved on this device. Nothing is lost while '
-                          'you are offline.',
+                            'you are offline.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -317,7 +319,9 @@ class _BottomActions extends StatelessWidget {
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant)),
+        border: Border(
+          top: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
       ),
       child: SafeArea(
         top: false,

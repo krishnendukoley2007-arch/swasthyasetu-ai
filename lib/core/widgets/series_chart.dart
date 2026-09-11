@@ -16,8 +16,12 @@ class SeriesSample {
 
 /// A shaded y-range (e.g. the usual baseline band) with an optional label.
 class ChartBand {
-  const ChartBand({required this.from, required this.to, required this.color,
-      this.label});
+  const ChartBand({
+    required this.from,
+    required this.to,
+    required this.color,
+    this.label,
+  });
   final double from, to;
   final Color color;
   final String? label;
@@ -27,10 +31,17 @@ class ChartBand {
 List<double> niceTicks(double min, double max, int count) {
   if (max - min < 1e-9) max = min + 1;
   final step0 = (max - min) / count;
-  final mag =
-      math.pow(10, (math.log(step0) / math.ln10).floor()).toDouble();
+  final mag = math.pow(10, (math.log(step0) / math.ln10).floor()).toDouble();
   final n = step0 / mag;
-  final step = (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * mag;
+  final step =
+      (n < 1.5
+          ? 1
+          : n < 3
+          ? 2
+          : n < 7
+          ? 5
+          : 10) *
+      mag;
   final out = <double>[];
   for (double v = (min / step).ceil() * step; v <= max + 1e-9; v += step) {
     out.add(v);
@@ -90,7 +101,9 @@ class _SeriesChartState extends State<SeriesChart>
   static const padL = 40.0, padR = 12.0, padT = 12.0, padB = 20.0;
 
   late final AnimationController _draw = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 700));
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
   bool _drawn = false;
   int? _scrub;
 
@@ -111,7 +124,10 @@ class _SeriesChartState extends State<SeriesChart>
   }
 
   (double, double) _range() {
-    final vals = [for (final s in widget.data) if (s.v != null) s.v!];
+    final vals = [
+      for (final s in widget.data)
+        if (s.v != null) s.v!,
+    ];
     if (widget.overlay != null) {
       for (final s in widget.overlay!) {
         if (s.v != null) vals.add(s.v!);
@@ -136,8 +152,10 @@ class _SeriesChartState extends State<SeriesChart>
   void _setScrub(double dx, double w) {
     final n = widget.data.length;
     if (n < 2) return;
-    final i =
-        ((dx - padL) / (w - padL - padR) * (n - 1)).round().clamp(0, n - 1);
+    final i = ((dx - padL) / (w - padL - padR) * (n - 1)).round().clamp(
+      0,
+      n - 1,
+    );
     if (i != _scrub) {
       HapticFeedback.selectionClick();
       setState(() => _scrub = i);
@@ -154,116 +172,124 @@ class _SeriesChartState extends State<SeriesChart>
     final (lo, hi) = _range();
     final data = widget.data;
 
-    if (data.length < 2 ||
-        data.where((s) => s.v != null).length < 2) {
+    if (data.length < 2 || data.where((s) => s.v != null).length < 2) {
       return SizedBox(
         height: widget.height,
         child: Center(
-          child: Text('—  not enough readings in range',
-              style: TextStyle(fontSize: 12, color: label)),
+          child: Text(
+            '—  not enough readings in range',
+            style: TextStyle(fontSize: 12, color: label),
+          ),
         ),
       );
     }
 
     return SizedBox(
       height: widget.height,
-      child: LayoutBuilder(builder: (_, cons) {
-        final w = cons.maxWidth;
-        final innerW = w - padL - padR;
-        final innerH = widget.height - padT - padB;
-        double xFor(int i) => padL + i / (data.length - 1) * innerW;
-        double yFor(double v) => padT + (1 - (v - lo) / (hi - lo)) * innerH;
+      child: LayoutBuilder(
+        builder: (_, cons) {
+          final w = cons.maxWidth;
+          final innerW = w - padL - padR;
+          final innerH = widget.height - padT - padB;
+          double xFor(int i) => padL + i / (data.length - 1) * innerW;
+          double yFor(double v) => padT + (1 - (v - lo) / (hi - lo)) * innerH;
 
-        return Stack(children: [
-          AnimatedBuilder(
-            animation: _draw,
-            builder: (_, __) => CustomPaint(
-              size: Size(w, widget.height),
-              painter: _SeriesPainter(
-                data: data,
-                stroke: widget.stroke,
-                bands: widget.bands,
-                ticks: niceTicks(lo, hi, 4),
-                yMin: lo,
-                yMax: hi,
-                yDecimals: widget.yDecimals,
-                progress: reduceMotion
-                    ? 1.0
-                    : Curves.easeOutCubic.transform(_draw.value),
-                reference: widget.reference,
-                referenceLabel: widget.referenceLabel,
-                overlay: widget.overlay,
-                overlayStroke: widget.overlayStroke,
-                xLabel: widget.xLabel,
-                grid: grid,
-                label: label,
-              ),
-            ),
-          ),
-          if (_scrub != null) ...[
-            Positioned(
-              left: xFor(_scrub!) - 0.5,
-              top: padT,
-              height: innerH,
-              width: 1,
-              child: Container(color: widget.stroke.withValues(alpha: 0.4)),
-            ),
-            if (data[_scrub!].v != null)
-              Positioned(
-                left: xFor(_scrub!) - 4,
-                top: yFor(data[_scrub!].v!) - 4,
-                width: 8,
-                height: 8,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: widget.stroke,
-                    border: Border.all(color: ink, width: 1.5),
+          return Stack(
+            children: [
+              AnimatedBuilder(
+                animation: _draw,
+                builder: (_, __) => CustomPaint(
+                  size: Size(w, widget.height),
+                  painter: _SeriesPainter(
+                    data: data,
+                    stroke: widget.stroke,
+                    bands: widget.bands,
+                    ticks: niceTicks(lo, hi, 4),
+                    yMin: lo,
+                    yMax: hi,
+                    yDecimals: widget.yDecimals,
+                    progress: reduceMotion
+                        ? 1.0
+                        : Curves.easeOutCubic.transform(_draw.value),
+                    reference: widget.reference,
+                    referenceLabel: widget.referenceLabel,
+                    overlay: widget.overlay,
+                    overlayStroke: widget.overlayStroke,
+                    xLabel: widget.xLabel,
+                    grid: grid,
+                    label: label,
                   ),
                 ),
               ),
-            Positioned(
-              left:
-                  (xFor(_scrub!) + 10 + 132 > w) ? xFor(_scrub!) - 142 : xFor(_scrub!) + 10,
-              top: 0,
-              width: 132,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: ClinicalPalette.hairline(context)),
+              if (_scrub != null) ...[
+                Positioned(
+                  left: xFor(_scrub!) - 0.5,
+                  top: padT,
+                  height: innerH,
+                  width: 1,
+                  child: Container(color: widget.stroke.withValues(alpha: 0.4)),
                 ),
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      widget.xLabel(data[_scrub!].t),
-                      style: TextStyle(fontSize: 10, color: label),
+                if (data[_scrub!].v != null)
+                  Positioned(
+                    left: xFor(_scrub!) - 4,
+                    top: yFor(data[_scrub!].v!) - 4,
+                    width: 8,
+                    height: 8,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: widget.stroke,
+                        border: Border.all(color: ink, width: 1.5),
+                      ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      data[_scrub!].v == null
-                          ? '—  gap'
-                          : '${data[_scrub!].v!.toStringAsFixed(widget.yDecimals == 0 ? 1 : widget.yDecimals)} ${widget.unit}',
-                      style: numTab(14, widget.stroke),
+                  ),
+                Positioned(
+                  left: (xFor(_scrub!) + 10 + 132 > w)
+                      ? xFor(_scrub!) - 142
+                      : xFor(_scrub!) + 10,
+                  top: 0,
+                  width: 132,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: ClinicalPalette.hairline(context),
+                      ),
                     ),
-                  ],
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.xLabel(data[_scrub!].t),
+                          style: TextStyle(fontSize: 10, color: label),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          data[_scrub!].v == null
+                              ? '—  gap'
+                              : '${data[_scrub!].v!.toStringAsFixed(widget.yDecimals == 0 ? 1 : widget.yDecimals)} ${widget.unit}',
+                          style: numTab(14, widget.stroke),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+              ],
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (e) => _setScrub(e.localPosition.dx, w),
+                onHorizontalDragStart: (e) => _setScrub(e.localPosition.dx, w),
+                onHorizontalDragUpdate: (e) => _setScrub(e.localPosition.dx, w),
+                onHorizontalDragEnd: (_) => setState(() => _scrub = null),
+                onTapUp: (_) => setState(() => _scrub = null),
               ),
-            ),
-          ],
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (e) => _setScrub(e.localPosition.dx, w),
-            onHorizontalDragStart: (e) => _setScrub(e.localPosition.dx, w),
-            onHorizontalDragUpdate: (e) => _setScrub(e.localPosition.dx, w),
-            onHorizontalDragEnd: (_) => setState(() => _scrub = null),
-            onTapUp: (_) => setState(() => _scrub = null),
-          ),
-        ]);
-      }),
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -300,10 +326,19 @@ class _SeriesPainter extends CustomPainter {
   final String Function(double) xLabel;
   final Color grid, label;
 
-  void _text(Canvas c, String s, double x, double y,
-      {double size = 10, bool right = false}) {
+  void _text(
+    Canvas c,
+    String s,
+    double x,
+    double y, {
+    double size = 10,
+    bool right = false,
+  }) {
     final tp = TextPainter(
-      text: TextSpan(text: s, style: TextStyle(color: label, fontSize: size)),
+      text: TextSpan(
+        text: s,
+        style: TextStyle(color: label, fontSize: size),
+      ),
       textDirection: TextDirection.ltr,
     )..layout();
     tp.paint(c, Offset(right ? x - tp.width : x, y));
@@ -311,8 +346,10 @@ class _SeriesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const padL = _SeriesChartState.padL, padR = _SeriesChartState.padR,
-        padT = _SeriesChartState.padT, padB = _SeriesChartState.padB;
+    const padL = _SeriesChartState.padL,
+        padR = _SeriesChartState.padR,
+        padT = _SeriesChartState.padT,
+        padB = _SeriesChartState.padB;
     final innerW = size.width - padL - padR;
     final innerH = size.height - padT - padB;
     final baseY = padT + innerH;
@@ -324,8 +361,10 @@ class _SeriesPainter extends CustomPainter {
       final top = yFor(math.min(b.to, yMax));
       final bot = yFor(math.max(b.from, yMin));
       if (bot <= padT || top >= baseY) continue;
-      canvas.drawRect(Rect.fromLTRB(padL, top, padL + innerW, bot),
-          Paint()..color = b.color.withValues(alpha: 0.07));
+      canvas.drawRect(
+        Rect.fromLTRB(padL, top, padL + innerW, bot),
+        Paint()..color = b.color.withValues(alpha: 0.07),
+      );
       if (b.label != null) {
         _text(canvas, b.label!, padL + innerW - 4, top + 3, size: 9);
       }
@@ -334,10 +373,20 @@ class _SeriesPainter extends CustomPainter {
     // Gridlines + y tick labels.
     for (final tk in ticks) {
       final y = yFor(tk);
-      canvas.drawLine(Offset(padL, y), Offset(padL + innerW, y),
-          Paint()..color = grid..strokeWidth = 1);
-      _text(canvas, tk.toStringAsFixed(yDecimals), padL - 6, y - 5,
-          right: true);
+      canvas.drawLine(
+        Offset(padL, y),
+        Offset(padL + innerW, y),
+        Paint()
+          ..color = grid
+          ..strokeWidth = 1,
+      );
+      _text(
+        canvas,
+        tk.toStringAsFixed(yDecimals),
+        padL - 6,
+        y - 5,
+        right: true,
+      );
     }
 
     // X axis: first, middle, last.
@@ -350,7 +399,8 @@ class _SeriesPainter extends CustomPainter {
     // a gap is drawn, not bridged.
     canvas.save();
     canvas.clipRect(
-        Rect.fromLTRB(padL, 0, padL + innerW * progress, size.height));
+      Rect.fromLTRB(padL, 0, padL + innerW * progress, size.height),
+    );
     var run = <Offset>[];
     void flush() {
       if (run.length > 1) {
@@ -364,13 +414,14 @@ class _SeriesPainter extends CustomPainter {
           ..close();
         canvas.drawPath(area, Paint()..color = stroke.withValues(alpha: 0.10));
         canvas.drawPath(
-            line,
-            Paint()
-              ..color = stroke
-              ..strokeWidth = 2
-              ..style = PaintingStyle.stroke
-              ..strokeCap = StrokeCap.round
-              ..strokeJoin = StrokeJoin.round);
+          line,
+          Paint()
+            ..color = stroke
+            ..strokeWidth = 2
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round,
+        );
       }
       run = [];
     }
@@ -407,13 +458,14 @@ class _SeriesPainter extends CustomPainter {
         }
       }
       canvas.drawPath(
-          path,
-          Paint()
-            ..color = oc
-            ..strokeWidth = 2
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round);
+        path,
+        Paint()
+          ..color = oc
+          ..strokeWidth = 2
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
     }
 
     canvas.restore();
@@ -430,8 +482,14 @@ class _SeriesPainter extends CustomPainter {
         x += 11;
       }
       if (referenceLabel != null) {
-        _text(canvas, referenceLabel!, padL + innerW, y - 12,
-            size: 9, right: true);
+        _text(
+          canvas,
+          referenceLabel!,
+          padL + innerW,
+          y - 12,
+          size: 9,
+          right: true,
+        );
       }
     }
   }

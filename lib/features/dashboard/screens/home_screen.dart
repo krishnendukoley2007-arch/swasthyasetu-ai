@@ -45,7 +45,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _startAnimations();
   }
 
-void _initializeAnimations() {
+  void _initializeAnimations() {
     _heroController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -75,7 +75,10 @@ void _initializeAnimations() {
       CurvedAnimation(parent: _devicePulseController, curve: Curves.easeInOut),
     );
 
-    _backgroundFloatAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_backgroundController);
+    _backgroundFloatAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_backgroundController);
   }
 
   void _startAnimations() async {
@@ -107,12 +110,11 @@ void _initializeAnimations() {
       appBar: AppBar(
         title: Text(
           AppConstants.appName,
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        actions: [
-          _buildNotificationButton(),
-          _buildProfileButton(),
-        ],
+        actions: [_buildNotificationButton(), _buildProfileButton()],
         bottom: const TopQuickAccessBar(),
         elevation: 0,
         scrolledUnderElevation: AppTheme.elevationLevel1,
@@ -149,7 +151,8 @@ void _initializeAnimations() {
                             controller: _heroController,
                             delay: const Duration(milliseconds: 0),
                             child: _buildHeroSection(isConnected),
-                          ),                          _buildAnimatedWidget(
+                          ),
+                          _buildAnimatedWidget(
                             controller: _statsController,
                             delay: const Duration(milliseconds: 200),
                             child: _buildStatsSection(),
@@ -192,9 +195,10 @@ void _initializeAnimations() {
       animation: controller,
       builder: (context, child) {
         final progress = controller.value;
-        final delayedProgress = ((progress * 1000) - delay.inMilliseconds).clamp(0, 1000) / 1000;
+        final delayedProgress =
+            ((progress * 1000) - delay.inMilliseconds).clamp(0, 1000) / 1000;
         final curvedProgress = Curves.easeOutCubic.transform(delayedProgress);
-        
+
         return Opacity(
           opacity: curvedProgress.clamp(0.0, 1.0),
           child: Transform.translate(
@@ -338,109 +342,117 @@ void _initializeAnimations() {
 
     final identity = Row(
       children: [
-          AnimatedBuilder(
-            animation: _devicePulseAnimation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: isConnected ? _devicePulseAnimation.value : 1.0,
-                child: Container(
-                  width: 68,
-                  height: 68,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isConnected
-                          ? [
-                              theme.colorScheme.primary,
-                              theme.colorScheme.primary.withValues(alpha: 0.7),
-                            ]
-                          : [
-                              theme.colorScheme.outlineVariant,
-                              theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
-                            ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-                    boxShadow: isConnected
+        AnimatedBuilder(
+          animation: _devicePulseAnimation,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: isConnected ? _devicePulseAnimation.value : 1.0,
+              child: Container(
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isConnected
                         ? [
-                            BoxShadow(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                              blurRadius: 20,
-                              spreadRadius: 2,
-                              offset: const Offset(0, 8),
-                            ),
+                            theme.colorScheme.primary,
+                            theme.colorScheme.primary.withValues(alpha: 0.7),
                           ]
-                        : null,
+                        : [
+                            theme.colorScheme.outlineVariant,
+                            theme.colorScheme.outlineVariant.withValues(
+                              alpha: 0.7,
+                            ),
+                          ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Icon(
-                    isConnected
-                        ? Icons.bluetooth_connected_rounded
-                        : Icons.bluetooth_disabled_rounded,
-                    color: theme.colorScheme.onPrimary,
-                    size: 34,
-                  ),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                  boxShadow: isConnected
+                      ? [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.4,
+                            ),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 8),
+                          ),
+                        ]
+                      : null,
                 ),
-              );
-            },
-          ),
-          const AppSpacing.hmd(),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Wrap, not Row: the label and the connection pill are both
-                // intrinsically sized, so at large font settings they ran past
-                // the card edge instead of dropping onto a second line.
-                Wrap(
-                  spacing: AppTheme.spacingSm,
-                  runSpacing: AppTheme.spacingXs,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      'Device',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    _buildConnectionIndicator(isConnected),
-                  ],
-                ),
-                const AppSpacing.vxs(),
-                Text(
+                child: Icon(
                   isConnected
-                      ? (link.deviceName ?? 'Sensor board')
-                      : 'No device linked',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                      ? Icons.bluetooth_connected_rounded
+                      : Icons.bluetooth_disabled_rounded,
+                  color: theme.colorScheme.onPrimary,
+                  size: 34,
                 ),
-                const AppSpacing.vxs(),
-                // Battery only exists when the board reports it; the demo
-                // badge is gone — the card never claims a device that is not
-                // on the link.
-                if (battery != null)
-                  Row(
-                    children: [
-                      Flexible(child: _buildBatteryIndicator(battery)),
-                    ],
+              ),
+            );
+          },
+        ),
+        const AppSpacing.hmd(),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Wrap, not Row: the label and the connection pill are both
+              // intrinsically sized, so at large font settings they ran past
+              // the card edge instead of dropping onto a second line.
+              Wrap(
+                spacing: AppTheme.spacingSm,
+                runSpacing: AppTheme.spacingXs,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'Device',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-              ],
-            ),
+                  _buildConnectionIndicator(isConnected),
+                ],
+              ),
+              const AppSpacing.vxs(),
+              Text(
+                isConnected
+                    ? (link.deviceName ?? 'Sensor board')
+                    : 'No device linked',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const AppSpacing.vxs(),
+              // Battery only exists when the board reports it; the demo
+              // badge is gone — the card never claims a device that is not
+              // on the link.
+              if (battery != null)
+                Row(
+                  children: [Flexible(child: _buildBatteryIndicator(battery))],
+                ),
+            ],
           ),
-        ],
-      );
+        ),
+      ],
+    );
 
     final action = _buildDeviceActionButton(isConnected);
 
     return AppCard(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       child: LayoutBuilder(
-        builder: (context, constraints) => _stacksHeaderActions(constraints.maxWidth)
+        builder: (context, constraints) =>
+            _stacksHeaderActions(constraints.maxWidth)
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [identity, const AppSpacing.vmd(), action],
               )
-            : Row(children: [Expanded(child: identity), action]),
+            : Row(
+                children: [
+                  Expanded(child: identity),
+                  action,
+                ],
+              ),
       ),
     );
   }
@@ -618,7 +630,9 @@ void _initializeAnimations() {
                 ),
                 child: Icon(
                   stat.icon,
-                  color: isZero ? theme.colorScheme.onSurfaceVariant : stat.color,
+                  color: isZero
+                      ? theme.colorScheme.onSurfaceVariant
+                      : stat.color,
                   size: 22,
                 ),
               ),
@@ -687,8 +701,10 @@ void _initializeAnimations() {
             title: context.l10n.homeLastScreening,
             action: TextButton(
               onPressed: () => context.go('/history'),
-              child: Text(context.l10n.navHistory,
-                  style: theme.textTheme.labelLarge),
+              child: Text(
+                context.l10n.navHistory,
+                style: theme.textTheme.labelLarge,
+              ),
             ),
           ),
           const AppSpacing.vsm(),
@@ -750,23 +766,30 @@ void _initializeAnimations() {
           children: [
             Expanded(
               child: _buildAnimatedVitalItem(
-                  'HR',
-                  measured(screening.heartRate),
-                  'bpm',
-                  Icons.favorite_rounded,
-                  theme.colorScheme.primary),
-            ),
-            Expanded(
-              child: _buildAnimatedVitalItem('SpO₂', measured(screening.spo2),
-                  '%', Icons.air_rounded, theme.colorScheme.secondary),
+                'HR',
+                measured(screening.heartRate),
+                'bpm',
+                Icons.favorite_rounded,
+                theme.colorScheme.primary,
+              ),
             ),
             Expanded(
               child: _buildAnimatedVitalItem(
-                  'Temp',
-                  measured(screening.temperature, digits: 1),
-                  '°C',
-                  Icons.thermostat_rounded,
-                  theme.colorScheme.tertiary),
+                'SpO₂',
+                measured(screening.spo2),
+                '%',
+                Icons.air_rounded,
+                theme.colorScheme.secondary,
+              ),
+            ),
+            Expanded(
+              child: _buildAnimatedVitalItem(
+                'Temp',
+                measured(screening.temperature, digits: 1),
+                '°C',
+                Icons.thermostat_rounded,
+                theme.colorScheme.tertiary,
+              ),
             ),
           ],
         ),
@@ -774,8 +797,13 @@ void _initializeAnimations() {
     );
   }
 
-  Widget _buildAnimatedVitalItem(String label, String? value, String unit,
-      IconData icon, Color color) {
+  Widget _buildAnimatedVitalItem(
+    String label,
+    String? value,
+    String unit,
+    IconData icon,
+    Color color,
+  ) {
     final theme = Theme.of(context);
 
     return AppPulseAnimation(
@@ -798,23 +826,23 @@ void _initializeAnimations() {
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             text: TextSpan(
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                ),
-                children: [
-                  TextSpan(text: value ?? '—'),
-                  if (value != null)
-                    TextSpan(
-                      text: ' $unit',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                ],
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
               ),
+              children: [
+                TextSpan(text: value ?? '—'),
+                if (value != null)
+                  TextSpan(
+                    text: ' $unit',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+              ],
             ),
+          ),
           Text(
             label,
             textAlign: TextAlign.center,
@@ -839,8 +867,9 @@ void _initializeAnimations() {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.5),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.5,
+              ),
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
             ),
             child: Icon(
@@ -947,9 +976,7 @@ void _initializeAnimations() {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppSectionHeader(
-            title: l10n.homeQuickActions,
-          ),
+          AppSectionHeader(title: l10n.homeQuickActions),
           const AppSpacing.vsm(),
           // Two-column grid: a wall of full-width cards made the dashboard a
           // scroll marathon; the actions are glanceable tiles now.
@@ -969,7 +996,7 @@ void _initializeAnimations() {
     );
   }
 
-Widget _buildActionButton(_ActionData action) {
+  Widget _buildActionButton(_ActionData action) {
     final theme = Theme.of(context);
 
     return AppCard(
@@ -1039,7 +1066,7 @@ Widget _buildActionButton(_ActionData action) {
     );
   }
 
-Widget _buildDisclaimerCard() {
+  Widget _buildDisclaimerCard() {
     final theme = Theme.of(context);
 
     return Padding(
@@ -1095,7 +1122,9 @@ Widget _buildDisclaimerCard() {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacingSm, vertical: AppTheme.spacingXs),
+        horizontal: AppTheme.spacingSm,
+        vertical: AppTheme.spacingXs,
+      ),
       decoration: BoxDecoration(
         color: isConnected
             ? theme.colorScheme.primaryContainer
@@ -1153,12 +1182,14 @@ Widget _buildDisclaimerCard() {
         const AppSpacing.hxs(),
         Expanded(
           child: Text(
-              '$battery%',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isLow ? theme.colorScheme.error : theme.colorScheme.onSurface,
-              ),
+            '$battery%',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: isLow
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.onSurface,
             ),
+          ),
         ),
       ],
     );
@@ -1195,12 +1226,15 @@ Widget _buildDisclaimerCard() {
   Widget _buildDeviceActionButton(bool isConnected) {
     return AppOutlinedButton(
       label: isConnected ? 'Manage' : 'Connect',
-      icon: Icon(isConnected
-          ? Icons.settings_rounded
-          : Icons.bluetooth_searching_rounded, size: 24),
+      icon: Icon(
+        isConnected
+            ? Icons.settings_rounded
+            : Icons.bluetooth_searching_rounded,
+        size: 24,
+      ),
       isExpanded: false,
-      onPressed: () => context
-          .go(isConnected ? '/devices/diagnostics' : '/devices/scan'),
+      onPressed: () =>
+          context.go(isConnected ? '/devices/diagnostics' : '/devices/scan'),
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(140, 52),
         padding: const EdgeInsets.symmetric(
@@ -1237,7 +1271,8 @@ Widget _buildDisclaimerCard() {
         ),
       ),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      ),
       onSelected: (value) {
         if (value == 'ui_showcase') {
           context.go('/debug/ui-showcase');

@@ -63,7 +63,10 @@ class MapPackInfo {
   /// Vector packs are valid MBTiles that this reader deliberately does not
   /// render: drawing them needs a style sheet and a vector renderer the app does
   /// not ship. Reported rather than silently ignored.
-  bool get isRaster => format == 'png' || format == 'jpg' || format == 'jpeg' ||
+  bool get isRaster =>
+      format == 'png' ||
+      format == 'jpg' ||
+      format == 'jpeg' ||
       format == 'webp';
 
   bool coversZoom(int z) => z >= minZoom && z <= maxZoom;
@@ -95,8 +98,7 @@ class MapTileAvailability {
 
   bool get hasTiles => packs.any((pack) => pack.isRaster && pack.tileCount > 0);
 
-  int get totalTiles =>
-      packs.fold(0, (sum, pack) => sum + pack.tileCount);
+  int get totalTiles => packs.fold(0, (sum, pack) => sum + pack.tileCount);
 
   int get totalBytes => packs.fold(0, (sum, pack) => sum + pack.fileBytes);
 
@@ -143,16 +145,17 @@ class MbTilesReader {
       }
 
       final zooms = db.select(
-          'SELECT MIN(zoom_level) AS lo, MAX(zoom_level) AS hi, '
-          'COUNT(*) AS n FROM tiles');
+        'SELECT MIN(zoom_level) AS lo, MAX(zoom_level) AS hi, '
+        'COUNT(*) AS n FROM tiles',
+      );
       final row = zooms.first;
       final count = (row['n'] as int?) ?? 0;
       // Trust the table over the metadata: a pack whose metadata claims z0-14
       // but only holds z0-6 must not be advertised as street-level.
-      final minZoom = (row['lo'] as int?) ??
-          int.tryParse(meta['minzoom'] ?? '') ?? 0;
-      final maxZoom = (row['hi'] as int?) ??
-          int.tryParse(meta['maxzoom'] ?? '') ?? 0;
+      final minZoom =
+          (row['lo'] as int?) ?? int.tryParse(meta['minzoom'] ?? '') ?? 0;
+      final maxZoom =
+          (row['hi'] as int?) ?? int.tryParse(meta['maxzoom'] ?? '') ?? 0;
 
       final info = MapPackInfo(
         name: meta['name']?.trim().isNotEmpty == true
@@ -229,9 +232,11 @@ class MbTilesReader {
   /// [lat]/[lon]. Used to pick a zoom the pack can really serve rather than
   /// requesting one it cannot and drawing holes.
   int? bestZoomFor(double lat, double lon, {int wanted = 14}) {
-    for (var z = wanted.clamp(info.minZoom, info.maxZoom);
-        z >= info.minZoom;
-        z--) {
+    for (
+      var z = wanted.clamp(info.minZoom, info.maxZoom);
+      z >= info.minZoom;
+      z--
+    ) {
       final x = lonToTileX(lon, z);
       final y = latToTileY(lat, z);
       if (tile(z, x, y) != null) return z;
@@ -311,12 +316,13 @@ Future<MapTileAvailability> discoverMapPacks() async {
   try {
     await materializeBundledPack();
     final dir = await StorageManager.mapTilesDirectory();
-    final files = dir
-        .listSync()
-        .whereType<File>()
-        .where((f) => p.extension(f.path).toLowerCase() == '.mbtiles')
-        .toList()
-      ..sort((a, b) => a.path.compareTo(b.path));
+    final files =
+        dir
+            .listSync()
+            .whereType<File>()
+            .where((f) => p.extension(f.path).toLowerCase() == '.mbtiles')
+            .toList()
+          ..sort((a, b) => a.path.compareTo(b.path));
 
     for (final file in files) {
       final bundled = p.basename(file.path) == kBundledPackFileName;
@@ -332,8 +338,12 @@ Future<MapTileAvailability> discoverMapPacks() async {
         continue;
       }
       if (!info.isRaster) {
-        errors.add(MapPackError(
-            file.path, 'vector (${info.format}) packs cannot be drawn'));
+        errors.add(
+          MapPackError(
+            file.path,
+            'vector (${info.format}) packs cannot be drawn',
+          ),
+        );
         continue;
       }
       packs.add(info);

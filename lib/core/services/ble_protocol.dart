@@ -97,7 +97,8 @@ class BleProtocol {
     final confidence = bytes[15];
     final uptimeMs = data.getUint32(16, Endian.little);
 
-    final plausible = heartRate >= minHeartRate &&
+    final plausible =
+        heartRate >= minHeartRate &&
         heartRate <= maxHeartRate &&
         spo2 >= minSpo2 &&
         spo2 <= maxSpo2 &&
@@ -175,12 +176,12 @@ class BleProtocol {
       version >= minProtocolVersion && version <= maxProtocolVersion;
 
   static String bpConfidenceLabel(int code) => switch (code) {
-        0 => 'LOW',
-        1 => 'MEDIUM',
-        2 => 'HIGH',
-        // An unknown code is not upgraded to a confidence the app invented.
-        _ => 'EXPERIMENTAL',
-      };
+    0 => 'LOW',
+    1 => 'MEDIUM',
+    2 => 'HIGH',
+    // An unknown code is not upgraded to a confidence the app invented.
+    _ => 'EXPERIMENTAL',
+  };
 
   /// Pull a `major.minor.patch` firmware version out of the device-info
   /// characteristic.
@@ -257,9 +258,8 @@ class EcgFrame {
   const EcgFrame({required this.sequence, required this.samples});
 
   Duration get duration => Duration(
-        milliseconds:
-            (samples.length * 1000 / BleProtocol.ecgSampleRateHz).round(),
-      );
+    milliseconds: (samples.length * 1000 / BleProtocol.ecgSampleRateHz).round(),
+  );
 }
 
 /// How long to wait before retry number `attempt`.

@@ -66,9 +66,7 @@ class AppTextField extends StatelessWidget {
             hintText: hint,
             helperText: helperText,
             errorText: errorText,
-            prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, size: 20)
-                : null,
+            prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
             suffixIcon: suffixIcon != null
                 ? IconButton(
                     icon: suffixIcon!,
@@ -125,10 +123,16 @@ class AppSearchField extends StatelessWidget {
       autofocus: autofocus,
       decoration: InputDecoration(
         hintText: hint ?? 'Search...',
-        prefixIcon: Icon(Icons.search_rounded, color: theme.colorScheme.onSurfaceVariant),
+        prefixIcon: Icon(
+          Icons.search_rounded,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
         suffixIcon: controller != null && controller!.text.isNotEmpty
             ? IconButton(
-                icon: Icon(Icons.clear_rounded, color: theme.colorScheme.onSurfaceVariant),
+                icon: Icon(
+                  Icons.clear_rounded,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 onPressed: () {
                   controller!.clear();
                   onClear?.call();
@@ -141,7 +145,9 @@ class AppSearchField extends StatelessWidget {
           borderSide: BorderSide.none,
         ),
         filled: true,
-        fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.5,
+        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spacingMd,
           vertical: AppTheme.spacingSm,
@@ -235,10 +241,7 @@ class _AppMultiSelectFieldState<T> extends State<AppMultiSelectField<T>> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label != null) ...[
-          Text(
-            widget.label!,
-            style: theme.textTheme.labelLarge,
-          ),
+          Text(widget.label!, style: theme.textTheme.labelLarge),
           const SizedBox(height: AppTheme.spacingXs),
         ],
         Wrap(
@@ -246,10 +249,11 @@ class _AppMultiSelectFieldState<T> extends State<AppMultiSelectField<T>> {
           runSpacing: AppTheme.spacingSm,
           children: widget.availableValues.map((value) {
             final isSelected = widget.selectedValues.contains(value);
-            final isDisabled = !widget.enabled ||
+            final isDisabled =
+                !widget.enabled ||
                 (widget.maxSelections != null &&
-                 widget.selectedValues.length >= widget.maxSelections! &&
-                 !isSelected);
+                    widget.selectedValues.length >= widget.maxSelections! &&
+                    !isSelected);
 
             return FilterChip(
               label: Text(widget.getLabel(value)),
@@ -352,7 +356,8 @@ class _AppChipInputState extends State<AppChipInput> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isAtMax = widget.maxChips != null && widget.chips.length >= widget.maxChips!;
+    final isAtMax =
+        widget.maxChips != null && widget.chips.length >= widget.maxChips!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,18 +370,24 @@ class _AppChipInputState extends State<AppChipInput> {
           spacing: AppTheme.spacingSm,
           runSpacing: AppTheme.spacingSm,
           children: [
-            ...widget.chips.map((chip) => InputChip(
-              label: Text(chip),
-              onDeleted: widget.enabled ? () => _removeChip(chip) : null,
-              deleteIconColor: theme.colorScheme.onSurfaceVariant,
-              labelStyle: theme.textTheme.bodyMedium,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+            ...widget.chips.map(
+              (chip) => InputChip(
+                label: Text(chip),
+                onDeleted: widget.enabled ? () => _removeChip(chip) : null,
+                deleteIconColor: theme.colorScheme.onSurfaceVariant,
+                labelStyle: theme.textTheme.bodyMedium,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                ),
               ),
-            )),
+            ),
             if (widget.enabled && !isAtMax)
               ActionChip(
-                avatar: Icon(Icons.add_rounded, size: 16, color: theme.colorScheme.primary),
+                avatar: Icon(
+                  Icons.add_rounded,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
                 label: Text(widget.addButtonLabel ?? 'Add'),
                 onPressed: () {
                   _focusNode.requestFocus();
@@ -394,9 +405,12 @@ class _AppChipInputState extends State<AppChipInput> {
         ),
         if (widget.hint != null) ...[
           const SizedBox(height: AppTheme.spacingXs),
-          Text(widget.hint!, style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          )),
+          Text(
+            widget.hint!,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ],
     );

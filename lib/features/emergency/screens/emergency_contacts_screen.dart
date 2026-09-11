@@ -85,25 +85,26 @@ class EmergencyContactsScreen extends ConsumerWidget {
                   onMakePrimary: c.isPrimary
                       ? null
                       : () => ref
-                          .read(emergencyRepositoryProvider)
-                          .saveContact(c.copyWith(isPrimary: true)),
+                            .read(emergencyRepositoryProvider)
+                            .saveContact(c.copyWith(isPrimary: true)),
                   onCall: () => ref.read(sosServiceProvider).call(c.phone),
                 ),
               ),
             ],
             const AppSpacing.vlg(),
             _QuickAddSection(
-              onAdd: (name, phone, relation) =>
-                  ref.read(emergencyRepositoryProvider).saveContact(
-                        EmergencyContact(
-                          id: const Uuid().v4(),
-                          name: name,
-                          phone: phone,
-                          relation: relation,
-                          isPrimary: list.isEmpty,
-                          sortOrder: list.length,
-                        ),
-                      ),
+              onAdd: (name, phone, relation) => ref
+                  .read(emergencyRepositoryProvider)
+                  .saveContact(
+                    EmergencyContact(
+                      id: const Uuid().v4(),
+                      name: name,
+                      phone: phone,
+                      relation: relation,
+                      isPrimary: list.isEmpty,
+                      sortOrder: list.length,
+                    ),
+                  ),
               existingPhones: list.map((c) => c.phone).toSet(),
             ),
           ],
@@ -248,8 +249,9 @@ class _ContactCard extends StatelessWidget {
                   children: [
                     Text(
                       contact.name,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     Text(
                       contact.phone,
@@ -457,9 +459,7 @@ class _ContactEditorState extends State<_ContactEditor> {
     // Padded for the keyboard and scrollable: at 2.0x text scale these four
     // fields are taller than the half-screen a bottom sheet gets.
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTheme.spacingLg),
         child: Column(
@@ -468,8 +468,9 @@ class _ContactEditorState extends State<_ContactEditor> {
           children: [
             Text(
               widget.existing == null ? 'Add contact' : 'Edit contact',
-              style: theme.textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const AppSpacing.vlg(),
             AppTextField(

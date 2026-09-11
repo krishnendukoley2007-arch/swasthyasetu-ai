@@ -25,22 +25,24 @@ enum Audience {
   patient;
 
   String get storageValue => switch (this) {
-        Audience.nurse => 'nurse',
-        Audience.patient => 'patient',
-      };
+    Audience.nurse => 'nurse',
+    Audience.patient => 'patient',
+  };
 
   /// Shown on the mode selector.
   String get label => switch (this) {
-        Audience.nurse => 'I am a nurse',
-        Audience.patient => 'I am a patient',
-      };
+    Audience.nurse => 'I am a nurse',
+    Audience.patient => 'I am a patient',
+  };
 
   String get description => switch (this) {
-        Audience.nurse => 'Clinical wording, referral steps, and no home '
-            'remedies or medicines suggested.',
-        Audience.patient => 'Plain wording, what the readings could mean, and '
-            'safe home care you can do yourself.',
-      };
+    Audience.nurse =>
+      'Clinical wording, referral steps, and no home '
+          'remedies or medicines suggested.',
+    Audience.patient =>
+      'Plain wording, what the readings could mean, and '
+          'safe home care you can do yourself.',
+  };
 
   bool get isPatient => this == Audience.patient;
 

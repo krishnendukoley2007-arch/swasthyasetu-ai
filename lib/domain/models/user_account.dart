@@ -10,16 +10,16 @@ enum AuthAccountProvider {
   phone;
 
   String get storageValue => switch (this) {
-        AuthAccountProvider.email => 'email',
-        AuthAccountProvider.google => 'google',
-        AuthAccountProvider.phone => 'phone',
-      };
+    AuthAccountProvider.email => 'email',
+    AuthAccountProvider.google => 'google',
+    AuthAccountProvider.phone => 'phone',
+  };
 
   static AuthAccountProvider fromStorage(String? raw) => switch (raw) {
-        'google' => AuthAccountProvider.google,
-        'phone' => AuthAccountProvider.phone,
-        _ => AuthAccountProvider.email,
-      };
+    'google' => AuthAccountProvider.google,
+    'phone' => AuthAccountProvider.phone,
+    _ => AuthAccountProvider.email,
+  };
 }
 
 /// Who is holding the phone.
@@ -34,9 +34,9 @@ enum UserRole {
   clinician;
 
   String get storageValue => switch (this) {
-        UserRole.patient => 'patient',
-        UserRole.clinician => 'clinician',
-      };
+    UserRole.patient => 'patient',
+    UserRole.clinician => 'clinician',
+  };
 
   bool get isPatient => this == UserRole.patient;
 
@@ -58,7 +58,7 @@ class UserAccount {
   final UserRole role;
   final AuthAccountProvider provider;
   final String? photoUrl;
-  final String? phoneNumber;  // E.164 format, e.g. +919876543210
+  final String? phoneNumber; // E.164 format, e.g. +919876543210
 
   final int? age;
   final String sex;
@@ -193,26 +193,25 @@ class UserAccount {
     String? patientId,
     DateTime? createdAt,
     DateTime? lastLoginAt,
-  }) =>
-      UserAccount(
-        id: id ?? this.id,
-        email: email ?? this.email,
-        displayName: displayName ?? this.displayName,
-        role: role ?? this.role,
-        provider: provider ?? this.provider,
-        photoUrl: photoUrl ?? this.photoUrl,
-        phoneNumber: phoneNumber ?? this.phoneNumber,
-        age: age ?? this.age,
-        sex: sex ?? this.sex,
-        heightCm: heightCm ?? this.heightCm,
-        weightKg: weightKg ?? this.weightKg,
-        conditions: conditions ?? this.conditions,
-        problems: problems ?? this.problems,
-        profileComplete: profileComplete ?? this.profileComplete,
-        patientId: patientId ?? this.patientId,
-        createdAt: createdAt ?? this.createdAt,
-        lastLoginAt: lastLoginAt ?? this.lastLoginAt,
-      );
+  }) => UserAccount(
+    id: id ?? this.id,
+    email: email ?? this.email,
+    displayName: displayName ?? this.displayName,
+    role: role ?? this.role,
+    provider: provider ?? this.provider,
+    photoUrl: photoUrl ?? this.photoUrl,
+    phoneNumber: phoneNumber ?? this.phoneNumber,
+    age: age ?? this.age,
+    sex: sex ?? this.sex,
+    heightCm: heightCm ?? this.heightCm,
+    weightKg: weightKg ?? this.weightKg,
+    conditions: conditions ?? this.conditions,
+    problems: problems ?? this.problems,
+    profileComplete: profileComplete ?? this.profileComplete,
+    patientId: patientId ?? this.patientId,
+    createdAt: createdAt ?? this.createdAt,
+    lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+  );
 
   @override
   String toString() =>

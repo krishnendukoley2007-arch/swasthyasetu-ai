@@ -16,7 +16,8 @@ class NetworkException implements Exception {
   });
 
   @override
-  String toString() => 'NetworkException: $message (status: $statusCode, endpoint: $endpoint)';
+  String toString() =>
+      'NetworkException: $message (status: $statusCode, endpoint: $endpoint)';
 }
 
 class NetworkService {
@@ -77,7 +78,8 @@ class NetworkService {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        message = 'Connection timed out. Please check your internet connection.';
+        message =
+            'Connection timed out. Please check your internet connection.';
         break;
       case DioExceptionType.connectionError:
         message = 'No internet connection. Please check your network settings.';
@@ -87,7 +89,8 @@ class NetworkService {
         if (data is Map && data['message'] != null) {
           message = data['message'].toString();
         } else {
-          message = 'Server error (${error.response?.statusCode}). Please try again later.';
+          message =
+              'Server error (${error.response?.statusCode}). Please try again later.';
         }
         break;
       case DioExceptionType.cancel:
@@ -194,15 +197,12 @@ class ApiResponse<T> {
   final NetworkException? error;
   final bool isLoading;
 
-  const ApiResponse({
-    this.data,
-    this.error,
-    this.isLoading = false,
-  });
+  const ApiResponse({this.data, this.error, this.isLoading = false});
 
   factory ApiResponse.loading() => const ApiResponse(isLoading: true);
   factory ApiResponse.success(T data) => ApiResponse(data: data);
-  factory ApiResponse.error(NetworkException error) => ApiResponse(error: error);
+  factory ApiResponse.error(NetworkException error) =>
+      ApiResponse(error: error);
 
   bool get hasError => error != null;
   bool get hasData => data != null;

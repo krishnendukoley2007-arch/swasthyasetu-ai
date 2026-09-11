@@ -112,14 +112,18 @@ class _NotesCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.insights_rounded,
-                  color: theme.colorScheme.tertiary, size: 22),
+              Icon(
+                Icons.insights_rounded,
+                color: theme.colorScheme.tertiary,
+                size: 22,
+              ),
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(
                   'Worth noticing',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -164,16 +168,28 @@ class _TrendCard extends StatelessWidget {
   });
 
   List<SeriesSample> get _samples => [
-        for (var i = 0; i < trend.points.length; i++)
-          SeriesSample(trend.points[i].at.millisecondsSinceEpoch.toDouble(),
-              trend.points[i].value),
-      ];
+    for (var i = 0; i < trend.points.length; i++)
+      SeriesSample(
+        trend.points[i].at.millisecondsSinceEpoch.toDouble(),
+        trend.points[i].value,
+      ),
+  ];
 
   String _xLabel(double t) {
     final d = DateTime.fromMillisecondsSinceEpoch(t.round());
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${d.day} ${months[d.month - 1]}';
   }
@@ -196,7 +212,10 @@ class _TrendCard extends StatelessWidget {
             ],
           ),
           const AppSpacing.vsm(),
-          Row(
+          Wrap(
+            spacing: AppTheme.spacingSm,
+            runSpacing: AppTheme.spacingXs,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               if (trend.latest != null)
                 UnitNumber(
@@ -206,10 +225,12 @@ class _TrendCard extends StatelessWidget {
                   color: color,
                 )
               else
-                Text('—',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant)),
-              const AppSpacing.hsm(),
+                Text(
+                  '—',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               if (delta != null && trend.points.length >= 2)
                 DeltaChip(
                   delta: delta,
@@ -263,4 +284,3 @@ class _TrendCard extends StatelessWidget {
     );
   }
 }
-

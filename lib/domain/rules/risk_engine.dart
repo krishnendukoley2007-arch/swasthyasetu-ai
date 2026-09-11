@@ -34,22 +34,22 @@ enum RiskBand {
   red;
 
   String get storageValue => switch (this) {
-        RiskBand.green => 'GREEN',
-        RiskBand.yellow => 'YELLOW',
-        RiskBand.red => 'RED',
-      };
+    RiskBand.green => 'GREEN',
+    RiskBand.yellow => 'YELLOW',
+    RiskBand.red => 'RED',
+  };
 
   String get label => switch (this) {
-        RiskBand.green => 'Normal',
-        RiskBand.yellow => 'Needs attention',
-        RiskBand.red => 'Urgent',
-      };
+    RiskBand.green => 'Normal',
+    RiskBand.yellow => 'Needs attention',
+    RiskBand.red => 'Urgent',
+  };
 
   static RiskBand fromStorage(String raw) => switch (raw) {
-        'RED' => RiskBand.red,
-        'YELLOW' => RiskBand.yellow,
-        _ => RiskBand.green,
-      };
+    'RED' => RiskBand.red,
+    'YELLOW' => RiskBand.yellow,
+    _ => RiskBand.green,
+  };
 }
 
 enum RuleSeverity {
@@ -60,10 +60,10 @@ enum RuleSeverity {
   critical;
 
   String get label => switch (this) {
-        RuleSeverity.advisory => 'Note',
-        RuleSeverity.warning => 'Warning',
-        RuleSeverity.critical => 'Critical',
-      };
+    RuleSeverity.advisory => 'Note',
+    RuleSeverity.warning => 'Warning',
+    RuleSeverity.critical => 'Critical',
+  };
 }
 
 /// Stable identifiers for every rule. Persisted in `screenings.triggered_rules`
@@ -176,20 +176,20 @@ class TriageAssessment {
       firedRules.where((r) => r.severity == RuleSeverity.advisory).toList();
 
   TriageResult toResult() => TriageResult(
-        level: band.storageValue,
-        score: score,
-        triggeredRules: firedRules.map((r) => r.display).toList(),
-        recommendedAction: recommendedAction,
-        escalationLevel: escalationLevel,
-        vitals: {
-          'heart_rate': sample.heartRateBpm,
-          'spo2': sample.spo2Percent,
-          'temperature': sample.temperatureC,
-          'ecg_quality': sample.ecgSignalQuality,
-        },
-        symptoms: symptoms,
-        isDemo: isDemo,
-      );
+    level: band.storageValue,
+    score: score,
+    triggeredRules: firedRules.map((r) => r.display).toList(),
+    recommendedAction: recommendedAction,
+    escalationLevel: escalationLevel,
+    vitals: {
+      'heart_rate': sample.heartRateBpm,
+      'spo2': sample.spo2Percent,
+      'temperature': sample.temperatureC,
+      'ecg_quality': sample.ecgSignalQuality,
+    },
+    symptoms: symptoms,
+    isDemo: isDemo,
+  );
 }
 
 class RiskEngine {
@@ -284,13 +284,12 @@ class RiskEngine {
     required HealthSample sample,
     required List<String> symptoms,
     required Patient patient,
-  }) =>
-      assess(
-        sample: sample,
-        symptoms: symptoms,
-        age: patient.age,
-        flags: Vulnerability.parse(patient.vulnerabilityFlags),
-      );
+  }) => assess(
+    sample: sample,
+    symptoms: symptoms,
+    age: patient.age,
+    flags: Vulnerability.parse(patient.vulnerabilityFlags),
+  );
 
   /// Legacy shape, kept so older call sites compile. Prefer [assess].
   static TriageResult evaluate({
@@ -298,21 +297,22 @@ class RiskEngine {
     required List<String> symptoms,
     List<String> vulnerabilityFlags = const [],
     int age = 30,
-  }) =>
-      assess(
-        sample: sample,
-        symptoms: symptoms,
-        age: age,
-        flags: Vulnerability.parse(vulnerabilityFlags),
-      ).toResult();
+  }) => assess(
+    sample: sample,
+    symptoms: symptoms,
+    age: age,
+    flags: Vulnerability.parse(vulnerabilityFlags),
+  ).toResult();
 
   static TriageResult evaluateWithPatient({
     required HealthSample sample,
     required List<String> symptoms,
     required Patient patient,
-  }) =>
-      assessForPatient(sample: sample, symptoms: symptoms, patient: patient)
-          .toResult();
+  }) => assessForPatient(
+    sample: sample,
+    symptoms: symptoms,
+    patient: patient,
+  ).toResult();
 
   static Set<Vulnerability> _effectiveFlags({
     required int age,
@@ -334,34 +334,42 @@ class RiskEngine {
     // A zero reading means "not measured", not "no oxygen". Treating it as a
     // value would fire critical hypoxaemia on every unmeasured screening.
     if (s.spo2Percent <= 0) {
-      out.add(const FiredRule(
-        id: RuleId.spo2NotMeasured,
-        severity: RuleSeverity.advisory,
-        points: 0,
-        title: 'Oxygen saturation not measured',
-        detail: 'No usable SpO₂ reading was captured for this screening.',
-      ));
+      out.add(
+        const FiredRule(
+          id: RuleId.spo2NotMeasured,
+          severity: RuleSeverity.advisory,
+          points: 0,
+          title: 'Oxygen saturation not measured',
+          detail: 'No usable SpO₂ reading was captured for this screening.',
+        ),
+      );
       return;
     }
 
     if (s.spo2Percent < t.spo2Critical) {
-      out.add(FiredRule(
-        id: RuleId.spo2Critical,
-        severity: RuleSeverity.critical,
-        points: 45,
-        title: 'Oxygen saturation critically low',
-        detail: 'Measured ${s.spo2Percent}%, below the '
-            '${t.spo2Critical}% critical limit for this patient.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.spo2Critical,
+          severity: RuleSeverity.critical,
+          points: 45,
+          title: 'Oxygen saturation critically low',
+          detail:
+              'Measured ${s.spo2Percent}%, below the '
+              '${t.spo2Critical}% critical limit for this patient.',
+        ),
+      );
     } else if (s.spo2Percent < t.spo2Warning) {
-      out.add(FiredRule(
-        id: RuleId.spo2Warning,
-        severity: RuleSeverity.warning,
-        points: 15,
-        title: 'Oxygen saturation below normal',
-        detail: 'Measured ${s.spo2Percent}%, below the '
-            '${t.spo2Warning}% expected minimum for this patient.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.spo2Warning,
+          severity: RuleSeverity.warning,
+          points: 15,
+          title: 'Oxygen saturation below normal',
+          detail:
+              'Measured ${s.spo2Percent}%, below the '
+              '${t.spo2Warning}% expected minimum for this patient.',
+        ),
+      );
     }
   }
 
@@ -373,41 +381,53 @@ class RiskEngine {
     if (s.heartRateBpm <= 0) return;
 
     if (s.heartRateBpm > t.hrHighCritical) {
-      out.add(FiredRule(
-        id: RuleId.hrTachyCritical,
-        severity: RuleSeverity.critical,
-        points: 35,
-        title: 'Heart rate severely elevated',
-        detail: 'Measured ${s.heartRateBpm} bpm, above the '
-            '${t.hrHighCritical} bpm critical limit for this patient.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.hrTachyCritical,
+          severity: RuleSeverity.critical,
+          points: 35,
+          title: 'Heart rate severely elevated',
+          detail:
+              'Measured ${s.heartRateBpm} bpm, above the '
+              '${t.hrHighCritical} bpm critical limit for this patient.',
+        ),
+      );
     } else if (s.heartRateBpm > t.hrHighWarning) {
-      out.add(FiredRule(
-        id: RuleId.hrTachyWarning,
-        severity: RuleSeverity.warning,
-        points: 10,
-        title: 'Heart rate elevated',
-        detail: 'Measured ${s.heartRateBpm} bpm, above the '
-            '${t.hrHighWarning} bpm expected maximum for this patient.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.hrTachyWarning,
+          severity: RuleSeverity.warning,
+          points: 10,
+          title: 'Heart rate elevated',
+          detail:
+              'Measured ${s.heartRateBpm} bpm, above the '
+              '${t.hrHighWarning} bpm expected maximum for this patient.',
+        ),
+      );
     } else if (s.heartRateBpm < t.hrLowCritical) {
-      out.add(FiredRule(
-        id: RuleId.hrBradyCritical,
-        severity: RuleSeverity.critical,
-        points: 35,
-        title: 'Heart rate severely low',
-        detail: 'Measured ${s.heartRateBpm} bpm, below the '
-            '${t.hrLowCritical} bpm critical limit for this patient.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.hrBradyCritical,
+          severity: RuleSeverity.critical,
+          points: 35,
+          title: 'Heart rate severely low',
+          detail:
+              'Measured ${s.heartRateBpm} bpm, below the '
+              '${t.hrLowCritical} bpm critical limit for this patient.',
+        ),
+      );
     } else if (s.heartRateBpm < t.hrLowWarning) {
-      out.add(FiredRule(
-        id: RuleId.hrBradyWarning,
-        severity: RuleSeverity.warning,
-        points: 10,
-        title: 'Heart rate low',
-        detail: 'Measured ${s.heartRateBpm} bpm, below the '
-            '${t.hrLowWarning} bpm expected minimum for this patient.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.hrBradyWarning,
+          severity: RuleSeverity.warning,
+          points: 10,
+          title: 'Heart rate low',
+          detail:
+              'Measured ${s.heartRateBpm} bpm, below the '
+              '${t.hrLowWarning} bpm expected minimum for this patient.',
+        ),
+      );
     }
   }
 
@@ -419,32 +439,41 @@ class RiskEngine {
     if (s.temperatureC <= 0) return;
 
     if (s.temperatureC < t.tempLow) {
-      out.add(FiredRule(
-        id: RuleId.tempLow,
-        severity: RuleSeverity.critical,
-        points: 30,
-        title: 'Body temperature too low',
-        detail: 'Measured ${_temp(s.temperatureC)}, below the '
-            '${_temp(t.tempLow)} hypothermia limit.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.tempLow,
+          severity: RuleSeverity.critical,
+          points: 30,
+          title: 'Body temperature too low',
+          detail:
+              'Measured ${_temp(s.temperatureC)}, below the '
+              '${_temp(t.tempLow)} hypothermia limit.',
+        ),
+      );
     } else if (s.temperatureC >= t.tempHigh) {
-      out.add(FiredRule(
-        id: RuleId.tempHigh,
-        severity: RuleSeverity.warning,
-        points: 25,
-        title: 'High fever',
-        detail: 'Measured ${_temp(s.temperatureC)}, at or above the '
-            '${_temp(t.tempHigh)} high-fever limit for this patient.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.tempHigh,
+          severity: RuleSeverity.warning,
+          points: 25,
+          title: 'High fever',
+          detail:
+              'Measured ${_temp(s.temperatureC)}, at or above the '
+              '${_temp(t.tempHigh)} high-fever limit for this patient.',
+        ),
+      );
     } else if (s.temperatureC >= t.tempFever) {
-      out.add(FiredRule(
-        id: RuleId.tempFever,
-        severity: RuleSeverity.warning,
-        points: 10,
-        title: 'Fever',
-        detail: 'Measured ${_temp(s.temperatureC)}, at or above the '
-            '${_temp(t.tempFever)} fever limit for this patient.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.tempFever,
+          severity: RuleSeverity.warning,
+          points: 10,
+          title: 'Fever',
+          detail:
+              'Measured ${_temp(s.temperatureC)}, at or above the '
+              '${_temp(t.tempFever)} fever limit for this patient.',
+        ),
+      );
     }
   }
 
@@ -456,21 +485,26 @@ class RiskEngine {
     VitalThresholds t,
     List<FiredRule> out,
   ) {
-    if (s.spo2Percent <= 0 || s.heartRateBpm <= 0 || s.temperatureC <= 0) return;
+    if (s.spo2Percent <= 0 || s.heartRateBpm <= 0 || s.temperatureC <= 0) {
+      return;
+    }
 
     final feverish = s.temperatureC >= t.tempFever;
     final tachycardic = s.heartRateBpm > t.hrHighWarning;
     final hypoxaemic = s.spo2Percent < t.spo2Warning;
 
     if (feverish && tachycardic && hypoxaemic) {
-      out.add(const FiredRule(
-        id: RuleId.sepsisScreen,
-        severity: RuleSeverity.critical,
-        points: 30,
-        title: 'Fever with fast pulse and low oxygen',
-        detail: 'All three together can indicate a serious infection spreading '
-            'through the body. This combination needs same-day assessment.',
-      ));
+      out.add(
+        const FiredRule(
+          id: RuleId.sepsisScreen,
+          severity: RuleSeverity.critical,
+          points: 30,
+          title: 'Fever with fast pulse and low oxygen',
+          detail:
+              'All three together can indicate a serious infection spreading '
+              'through the body. This combination needs same-day assessment.',
+        ),
+      );
     }
   }
 
@@ -481,29 +515,35 @@ class RiskEngine {
     // not over-trusted, but it adds no risk points — the patient is not sicker
     // because an electrode was dry.
     if (s.ecgSignalQuality < 0.5) {
-      out.add(FiredRule(
-        id: RuleId.ecgPoorQuality,
-        severity: RuleSeverity.advisory,
-        points: 0,
-        title: 'ECG signal quality poor',
-        detail: 'Rhythm analysis is unreliable at this signal quality '
-            '(${(s.ecgSignalQuality * 100).round()}%). Re-check electrode '
-            'contact and repeat if a rhythm assessment is needed.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.ecgPoorQuality,
+          severity: RuleSeverity.advisory,
+          points: 0,
+          title: 'ECG signal quality poor',
+          detail:
+              'Rhythm analysis is unreliable at this signal quality '
+              '(${(s.ecgSignalQuality * 100).round()}%). Re-check electrode '
+              'contact and repeat if a rhythm assessment is needed.',
+        ),
+      );
       return;
     }
 
     // Only trust an irregularity call when the signal was good enough to make
     // it. rrIntervalMs of 0 means no R-peak pair was measured.
     if (s.rrIntervalMs > 0 && !s.rPeakDetected) {
-      out.add(const FiredRule(
-        id: RuleId.ecgIrregular,
-        severity: RuleSeverity.warning,
-        points: 20,
-        title: 'Irregular rhythm detected',
-        detail: 'The beat-to-beat interval was inconsistent. This is a '
-            'screening signal only and needs a proper ECG to interpret.',
-      ));
+      out.add(
+        const FiredRule(
+          id: RuleId.ecgIrregular,
+          severity: RuleSeverity.warning,
+          points: 20,
+          title: 'Irregular rhythm detected',
+          detail:
+              'The beat-to-beat interval was inconsistent. This is a '
+              'screening signal only and needs a proper ECG to interpret.',
+        ),
+      );
     }
   }
 
@@ -515,38 +555,47 @@ class RiskEngine {
 
     if (s.bpConfidence == 'EXPERIMENTAL') {
       if (s.estimatedSystolic >= 180 || s.estimatedDiastolic >= 110) {
-        out.add(FiredRule(
-          id: RuleId.bpExperimentalAdvisory,
-          severity: RuleSeverity.advisory,
-          points: 0,
-          title: 'Estimated blood pressure very high (Advisory)',
-          detail: 'Estimated ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg. '
-              'This is an uncalibrated optical estimate — confirm with a manual '
-              'sphygmomanometer cuff before acting on it.',
-        ));
+        out.add(
+          FiredRule(
+            id: RuleId.bpExperimentalAdvisory,
+            severity: RuleSeverity.advisory,
+            points: 0,
+            title: 'Estimated blood pressure very high (Advisory)',
+            detail:
+                'Estimated ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg. '
+                'This is an uncalibrated optical estimate — confirm with a manual '
+                'sphygmomanometer cuff before acting on it.',
+          ),
+        );
       } else if (s.estimatedSystolic >= 140 || s.estimatedDiastolic >= 90) {
-        out.add(FiredRule(
-          id: RuleId.bpExperimentalAdvisory,
-          severity: RuleSeverity.advisory,
-          points: 0,
-          title: 'Estimated blood pressure elevated (Advisory)',
-          detail: 'Estimated ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg '
-              '(optical estimate). Confirm with a standard blood pressure cuff.',
-        ));
+        out.add(
+          FiredRule(
+            id: RuleId.bpExperimentalAdvisory,
+            severity: RuleSeverity.advisory,
+            points: 0,
+            title: 'Estimated blood pressure elevated (Advisory)',
+            detail:
+                'Estimated ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg '
+                '(optical estimate). Confirm with a standard blood pressure cuff.',
+          ),
+        );
       }
       return;
     }
 
     if (s.estimatedSystolic >= 180 || s.estimatedDiastolic >= 110) {
-      out.add(FiredRule(
-        id: RuleId.bpHigh,
-        severity: RuleSeverity.warning,
-        points: 20,
-        title: 'Estimated blood pressure very high',
-        detail: 'Estimated ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg. '
-            'This is an uncalibrated estimate — confirm with a cuff before '
-            'acting on it.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.bpHigh,
+          severity: RuleSeverity.warning,
+          points: 20,
+          title: 'Estimated blood pressure very high',
+          detail:
+              'Estimated ${s.estimatedSystolic}/${s.estimatedDiastolic} mmHg. '
+              'This is an uncalibrated estimate — confirm with a cuff before '
+              'acting on it.',
+        ),
+      );
     }
   }
 
@@ -554,32 +603,41 @@ class RiskEngine {
     if (s.estimatedGlucose <= 0) return;
 
     if (s.estimatedGlucose < 70) {
-      out.add(FiredRule(
-        id: RuleId.glucoseHypoglycemia,
-        severity: RuleSeverity.critical,
-        points: 30,
-        title: 'Estimated blood glucose low (Hypoglycemia)',
-        detail: 'Estimated ${s.estimatedGlucose} mg/dL, below the 70 mg/dL '
-            'safety threshold. Confirm with a blood test.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.glucoseHypoglycemia,
+          severity: RuleSeverity.critical,
+          points: 30,
+          title: 'Estimated blood glucose low (Hypoglycemia)',
+          detail:
+              'Estimated ${s.estimatedGlucose} mg/dL, below the 70 mg/dL '
+              'safety threshold. Confirm with a blood test.',
+        ),
+      );
     } else if (s.estimatedGlucose >= 250) {
-      out.add(FiredRule(
-        id: RuleId.glucoseHyperglycemiaCritical,
-        severity: RuleSeverity.critical,
-        points: 30,
-        title: 'Estimated blood glucose critically high',
-        detail: 'Estimated ${s.estimatedGlucose} mg/dL, at or above 250 mg/dL. '
-            'Confirm with a blood glucose meter.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.glucoseHyperglycemiaCritical,
+          severity: RuleSeverity.critical,
+          points: 30,
+          title: 'Estimated blood glucose critically high',
+          detail:
+              'Estimated ${s.estimatedGlucose} mg/dL, at or above 250 mg/dL. '
+              'Confirm with a blood glucose meter.',
+        ),
+      );
     } else if (s.estimatedGlucose >= 180) {
-      out.add(FiredRule(
-        id: RuleId.glucoseHyperglycemiaHigh,
-        severity: RuleSeverity.warning,
-        points: 15,
-        title: 'Estimated blood glucose elevated',
-        detail: 'Estimated ${s.estimatedGlucose} mg/dL, above the expected '
-            '140 mg/dL upper normal limit.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.glucoseHyperglycemiaHigh,
+          severity: RuleSeverity.warning,
+          points: 15,
+          title: 'Estimated blood glucose elevated',
+          detail:
+              'Estimated ${s.estimatedGlucose} mg/dL, above the expected '
+              '140 mg/dL upper normal limit.',
+        ),
+      );
     }
   }
 
@@ -590,58 +648,69 @@ class RiskEngine {
         .toSet();
     if (normalised.isEmpty) return;
 
-    final redFlags =
-        normalised.where(_redFlagSymptoms.contains).toList()..sort();
+    final redFlags = normalised.where(_redFlagSymptoms.contains).toList()
+      ..sort();
     if (redFlags.isNotEmpty) {
-      out.add(FiredRule(
-        id: RuleId.redFlagSymptoms,
-        severity: RuleSeverity.critical,
-        points: 25,
-        title: 'Danger sign reported',
-        detail: '${_humanList(redFlags)} — reported danger '
-            'sign${redFlags.length > 1 ? 's' : ''} that warrant assessment '
-            'regardless of the measured vitals.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.redFlagSymptoms,
+          severity: RuleSeverity.critical,
+          points: 25,
+          title: 'Danger sign reported',
+          detail:
+              '${_humanList(redFlags)} — reported danger '
+              'sign${redFlags.length > 1 ? 's' : ''} that warrant assessment '
+              'regardless of the measured vitals.',
+        ),
+      );
     }
 
-    final respiratory = normalised
-        .where(_respiratorySymptoms.contains)
-        .where((s) => !_redFlagSymptoms.contains(s))
-        .toList()
-      ..sort();
+    final respiratory =
+        normalised
+            .where(_respiratorySymptoms.contains)
+            .where((s) => !_redFlagSymptoms.contains(s))
+            .toList()
+          ..sort();
     if (respiratory.isNotEmpty) {
       // Capped so a long symptom checklist cannot dominate the measured vitals.
       final points = (respiratory.length * 5).clamp(0, 15);
-      out.add(FiredRule(
-        id: RuleId.respiratorySymptoms,
-        severity: RuleSeverity.warning,
-        points: points,
-        title: 'Respiratory symptoms reported',
-        detail: _humanList(respiratory),
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.respiratorySymptoms,
+          severity: RuleSeverity.warning,
+          points: points,
+          title: 'Respiratory symptoms reported',
+          detail: _humanList(respiratory),
+        ),
+      );
     }
 
-    final dehydration =
-        normalised.where(_dehydrationSymptoms.contains).toList()..sort();
+    final dehydration = normalised.where(_dehydrationSymptoms.contains).toList()
+      ..sort();
     if (dehydration.length >= 2) {
-      out.add(FiredRule(
-        id: RuleId.dehydrationSymptoms,
-        severity: RuleSeverity.warning,
-        points: 15,
-        title: 'Possible dehydration',
-        detail: '${_humanList(dehydration)} together raise the risk of fluid '
-            'loss, especially in hot weather or after flooding.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.dehydrationSymptoms,
+          severity: RuleSeverity.warning,
+          points: 15,
+          title: 'Possible dehydration',
+          detail:
+              '${_humanList(dehydration)} together raise the risk of fluid '
+              'loss, especially in hot weather or after flooding.',
+        ),
+      );
     }
 
     if (normalised.length >= 3) {
-      out.add(FiredRule(
-        id: RuleId.multipleSymptoms,
-        severity: RuleSeverity.warning,
-        points: 10,
-        title: 'Several symptoms at once',
-        detail: '${normalised.length} symptoms reported together.',
-      ));
+      out.add(
+        FiredRule(
+          id: RuleId.multipleSymptoms,
+          severity: RuleSeverity.warning,
+          points: 10,
+          title: 'Several symptoms at once',
+          detail: '${normalised.length} symptoms reported together.',
+        ),
+      );
     }
   }
 
@@ -652,43 +721,45 @@ class RiskEngine {
     // Sorted by enum index so the rule list is stable regardless of set order.
     final ordered = flags.toList()..sort((a, b) => a.index.compareTo(b.index));
     for (final flag in ordered) {
-      out.add(FiredRule(
-        id: _vulnerabilityRuleId(flag),
-        severity: RuleSeverity.warning,
-        points: flag.riskPoints,
-        title: '${flag.label}: thresholds adjusted',
-        detail: flag.explanation,
-      ));
+      out.add(
+        FiredRule(
+          id: _vulnerabilityRuleId(flag),
+          severity: RuleSeverity.warning,
+          points: flag.riskPoints,
+          title: '${flag.label}: thresholds adjusted',
+          detail: flag.explanation,
+        ),
+      );
     }
   }
 
   static String _vulnerabilityRuleId(Vulnerability v) => switch (v) {
-        Vulnerability.elderly => RuleId.vulnerabilityElderly,
-        Vulnerability.chronic => RuleId.vulnerabilityChronic,
-        Vulnerability.pregnant => RuleId.vulnerabilityPregnant,
-        Vulnerability.infant => RuleId.vulnerabilityInfant,
-        Vulnerability.immunocompromised => RuleId.vulnerabilityImmuno,
-      };
+    Vulnerability.elderly => RuleId.vulnerabilityElderly,
+    Vulnerability.chronic => RuleId.vulnerabilityChronic,
+    Vulnerability.pregnant => RuleId.vulnerabilityPregnant,
+    Vulnerability.infant => RuleId.vulnerabilityInfant,
+    Vulnerability.immunocompromised => RuleId.vulnerabilityImmuno,
+  };
 
   // ─────────────────────────────── Outputs ───────────────────────────────
 
   static String recommendedActionFor(RiskBand band) => switch (band) {
-        RiskBand.green =>
-          'Readings are within the expected range for this patient. Continue '
-              'routine monitoring.',
-        RiskBand.yellow =>
-          'Some readings need attention. Arrange a health-worker or clinic '
-              'review, and screen again if anything changes.',
-        RiskBand.red =>
-          'Readings are concerning. Arrange prompt medical assessment — do not '
-              'wait for symptoms to worsen.',
-      };
+    RiskBand.green =>
+      'Readings are within the expected range for this patient. Continue '
+          'routine monitoring.',
+    RiskBand.yellow =>
+      'Some readings need attention. Arrange a health-worker or clinic '
+          'review, and screen again if anything changes.',
+    RiskBand.red =>
+      'Readings are concerning. Arrange prompt medical assessment — do not '
+          'wait for symptoms to worsen.',
+  };
 
   static String escalationLevelFor(RiskBand band) => switch (band) {
-        RiskBand.green => 'NONE',
-        RiskBand.yellow => 'CLINIC_VISIT',
-        RiskBand.red => 'EMERGENCY',
-      };
+    RiskBand.green => 'NONE',
+    RiskBand.yellow => 'CLINIC_VISIT',
+    RiskBand.red => 'EMERGENCY',
+  };
 
   static String _temp(double c) => '${c.toStringAsFixed(1)}°C';
 
@@ -698,7 +769,9 @@ class RiskEngine {
       return s[0].toUpperCase() + s.substring(1);
     }).toList();
     if (capitalised.length == 1) return capitalised.first;
-    if (capitalised.length == 2) return '${capitalised[0]} and ${capitalised[1]}';
+    if (capitalised.length == 2) {
+      return '${capitalised[0]} and ${capitalised[1]}';
+    }
     return '${capitalised.sublist(0, capitalised.length - 1).join(', ')} '
         'and ${capitalised.last}';
   }
@@ -708,82 +781,82 @@ class RiskEngine {
   static const Map<String, String> ruleDescriptions = {
     RuleId.spo2Critical:
         'Oxygen saturation below the critical limit means the blood is not '
-            'carrying enough oxygen. This needs urgent assessment.',
+        'carrying enough oxygen. This needs urgent assessment.',
     RuleId.spo2Warning:
         'Oxygen saturation slightly below normal can be an early sign of a '
-            'chest infection or breathing problem.',
+        'chest infection or breathing problem.',
     RuleId.hrTachyCritical:
         'A very fast pulse at rest can accompany serious infection, '
-            'dehydration, blood loss, or a heart rhythm problem.',
+        'dehydration, blood loss, or a heart rhythm problem.',
     RuleId.hrTachyWarning:
         'A raised pulse at rest is common with fever, pain, anxiety, or '
-            'dehydration, and is worth re-checking when calm.',
+        'dehydration, and is worth re-checking when calm.',
     RuleId.hrBradyCritical:
         'A very slow pulse can reduce blood flow to the brain and needs '
-            'assessment, particularly with dizziness or fainting.',
+        'assessment, particularly with dizziness or fainting.',
     RuleId.hrBradyWarning:
         'A slow pulse can be normal in fit adults, but is worth noting '
-            'alongside any dizziness or tiredness.',
+        'alongside any dizziness or tiredness.',
     RuleId.tempHigh:
         'High fever increases fluid loss and can indicate a significant '
-            'infection.',
+        'infection.',
     RuleId.tempFever:
         'Fever is the body responding to infection. Fluids, rest, and '
-            'monitoring are the first steps.',
+        'monitoring are the first steps.',
     RuleId.tempLow:
         'Low body temperature can follow cold exposure, severe infection, or '
-            'shock, and is dangerous in the very young and very old.',
+        'shock, and is dangerous in the very young and very old.',
     RuleId.sepsisScreen:
         'Fever, a fast pulse, and low oxygen together can mean an infection is '
-            'affecting the whole body. This needs same-day assessment.',
+        'affecting the whole body. This needs same-day assessment.',
     RuleId.ecgIrregular:
         'An irregular beat-to-beat interval can indicate a rhythm disturbance. '
-            'A proper ECG is needed to interpret it.',
+        'A proper ECG is needed to interpret it.',
     RuleId.ecgPoorQuality:
         'The ECG trace was too noisy to analyse. This says nothing about the '
-            'heart — it means the electrodes need better contact.',
+        'heart — it means the electrodes need better contact.',
     RuleId.spo2NotMeasured:
         'No oxygen reading was captured. Re-seat the finger sensor and repeat '
-            'the measurement before relying on this screening.',
+        'the measurement before relying on this screening.',
     RuleId.bpHigh:
         'A very high blood-pressure estimate should be confirmed with a cuff '
-            'before any action is taken.',
+        'before any action is taken.',
     RuleId.glucoseHypoglycemia:
         'Low blood glucose estimates suggest hypoglycemia. Fasting or symptomatic '
-            'low sugar requires verification with a blood test.',
+        'low sugar requires verification with a blood test.',
     RuleId.glucoseHyperglycemiaHigh:
         'Elevated blood glucose estimates suggest hyperglycemia. High sugar levels '
-            'should be monitored and confirmed.',
+        'should be monitored and confirmed.',
     RuleId.glucoseHyperglycemiaCritical:
         'Critically high blood glucose estimates require prompt clinical review '
-            'and confirmation with a blood glucose meter.',
+        'and confirmation with a blood glucose meter.',
     RuleId.respiratorySymptoms:
         'Breathing symptoms alongside abnormal vitals raise the concern for a '
-            'chest infection.',
+        'chest infection.',
     RuleId.redFlagSymptoms:
         'Certain symptoms are treated as danger signs on their own and warrant '
-            'assessment even when vitals look normal.',
+        'assessment even when vitals look normal.',
     RuleId.multipleSymptoms:
         'Several symptoms together make significant illness more likely than '
-            'any one alone.',
+        'any one alone.',
     RuleId.dehydrationSymptoms:
         'Vomiting, loose stools, and dizziness together suggest fluid loss. '
-            'Oral rehydration is the immediate priority.',
+        'Oral rehydration is the immediate priority.',
     RuleId.vulnerabilityElderly:
         'Older adults have less physiological reserve, so thresholds are '
-            'tightened and fever may be less pronounced.',
+        'tightened and fever may be less pronounced.',
     RuleId.vulnerabilityChronic:
         'An existing long-term condition raises the concern attached to the '
-            'same set of readings.',
+        'same set of readings.',
     RuleId.vulnerabilityPregnant:
         'Pregnancy raises resting pulse normally, so heart-rate limits are '
-            'raised while fever limits are lowered.',
+        'raised while fever limits are lowered.',
     RuleId.vulnerabilityInfant:
         'Infants normally have a much faster pulse, and any fever in an infant '
-            'is treated as significant.',
+        'is treated as significant.',
     RuleId.vulnerabilityImmuno:
         'A weakened immune system means infection can progress quickly with '
-            'fewer outward signs.',
+        'fewer outward signs.',
   };
 
   /// Legacy accessor kept for the debug screen.

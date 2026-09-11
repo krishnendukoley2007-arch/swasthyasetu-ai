@@ -40,24 +40,26 @@ class ArcGauge extends StatelessWidget {
       label: semanticsLabel,
       value: semanticsLabel == null ? '${value.round()} of 100' : null,
       child: TweenAnimationBuilder<double>(
-      tween: Tween(end: value.clamp(0, 100)),
-      // Reduced motion: the gauge must still show the final value, just
-      // without the sweep.
-      duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 900),
-      curve: Curves.easeOutCubic,
-      builder: (_, v, __) => SizedBox(
-        width: size,
-        height: size * 0.72,
-        child: CustomPaint(
-          painter: _GaugePainter(v, bands),
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.only(top: size * 0.18),
-              child: child,
+        tween: Tween(end: value.clamp(0, 100)),
+        // Reduced motion: the gauge must still show the final value, just
+        // without the sweep.
+        duration: reduceMotion
+            ? Duration.zero
+            : const Duration(milliseconds: 900),
+        curve: Curves.easeOutCubic,
+        builder: (_, v, __) => SizedBox(
+          width: size,
+          height: size * 0.72,
+          child: CustomPaint(
+            painter: _GaugePainter(v, bands),
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.only(top: size * 0.18),
+                child: child,
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

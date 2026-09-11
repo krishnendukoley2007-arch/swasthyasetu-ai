@@ -27,10 +27,10 @@ class BpCalibration {
   }
 
   String get label => switch (state) {
-        CalibrationState.never => 'Not calibrated',
-        CalibrationState.valid => 'Calibrated',
-        CalibrationState.stale => 'Calibration expired',
-      };
+    CalibrationState.never => 'Not calibrated',
+    CalibrationState.valid => 'Calibrated',
+    CalibrationState.stale => 'Calibration expired',
+  };
 
   int? get daysSince =>
       date == null ? null : DateTime.now().difference(date!).inDays;
@@ -50,8 +50,9 @@ class DeviceRepository {
   Future<List<Device>> getAll() async =>
       (await _db.getAllDevices()).map((r) => r.toModel()).toList();
 
-  Stream<List<Device>> watchAll() =>
-      _db.watchAllDevices().map((rows) => rows.map((r) => r.toModel()).toList());
+  Stream<List<Device>> watchAll() => _db.watchAllDevices().map(
+    (rows) => rows.map((r) => r.toModel()).toList(),
+  );
 
   Future<Device?> getById(String id) async =>
       (await _db.getDeviceRow(id))?.toModel();
@@ -83,11 +84,7 @@ class DeviceRepository {
     );
   }
 
-  Future<void> markConnected(
-    String id, {
-    int? battery,
-    String? firmware,
-  }) =>
+  Future<void> markConnected(String id, {int? battery, String? firmware}) =>
       _db.markDeviceConnected(id, battery: battery, firmware: firmware);
 
   Future<void> markAllDisconnected() => _db.markAllDevicesDisconnected();
@@ -111,21 +108,19 @@ class DeviceRepository {
     required int systolic,
     required int diastolic,
     DateTime? at,
-  }) =>
-      _db.setDeviceCalibration(
-        deviceId,
-        date: at ?? DateTime.now(),
-        systolic: systolic,
-        diastolic: diastolic,
-      );
+  }) => _db.setDeviceCalibration(
+    deviceId,
+    date: at ?? DateTime.now(),
+    systolic: systolic,
+    diastolic: diastolic,
+  );
 
   /// Most recent calibration across all paired devices — what the Settings
   /// screen shows when no device is currently connected.
   Future<BpCalibration> latestCalibration() async {
     final rows = await _db.getAllDevices();
-    final calibrated =
-        rows.where((r) => r.calibrationDate != null).toList()
-          ..sort((a, b) => b.calibrationDate!.compareTo(a.calibrationDate!));
+    final calibrated = rows.where((r) => r.calibrationDate != null).toList()
+      ..sort((a, b) => b.calibrationDate!.compareTo(a.calibrationDate!));
     if (calibrated.isEmpty) return const BpCalibration();
     final r = calibrated.first;
     return BpCalibration(
@@ -163,23 +158,23 @@ enum FirmwareCompatibility {
   bool get needsWarning => this != FirmwareCompatibility.supported;
 
   String get label => switch (this) {
-        FirmwareCompatibility.supported => 'Compatible',
-        FirmwareCompatibility.tooOld => 'Firmware out of date',
-        FirmwareCompatibility.tooNew => 'App out of date',
-        FirmwareCompatibility.unknown => 'Version unknown',
-      };
+    FirmwareCompatibility.supported => 'Compatible',
+    FirmwareCompatibility.tooOld => 'Firmware out of date',
+    FirmwareCompatibility.tooNew => 'App out of date',
+    FirmwareCompatibility.unknown => 'Version unknown',
+  };
 
   String get detail => switch (this) {
-        FirmwareCompatibility.supported =>
-          'This device reports a firmware version this app build supports.',
-        FirmwareCompatibility.tooOld =>
-          'This device runs firmware older than this app expects. Readings may '
-              'be missing fields. Update the device firmware when possible.',
-        FirmwareCompatibility.tooNew =>
-          'This device runs newer firmware than this app build knows about. '
-              'Some readings may not be shown. Update the app when possible.',
-        FirmwareCompatibility.unknown =>
-          'The device did not report a firmware version. Screening still works, '
-              'but compatibility cannot be confirmed.',
-      };
+    FirmwareCompatibility.supported =>
+      'This device reports a firmware version this app build supports.',
+    FirmwareCompatibility.tooOld =>
+      'This device runs firmware older than this app expects. Readings may '
+          'be missing fields. Update the device firmware when possible.',
+    FirmwareCompatibility.tooNew =>
+      'This device runs newer firmware than this app build knows about. '
+          'Some readings may not be shown. Update the app when possible.',
+    FirmwareCompatibility.unknown =>
+      'The device did not report a firmware version. Screening still works, '
+          'but compatibility cannot be confirmed.',
+  };
 }

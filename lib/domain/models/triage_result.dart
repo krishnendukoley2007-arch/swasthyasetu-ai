@@ -22,7 +22,8 @@ class TriageResult {
   factory TriageResult.fromJson(Map<String, dynamic> json) => TriageResult(
     level: json['level'] as String,
     score: json['score'] as int,
-    triggeredRules: (json['triggeredRules'] as List<dynamic>?)?.cast<String>() ?? [],
+    triggeredRules:
+        (json['triggeredRules'] as List<dynamic>?)?.cast<String>() ?? [],
     recommendedAction: json['recommendedAction'] as String,
     escalationLevel: json['escalationLevel'] as String,
     vitals: (json['vitals'] as Map<String, dynamic>?) ?? {},
@@ -65,7 +66,8 @@ class TriageResult {
     level: 'GREEN',
     score: 20,
     triggeredRules: [],
-    recommendedAction: 'Vitals within normal range. Continue routine monitoring.',
+    recommendedAction:
+        'Vitals within normal range. Continue routine monitoring.',
     escalationLevel: 'NONE',
     vitals: {},
     symptoms: [],
@@ -84,7 +86,8 @@ class TriageResult {
     // disagreed. See RiskEngine.bandForScore.
     score: 45,
     triggeredRules: triggeredRules,
-    recommendedAction: 'Some measurements require attention. Consult healthcare professional. Continue monitoring.',
+    recommendedAction:
+        'Some measurements require attention. Consult healthcare professional. Continue monitoring.',
     escalationLevel: 'CLINIC_VISIT',
     vitals: vitals,
     symptoms: symptoms,
@@ -100,7 +103,8 @@ class TriageResult {
     level: 'RED',
     score: 90,
     triggeredRules: triggeredRules,
-    recommendedAction: 'Potentially concerning measurements detected. Seek prompt medical assessment.',
+    recommendedAction:
+        'Potentially concerning measurements detected. Seek prompt medical assessment.',
     escalationLevel: 'EMERGENCY',
     vitals: vitals,
     symptoms: symptoms,
@@ -122,7 +126,16 @@ class TriageResult {
           isDemo == other.isDemo;
 
   @override
-  int get hashCode => Object.hash(level, score, triggeredRules, recommendedAction, escalationLevel, vitals, symptoms, isDemo);
+  int get hashCode => Object.hash(
+    level,
+    score,
+    triggeredRules,
+    recommendedAction,
+    escalationLevel,
+    vitals,
+    symptoms,
+    isDemo,
+  );
 }
 
 class AIExplanation {
@@ -149,7 +162,8 @@ class AIExplanation {
     whyThisLevel: json['whyThisLevel'] as String,
     safeNextSteps: json['safeNextSteps'] as String,
     whenToEscalate: json['whenToEscalate'] as String,
-    questionsToAsk: (json['questionsToAsk'] as List<dynamic>?)?.cast<String>() ?? [],
+    questionsToAsk:
+        (json['questionsToAsk'] as List<dynamic>?)?.cast<String>() ?? [],
     disclaimer: json['disclaimer'] as String,
     isDemo: json['isDemo'] as bool? ?? false,
   );
@@ -183,8 +197,10 @@ class AIExplanation {
   );
 
   factory AIExplanation.demo({required String triageLevel}) => AIExplanation(
-    summary: 'Your screening shows a $triageLevel risk level based on the measured vital signs and reported symptoms.',
-    whyThisLevel: 'The deterministic risk engine evaluated your heart rate, oxygen saturation, temperature, and symptoms against established screening thresholds.',
+    summary:
+        'Your screening shows a $triageLevel risk level based on the measured vital signs and reported symptoms.',
+    whyThisLevel:
+        'The deterministic risk engine evaluated your heart rate, oxygen saturation, temperature, and symptoms against established screening thresholds.',
     safeNextSteps: triageLevel == 'RED'
         ? 'Seek immediate medical attention. Do not delay.'
         : triageLevel == 'YELLOW'
@@ -201,7 +217,8 @@ class AIExplanation {
       'Do you have any pre-existing conditions?',
       'Have you been in contact with anyone ill recently?',
     ],
-    disclaimer: 'This is a screening/triage assessment tool, NOT a medical diagnosis. Results should be reviewed by a qualified healthcare professional. The AI explanation is for informational purposes only and does not replace clinical judgment.',
+    disclaimer:
+        'This is a screening/triage assessment tool, NOT a medical diagnosis. Results should be reviewed by a qualified healthcare professional. The AI explanation is for informational purposes only and does not replace clinical judgment.',
     isDemo: true,
   );
 
@@ -219,5 +236,13 @@ class AIExplanation {
           isDemo == other.isDemo;
 
   @override
-  int get hashCode => Object.hash(summary, whyThisLevel, safeNextSteps, whenToEscalate, questionsToAsk, disclaimer, isDemo);
+  int get hashCode => Object.hash(
+    summary,
+    whyThisLevel,
+    safeNextSteps,
+    whenToEscalate,
+    questionsToAsk,
+    disclaimer,
+    isDemo,
+  );
 }

@@ -17,10 +17,7 @@ Widget _buttonContent({
     mainAxisSize: isExpanded ? MainAxisSize.max : MainAxisSize.min,
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
-      if (icon != null) ...[
-        icon,
-        const SizedBox(width: AppTheme.spacingSm),
-      ],
+      if (icon != null) ...[icon, const SizedBox(width: AppTheme.spacingSm)],
       Flexible(child: Text(label, textAlign: TextAlign.center)),
       if (trailingIcon != null) ...[
         const SizedBox(width: AppTheme.spacingSm),
@@ -56,9 +53,13 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buttonStyle = style ??
+    final buttonStyle =
+        style ??
         ElevatedButton.styleFrom(
-          minimumSize: Size(minWidth ?? (isExpanded ? double.infinity : 140), minHeight),
+          minimumSize: Size(
+            minWidth ?? (isExpanded ? double.infinity : 140),
+            minHeight,
+          ),
           padding: const EdgeInsets.symmetric(
             horizontal: AppTheme.spacingXl,
             vertical: AppTheme.spacingMd,
@@ -133,12 +134,17 @@ class AppOutlinedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final effectiveBorderColor = borderColor ?? theme.colorScheme.primary;
-    final effectiveForegroundColor = foregroundColor ?? theme.colorScheme.primary;
+    final effectiveForegroundColor =
+        foregroundColor ?? theme.colorScheme.primary;
 
-    final buttonStyle = style ??
+    final buttonStyle =
+        style ??
         OutlinedButton.styleFrom(
           foregroundColor: effectiveForegroundColor,
-          minimumSize: Size(minWidth ?? (isExpanded ? double.infinity : 140), minHeight),
+          minimumSize: Size(
+            minWidth ?? (isExpanded ? double.infinity : 140),
+            minHeight,
+          ),
           padding: const EdgeInsets.symmetric(
             horizontal: AppTheme.spacingXl,
             vertical: AppTheme.spacingMd,
@@ -165,7 +171,9 @@ class AppOutlinedButton extends StatelessWidget {
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(effectiveForegroundColor),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    effectiveForegroundColor,
+                  ),
                 ),
               )
             : _buttonContent(
@@ -197,10 +205,11 @@ class AppTextButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return TextButton(
       style: TextButton.styleFrom(
-        minimumSize: isExpanded ? Size(double.infinity, minHeight) : Size(80, minHeight),
+        minimumSize: isExpanded
+            ? Size(double.infinity, minHeight)
+            : Size(80, minHeight),
         padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spacingLg,
           vertical: AppTheme.spacingSm,
@@ -215,11 +224,7 @@ class AppTextButton extends StatelessWidget {
         ),
       ),
       onPressed: onPressed,
-      child: _buttonContent(
-        label: label,
-        icon: icon,
-        isExpanded: isExpanded,
-      ),
+      child: _buttonContent(label: label, icon: icon, isExpanded: isExpanded),
     );
   }
 }
@@ -253,7 +258,8 @@ class AppIconButton extends StatelessWidget {
       borderRadius: borderRadius ?? BorderRadius.circular(AppTheme.radiusFull),
       child: InkWell(
         onTap: onPressed,
-        borderRadius: borderRadius ?? BorderRadius.circular(AppTheme.radiusFull),
+        borderRadius:
+            borderRadius ?? BorderRadius.circular(AppTheme.radiusFull),
         child: SizedBox(
           width: size,
           height: size,
@@ -365,15 +371,26 @@ class AppSegmentedButton<T> extends StatelessWidget {
         }),
         side: WidgetStateProperty.resolveWith<BorderSide>((states) {
           if (states.contains(WidgetState.selected)) {
-            return BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5);
+            return BorderSide(
+              color: Theme.of(context).colorScheme.primary,
+              width: 1.5,
+            );
           }
-          return BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 1);
+          return BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 1,
+          );
         }),
         shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          ),
         ),
         padding: const WidgetStatePropertyAll(
-          EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingSm),
+          EdgeInsets.symmetric(
+            horizontal: AppTheme.spacingMd,
+            vertical: AppTheme.spacingSm,
+          ),
         ),
         textStyle: WidgetStatePropertyAll(
           Theme.of(context).textTheme.labelLarge,

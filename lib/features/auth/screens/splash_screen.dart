@@ -12,7 +12,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   late AnimationController _mainController;
   late AnimationController _particleController;
   late AnimationController _logoController;
@@ -86,15 +87,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       ),
     );
 
-    _titleSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _textController,
-        curve: const Interval(0.0, 0.6, curve: AppTheme.curveDecelerate),
-      ),
-    );
+    _titleSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _textController,
+            curve: const Interval(0.0, 0.6, curve: AppTheme.curveDecelerate),
+          ),
+        );
 
     _subtitleFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -103,42 +102,51 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       ),
     );
 
-    _subtitleSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(
+    _subtitleSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _textController,
+            curve: const Interval(0.3, 0.8, curve: AppTheme.curveDecelerate),
+          ),
+        );
+
+    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _textController,
-        curve: const Interval(0.3, 0.8, curve: AppTheme.curveDecelerate),
+        parent: _progressController,
+        curve: AppTheme.curveStandard,
       ),
     );
 
-    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _progressController, curve: AppTheme.curveStandard),
-    );
-
     _progressBarAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _progressController, curve: const Interval(0.2, 1.0, curve: AppTheme.curveDecelerate)),
+      CurvedAnimation(
+        parent: _progressController,
+        curve: const Interval(0.2, 1.0, curve: AppTheme.curveDecelerate),
+      ),
     );
 
-    _particleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_particleController);
+    _particleAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_particleController);
   }
 
   void _generateParticles() {
     for (int i = 0; i < 30; i++) {
-      _particles.add(_Particle(
-        x: _random.nextDouble(),
-        y: _random.nextDouble(),
-        size: 2 + _random.nextDouble() * 4,
-        speed: 0.1 + _random.nextDouble() * 0.3,
-        opacity: 0.1 + _random.nextDouble() * 0.3,
-        color: [
-          AppTheme.primaryGreen,
-          AppTheme.primaryGreenLight,
-          AppTheme.secondaryTeal,
-          AppTheme.accentAmber,
-        ][_random.nextInt(4)],
-      ));
+      _particles.add(
+        _Particle(
+          x: _random.nextDouble(),
+          y: _random.nextDouble(),
+          size: 2 + _random.nextDouble() * 4,
+          speed: 0.1 + _random.nextDouble() * 0.3,
+          opacity: 0.1 + _random.nextDouble() * 0.3,
+          color: [
+            AppTheme.primaryGreen,
+            AppTheme.primaryGreenLight,
+            AppTheme.secondaryTeal,
+            AppTheme.accentAmber,
+          ][_random.nextInt(4)],
+        ),
+      );
     }
   }
 
@@ -146,9 +154,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     await _logoController.forward();
     await _textController.forward();
     await _progressController.forward();
-    
+
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     if (mounted) {
       // '/' has no screen of its own — the router's auth guard turns it into
       // /login, /register/patient, /home or /my-health depending on the
@@ -192,7 +200,10 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 AnimatedBuilder(
-                  animation: Listenable.merge([_logoController, _particleAnimation]),
+                  animation: Listenable.merge([
+                    _logoController,
+                    _particleAnimation,
+                  ]),
                   builder: (context, child) {
                     return Transform.scale(
                       scale: _logoScaleAnimation.value,
@@ -239,7 +250,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         child: Text(
                           AppConstants.appSubtitle,
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
+                            color: theme.colorScheme.onPrimary.withValues(
+                              alpha: 0.9,
+                            ),
                             fontWeight: FontWeight.w400,
                             height: 1.5,
                           ),
@@ -261,10 +274,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                             width: 200,
                             height: 4,
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusFull,
+                              ),
                               child: LinearProgressIndicator(
                                 value: _progressBarAnimation.value,
-                                backgroundColor: theme.colorScheme.onPrimary.withValues(alpha: 0.2),
+                                backgroundColor: theme.colorScheme.onPrimary
+                                    .withValues(alpha: 0.2),
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   theme.colorScheme.onPrimary,
                                 ),
@@ -276,7 +292,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                           Text(
                             'Initializing...',
                             style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.onPrimary.withValues(alpha: 0.7),
+                              color: theme.colorScheme.onPrimary.withValues(
+                                alpha: 0.7,
+                              ),
                             ),
                           ),
                           const AppSpacing.vxs(),
@@ -389,17 +407,14 @@ class _ParticlePainter extends CustomPainter {
   final List<_Particle> particles;
   final double animationValue;
 
-  _ParticlePainter({
-    required this.particles,
-    required this.animationValue,
-  });
+  _ParticlePainter({required this.particles, required this.animationValue});
 
   @override
   void paint(Canvas canvas, Size size) {
     for (final particle in particles) {
       final x = (particle.x + animationValue * particle.speed) % 1.0;
       final y = (particle.y - animationValue * particle.speed * 0.5) % 1.0;
-      
+
       final paint = Paint()
         ..color = particle.color.withValues(alpha: particle.opacity)
         ..style = PaintingStyle.fill;
@@ -414,7 +429,7 @@ class _ParticlePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate is _ParticlePainter && 
-           oldDelegate.animationValue != animationValue;
+    return oldDelegate is _ParticlePainter &&
+        oldDelegate.animationValue != animationValue;
   }
 }

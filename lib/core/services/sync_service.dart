@@ -43,20 +43,20 @@ class SyncReport {
 
   /// A sentence safe to show a health worker verbatim.
   String get message => switch (outcome) {
-        SyncOutcome.uploaded =>
-          'Uploaded $uploaded record${uploaded == 1 ? '' : 's'}.'
-              '${failed > 0 ? ' $failed could not be sent and will be retried.' : ''}',
-        SyncOutcome.nothingToDo => 'Everything is already uploaded.',
-        SyncOutcome.offline =>
-          'No connection. $remaining record${remaining == 1 ? '' : 's'} '
-              'stay safely on this device and will upload automatically later.',
-        SyncOutcome.noEndpoint =>
-          'No upload server is configured, so records stay on this device. '
-              'Nothing has been lost.',
-        SyncOutcome.rejected =>
-          'The server refused the upload${detail == null ? '' : ' ($detail)'}. '
-              'Records are kept on this device and will be retried.',
-      };
+    SyncOutcome.uploaded =>
+      'Uploaded $uploaded record${uploaded == 1 ? '' : 's'}.'
+          '${failed > 0 ? ' $failed could not be sent and will be retried.' : ''}',
+    SyncOutcome.nothingToDo => 'Everything is already uploaded.',
+    SyncOutcome.offline =>
+      'No connection. $remaining record${remaining == 1 ? '' : 's'} '
+          'stay safely on this device and will upload automatically later.',
+    SyncOutcome.noEndpoint =>
+      'No upload server is configured, so records stay on this device. '
+          'Nothing has been lost.',
+    SyncOutcome.rejected =>
+      'The server refused the upload${detail == null ? '' : ' ($detail)'}. '
+          'Records are kept on this device and will be retried.',
+  };
 }
 
 /// Uploads queued screenings when a server is configured and reachable.
@@ -67,11 +67,15 @@ class SyncReport {
 /// the worker can see *why* it has not gone up yet.
 class SyncService {
   SyncService(this._db, this._settings, {Dio? client})
-      : _client = client ?? Dio(BaseOptions(
-            connectTimeout: const Duration(seconds: 12),
-            receiveTimeout: const Duration(seconds: 20),
-            headers: const {'Content-Type': 'application/json'},
-          ));
+    : _client =
+          client ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 12),
+              receiveTimeout: const Duration(seconds: 20),
+              headers: const {'Content-Type': 'application/json'},
+            ),
+          );
 
   final AppDatabase _db;
   final SettingsRepository _settings;
@@ -83,11 +87,13 @@ class SyncService {
 
   Future<bool> hasConnection() async {
     final result = await Connectivity().checkConnectivity();
-    return result.any((r) =>
-        r == ConnectivityResult.wifi ||
-        r == ConnectivityResult.mobile ||
-        r == ConnectivityResult.ethernet ||
-        r == ConnectivityResult.vpn);
+    return result.any(
+      (r) =>
+          r == ConnectivityResult.wifi ||
+          r == ConnectivityResult.mobile ||
+          r == ConnectivityResult.ethernet ||
+          r == ConnectivityResult.vpn,
+    );
   }
 
   Future<String?> endpoint() async {
@@ -99,8 +105,9 @@ class SyncService {
   /// Attempts to upload everything queued. Never throws.
   Future<SyncReport> syncAll() async {
     final queued = await _db.getPendingSyncItems();
-    final actionable =
-        queued.where((q) => q.attempts < maxAttempts).toList(growable: false);
+    final actionable = queued
+        .where((q) => q.attempts < maxAttempts)
+        .toList(growable: false);
     if (actionable.isEmpty) {
       return SyncReport(
         outcome: SyncOutcome.nothingToDo,
@@ -257,8 +264,7 @@ class SyncService {
       return switch (error.type) {
         DioExceptionType.connectionTimeout ||
         DioExceptionType.sendTimeout ||
-        DioExceptionType.receiveTimeout =>
-          'timed out',
+        DioExceptionType.receiveTimeout => 'timed out',
         DioExceptionType.connectionError => 'could not reach server',
         DioExceptionType.badResponse =>
           'server said ${error.response?.statusCode ?? '?'}',

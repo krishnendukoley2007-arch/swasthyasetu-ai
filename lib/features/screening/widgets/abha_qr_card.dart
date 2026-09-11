@@ -32,7 +32,7 @@ class AbhaQrCard extends StatelessWidget {
       'id': 'swasthyasetu-screening-${screening.id}',
       'meta': {
         'profile': [
-          'https://nrces.in/ndhm/fhir/r4/StructureDefinition/DiagnosticReportRecord'
+          'https://nrces.in/ndhm/fhir/r4/StructureDefinition/DiagnosticReportRecord',
         ],
         'lastUpdated': screening.timestamp.toIso8601String(),
       },
@@ -76,7 +76,8 @@ class AbhaQrCard extends StatelessWidget {
     final abhaIdFormatted = patient.notes?.contains('ABHA:') == true
         ? patient.notes!.split('ABHA:').last.trim()
         : '91-8421-9034-7712';
-    final abhaAddress = '${patient.name.toLowerCase().replaceAll(' ', '')}@abdm';
+    final abhaAddress =
+        '${patient.name.toLowerCase().replaceAll(' ', '')}@abdm';
 
     return Container(
       decoration: BoxDecoration(
@@ -124,14 +125,18 @@ class AbhaQrCard extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
-                    child: Icon(Icons.health_and_safety_rounded, color: Color(0xFF0D47A1), size: 24),
+                    child: Icon(
+                      Icons.health_and_safety_rounded,
+                      color: Color(0xFF0D47A1),
+                      size: 24,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         'NATIONAL HEALTH AUTHORITY',
                         style: TextStyle(
@@ -153,7 +158,10 @@ class AbhaQrCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
@@ -195,7 +203,11 @@ class AbhaQrCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         'ABHA Number',
-                        style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       Text(
                         abhaIdFormatted,
@@ -229,7 +241,10 @@ class AbhaQrCard extends StatelessWidget {
 
                       // Triage summary badge inside card
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: screening.riskLevel == 'high'
                               ? const Color(0xFFFFEBEE)
@@ -268,7 +283,10 @@ class AbhaQrCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade300, width: 1.0),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                            width: 1.0,
+                          ),
                         ),
                         child: QrImageView(
                           data: fhirJson,
@@ -308,7 +326,11 @@ class AbhaQrCard extends StatelessWidget {
               color: const Color(0xFFF8FAFC),
               child: Row(
                 children: [
-                  const Icon(Icons.verified_user_rounded, size: 14, color: Color(0xFF138808)),
+                  const Icon(
+                    Icons.verified_user_rounded,
+                    size: 14,
+                    color: Color(0xFF138808),
+                  ),
                   const SizedBox(width: 6),
                   const Expanded(
                     child: Text(
@@ -322,9 +344,15 @@ class AbhaQrCard extends StatelessWidget {
                   ),
                   TextButton.icon(
                     icon: const Icon(Icons.share_rounded, size: 15),
-                    label: const Text('Share Card', style: TextStyle(fontSize: 11)),
+                    label: const Text(
+                      'Share Card',
+                      style: TextStyle(fontSize: 11),
+                    ),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       visualDensity: VisualDensity.compact,
                     ),
                     onPressed: () {
@@ -333,7 +361,8 @@ class AbhaQrCard extends StatelessWidget {
                           : 'Not measured';
                       SharePlus.instance.share(
                         ShareParams(
-                          text: 'SwasthyaSetu AI - Ayushman Bharat Health Account\n'
+                          text:
+                              'SwasthyaSetu AI - Ayushman Bharat Health Account\n'
                               'Patient: ${patient.name} (${patient.age}y, ${patient.sex})\n'
                               'ABHA ID: $abhaIdFormatted\n'
                               'Triage: ${screening.riskLevel.toUpperCase()} (Risk Score: ${screening.riskScore})\n'

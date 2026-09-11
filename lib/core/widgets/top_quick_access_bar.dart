@@ -26,7 +26,10 @@ class TopQuickAccessBar extends ConsumerWidget implements PreferredSizeWidget {
     final currentLang = settings.locale.languageCode;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacingMd,
+        vertical: 6,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
         border: Border(
@@ -57,9 +60,14 @@ class TopQuickAccessBar extends ConsumerWidget implements PreferredSizeWidget {
                 );
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: isLive ? AppTheme.riskGreenContainer : theme.colorScheme.secondaryContainer,
+                  color: isLive
+                      ? AppTheme.riskGreenContainer
+                      : theme.colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                 ),
                 child: Row(
@@ -69,11 +77,13 @@ class TopQuickAccessBar extends ConsumerWidget implements PreferredSizeWidget {
                       width: 7,
                       height: 7,
                       decoration: BoxDecoration(
-                        color: isLive ? AppTheme.riskGreen : theme.colorScheme.secondary,
+                        color: isLive
+                            ? AppTheme.riskGreen
+                            : theme.colorScheme.secondary,
                         shape: BoxShape.circle,
                       ),
                     ),
-                  const SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Flexible(
                       child: Text(
                         isLive ? 'LIVE' : 'DEMO',
@@ -81,7 +91,9 @@ class TopQuickAccessBar extends ConsumerWidget implements PreferredSizeWidget {
                         maxLines: 1,
                         style: theme.textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: isLive ? AppTheme.riskGreen : theme.colorScheme.onSecondaryContainer,
+                          color: isLive
+                              ? AppTheme.riskGreen
+                              : theme.colorScheme.onSecondaryContainer,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -104,10 +116,17 @@ class TopQuickAccessBar extends ConsumerWidget implements PreferredSizeWidget {
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
+                ),
               ),
-              child: Icon(Icons.wifi_off_rounded,
-                  size: 14, color: theme.colorScheme.onSurfaceVariant),
+              child: Icon(
+                Icons.wifi_off_rounded,
+                size: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
 
@@ -141,7 +160,11 @@ class TopQuickAccessBar extends ConsumerWidget implements PreferredSizeWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.language_rounded, size: 14, color: theme.colorScheme.onPrimaryContainer),
+                  Icon(
+                    Icons.language_rounded,
+                    size: 14,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     switch (currentLang) {
@@ -155,7 +178,11 @@ class TopQuickAccessBar extends ConsumerWidget implements PreferredSizeWidget {
                     ),
                   ),
                   const SizedBox(width: 2),
-                  Icon(Icons.arrow_drop_down, size: 14, color: theme.colorScheme.onPrimaryContainer),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    size: 14,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
                 ],
               ),
             ),
@@ -165,27 +192,15 @@ class TopQuickAccessBar extends ConsumerWidget implements PreferredSizeWidget {
             itemBuilder: (context) => [
               const PopupMenuItem(
                 value: 'en',
-                child: Row(
-                  children: [
-                    Text('🇺🇸 English'),
-                  ],
-                ),
+                child: Row(children: [Text('🇺🇸 English')]),
               ),
               const PopupMenuItem(
                 value: 'hi',
-                child: Row(
-                  children: [
-                    Text('🇮🇳 हिन्दी (Hindi)'),
-                  ],
-                ),
+                child: Row(children: [Text('🇮🇳 हिन्दी (Hindi)')]),
               ),
               const PopupMenuItem(
                 value: 'bn',
-                child: Row(
-                  children: [
-                    Text('🇮🇳 বাংলা (Bengali)'),
-                  ],
-                ),
+                child: Row(children: [Text('🇮🇳 বাংলা (Bengali)')]),
               ),
             ],
           ),

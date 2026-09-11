@@ -85,55 +85,65 @@ class _ClinicalNavBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: surface,
-        border: Border(top: BorderSide(color: ClinicalPalette.hairline(context))),
+        border: Border(
+          top: BorderSide(color: ClinicalPalette.hairline(context)),
+        ),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
           height: 64,
-          child: LayoutBuilder(builder: (context, cons) {
-            final slot = cons.maxWidth / n;
-            return Stack(children: [
-              // Sliding pill behind the active tab.
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 340),
-                curve: const Cubic(0.34, 1.25, 0.64, 1),
-                left: slot * currentIndex + 8,
-                width: slot - 16,
-                top: 10,
-                height: 44,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    color: ClinicalPalette.teal.withValues(
-                        alpha: theme.brightness == Brightness.dark
-                            ? 0.16
-                            : 0.10),
-                    border: Border.all(
-                        color: ClinicalPalette.teal.withValues(alpha: 0.28)),
-                  ),
-                ),
-              ),
-              Row(children: [
-                for (var i = 0; i < n; i++)
-                  Expanded(
-                    child: _NavTab(
-                      icon: destinations[i].icon,
-                      label: destinations[i].label,
-                      selected: i == currentIndex,
-                      liveDot: i == liveDotIndex,
-                      ink: ink,
-                      onTap: () {
-                        if (i != currentIndex) {
-                          HapticFeedback.selectionClick();
-                        }
-                        onSelected(i);
-                      },
+          child: LayoutBuilder(
+            builder: (context, cons) {
+              final slot = cons.maxWidth / n;
+              return Stack(
+                children: [
+                  // Sliding pill behind the active tab.
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 340),
+                    curve: const Cubic(0.34, 1.25, 0.64, 1),
+                    left: slot * currentIndex + 8,
+                    width: slot - 16,
+                    top: 10,
+                    height: 44,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        color: ClinicalPalette.teal.withValues(
+                          alpha: theme.brightness == Brightness.dark
+                              ? 0.16
+                              : 0.10,
+                        ),
+                        border: Border.all(
+                          color: ClinicalPalette.teal.withValues(alpha: 0.28),
+                        ),
+                      ),
                     ),
                   ),
-              ]),
-            ]);
-          }),
+                  Row(
+                    children: [
+                      for (var i = 0; i < n; i++)
+                        Expanded(
+                          child: _NavTab(
+                            icon: destinations[i].icon,
+                            label: destinations[i].label,
+                            selected: i == currentIndex,
+                            liveDot: i == liveDotIndex,
+                            ink: ink,
+                            onTap: () {
+                              if (i != currentIndex) {
+                                HapticFeedback.selectionClick();
+                              }
+                              onSelected(i);
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -159,36 +169,38 @@ class _NavTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        selected ? ClinicalPalette.teal : ink.withValues(alpha: 0.55);
+    final color = selected ? ClinicalPalette.teal : ink.withValues(alpha: 0.55);
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Stack(children: [
-            Padding(
-              padding: const EdgeInsets.all(3),
-              child: Icon(icon, size: 21, color: color),
-            ),
-            if (liveDot)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: ClinicalPalette.tealBright,
-                    border: Border.all(
+          Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(3),
+                child: Icon(icon, size: 21, color: color),
+              ),
+              if (liveDot)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: ClinicalPalette.tealBright,
+                      border: Border.all(
                         color: Theme.of(context).colorScheme.surface,
-                        width: 1.5),
+                        width: 1.5,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-          ]),
+            ],
+          ),
           const SizedBox(height: 3),
           Text(
             label,
@@ -244,7 +256,8 @@ class _PatientShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // The device tab shows the teal dot while a board is streaming — the tab
     // is live, not just reachable.
-    final streaming = ref.watch(bleLinkProvider).status == BleLinkStatus.streaming;
+    final streaming =
+        ref.watch(bleLinkProvider).status == BleLinkStatus.streaming;
     return Scaffold(
       body: shell,
       bottomNavigationBar: _ClinicalNavBar(
@@ -282,10 +295,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register/patient',
         builder: (context, state) => const PatientRegistrationScreen(),
@@ -489,11 +499,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const UIShowcaseScreen(),
       ),
     ],
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Text('Page not found: ${state.error}'),
-      ),
-    ),
+    errorBuilder: (context, state) =>
+        Scaffold(body: Center(child: Text('Page not found: ${state.error}'))),
   );
 
   ref.onDispose(router.dispose);

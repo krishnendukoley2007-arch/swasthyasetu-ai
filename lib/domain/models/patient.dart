@@ -38,8 +38,11 @@ class Patient {
     phone: json['phone'] as String?,
     notes: json['notes'] as String?,
     createdAt: DateTime.parse(json['createdAt'] as String),
-    lastScreenedAt: json['lastScreenedAt'] != null ? DateTime.parse(json['lastScreenedAt'] as String) : null,
-    vulnerabilityFlags: (json['vulnerabilityFlags'] as List<dynamic>?)?.cast<String>() ?? [],
+    lastScreenedAt: json['lastScreenedAt'] != null
+        ? DateTime.parse(json['lastScreenedAt'] as String)
+        : null,
+    vulnerabilityFlags:
+        (json['vulnerabilityFlags'] as List<dynamic>?)?.cast<String>() ?? [],
     isDemo: json['isDemo'] as bool? ?? false,
     syncStatus: json['syncStatus'] as String? ?? 'PENDING',
     retryCount: json['retryCount'] as int?,
@@ -145,11 +148,24 @@ class Patient {
 
   @override
   int get hashCode => Object.hash(
-    id, name, age, sex, location, phone, notes, createdAt, lastScreenedAt, vulnerabilityFlags, isDemo, syncStatus, retryCount
+    id,
+    name,
+    age,
+    sex,
+    location,
+    phone,
+    notes,
+    createdAt,
+    lastScreenedAt,
+    vulnerabilityFlags,
+    isDemo,
+    syncStatus,
+    retryCount,
   );
 
   @override
-  String toString() => 'Patient(id: $id, name: $name, age: $age, sex: $sex, location: $location, isDemo: $isDemo)';
+  String toString() =>
+      'Patient(id: $id, name: $name, age: $age, sex: $sex, location: $location, isDemo: $isDemo)';
 }
 
 /// One completed screening: raw vitals, reported symptoms, and the
@@ -439,7 +455,9 @@ class Device {
     isConnected: json['isConnected'] as bool,
     lastConnectedAt: DateTime.parse(json['lastConnectedAt'] as String),
     firmwareVersion: json['firmwareVersion'] as String? ?? 'UNKNOWN',
-    calibrationDate: json['calibrationDate'] != null ? DateTime.parse(json['calibrationDate'] as String) : null,
+    calibrationDate: json['calibrationDate'] != null
+        ? DateTime.parse(json['calibrationDate'] as String)
+        : null,
     isDemo: json['isDemo'] as bool? ?? false,
   );
 
@@ -505,8 +523,19 @@ class Device {
           isDemo == other.isDemo;
 
   @override
-  int get hashCode => Object.hash(id, name, macAddress, batteryPercent, isConnected, lastConnectedAt, firmwareVersion, calibrationDate, isDemo);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    macAddress,
+    batteryPercent,
+    isConnected,
+    lastConnectedAt,
+    firmwareVersion,
+    calibrationDate,
+    isDemo,
+  );
 
   @override
-  String toString() => 'Device(id: $id, name: $name, isConnected: $isConnected, battery: $batteryPercent%)';
+  String toString() =>
+      'Device(id: $id, name: $name, isConnected: $isConnected, battery: $batteryPercent%)';
 }

@@ -106,7 +106,9 @@ void main() {
 
   group('FallDetector — free fall duration boundary', () {
     test('a collapse shorter than the minimum is discarded', () {
-      final d = FallDetector(minFreeFallDuration: const Duration(milliseconds: 80));
+      final d = FallDetector(
+        minFreeFallDuration: const Duration(milliseconds: 80),
+      );
 
       // 40 ms of low-g, then gravity back — a jolt, not a drop.
       d.addSample(1.0, t0);
@@ -127,7 +129,9 @@ void main() {
     });
 
     test('a collapse exactly at the minimum is accepted', () {
-      final d = FallDetector(minFreeFallDuration: const Duration(milliseconds: 80));
+      final d = FallDetector(
+        minFreeFallDuration: const Duration(milliseconds: 80),
+      );
 
       d.addSample(1.0, t0);
       d.addSample(9.8, t0.add(const Duration(milliseconds: 80)));
@@ -279,10 +283,7 @@ void main() {
 
   group('magnitudeOf', () {
     test('reads ~1 g for a phone at rest on a table', () {
-      expect(
-        FallDetector.magnitudeOf(0, 0, 9.81),
-        closeTo(9.81, 0.001),
-      );
+      expect(FallDetector.magnitudeOf(0, 0, 9.81), closeTo(9.81, 0.001));
     });
 
     test('combines all three axes', () {

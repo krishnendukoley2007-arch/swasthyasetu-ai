@@ -83,19 +83,17 @@ class GuidelineRetriever {
   final double _averageLength;
 
   GuidelineRetriever(List<GuidelineChunk> corpus)
-      : _corpus = List.unmodifiable(corpus),
-        _documentFrequency = _buildDocumentFrequency(corpus),
-        _averageLength = corpus.isEmpty
-            ? 0
-            : corpus.fold<int>(0, (sum, c) => sum + c.keywords.length) /
+    : _corpus = List.unmodifiable(corpus),
+      _documentFrequency = _buildDocumentFrequency(corpus),
+      _averageLength = corpus.isEmpty
+          ? 0
+          : corpus.fold<int>(0, (sum, c) => sum + c.keywords.length) /
                 corpus.length;
 
   bool get isEmpty => _corpus.isEmpty;
   int get length => _corpus.length;
 
-  static Map<String, int> _buildDocumentFrequency(
-    List<GuidelineChunk> corpus,
-  ) {
+  static Map<String, int> _buildDocumentFrequency(List<GuidelineChunk> corpus) {
     final df = <String, int>{};
     for (final chunk in corpus) {
       for (final term in chunk.keywords.toSet()) {

@@ -70,7 +70,8 @@ class _AnimatedTextItem extends StatefulWidget {
   State<_AnimatedTextItem> createState() => _AnimatedTextItemState();
 }
 
-class _AnimatedTextItemState extends State<_AnimatedTextItem> with SingleTickerProviderStateMixin {
+class _AnimatedTextItemState extends State<_AnimatedTextItem>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -78,13 +79,11 @@ class _AnimatedTextItemState extends State<_AnimatedTextItem> with SingleTickerP
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve),
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
     _slideAnimation = Tween<Offset>(
       begin: Offset(0, widget.startOffset),
       end: Offset.zero,
@@ -190,7 +189,8 @@ class _AnimatedRichTextItem extends StatefulWidget {
   State<_AnimatedRichTextItem> createState() => _AnimatedRichTextItemState();
 }
 
-class _AnimatedRichTextItemState extends State<_AnimatedRichTextItem> with SingleTickerProviderStateMixin {
+class _AnimatedRichTextItemState extends State<_AnimatedRichTextItem>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -198,13 +198,11 @@ class _AnimatedRichTextItemState extends State<_AnimatedRichTextItem> with Singl
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve),
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
     _slideAnimation = Tween<Offset>(
       begin: Offset(0, widget.startOffset),
       end: Offset.zero,
@@ -232,10 +230,7 @@ class _AnimatedRichTextItemState extends State<_AnimatedRichTextItem> with Singl
       child: SlideTransition(
         position: _slideAnimation,
         child: RichText(
-          text: TextSpan(
-            style: widget.style,
-            children: widget.children,
-          ),
+          text: TextSpan(style: widget.style, children: widget.children),
           textAlign: widget.textAlign ?? TextAlign.start,
           maxLines: widget.maxLines,
           overflow: widget.overflow ?? TextOverflow.ellipsis,
@@ -327,28 +322,26 @@ class AppHighlightText extends StatelessWidget {
 
     while (index != -1) {
       if (index > start) {
-        spans.add(TextSpan(
-          text: text.substring(start, index),
-          style: style,
-        ));
+        spans.add(TextSpan(text: text.substring(start, index), style: style));
       }
-      spans.add(TextSpan(
-        text: text.substring(index, index + query.length),
-        style: highlightStyle ?? (style?.copyWith(
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          color: Theme.of(context).colorScheme.onPrimaryContainer,
-          fontWeight: FontWeight.w600,
-        )),
-      ));
+      spans.add(
+        TextSpan(
+          text: text.substring(index, index + query.length),
+          style:
+              highlightStyle ??
+              (style?.copyWith(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w600,
+              )),
+        ),
+      );
       start = index + query.length;
       index = text.toLowerCase().indexOf(query.toLowerCase(), start);
     }
 
     if (start < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(start),
-        style: style,
-      ));
+      spans.add(TextSpan(text: text.substring(start), style: style));
     }
 
     return RichText(
@@ -382,7 +375,8 @@ class AppMarqueeText extends StatefulWidget {
   State<AppMarqueeText> createState() => _AppMarqueeTextState();
 }
 
-class _AppMarqueeTextState extends State<AppMarqueeText> with SingleTickerProviderStateMixin {
+class _AppMarqueeTextState extends State<AppMarqueeText>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -499,20 +493,19 @@ class _AnimatedCounter extends StatefulWidget {
   State<_AnimatedCounter> createState() => _AnimatedCounterState();
 }
 
-class _AnimatedCounterState extends State<_AnimatedCounter> with SingleTickerProviderStateMixin {
+class _AnimatedCounterState extends State<_AnimatedCounter>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    _animation = Tween<double>(begin: 0, end: widget.value.toDouble()).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve),
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    _animation = Tween<double>(
+      begin: 0,
+      end: widget.value.toDouble(),
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
     _controller.forward();
   }
 
@@ -520,9 +513,10 @@ class _AnimatedCounterState extends State<_AnimatedCounter> with SingleTickerPro
   void didUpdateWidget(_AnimatedCounter oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
-      _animation = Tween<double>(begin: oldWidget.value.toDouble(), end: widget.value.toDouble()).animate(
-        CurvedAnimation(parent: _controller, curve: widget.curve),
-      );
+      _animation = Tween<double>(
+        begin: oldWidget.value.toDouble(),
+        end: widget.value.toDouble(),
+      ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
       _controller.forward(from: 0);
     }
   }
@@ -593,7 +587,8 @@ class AppExpandableText extends StatefulWidget {
   State<AppExpandableText> createState() => _AppExpandableTextState();
 }
 
-class _AppExpandableTextState extends State<AppExpandableText> with SingleTickerProviderStateMixin {
+class _AppExpandableTextState extends State<AppExpandableText>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _maxLinesAnimation;
   bool _isExpanded = false;
@@ -605,9 +600,10 @@ class _AppExpandableTextState extends State<AppExpandableText> with SingleTicker
       duration: widget.animationDuration,
       vsync: this,
     );
-    _maxLinesAnimation = Tween<double>(begin: widget.maxLines.toDouble(), end: 100.0).animate(
-      CurvedAnimation(parent: _controller, curve: widget.animationCurve),
-    );
+    _maxLinesAnimation =
+        Tween<double>(begin: widget.maxLines.toDouble(), end: 100.0).animate(
+          CurvedAnimation(parent: _controller, curve: widget.animationCurve),
+        );
   }
 
   @override
@@ -632,7 +628,10 @@ class _AppExpandableTextState extends State<AppExpandableText> with SingleTicker
     return LayoutBuilder(
       builder: (context, constraints) {
         final textPainter = TextPainter(
-          text: TextSpan(text: widget.text, style: widget.style ?? Theme.of(context).textTheme.bodyMedium),
+          text: TextSpan(
+            text: widget.text,
+            style: widget.style ?? Theme.of(context).textTheme.bodyMedium,
+          ),
           textDirection: ui.TextDirection.ltr,
           maxLines: widget.maxLines,
         );
@@ -664,10 +663,13 @@ class _AppExpandableTextState extends State<AppExpandableText> with SingleTicker
               onTap: _toggle,
               child: Text(
                 _isExpanded ? widget.collapseText : widget.expandText,
-                style: widget.linkStyle ?? (widget.style ?? Theme.of(context).textTheme.bodyMedium)?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
+                style:
+                    widget.linkStyle ??
+                    (widget.style ?? Theme.of(context).textTheme.bodyMedium)
+                        ?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
               ),
             ),
           ],

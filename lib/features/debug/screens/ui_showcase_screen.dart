@@ -24,7 +24,6 @@ class _UIShowcaseScreenState extends State<UIShowcaseScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return AppPageScaffold(
       appBar: const AppTopBar(title: 'UI Showcase'),
       body: SingleChildScrollView(
@@ -32,27 +31,13 @@ class _UIShowcaseScreenState extends State<UIShowcaseScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSection('Buttons', [
-              _buildButtonShowcase(),
-            ]),
-            _buildSection('Cards', [
-              _buildCardShowcase(),
-            ]),
-            _buildSection('Badges & Chips', [
-              _buildBadgeShowcase(),
-            ]),
-            _buildSection('Inputs', [
-              _buildInputShowcase(),
-            ]),
-            _buildSection('Progress & Loading', [
-              _buildProgressShowcase(),
-            ]),
-            _buildSection('Risk Badges', [
-              _buildRiskBadgeShowcase(),
-            ]),
-            _buildSection('Theme Colors', [
-              _buildColorShowcase(),
-            ]),
+            _buildSection('Buttons', [_buildButtonShowcase()]),
+            _buildSection('Cards', [_buildCardShowcase()]),
+            _buildSection('Badges & Chips', [_buildBadgeShowcase()]),
+            _buildSection('Inputs', [_buildInputShowcase()]),
+            _buildSection('Progress & Loading', [_buildProgressShowcase()]),
+            _buildSection('Risk Badges', [_buildRiskBadgeShowcase()]),
+            _buildSection('Theme Colors', [_buildColorShowcase()]),
           ],
         ),
       ),
@@ -65,10 +50,16 @@ class _UIShowcaseScreenState extends State<UIShowcaseScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700))
-            .animate().fadeIn().slideX(),
+        Text(
+          title,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ).animate().fadeIn().slideX(),
         const AppSpacing.vmd(),
-        ...children.map((child) => child.animate().fadeIn(delay: 100.ms).slideY()),
+        ...children.map(
+          (child) => child.animate().fadeIn(delay: 100.ms).slideY(),
+        ),
         const AppSpacing.vxl(),
       ],
     );
@@ -79,11 +70,22 @@ class _UIShowcaseScreenState extends State<UIShowcaseScreen> {
       spacing: AppTheme.spacingMd,
       runSpacing: AppTheme.spacingMd,
       children: [
-        AppButton(label: 'Primary', icon: const Icon(Icons.arrow_forward_rounded), onPressed: () {}),
+        AppButton(
+          label: 'Primary',
+          icon: const Icon(Icons.arrow_forward_rounded),
+          onPressed: () {},
+        ),
         AppButton(label: 'Loading', isLoading: true, onPressed: () {}),
-        AppOutlinedButton(label: 'Outlined', icon: const Icon(Icons.format_paint_rounded), onPressed: () {}),
+        AppOutlinedButton(
+          label: 'Outlined',
+          icon: const Icon(Icons.format_paint_rounded),
+          onPressed: () {},
+        ),
         AppTextButton(label: 'Text Button', onPressed: () {}),
-        AppIconButton(icon: const Icon(Icons.favorite_rounded), onPressed: () {}),
+        AppIconButton(
+          icon: const Icon(Icons.favorite_rounded),
+          onPressed: () {},
+        ),
       ],
     );
   }
@@ -142,8 +144,17 @@ class _UIShowcaseScreenState extends State<UIShowcaseScreen> {
         const AppRiskBadge(riskLevel: 'RED', isCompact: true),
         const AppRiskBadge(riskLevel: 'YELLOW', isCompact: true),
         const AppRiskBadge(riskLevel: 'GREEN', isCompact: true),
-        AppPillLabel(label: 'Filter 1', color: theme.colorScheme.primary, onClose: () {}),
-        AppPillLabel(label: 'Selected', color: theme.colorScheme.primary, isSelected: true, onClose: () {}),
+        AppPillLabel(
+          label: 'Filter 1',
+          color: theme.colorScheme.primary,
+          onClose: () {},
+        ),
+        AppPillLabel(
+          label: 'Selected',
+          color: theme.colorScheme.primary,
+          isSelected: true,
+          onClose: () {},
+        ),
       ],
     );
   }
@@ -170,9 +181,11 @@ class _UIShowcaseScreenState extends State<UIShowcaseScreen> {
         AppSelectField<String>(
           label: 'Select Option',
           value: _dropdownValue,
-          items: ['Option 1', 'Option 2', 'Option 3']
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
+          items: [
+            'Option 1',
+            'Option 2',
+            'Option 3',
+          ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
           onChanged: (v) => setState(() => _dropdownValue = v!),
           prefixIcon: Icons.arrow_drop_down_rounded,
         ),
@@ -204,19 +217,37 @@ class _UIShowcaseScreenState extends State<UIShowcaseScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             const AppProgressIndicator(value: 0.3, radius: 40),
-            AppProgressIndicator(value: 0.65, radius: 40, color: Theme.of(context).colorScheme.tertiary),
+            AppProgressIndicator(
+              value: 0.65,
+              radius: 40,
+              color: Theme.of(context).colorScheme.tertiary,
+            ),
             const AppProgressIndicator(radius: 40),
           ],
         ),
         const AppSpacing.vlg(),
-        const AppLinearProgress(value: 0.25, showValue: true, valueLabel: '25% Complete'),
+        const AppLinearProgress(
+          value: 0.25,
+          showValue: true,
+          valueLabel: '25% Complete',
+        ),
         const AppSpacing.vmd(),
-        AppLinearProgress(value: 0.75, color: Theme.of(context).colorScheme.tertiary, showValue: true),
+        AppLinearProgress(
+          value: 0.75,
+          color: Theme.of(context).colorScheme.tertiary,
+          showValue: true,
+        ),
         const AppSpacing.vlg(),
         const AppStepProgress(
           currentStep: 2,
           totalSteps: 5,
-          stepLabels: ['Patient', 'Device', 'Instructions', 'Screening', 'Results'],
+          stepLabels: [
+            'Patient',
+            'Device',
+            'Instructions',
+            'Screening',
+            'Results',
+          ],
         ),
       ],
     );
@@ -242,15 +273,35 @@ class _UIShowcaseScreenState extends State<UIShowcaseScreen> {
 
     final colors = [
       ('Primary', theme.colorScheme.primary, theme.colorScheme.onPrimary),
-      ('Primary Container', theme.colorScheme.primaryContainer, theme.colorScheme.onPrimaryContainer),
+      (
+        'Primary Container',
+        theme.colorScheme.primaryContainer,
+        theme.colorScheme.onPrimaryContainer,
+      ),
       ('Secondary', theme.colorScheme.secondary, theme.colorScheme.onSecondary),
-      ('Secondary Container', theme.colorScheme.secondaryContainer, theme.colorScheme.onSecondaryContainer),
+      (
+        'Secondary Container',
+        theme.colorScheme.secondaryContainer,
+        theme.colorScheme.onSecondaryContainer,
+      ),
       ('Tertiary', theme.colorScheme.tertiary, theme.colorScheme.onTertiary),
-      ('Tertiary Container', theme.colorScheme.tertiaryContainer, theme.colorScheme.onTertiaryContainer),
+      (
+        'Tertiary Container',
+        theme.colorScheme.tertiaryContainer,
+        theme.colorScheme.onTertiaryContainer,
+      ),
       ('Error', theme.colorScheme.error, theme.colorScheme.onError),
-      ('Error Container', theme.colorScheme.errorContainer, theme.colorScheme.onErrorContainer),
+      (
+        'Error Container',
+        theme.colorScheme.errorContainer,
+        theme.colorScheme.onErrorContainer,
+      ),
       ('Surface', theme.colorScheme.surface, theme.colorScheme.onSurface),
-      ('Surface Variant', theme.colorScheme.surfaceContainerHighest, theme.colorScheme.onSurfaceVariant),
+      (
+        'Surface Variant',
+        theme.colorScheme.surfaceContainerHighest,
+        theme.colorScheme.onSurfaceVariant,
+      ),
       ('Outline', theme.colorScheme.outline, theme.colorScheme.onSurface),
     ];
 

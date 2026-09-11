@@ -45,8 +45,9 @@ class PatientRepository {
   Future<List<Patient>> getAll() async =>
       (await _db.getAllPatients()).map((r) => r.toModel()).toList();
 
-  Stream<List<Patient>> watchAll() =>
-      _db.watchAllPatients().map((rows) => rows.map((r) => r.toModel()).toList());
+  Stream<List<Patient>> watchAll() => _db.watchAllPatients().map(
+    (rows) => rows.map((r) => r.toModel()).toList(),
+  );
 
   Future<Patient?> getById(String id) async =>
       (await _db.getPatient(id))?.toModel();
@@ -88,8 +89,9 @@ class PatientRepository {
       screeningCount: screenings.length,
       riskTrend: trend,
       latestRiskLevel: screenings.isEmpty ? null : screenings.first.riskLevel,
-      pendingSyncCount:
-          screenings.where((s) => s.syncStatus != 'SYNCED').length,
+      pendingSyncCount: screenings
+          .where((s) => s.syncStatus != 'SYNCED')
+          .length,
     );
   }
 
@@ -128,8 +130,11 @@ class PatientRepository {
 
     switch (sort) {
       case PatientSort.nameAsc:
-        result.sort((a, b) =>
-            a.patient.name.toLowerCase().compareTo(b.patient.name.toLowerCase()));
+        result.sort(
+          (a, b) => a.patient.name.toLowerCase().compareTo(
+            b.patient.name.toLowerCase(),
+          ),
+        );
       case PatientSort.riskDesc:
         result.sort((a, b) => b.latestRiskScore.compareTo(a.latestRiskScore));
       case PatientSort.neverScreened:

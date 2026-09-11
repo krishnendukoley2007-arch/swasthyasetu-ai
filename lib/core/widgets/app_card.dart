@@ -30,15 +30,23 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cardColor = color ?? theme.cardTheme.color ?? theme.colorScheme.surface;
-    final cardElevation = elevation ?? theme.cardTheme.elevation ?? AppTheme.elevationLevel1;
-    final cardBorderRadius = borderRadius ?? BorderRadius.circular(AppTheme.radiusLg);
-    final cardBorder = border ?? BorderSide(
-      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
-      width: isSelected ? 2 : 1,
-    );
+    final cardColor =
+        color ?? theme.cardTheme.color ?? theme.colorScheme.surface;
+    final cardElevation =
+        elevation ?? theme.cardTheme.elevation ?? AppTheme.elevationLevel1;
+    final cardBorderRadius =
+        borderRadius ?? BorderRadius.circular(AppTheme.radiusLg);
+    final cardBorder =
+        border ??
+        BorderSide(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outlineVariant,
+          width: isSelected ? 2 : 1,
+        );
 
-    final effectiveShadows = shadows ??
+    final effectiveShadows =
+        shadows ??
         (cardElevation > 0
             ? [
                 BoxShadow(
@@ -76,10 +84,12 @@ class AppCard extends StatelessWidget {
     );
 
     return Padding(
-      padding: margin ?? const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacingMd,
-        vertical: AppTheme.spacingSm,
-      ),
+      padding:
+          margin ??
+          const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacingMd,
+            vertical: AppTheme.spacingSm,
+          ),
       // The shadow is drawn outside the Material so it is not clipped by it.
       // Material's own elevation would add an M3 surface tint on top of the
       // explicit card colour, which is not what the palette specifies.
@@ -173,7 +183,9 @@ class AppCardSection extends StatelessWidget {
             endIndent: padding?.resolve(Directionality.of(context)).right ?? 0,
           ),
         Padding(
-          padding: padding ?? const EdgeInsets.symmetric(vertical: AppTheme.spacingSm),
+          padding:
+              padding ??
+              const EdgeInsets.symmetric(vertical: AppTheme.spacingSm),
           child: child,
         ),
       ],
@@ -266,7 +278,11 @@ class AppFilledCard extends StatelessWidget {
     return AppCard(
       padding: padding,
       margin: margin,
-      color: color ?? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      color:
+          color ??
+          Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       elevation: 0,
       border: BorderSide.none,
       onTap: onTap,

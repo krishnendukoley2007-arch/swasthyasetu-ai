@@ -12,49 +12,48 @@ UserAccount account({
   double? weight = 54,
   List<String> conditions = const ['Diabetes'],
   String? problems = 'dizzy since morning',
-}) =>
-    UserAccount(
-      id: 'acc-1',
-      email: 'mira@example.com',
-      displayName: 'Mira Das',
-      role: UserRole.patient,
-      provider: AuthAccountProvider.email,
-      age: age,
-      sex: sex,
-      heightCm: height,
-      weightKg: weight,
-      conditions: conditions,
-      problems: problems,
-      profileComplete: true,
-      patientId: 'p1',
-      createdAt: DateTime(2026, 1, 1),
-      lastLoginAt: DateTime(2026, 8, 25),
-    );
+}) => UserAccount(
+  id: 'acc-1',
+  email: 'mira@example.com',
+  displayName: 'Mira Das',
+  role: UserRole.patient,
+  provider: AuthAccountProvider.email,
+  age: age,
+  sex: sex,
+  heightCm: height,
+  weightKg: weight,
+  conditions: conditions,
+  problems: problems,
+  profileComplete: true,
+  patientId: 'p1',
+  createdAt: DateTime(2026, 1, 1),
+  lastLoginAt: DateTime(2026, 8, 25),
+);
 
 Patient patient() => Patient(
-      id: 'p1',
-      name: 'Mira Das',
-      age: 29,
-      sex: 'F',
-      createdAt: DateTime(2026, 8, 1),
-    );
+  id: 'p1',
+  name: 'Mira Das',
+  age: 29,
+  sex: 'F',
+  createdAt: DateTime(2026, 8, 1),
+);
 
 Screening screening() => Screening(
-      id: 's1',
-      patientId: 'p1',
-      deviceId: 'd1',
-      timestamp: DateTime(2026, 8, 25, 11),
-      heartRate: 87,
-      spo2: 96,
-      temperature: 37.4,
-      ecgRhythm: 'SINUS_RHYTHM',
-      ecgQualityScore: 0.9,
-      rrIntervalMs: 690,
-      symptoms: const ['Dizziness'],
-      riskLevel: 'YELLOW',
-      riskScore: 18,
-      recommendedAction: 'Rest, hydrate, recheck tomorrow',
-    );
+  id: 's1',
+  patientId: 'p1',
+  deviceId: 'd1',
+  timestamp: DateTime(2026, 8, 25, 11),
+  heartRate: 87,
+  spo2: 96,
+  temperature: 37.4,
+  ecgRhythm: 'SINUS_RHYTHM',
+  ecgQualityScore: 0.9,
+  rrIntervalMs: 690,
+  symptoms: const ['Dizziness'],
+  riskLevel: 'YELLOW',
+  riskScore: 18,
+  recommendedAction: 'Rest, hydrate, recheck tomorrow',
+);
 
 void main() {
   group('HealthReport', () {
@@ -116,30 +115,32 @@ void main() {
       expect(text, contains('AQI 121'));
     });
 
-    test('absent fields are omitted cleanly, never rendered as placeholders',
-        () {
-      final minimal = HealthReport.build(
-        account: account(
-          age: null,
-          sex: '',
-          height: null,
-          weight: null,
-          conditions: const [],
-          problems: null,
-        ),
-        patient: patient(),
-        latest: screening().copyWith(symptoms: const []),
-      );
+    test(
+      'absent fields are omitted cleanly, never rendered as placeholders',
+      () {
+        final minimal = HealthReport.build(
+          account: account(
+            age: null,
+            sex: '',
+            height: null,
+            weight: null,
+            conditions: const [],
+            problems: null,
+          ),
+          patient: patient(),
+          latest: screening().copyWith(symptoms: const []),
+        );
 
-      expect(minimal, isNot(contains('Pre-existing')));
-      expect(minimal, isNot(contains('Age:')));
-      expect(minimal, isNot(contains('Build:')));
-      expect(minimal, isNot(contains('Symptoms:')));
-      expect(minimal, isNot(contains('TREND')));
-      expect(minimal, isNot(contains('ENVIRONMENT')));
-      // Identity and band still survive — they are why the report exists.
-      expect(minimal, contains('Mira Das'));
-      expect(minimal, contains('YELLOW'));
-    });
+        expect(minimal, isNot(contains('Pre-existing')));
+        expect(minimal, isNot(contains('Age:')));
+        expect(minimal, isNot(contains('Build:')));
+        expect(minimal, isNot(contains('Symptoms:')));
+        expect(minimal, isNot(contains('TREND')));
+        expect(minimal, isNot(contains('ENVIRONMENT')));
+        // Identity and band still survive — they are why the report exists.
+        expect(minimal, contains('Mira Das'));
+        expect(minimal, contains('YELLOW'));
+      },
+    );
   });
 }

@@ -54,16 +54,20 @@ void main() {
       );
 
       for (final attempt in [
-        () => repo.signInWithEmail(email: 'nurse@example.com', password: 'nope'),
-        () => repo.signInWithEmail(email: 'ghost@example.com', password: 'nope'),
+        () =>
+            repo.signInWithEmail(email: 'nurse@example.com', password: 'nope'),
+        () =>
+            repo.signInWithEmail(email: 'ghost@example.com', password: 'nope'),
       ]) {
         await expectLater(
           attempt(),
-          throwsA(isA<AuthException>().having(
-            (e) => e.failure,
-            'failure',
-            AuthFailure.wrongCredentials,
-          )),
+          throwsA(
+            isA<AuthException>().having(
+              (e) => e.failure,
+              'failure',
+              AuthFailure.wrongCredentials,
+            ),
+          ),
         );
       }
     });
@@ -85,35 +89,42 @@ void main() {
           displayName: 'Also Me',
           role: UserRole.clinician,
         ),
-        throwsA(isA<AuthException>()
-            .having((e) => e.failure, 'failure', AuthFailure.emailInUse)),
+        throwsA(
+          isA<AuthException>().having(
+            (e) => e.failure,
+            'failure',
+            AuthFailure.emailInUse,
+          ),
+        ),
       );
     });
 
-    test('a Google identity cannot change the role an account registered with',
-        () async {
-      final harness = await TestHarness.create();
-      final repo = harness.container.read(authRepositoryProvider);
+    test(
+      'a Google identity cannot change the role an account registered with',
+      () async {
+        final harness = await TestHarness.create();
+        final repo = harness.container.read(authRepositoryProvider);
 
-      // Patient registers with email first…
-      await repo.registerWithEmail(
-        email: 'rin@example.com',
-        password: 'secret-1',
-        displayName: 'Rin',
-        role: UserRole.patient,
-      );
-      await repo.endSession();
+        // Patient registers with email first…
+        await repo.registerWithEmail(
+          email: 'rin@example.com',
+          password: 'secret-1',
+          displayName: 'Rin',
+          role: UserRole.patient,
+        );
+        await repo.endSession();
 
-      // …then later taps "Continue with Google" from the clinician side.
-      final again = await repo.signInWithGoogleIdentity(
-        email: 'rin@example.com',
-        displayName: 'Rin',
-        roleForNewAccounts: UserRole.clinician,
-      );
+        // …then later taps "Continue with Google" from the clinician side.
+        final again = await repo.signInWithGoogleIdentity(
+          email: 'rin@example.com',
+          displayName: 'Rin',
+          roleForNewAccounts: UserRole.clinician,
+        );
 
-      // The stored role wins; the tap cannot promote her.
-      expect(again.role, UserRole.patient);
-    });
+        // The stored role wins; the tap cannot promote her.
+        expect(again.role, UserRole.patient);
+      },
+    );
   });
 
   group('AuthController', () {
@@ -121,79 +132,88 @@ void main() {
       final harness = await TestHarness.create();
       harness.container.read(authStateProvider.notifier);
       await settle();
-      expect(harness.container.read(authStateProvider).status,
-          AuthStatus.signedOut);
+      expect(
+        harness.container.read(authStateProvider).status,
+        AuthStatus.signedOut,
+      );
     });
 
-    test('patient registration holds at needsProfile until the form is done',
-        () async {
-      final harness = await TestHarness.create();
-      final auth = harness.container.read(authStateProvider.notifier);
-      await settle();
+    test(
+      'patient registration holds at needsProfile until the form is done',
+      () async {
+        final harness = await TestHarness.create();
+        final auth = harness.container.read(authStateProvider.notifier);
+        await settle();
 
-      await auth.registerWithEmail(
-        email: 'mira@example.com',
-        password: 'safe-pass',
-        displayName: 'Mira Das',
-        role: UserRole.patient,
-      );
+        await auth.registerWithEmail(
+          email: 'mira@example.com',
+          password: 'safe-pass',
+          displayName: 'Mira Das',
+          role: UserRole.patient,
+        );
 
-      var state = harness.container.read(authStateProvider);
-      expect(state.status, AuthStatus.needsProfile);
-      // The AI voice flipped with the role.
-      expect(harness.container.read(settingsProvider).audience,
-          Audience.patient);
+        var state = harness.container.read(authStateProvider);
+        expect(state.status, AuthStatus.needsProfile);
+        // The AI voice flipped with the role.
+        expect(
+          harness.container.read(settingsProvider).audience,
+          Audience.patient,
+        );
 
-      await auth.completePatientProfile(
-        displayName: 'Mira Das',
-        age: 29,
-        sex: 'F',
-        heightCm: 158,
-        weightKg: 54,
-        conditions: const ['Diabetes'],
-        problems: 'feeling dizzy since morning',
-        emergencyName: 'Ravi Das',
-        emergencyPhone: '+91 98765 43210',
-      );
+        await auth.completePatientProfile(
+          displayName: 'Mira Das',
+          age: 29,
+          sex: 'F',
+          heightCm: 158,
+          weightKg: 54,
+          conditions: const ['Diabetes'],
+          problems: 'feeling dizzy since morning',
+          emergencyName: 'Ravi Das',
+          emergencyPhone: '+91 98765 43210',
+        );
 
-      state = harness.container.read(authStateProvider);
-      expect(state.status, AuthStatus.signedIn);
-      expect(state.account!.profileComplete, isTrue);
+        state = harness.container.read(authStateProvider);
+        expect(state.status, AuthStatus.signedIn);
+        expect(state.account!.profileComplete, isTrue);
 
-      // Linked screening subject exists, with the diabetes flag applied.
-      final patient = await harness.container
-          .read(myPatientProvider.future);
-      expect(patient, isNotNull);
-      expect(patient!.name, 'Mira Das');
-      expect(patient.vulnerabilityFlags, contains('chronic'));
-      expect(patient.notes, contains('BMI'));
+        // Linked screening subject exists, with the diabetes flag applied.
+        final patient = await harness.container.read(myPatientProvider.future);
+        expect(patient, isNotNull);
+        expect(patient!.name, 'Mira Das');
+        expect(patient.vulnerabilityFlags, contains('chronic'));
+        expect(patient.notes, contains('BMI'));
 
-      // Emergency contact landed as the primary SOS target.
-      final contacts = await harness.container
-          .read(emergencyRepositoryProvider)
-          .getContacts();
-      expect(contacts.single.isPrimary, isTrue);
-      expect(contacts.single.phone, '+919876543210');
-    });
+        // Emergency contact landed as the primary SOS target.
+        final contacts = await harness.container
+            .read(emergencyRepositoryProvider)
+            .getContacts();
+        expect(contacts.single.isPrimary, isTrue);
+        expect(contacts.single.phone, '+919876543210');
+      },
+    );
 
-    test('clinician registration signs straight in with nurse wording',
-        () async {
-      final harness = await TestHarness.create();
-      final auth = harness.container.read(authStateProvider.notifier);
-      await settle();
+    test(
+      'clinician registration signs straight in with nurse wording',
+      () async {
+        final harness = await TestHarness.create();
+        final auth = harness.container.read(authStateProvider.notifier);
+        await settle();
 
-      await auth.registerWithEmail(
-        email: 'worker@example.com',
-        password: 'safe-pass',
-        displayName: 'Field Worker',
-        role: UserRole.clinician,
-      );
+        await auth.registerWithEmail(
+          email: 'worker@example.com',
+          password: 'safe-pass',
+          displayName: 'Field Worker',
+          role: UserRole.clinician,
+        );
 
-      final state = harness.container.read(authStateProvider);
-      expect(state.status, AuthStatus.signedIn);
-      expect(harness.container.read(settingsProvider).audience,
-          Audience.nurse);
-    });
+        final state = harness.container.read(authStateProvider);
+        expect(state.status, AuthStatus.signedIn);
+        expect(
+          harness.container.read(settingsProvider).audience,
+          Audience.nurse,
+        );
+      },
+    );
 
     test('sign out ends the session and returns to signed-out', () async {
       final harness = await TestHarness.create();
@@ -208,8 +228,10 @@ void main() {
       );
       await auth.signOut();
 
-      expect(harness.container.read(authStateProvider).status,
-          AuthStatus.signedOut);
+      expect(
+        harness.container.read(authStateProvider).status,
+        AuthStatus.signedOut,
+      );
     });
 
     test('session survives a simulated cold start', () async {
@@ -224,10 +246,12 @@ void main() {
       );
 
       // A second container over the SAME database is a cold start.
-      final container2 = ProviderContainer(overrides: [
-        databaseProvider.overrideWithValue(harness.db),
-        bootstrapProvider.overrideWith((ref) async => const SeedReport()),
-      ]);
+      final container2 = ProviderContainer(
+        overrides: [
+          databaseProvider.overrideWithValue(harness.db),
+          bootstrapProvider.overrideWith((ref) async => const SeedReport()),
+        ],
+      );
       addTearDown(container2.dispose);
       final revived = container2.read(authStateProvider.notifier);
       await settle();

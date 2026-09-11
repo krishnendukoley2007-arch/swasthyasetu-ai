@@ -58,7 +58,8 @@ class Screenings extends Table {
   // Cuffless BP estimate (experimental, per-user calibrated)
   IntColumn get pttMs => integer().withDefault(const Constant(0))();
   IntColumn get estimatedSystolic => integer().withDefault(const Constant(0))();
-  IntColumn get estimatedDiastolic => integer().withDefault(const Constant(0))();
+  IntColumn get estimatedDiastolic =>
+      integer().withDefault(const Constant(0))();
   TextColumn get bpConfidence =>
       text().withDefault(const Constant('EXPERIMENTAL'))();
   DateTimeColumn get bpCalibratedAt => dateTime().nullable()();
@@ -76,7 +77,8 @@ class Screenings extends Table {
   IntColumn get riskScore => integer()();
   TextColumn get triggeredRules => text().withDefault(const Constant('[]'))();
   TextColumn get recommendedAction => text().withDefault(const Constant(''))();
-  TextColumn get escalationLevel => text().withDefault(const Constant('NONE'))();
+  TextColumn get escalationLevel =>
+      text().withDefault(const Constant('NONE'))();
 
   // Optional geotag — only written when the worker has consented (DPDPA).
   RealColumn get latitude => real().nullable()();
@@ -100,7 +102,8 @@ class WaveformBlobs extends Table {
   IntColumn get durationMs => integer()();
   IntColumn get sampleRate => integer()();
   IntColumn get sizeBytes => integer().withDefault(const Constant(0))();
-  BoolColumn get isDownsampled => boolean().withDefault(const Constant(false))();
+  BoolColumn get isDownsampled =>
+      boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
 
   @override
@@ -320,26 +323,26 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) async => m.createAll(),
-        onUpgrade: (m, from, to) async {
-          // v2 adds the local account store.
-          if (from < 2) {
-            await m.createTable(authAccounts);
-          }
-          // v3 adds estimatedGlucose and glucoseConfidence columns to Screenings.
-          if (from < 3) {
-            await m.addColumn(screenings, screenings.estimatedGlucose);
-            await m.addColumn(screenings, screenings.glucoseConfidence);
-          }
-          // v4 adds phoneNumber to AuthAccounts for Phone OTP sign-in.
-          if (from < 4) {
-            await m.addColumn(authAccounts, authAccounts.phoneNumber);
-          }
-        },
-        beforeOpen: (details) async {
-          await customStatement('PRAGMA foreign_keys = ON');
-        },
-      );
+    onCreate: (m) async => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      // v2 adds the local account store.
+      if (from < 2) {
+        await m.createTable(authAccounts);
+      }
+      // v3 adds estimatedGlucose and glucoseConfidence columns to Screenings.
+      if (from < 3) {
+        await m.addColumn(screenings, screenings.estimatedGlucose);
+        await m.addColumn(screenings, screenings.glucoseConfidence);
+      }
+      // v4 adds phoneNumber to AuthAccounts for Phone OTP sign-in.
+      if (from < 4) {
+        await m.addColumn(authAccounts, authAccounts.phoneNumber);
+      }
+    },
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
 
   // ───────────────────────────── Patients ─────────────────────────────
 
@@ -356,25 +359,28 @@ class AppDatabase extends _$AppDatabase {
     final q = select(patients);
     if (!includeDemo) q.where((t) => t.isDemo.equals(false));
     q.orderBy([
-      (t) => OrderingTerm(expression: t.lastScreenedAt, mode: OrderingMode.desc),
+      (t) =>
+          OrderingTerm(expression: t.lastScreenedAt, mode: OrderingMode.desc),
       (t) => OrderingTerm(expression: t.name),
     ]);
     return q.get();
   }
 
   Stream<List<PatientRow>> watchAllPatients() {
-    return (select(patients)
-          ..orderBy([
-            (t) => OrderingTerm(
-                expression: t.lastScreenedAt, mode: OrderingMode.desc),
-            (t) => OrderingTerm(expression: t.name),
-          ]))
+    return (select(patients)..orderBy([
+          (t) => OrderingTerm(
+            expression: t.lastScreenedAt,
+            mode: OrderingMode.desc,
+          ),
+          (t) => OrderingTerm(expression: t.name),
+        ]))
         .watch();
   }
 
   Future<void> touchPatientLastScreened(String patientId, DateTime at) =>
-      (update(patients)..where((t) => t.id.equals(patientId)))
-          .write(PatientsCompanion(lastScreenedAt: Value(at)));
+      (update(patients)..where((t) => t.id.equals(patientId))).write(
+        PatientsCompanion(lastScreenedAt: Value(at)),
+      );
 
   Future<int> countPatients() async {
     final count = patients.id.count();
@@ -393,12 +399,15 @@ class AppDatabase extends _$AppDatabase {
   Future<ScreeningRow?> getScreening(String id) =>
       (select(screenings)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<List<ScreeningRow>> getScreeningsForPatient(String patientId,
-      {int? limit}) {
+  Future<List<ScreeningRow>> getScreeningsForPatient(
+    String patientId, {
+    int? limit,
+  }) {
     final q = select(screenings)
       ..where((t) => t.patientId.equals(patientId))
-      ..orderBy(
-          [(t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)]);
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc),
+      ]);
     if (limit != null) q.limit(limit);
     return q.get();
   }
@@ -408,14 +417,17 @@ class AppDatabase extends _$AppDatabase {
             ..where((t) => t.patientId.equals(patientId))
             ..orderBy([
               (t) => OrderingTerm(
-                  expression: t.timestamp, mode: OrderingMode.desc)
+                expression: t.timestamp,
+                mode: OrderingMode.desc,
+              ),
             ]))
           .watch();
 
   Future<List<ScreeningRow>> getAllScreenings({int? limit}) {
     final q = select(screenings)
-      ..orderBy(
-          [(t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)]);
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc),
+      ]);
     if (limit != null) q.limit(limit);
     return q.get();
   }
@@ -424,7 +436,9 @@ class AppDatabase extends _$AppDatabase {
       (select(screenings)
             ..orderBy([
               (t) => OrderingTerm(
-                  expression: t.timestamp, mode: OrderingMode.desc)
+                expression: t.timestamp,
+                mode: OrderingMode.desc,
+              ),
             ])
             ..limit(limit))
           .watch();
@@ -434,7 +448,9 @@ class AppDatabase extends _$AppDatabase {
             ..where((t) => t.timestamp.isBiggerOrEqualValue(since))
             ..orderBy([
               (t) => OrderingTerm(
-                  expression: t.timestamp, mode: OrderingMode.desc)
+                expression: t.timestamp,
+                mode: OrderingMode.desc,
+              ),
             ]))
           .get();
 
@@ -444,15 +460,16 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(t) => OrderingTerm(expression: t.timestamp)]))
           .get();
 
-  Future<void> setScreeningSyncStatus(String id, String status,
-          {int? attempts}) =>
-      (update(screenings)..where((t) => t.id.equals(id))).write(
-        ScreeningsCompanion(
-          syncStatus: Value(status),
-          retryCount:
-              attempts != null ? Value(attempts) : const Value.absent(),
-        ),
-      );
+  Future<void> setScreeningSyncStatus(
+    String id,
+    String status, {
+    int? attempts,
+  }) => (update(screenings)..where((t) => t.id.equals(id))).write(
+    ScreeningsCompanion(
+      syncStatus: Value(status),
+      retryCount: attempts != null ? Value(attempts) : const Value.absent(),
+    ),
+  );
 
   Future<int> countScreenings() async {
     final count = screenings.id.count();
@@ -462,10 +479,11 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> countScreeningsForPatient(String patientId) async {
     final count = screenings.id.count();
-    final row = await (selectOnly(screenings)
-          ..addColumns([count])
-          ..where(screenings.patientId.equals(patientId)))
-        .getSingle();
+    final row =
+        await (selectOnly(screenings)
+              ..addColumns([count])
+              ..where(screenings.patientId.equals(patientId)))
+            .getSingle();
     return row.read(count) ?? 0;
   }
 
@@ -491,27 +509,30 @@ class AppDatabase extends _$AppDatabase {
   Future<int> upsertWaveformBlob(WaveformBlobsCompanion blob) =>
       into(waveformBlobs).insertOnConflictUpdate(blob);
 
-  Future<void> deleteWaveformBlobsForScreening(String screeningId) =>
-      (delete(waveformBlobs)..where((t) => t.screeningId.equals(screeningId)))
-          .go();
+  Future<void> deleteWaveformBlobsForScreening(String screeningId) => (delete(
+    waveformBlobs,
+  )..where((t) => t.screeningId.equals(screeningId))).go();
 
   Future<WaveformBlobRow?> getWaveformBlob(String screeningId, String type) =>
-      (select(waveformBlobs)
-            ..where((t) => t.screeningId.equals(screeningId) & t.type.equals(type)))
+      (select(waveformBlobs)..where(
+            (t) => t.screeningId.equals(screeningId) & t.type.equals(type),
+          ))
           .getSingleOrNull();
 
   Future<List<WaveformBlobRow>> getWaveformBlobsForScreening(
-          String screeningId) =>
-      (select(waveformBlobs)..where((t) => t.screeningId.equals(screeningId)))
-          .get();
+    String screeningId,
+  ) => (select(
+    waveformBlobs,
+  )..where((t) => t.screeningId.equals(screeningId))).get();
 
   Future<List<WaveformBlobRow>> getAllWaveformBlobs() =>
       select(waveformBlobs).get();
 
   Future<int> totalWaveformBytes() async {
     final sum = waveformBlobs.sizeBytes.sum();
-    final row =
-        await (selectOnly(waveformBlobs)..addColumns([sum])).getSingle();
+    final row = await (selectOnly(
+      waveformBlobs,
+    )..addColumns([sum])).getSingle();
     return (row.read(sum) ?? 0).toInt();
   }
 
@@ -526,12 +547,14 @@ class AppDatabase extends _$AppDatabase {
   Future<DeviceRow?> getDeviceRow(String id) =>
       (select(devices)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<List<DeviceRow>> getAllDevices() => (select(devices)
-        ..orderBy([
-          (t) => OrderingTerm(
-              expression: t.lastConnectedAt, mode: OrderingMode.desc)
-        ]))
-      .get();
+  Future<List<DeviceRow>> getAllDevices() =>
+      (select(devices)..orderBy([
+            (t) => OrderingTerm(
+              expression: t.lastConnectedAt,
+              mode: OrderingMode.desc,
+            ),
+          ]))
+          .get();
 
   Stream<List<DeviceRow>> watchAllDevices() => select(devices).watch();
 
@@ -540,17 +563,16 @@ class AppDatabase extends _$AppDatabase {
     DateTime? at,
     int? battery,
     String? firmware,
-  }) =>
-      (update(devices)..where((t) => t.id.equals(id))).write(
-        DevicesCompanion(
-          isConnected: const Value(true),
-          lastConnectedAt: Value(at ?? DateTime.now()),
-          batteryPercent:
-              battery != null ? Value(battery) : const Value.absent(),
-          firmwareVersion:
-              firmware != null ? Value(firmware) : const Value.absent(),
-        ),
-      );
+  }) => (update(devices)..where((t) => t.id.equals(id))).write(
+    DevicesCompanion(
+      isConnected: const Value(true),
+      lastConnectedAt: Value(at ?? DateTime.now()),
+      batteryPercent: battery != null ? Value(battery) : const Value.absent(),
+      firmwareVersion: firmware != null
+          ? Value(firmware)
+          : const Value.absent(),
+    ),
+  );
 
   Future<void> markAllDevicesDisconnected() =>
       update(devices).write(const DevicesCompanion(isConnected: Value(false)));
@@ -560,34 +582,40 @@ class AppDatabase extends _$AppDatabase {
     required DateTime date,
     required int systolic,
     required int diastolic,
-  }) =>
-      (update(devices)..where((t) => t.id.equals(id))).write(
-        DevicesCompanion(
-          calibrationDate: Value(date),
-          calibrationSystolic: Value(systolic),
-          calibrationDiastolic: Value(diastolic),
-        ),
-      );
+  }) => (update(devices)..where((t) => t.id.equals(id))).write(
+    DevicesCompanion(
+      calibrationDate: Value(date),
+      calibrationSystolic: Value(systolic),
+      calibrationDiastolic: Value(diastolic),
+    ),
+  );
 
   // ───────────────────────────── Sync queue ─────────────────────────────
 
   Future<int> enqueueSync(SyncQueueCompanion item) =>
       into(syncQueue).insertOnConflictUpdate(item);
 
-  Future<List<SyncQueueRow>> getPendingSyncItems() => (select(syncQueue)
-        ..where((t) => t.status.equals('PENDING') | t.status.equals('FAILED'))
-        ..orderBy([(t) => OrderingTerm(expression: t.queuedAt)]))
-      .get();
+  Future<List<SyncQueueRow>> getPendingSyncItems() =>
+      (select(syncQueue)
+            ..where(
+              (t) => t.status.equals('PENDING') | t.status.equals('FAILED'),
+            )
+            ..orderBy([(t) => OrderingTerm(expression: t.queuedAt)]))
+          .get();
 
-  Future<List<SyncQueueRow>> getAllSyncItems() => (select(syncQueue)
-        ..orderBy(
-            [(t) => OrderingTerm(expression: t.queuedAt, mode: OrderingMode.desc)]))
-      .get();
+  Future<List<SyncQueueRow>> getAllSyncItems() =>
+      (select(syncQueue)..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.queuedAt, mode: OrderingMode.desc),
+          ]))
+          .get();
 
-  Stream<List<SyncQueueRow>> watchSyncQueue() => (select(syncQueue)
-        ..orderBy(
-            [(t) => OrderingTerm(expression: t.queuedAt, mode: OrderingMode.desc)]))
-      .watch();
+  Stream<List<SyncQueueRow>> watchSyncQueue() =>
+      (select(syncQueue)..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.queuedAt, mode: OrderingMode.desc),
+          ]))
+          .watch();
 
   Future<void> removeSyncItem(String id) =>
       (delete(syncQueue)..where((t) => t.id.equals(id))).go();
@@ -601,44 +629,47 @@ class AppDatabase extends _$AppDatabase {
     String? lastError,
     String? status,
     DateTime? lastAttemptAt,
-  }) =>
-      (update(syncQueue)..where((t) => t.id.equals(id))).write(
-        SyncQueueCompanion(
-          attempts: attempts != null ? Value(attempts) : const Value.absent(),
-          lastError: lastError != null ? Value(lastError) : const Value.absent(),
-          status: status != null ? Value(status) : const Value.absent(),
-          lastAttemptAt: lastAttemptAt != null
-              ? Value(lastAttemptAt)
-              : const Value.absent(),
-        ),
-      );
+  }) => (update(syncQueue)..where((t) => t.id.equals(id))).write(
+    SyncQueueCompanion(
+      attempts: attempts != null ? Value(attempts) : const Value.absent(),
+      lastError: lastError != null ? Value(lastError) : const Value.absent(),
+      status: status != null ? Value(status) : const Value.absent(),
+      lastAttemptAt: lastAttemptAt != null
+          ? Value(lastAttemptAt)
+          : const Value.absent(),
+    ),
+  );
 
   Future<int> countPendingSync() async {
     final count = syncQueue.id.count();
-    final row = await (selectOnly(syncQueue)
-          ..addColumns([count])
-          ..where(syncQueue.status.equals('PENDING') |
-              syncQueue.status.equals('FAILED')))
-        .getSingle();
+    final row =
+        await (selectOnly(syncQueue)
+              ..addColumns([count])
+              ..where(
+                syncQueue.status.equals('PENDING') |
+                    syncQueue.status.equals('FAILED'),
+              ))
+            .getSingle();
     return row.read(count) ?? 0;
   }
 
   // ────────────────────────── Guideline corpus ──────────────────────────
 
   Future<void> replaceGuidelineCorpus(
-          List<GuidelineCacheCompanion> chunks) async =>
-      transaction(() async {
-        await delete(guidelineCache).go();
-        await batch((b) => b.insertAll(guidelineCache, chunks));
-      });
+    List<GuidelineCacheCompanion> chunks,
+  ) async => transaction(() async {
+    await delete(guidelineCache).go();
+    await batch((b) => b.insertAll(guidelineCache, chunks));
+  });
 
   Future<List<GuidelineChunkRow>> getAllGuidelineChunks() =>
       select(guidelineCache).get();
 
   Future<int> countGuidelineChunks() async {
     final count = guidelineCache.chunkId.count();
-    final row =
-        await (selectOnly(guidelineCache)..addColumns([count])).getSingle();
+    final row = await (selectOnly(
+      guidelineCache,
+    )..addColumns([count])).getSingle();
     return row.read(count) ?? 0;
   }
 
@@ -647,7 +678,11 @@ class AppDatabase extends _$AppDatabase {
     return rows.fold<int>(
       0,
       (sum, r) =>
-          sum + r.body.length + r.keywords.length + r.title.length + r.ruleTags.length,
+          sum +
+          r.body.length +
+          r.keywords.length +
+          r.title.length +
+          r.ruleTags.length,
     );
   }
 
@@ -658,21 +693,24 @@ class AppDatabase extends _$AppDatabase {
   Future<int> upsertExplanation(ExplanationsCompanion e) =>
       into(explanations).insertOnConflictUpdate(e);
 
-  Future<ExplanationRow?> getExplanation(String screeningId,
-          {String? source}) async {
+  Future<ExplanationRow?> getExplanation(
+    String screeningId, {
+    String? source,
+  }) async {
     final q = select(explanations)
       ..where((t) => t.screeningId.equals(screeningId));
     if (source != null) q.where((t) => t.source.equals(source));
-    q.orderBy(
-        [(t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc)]);
+    q.orderBy([
+      (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+    ]);
     q.limit(1);
     final rows = await q.get();
     return rows.isEmpty ? null : rows.first;
   }
 
-  Future<void> deleteExplanationsForScreening(String screeningId) =>
-      (delete(explanations)..where((t) => t.screeningId.equals(screeningId)))
-          .go();
+  Future<void> deleteExplanationsForScreening(String screeningId) => (delete(
+    explanations,
+  )..where((t) => t.screeningId.equals(screeningId))).go();
 
   // ───────────────────────── Emergency contacts ─────────────────────────
 
@@ -688,29 +726,28 @@ class AppDatabase extends _$AppDatabase {
   /// used to throw `InvalidDataException` and take the whole profile save down
   /// with it. An UPDATE touches only the column named.
   Future<int> demoteOtherPrimaryContacts(String exceptId) =>
-      (update(emergencyContacts)
-            ..where((t) => t.isPrimary.equals(true) & t.id.equals(exceptId).not()))
+      (update(emergencyContacts)..where(
+            (t) => t.isPrimary.equals(true) & t.id.equals(exceptId).not(),
+          ))
           .write(const EmergencyContactsCompanion(isPrimary: Value(false)));
 
   Future<void> deleteEmergencyContact(String id) =>
       (delete(emergencyContacts)..where((t) => t.id.equals(id))).go();
 
   Future<List<EmergencyContactRow>> getEmergencyContacts() =>
-      (select(emergencyContacts)
-            ..orderBy([
-              (t) => OrderingTerm(
-                  expression: t.isPrimary, mode: OrderingMode.desc),
-              (t) => OrderingTerm(expression: t.sortOrder),
-            ]))
+      (select(emergencyContacts)..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.isPrimary, mode: OrderingMode.desc),
+            (t) => OrderingTerm(expression: t.sortOrder),
+          ]))
           .get();
 
   Stream<List<EmergencyContactRow>> watchEmergencyContacts() =>
-      (select(emergencyContacts)
-            ..orderBy([
-              (t) => OrderingTerm(
-                  expression: t.isPrimary, mode: OrderingMode.desc),
-              (t) => OrderingTerm(expression: t.sortOrder),
-            ]))
+      (select(emergencyContacts)..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.isPrimary, mode: OrderingMode.desc),
+            (t) => OrderingTerm(expression: t.sortOrder),
+          ]))
           .watch();
 
   // ────────────────────────────── SOS log ──────────────────────────────
@@ -718,19 +755,27 @@ class AppDatabase extends _$AppDatabase {
   Future<int> insertSosEvent(SosEventsCompanion e) =>
       into(sosEvents).insertOnConflictUpdate(e);
 
-  Future<List<SosEventRow>> getSosEvents({int limit = 100}) => (select(sosEvents)
-        ..orderBy([
-          (t) => OrderingTerm(expression: t.triggeredAt, mode: OrderingMode.desc)
-        ])
-        ..limit(limit))
-      .get();
+  Future<List<SosEventRow>> getSosEvents({int limit = 100}) =>
+      (select(sosEvents)
+            ..orderBy([
+              (t) => OrderingTerm(
+                expression: t.triggeredAt,
+                mode: OrderingMode.desc,
+              ),
+            ])
+            ..limit(limit))
+          .get();
 
-  Stream<List<SosEventRow>> watchSosEvents() => (select(sosEvents)
-        ..orderBy([
-          (t) => OrderingTerm(expression: t.triggeredAt, mode: OrderingMode.desc)
-        ])
-        ..limit(100))
-      .watch();
+  Stream<List<SosEventRow>> watchSosEvents() =>
+      (select(sosEvents)
+            ..orderBy([
+              (t) => OrderingTerm(
+                expression: t.triggeredAt,
+                mode: OrderingMode.desc,
+              ),
+            ])
+            ..limit(100))
+          .watch();
 
   Future<void> clearSosEvents() => delete(sosEvents).go();
 
@@ -738,11 +783,13 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> setSetting(String key, String value) =>
       into(appSettings).insertOnConflictUpdate(
-          AppSettingsCompanion(key: Value(key), value: Value(value)));
+        AppSettingsCompanion(key: Value(key), value: Value(value)),
+      );
 
   Future<String?> getSetting(String key) async {
-    final row = await (select(appSettings)..where((t) => t.key.equals(key)))
-        .getSingleOrNull();
+    final row = await (select(
+      appSettings,
+    )..where((t) => t.key.equals(key))).getSingleOrNull();
     return row?.value;
   }
 
@@ -751,9 +798,9 @@ class AppDatabase extends _$AppDatabase {
     return {for (final r in rows) r.key: r.value};
   }
 
-  Stream<Map<String, String>> watchSettings() => select(appSettings)
-      .watch()
-      .map((rows) => {for (final r in rows) r.key: r.value});
+  Stream<Map<String, String>> watchSettings() => select(
+    appSettings,
+  ).watch().map((rows) => {for (final r in rows) r.key: r.value});
 
   Future<void> deleteSetting(String key) =>
       (delete(appSettings)..where((t) => t.key.equals(key))).go();
@@ -790,13 +837,13 @@ class AppDatabase extends _$AppDatabase {
   /// Deletes every patient-derived row. Guideline corpus and settings survive —
   /// wiping those is a separate, explicit action.
   Future<void> deleteAllPatientData() => transaction(() async {
-        await delete(sosEvents).go();
-        await delete(explanations).go();
-        await delete(waveformBlobs).go();
-        await delete(syncQueue).go();
-        await delete(screenings).go();
-        await delete(patients).go();
-      });
+    await delete(sosEvents).go();
+    await delete(explanations).go();
+    await delete(waveformBlobs).go();
+    await delete(syncQueue).go();
+    await delete(screenings).go();
+    await delete(patients).go();
+  });
 
   Future<int> databaseFileSize() async {
     final f = await _databaseFile();

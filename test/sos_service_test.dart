@@ -287,16 +287,17 @@ void main() {
         ),
       );
       final uri = SosService.smsUri(['108'], body);
-      final decoded =
-          Uri.decodeComponent(uri.toString().split('?body=').last);
+      final decoded = Uri.decodeComponent(uri.toString().split('?body=').last);
       expect(decoded, body);
     });
   });
 
   group('telUri', () {
     test('normalises before dialling', () {
-      expect(SosService.telUri('+91 98765 43210').toString(),
-          'tel:+919876543210');
+      expect(
+        SosService.telUri('+91 98765 43210').toString(),
+        'tel:+919876543210',
+      );
     });
 
     test('leaves a short emergency number intact', () {
@@ -307,26 +308,30 @@ void main() {
   group('SosDispatchResult', () {
     test('only composerOpened counts as success', () {
       expect(
-        const SosDispatchResult(outcome: SosDispatchOutcome.composerOpened)
-            .isSuccess,
+        const SosDispatchResult(
+          outcome: SosDispatchOutcome.composerOpened,
+        ).isSuccess,
         isTrue,
       );
       expect(
-        const SosDispatchResult(outcome: SosDispatchOutcome.noContacts)
-            .isSuccess,
+        const SosDispatchResult(
+          outcome: SosDispatchOutcome.noContacts,
+        ).isSuccess,
         isFalse,
       );
       expect(
-        const SosDispatchResult(outcome: SosDispatchOutcome.launchFailed)
-            .isSuccess,
+        const SosDispatchResult(
+          outcome: SosDispatchOutcome.launchFailed,
+        ).isSuccess,
         isFalse,
       );
     });
 
     test('every failure explains itself and success stays silent', () {
       expect(
-        const SosDispatchResult(outcome: SosDispatchOutcome.composerOpened)
-            .failureReason,
+        const SosDispatchResult(
+          outcome: SosDispatchOutcome.composerOpened,
+        ).failureReason,
         isEmpty,
       );
       for (final outcome in [

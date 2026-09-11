@@ -47,7 +47,9 @@ class VascularElasticityGauge extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -77,11 +79,15 @@ class VascularElasticityGauge extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     Text(
                       'ECG R-Peak to PPG Transit Synchrony',
-                      style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -112,10 +118,7 @@ class VascularElasticityGauge extends StatelessWidget {
               width: 240,
               height: 135,
               child: CustomPaint(
-                painter: _VascularGaugePainter(
-                  pwv: pwv,
-                  stiffnessColor: color,
-                ),
+                painter: _VascularGaugePainter(pwv: pwv, stiffnessColor: color),
               ),
             ),
           ),
@@ -164,25 +167,38 @@ class VascularElasticityGauge extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppTheme.spacingSm),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.4,
+              ),
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.monitor_heart_outlined, size: 15, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.monitor_heart_outlined,
+                      size: 15,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Cuffless BP Derivation Mechanism',
-                      style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const Spacer(),
                     if (systolicBp != null && diastolicBp != null)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(4),
@@ -220,10 +236,7 @@ class _VascularGaugePainter extends CustomPainter {
   final double pwv;
   final Color stiffnessColor;
 
-  _VascularGaugePainter({
-    required this.pwv,
-    required this.stiffnessColor,
-  });
+  _VascularGaugePainter({required this.pwv, required this.stiffnessColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -313,7 +326,11 @@ class _VascularGaugePainter extends CustomPainter {
     void drawTick(String text, double x, double y) {
       tp.text = TextSpan(
         text: text,
-        style: const TextStyle(color: Colors.grey, fontSize: 9.5, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.grey,
+          fontSize: 9.5,
+          fontWeight: FontWeight.bold,
+        ),
       );
       tp.layout();
       tp.paint(canvas, Offset(x, y));
@@ -327,6 +344,7 @@ class _VascularGaugePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _VascularGaugePainter oldDelegate) {
-    return oldDelegate.pwv != pwv || oldDelegate.stiffnessColor != stiffnessColor;
+    return oldDelegate.pwv != pwv ||
+        oldDelegate.stiffnessColor != stiffnessColor;
   }
 }

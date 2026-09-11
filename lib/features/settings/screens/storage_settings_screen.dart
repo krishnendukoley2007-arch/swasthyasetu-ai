@@ -71,10 +71,9 @@ class _StorageSettingsScreenState extends ConsumerState<StorageSettingsScreen> {
           if (_busy)
             Positioned.fill(
               child: ColoredBox(
-                color: Theme.of(context)
-                    .colorScheme
-                    .scrim
-                    .withValues(alpha: 0.45),
+                color: Theme.of(
+                  context,
+                ).colorScheme.scrim.withValues(alpha: 0.45),
                 child: Center(
                   child: AppCard(
                     child: Column(
@@ -137,7 +136,9 @@ class _StorageSettingsScreenState extends ConsumerState<StorageSettingsScreen> {
 
     final report = await _guard<ReclaimReport>(
       'Reclaiming space…',
-      () => ref.read(storageManagerProvider).freeUpSpace(
+      () => ref
+          .read(storageManagerProvider)
+          .freeUpSpace(
             downsampleOldWaveforms: options.downsample,
             removeOrphans: options.removeOrphans,
             clearMapCache: options.clearMapTiles,
@@ -201,7 +202,8 @@ class _StorageSettingsScreenState extends ConsumerState<StorageSettingsScreen> {
         ShareParams(
           files: [XFile(file.path)],
           subject: 'SwasthyaSetu export — ${patient.patient.name}',
-          text: 'Screening history for ${patient.patient.name}. '
+          text:
+              'Screening history for ${patient.patient.name}. '
               'Contains health data — share only with the intended recipient.',
         ),
       );
@@ -222,7 +224,8 @@ class _StorageSettingsScreenState extends ConsumerState<StorageSettingsScreen> {
 
     final confirmed = await _confirmDestructive(
       title: 'Delete ${patient.patient.name}?',
-      body: 'Their ${patient.screeningCount} screening'
+      body:
+          'Their ${patient.screeningCount} screening'
           '${patient.screeningCount == 1 ? '' : 's'} and all recorded waveforms '
           'will be deleted from this phone. Anything already synced to a server '
           'is not affected.',
@@ -232,8 +235,9 @@ class _StorageSettingsScreenState extends ConsumerState<StorageSettingsScreen> {
 
     await _guard<void>(
       'Deleting…',
-      () =>
-          ref.read(storageManagerProvider).deletePatientData(patient.patient.id),
+      () => ref
+          .read(storageManagerProvider)
+          .deletePatientData(patient.patient.id),
     );
     _toast('${patient.patient.name} deleted.');
   }
@@ -251,7 +255,9 @@ class _StorageSettingsScreenState extends ConsumerState<StorageSettingsScreen> {
 
     await _guard<void>(
       'Wiping all data…',
-      () => ref.read(storageManagerProvider).wipeAllData(
+      () => ref
+          .read(storageManagerProvider)
+          .wipeAllData(
             includeGuidelineCorpus: choice.includeGuidelines,
             includeMapTiles: choice.includeMapTiles,
             includeSettings: choice.includeSettings,
@@ -270,7 +276,8 @@ class _StorageSettingsScreenState extends ConsumerState<StorageSettingsScreen> {
     required String title,
     required String subtitle,
   }) async {
-    final summaries = ref.read(patientSummariesProvider).valueOrNull ?? const [];
+    final summaries =
+        ref.read(patientSummariesProvider).valueOrNull ?? const [];
     if (summaries.isEmpty) {
       _toast('There are no patients on this device.');
       return null;
@@ -404,14 +411,17 @@ class _BudgetCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'On this phone',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               Text(
                 '${(usage.fractionOfBudget * 100).round()}%',
-                style: theme.textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.bold, color: tint),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: tint,
+                ),
               ),
             ],
           ),
@@ -423,8 +433,10 @@ class _BudgetCard extends StatelessWidget {
             children: [
               Text(
                 usage.formattedTotal,
-                style: theme.textTheme.headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.bold, color: tint),
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: tint,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
@@ -451,11 +463,13 @@ class _BudgetCard extends StatelessWidget {
           Text(
             near
                 ? 'Nearly full. Free up space below before the next round of '
-                    'screenings.'
+                      'screenings.'
                 : 'Room for about ${usage.projectedRemainingScreenings} more '
-                    'screenings at full waveform resolution.',
+                      'screenings at full waveform resolution.',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: near ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant,
+              color: near
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.onSurfaceVariant,
               height: 1.4,
             ),
           ),
@@ -472,26 +486,30 @@ class _BreakdownCard extends StatelessWidget {
 
   /// Category ids are storage keys. Nothing raw reaches a `Text`.
   static const _labels = <String, ({String name, IconData icon, String unit})>{
-    'patients': (name: 'Patients', icon: Icons.people_outline_rounded, unit: 'people'),
+    'patients': (
+      name: 'Patients',
+      icon: Icons.people_outline_rounded,
+      unit: 'people',
+    ),
     'screenings': (
       name: 'Screenings',
       icon: Icons.assignment_outlined,
-      unit: 'records'
+      unit: 'records',
     ),
     'waveforms': (
       name: 'ECG / PPG waveforms',
       icon: Icons.monitor_heart_outlined,
-      unit: 'files'
+      unit: 'files',
     ),
     'guidelines': (
       name: 'Offline guidelines',
       icon: Icons.menu_book_outlined,
-      unit: 'passages'
+      unit: 'passages',
     ),
     'explanations': (
       name: 'Cached explanations',
       icon: Icons.chat_bubble_outline_rounded,
-      unit: ''
+      unit: '',
     ),
     'mapTiles': (name: 'Offline map tiles', icon: Icons.map_outlined, unit: ''),
   };
@@ -506,8 +524,9 @@ class _BreakdownCard extends StatelessWidget {
         children: [
           Text(
             'What is using it',
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const AppSpacing.vsm(),
           for (final category in usage.breakdown)
@@ -517,7 +536,7 @@ class _BreakdownCard extends StatelessWidget {
               bytes: category.bytes,
               detail: category.itemCount > 0
                   ? '${category.itemCount} '
-                      '${_labels[category.id]?.unit ?? 'items'}'
+                        '${_labels[category.id]?.unit ?? 'items'}'
                   : null,
             ),
           const AppSpacing.vsm(),
@@ -578,8 +597,9 @@ class _BreakdownRow extends StatelessWidget {
           const AppSpacing.hsm(),
           Text(
             formatBytes(bytes),
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -611,8 +631,9 @@ class _ReclaimCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Free up space',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -662,8 +683,9 @@ class _ExportCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Export a patient',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -791,8 +813,9 @@ class _ReclaimSheetState extends State<_ReclaimSheet> {
           children: [
             Text(
               'Free up space',
-              style: theme.textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const AppSpacing.vmd(),
             SwitchListTile(
@@ -839,13 +862,13 @@ class _ReclaimSheetState extends State<_ReclaimSheet> {
                     label: 'Run',
                     onPressed: (_downsample || _orphans || _mapTiles)
                         ? () => Navigator.pop(
-                              context,
-                              _ReclaimOptions(
-                                downsample: _downsample,
-                                removeOrphans: _orphans,
-                                clearMapTiles: _mapTiles,
-                              ),
-                            )
+                            context,
+                            _ReclaimOptions(
+                              downsample: _downsample,
+                              removeOrphans: _orphans,
+                              clearMapTiles: _mapTiles,
+                            ),
+                          )
                         : null,
                   ),
                 ),
@@ -1011,8 +1034,8 @@ class _PatientPickerSheetState extends State<_PatientPickerSheet> {
     final filtered = query.isEmpty
         ? widget.patients
         : widget.patients
-            .where((p) => p.patient.name.toLowerCase().contains(query))
-            .toList();
+              .where((p) => p.patient.name.toLowerCase().contains(query))
+              .toList();
 
     // Capped at 70% of the screen so the sheet never grows past the viewport at
     // large text scales with a long roster behind it.
@@ -1036,8 +1059,9 @@ class _PatientPickerSheetState extends State<_PatientPickerSheet> {
                   children: [
                     Text(
                       widget.title,
-                      style: theme.textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const AppSpacing.vxs(),
                     Text(

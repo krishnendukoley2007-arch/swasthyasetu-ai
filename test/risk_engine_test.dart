@@ -12,30 +12,28 @@ HealthSample healthy({
   double ecgQuality = 0.95,
   bool rPeak = true,
   int rrInterval = 833,
-}) =>
-    HealthSample(
-      timestamp: 0,
-      heartRateBpm: hr,
-      spo2Percent: spo2,
-      temperatureC: temp,
-      ecgSignalQuality: ecgQuality,
-      rPeakDetected: rPeak,
-      rrIntervalMs: rrInterval,
-      batteryPercent: 90,
-    );
+}) => HealthSample(
+  timestamp: 0,
+  heartRateBpm: hr,
+  spo2Percent: spo2,
+  temperatureC: temp,
+  ecgSignalQuality: ecgQuality,
+  rPeakDetected: rPeak,
+  rrIntervalMs: rrInterval,
+  batteryPercent: 90,
+);
 
 TriageAssessment assess(
   HealthSample sample, {
   List<String> symptoms = const [],
   int age = 30,
   Set<Vulnerability> flags = const {},
-}) =>
-    RiskEngine.assess(
-      sample: sample,
-      symptoms: symptoms,
-      age: age,
-      flags: flags,
-    );
+}) => RiskEngine.assess(
+  sample: sample,
+  symptoms: symptoms,
+  age: age,
+  flags: flags,
+);
 
 bool fired(TriageAssessment a, String ruleId) => a.ruleIds.contains(ruleId);
 
@@ -61,7 +59,8 @@ void main() {
             expect(
               a.band,
               RiskEngine.bandForScore(a.score),
-              reason: 'hr=$hr spo2=$spo2 temp=$temp scored ${a.score} '
+              reason:
+                  'hr=$hr spo2=$spo2 temp=$temp scored ${a.score} '
                   'but was banded ${a.band.storageValue}',
             );
             expect(a.score, inInclusiveRange(0, 100));
@@ -145,8 +144,11 @@ void main() {
     test('one below the critical threshold fires critical, not warning', () {
       final a = assess(healthy(spo2: t.spo2Critical - 1)); // 89
       expect(fired(a, RuleId.spo2Critical), isTrue);
-      expect(fired(a, RuleId.spo2Warning), isFalse,
-          reason: 'the bands are exclusive, not cumulative');
+      expect(
+        fired(a, RuleId.spo2Warning),
+        isFalse,
+        reason: 'the bands are exclusive, not cumulative',
+      );
       expect(a.band, RiskBand.red);
     });
 
@@ -165,8 +167,10 @@ void main() {
     const t = VitalThresholds.adult;
 
     test('at the high warning threshold exactly, nothing fires', () {
-      expect(fired(assess(healthy(hr: t.hrHighWarning)), RuleId.hrTachyWarning),
-          isFalse); // 100
+      expect(
+        fired(assess(healthy(hr: t.hrHighWarning)), RuleId.hrTachyWarning),
+        isFalse,
+      ); // 100
     });
 
     test('one above the high warning fires tachycardia warning', () {
@@ -188,8 +192,10 @@ void main() {
     });
 
     test('at the low warning threshold exactly, nothing fires', () {
-      expect(fired(assess(healthy(hr: t.hrLowWarning)), RuleId.hrBradyWarning),
-          isFalse); // 55
+      expect(
+        fired(assess(healthy(hr: t.hrLowWarning)), RuleId.hrBradyWarning),
+        isFalse,
+      ); // 55
     });
 
     test('one below the low warning fires bradycardia warning', () {
@@ -210,16 +216,21 @@ void main() {
       expect(a.band, RiskBand.red);
     });
 
-    test('bradycardia is detected at all — the old engine had no low-HR rule', () {
-      expect(fired(assess(healthy(hr: 38)), RuleId.hrBradyCritical), isTrue);
-    });
+    test(
+      'bradycardia is detected at all — the old engine had no low-HR rule',
+      () {
+        expect(fired(assess(healthy(hr: 38)), RuleId.hrBradyCritical), isTrue);
+      },
+    );
 
     test('high and low rules are mutually exclusive', () {
       for (var hr = 20; hr <= 220; hr++) {
         final ids = assess(healthy(hr: hr)).ruleIds;
-        final high = ids.contains(RuleId.hrTachyWarning) ||
+        final high =
+            ids.contains(RuleId.hrTachyWarning) ||
             ids.contains(RuleId.hrTachyCritical);
-        final low = ids.contains(RuleId.hrBradyWarning) ||
+        final low =
+            ids.contains(RuleId.hrBradyWarning) ||
             ids.contains(RuleId.hrBradyCritical);
         expect(high && low, isFalse, reason: 'hr=$hr fired both directions');
       }
@@ -253,15 +264,20 @@ void main() {
       expect(fired(a, RuleId.tempHigh), isFalse);
     });
 
-    test('at the high-fever threshold exactly, high fever fires (inclusive)', () {
-      final a = assess(healthy(temp: t.tempHigh)); // 39.0
-      expect(fired(a, RuleId.tempHigh), isTrue);
-      expect(fired(a, RuleId.tempFever), isFalse);
-    });
+    test(
+      'at the high-fever threshold exactly, high fever fires (inclusive)',
+      () {
+        final a = assess(healthy(temp: t.tempHigh)); // 39.0
+        expect(fired(a, RuleId.tempHigh), isTrue);
+        expect(fired(a, RuleId.tempFever), isFalse);
+      },
+    );
 
     test('at the hypothermia threshold exactly, nothing fires', () {
-      expect(fired(assess(healthy(temp: t.tempLow)), RuleId.tempLow),
-          isFalse); // 35.0
+      expect(
+        fired(assess(healthy(temp: t.tempLow)), RuleId.tempLow),
+        isFalse,
+      ); // 35.0
     });
 
     test('just below the hypothermia threshold fires critical', () {
@@ -289,16 +305,20 @@ void main() {
     });
 
     test('at the quality threshold exactly, the advisory does not fire', () {
-      expect(fired(assess(healthy(ecgQuality: 0.5)), RuleId.ecgPoorQuality),
-          isFalse);
+      expect(
+        fired(assess(healthy(ecgQuality: 0.5)), RuleId.ecgPoorQuality),
+        isFalse,
+      );
     });
 
-    test('irregular rhythm is not claimed when the signal is too poor to judge',
-        () {
-      final a = assess(healthy(ecgQuality: 0.2, rPeak: false));
-      expect(fired(a, RuleId.ecgIrregular), isFalse);
-      expect(fired(a, RuleId.ecgPoorQuality), isTrue);
-    });
+    test(
+      'irregular rhythm is not claimed when the signal is too poor to judge',
+      () {
+        final a = assess(healthy(ecgQuality: 0.2, rPeak: false));
+        expect(fired(a, RuleId.ecgIrregular), isFalse);
+        expect(fired(a, RuleId.ecgPoorQuality), isTrue);
+      },
+    );
 
     test('irregular rhythm fires on good signal with no R-peak lock', () {
       final a = assess(healthy(ecgQuality: 0.9, rPeak: false));
@@ -340,9 +360,13 @@ void main() {
       final a = assess(withBp(190, 120));
       expect(fired(a, RuleId.bpHigh), isTrue);
       final rule = a.firedRules.firstWhere((r) => r.id == RuleId.bpHigh);
-      expect(rule.severity, isNot(RuleSeverity.critical),
-          reason: 'an uncalibrated estimate must not send anyone to hospital '
-              'on its own');
+      expect(
+        rule.severity,
+        isNot(RuleSeverity.critical),
+        reason:
+            'an uncalibrated estimate must not send anyone to hospital '
+            'on its own',
+      );
       expect(a.band, RiskBand.green, reason: '20 points is inside GREEN');
     });
 
@@ -363,17 +387,37 @@ void main() {
       expect(fired(all, RuleId.sepsisScreen), isTrue);
       expect(all.band, RiskBand.red);
 
-      expect(fired(assess(healthy(temp: 38.5, hr: 110, spo2: 98)),
-          RuleId.sepsisScreen), isFalse);
-      expect(fired(assess(healthy(temp: 36.5, hr: 110, spo2: 93)),
-          RuleId.sepsisScreen), isFalse);
-      expect(fired(assess(healthy(temp: 38.5, hr: 80, spo2: 93)),
-          RuleId.sepsisScreen), isFalse);
+      expect(
+        fired(
+          assess(healthy(temp: 38.5, hr: 110, spo2: 98)),
+          RuleId.sepsisScreen,
+        ),
+        isFalse,
+      );
+      expect(
+        fired(
+          assess(healthy(temp: 36.5, hr: 110, spo2: 93)),
+          RuleId.sepsisScreen,
+        ),
+        isFalse,
+      );
+      expect(
+        fired(
+          assess(healthy(temp: 38.5, hr: 80, spo2: 93)),
+          RuleId.sepsisScreen,
+        ),
+        isFalse,
+      );
     });
 
     test('does not fire when a component was never measured', () {
-      expect(fired(assess(healthy(temp: 38.5, hr: 110, spo2: 0)),
-          RuleId.sepsisScreen), isFalse);
+      expect(
+        fired(
+          assess(healthy(temp: 38.5, hr: 110, spo2: 0)),
+          RuleId.sepsisScreen,
+        ),
+        isFalse,
+      );
     });
   });
 
@@ -385,35 +429,48 @@ void main() {
     });
 
     test('respiratory symptom points are capped', () {
-      final a = assess(healthy(),
-          symptoms: const ['Cough', 'Breathlessness', 'Sore throat']);
-      final rule =
-          a.firedRules.firstWhere((r) => r.id == RuleId.respiratorySymptoms);
+      final a = assess(
+        healthy(),
+        symptoms: const ['Cough', 'Breathlessness', 'Sore throat'],
+      );
+      final rule = a.firedRules.firstWhere(
+        (r) => r.id == RuleId.respiratorySymptoms,
+      );
       expect(rule.points, lessThanOrEqualTo(15));
     });
 
     test('three or more symptoms fires the multiple-symptoms rule', () {
       expect(
-          fired(
-              assess(healthy(),
-                  symptoms: const ['Fever', 'Cough', 'Body pain']),
-              RuleId.multipleSymptoms),
-          isTrue);
+        fired(
+          assess(healthy(), symptoms: const ['Fever', 'Cough', 'Body pain']),
+          RuleId.multipleSymptoms,
+        ),
+        isTrue,
+      );
       expect(
-          fired(assess(healthy(), symptoms: const ['Fever', 'Cough']),
-              RuleId.multipleSymptoms),
-          isFalse);
+        fired(
+          assess(healthy(), symptoms: const ['Fever', 'Cough']),
+          RuleId.multipleSymptoms,
+        ),
+        isFalse,
+      );
     });
 
     test('two dehydration symptoms fire, one does not', () {
       expect(
-          fired(assess(healthy(), symptoms: const ['Vomiting', 'Diarrhea']),
-              RuleId.dehydrationSymptoms),
-          isTrue);
+        fired(
+          assess(healthy(), symptoms: const ['Vomiting', 'Diarrhea']),
+          RuleId.dehydrationSymptoms,
+        ),
+        isTrue,
+      );
       expect(
-          fired(assess(healthy(), symptoms: const ['Vomiting']),
-              RuleId.dehydrationSymptoms),
-          isFalse);
+        fired(
+          assess(healthy(), symptoms: const ['Vomiting']),
+          RuleId.dehydrationSymptoms,
+        ),
+        isFalse,
+      );
     });
 
     test('symptom matching is case- and whitespace-insensitive', () {
@@ -444,13 +501,15 @@ void main() {
       expect(elderly.score, greaterThan(assess(healthy(spo2: 93)).score));
     });
 
-    test('92% SpO2 is a warning for an adult but critical for an elderly patient',
-        () {
-      expect(fired(assess(healthy(spo2: 92)), RuleId.spo2Warning), isTrue);
-      final elderly = assess(healthy(spo2: 90), age: 70);
-      expect(fired(elderly, RuleId.spo2Critical), isTrue);
-      expect(elderly.band, RiskBand.red);
-    });
+    test(
+      '92% SpO2 is a warning for an adult but critical for an elderly patient',
+      () {
+        expect(fired(assess(healthy(spo2: 92)), RuleId.spo2Warning), isTrue);
+        final elderly = assess(healthy(spo2: 90), age: 70);
+        expect(fired(elderly, RuleId.spo2Critical), isTrue);
+        expect(elderly.band, RiskBand.red);
+      },
+    );
 
     test('age alone implies the elderly flag with no box ticked', () {
       // Guards against a data-entry omission triaging an 80-year-old on adult
@@ -461,7 +520,10 @@ void main() {
     });
 
     test('the elderly boundary is 65 inclusive', () {
-      expect(assess(healthy(), age: 64).flags, isNot(contains(Vulnerability.elderly)));
+      expect(
+        assess(healthy(), age: 64).flags,
+        isNot(contains(Vulnerability.elderly)),
+      );
       expect(assess(healthy(), age: 65).flags, contains(Vulnerability.elderly));
     });
 
@@ -476,7 +538,10 @@ void main() {
       // A resting pulse of 105 is normal in pregnancy. Tightening here would
       // fire tachycardia on every routine screening.
       expect(fired(assess(healthy(hr: 105)), RuleId.hrTachyWarning), isTrue);
-      final pregnant = assess(healthy(hr: 105), flags: {Vulnerability.pregnant});
+      final pregnant = assess(
+        healthy(hr: 105),
+        flags: {Vulnerability.pregnant},
+      );
       expect(pregnant.thresholds.hrHighWarning, 110);
       expect(fired(pregnant, RuleId.hrTachyWarning), isFalse);
     });
@@ -490,10 +555,17 @@ void main() {
     test('pregnancy HR shift survives a co-occurring elderly flag', () {
       // The physiological shift owns the vital; the caution flag must not
       // silently undo it.
-      final a = assess(healthy(),
-          age: 70, flags: {Vulnerability.pregnant, Vulnerability.elderly});
+      final a = assess(
+        healthy(),
+        age: 70,
+        flags: {Vulnerability.pregnant, Vulnerability.elderly},
+      );
       expect(a.thresholds.hrHighWarning, 110);
-      expect(a.thresholds.spo2Warning, 96, reason: 'elderly still tightens SpO2');
+      expect(
+        a.thresholds.spo2Warning,
+        96,
+        reason: 'elderly still tightens SpO2',
+      );
     });
 
     test('infant physiology raises HR limits far above adult', () {
@@ -510,8 +582,10 @@ void main() {
     });
 
     test('immunocompromised lowers the fever threshold', () {
-      final a =
-          assess(healthy(temp: 37.6), flags: {Vulnerability.immunocompromised});
+      final a = assess(
+        healthy(temp: 37.6),
+        flags: {Vulnerability.immunocompromised},
+      );
       expect(a.thresholds.tempFever, 37.5);
       expect(fired(a, RuleId.tempFever), isTrue);
     });
@@ -546,9 +620,13 @@ void main() {
       };
       for (final flag in Vulnerability.values) {
         final a = assess(samples[flag]!, flags: {flag});
-        expect(a.score, flag.riskPoints,
-            reason: '${flag.id} should contribute exactly its riskPoints, '
-                'but also fired ${a.scoringRules.map((r) => r.id)}');
+        expect(
+          a.score,
+          flag.riskPoints,
+          reason:
+              '${flag.id} should contribute exactly its riskPoints, '
+              'but also fired ${a.scoringRules.map((r) => r.id)}',
+        );
       }
     });
 
@@ -561,8 +639,10 @@ void main() {
     test('evaluate() does not throw on the double/int threshold map', () {
       // The old engine did Map<String,int>.from(Map<String,double>), which threw
       // a TypeError on every single call.
-      expect(() => RiskEngine.evaluate(sample: healthy(), symptoms: const []),
-          returnsNormally);
+      expect(
+        () => RiskEngine.evaluate(sample: healthy(), symptoms: const []),
+        returnsNormally,
+      );
     });
 
     test('the pregnancy fever rule is reachable', () {
@@ -574,8 +654,10 @@ void main() {
 
     test('legacy evaluate() agrees with assess() on band and score', () {
       final sample = healthy(spo2: 88, hr: 120, temp: 38.6);
-      final legacy =
-          RiskEngine.evaluate(sample: sample, symptoms: const ['Cough']);
+      final legacy = RiskEngine.evaluate(
+        sample: sample,
+        symptoms: const ['Cough'],
+      );
       final modern = assess(sample, symptoms: const ['Cough']);
       expect(legacy.level, modern.band.storageValue);
       expect(legacy.score, modern.score);
@@ -589,8 +671,11 @@ void main() {
         final again = assess(sample, symptoms: symptoms, age: 70);
         expect(again.score, first.score);
         expect(again.band, first.band);
-        expect(again.ruleIds, first.ruleIds,
-            reason: 'rule order must be stable for cached explanations');
+        expect(
+          again.ruleIds,
+          first.ruleIds,
+          reason: 'rule order must be stable for cached explanations',
+        );
       }
     });
 
@@ -604,8 +689,11 @@ void main() {
         flags: {Vulnerability.chronic, Vulnerability.immunocompromised},
       );
       for (final id in a.ruleIds) {
-        expect(RiskEngine.ruleDescriptions.containsKey(id), isTrue,
-            reason: 'no description for rule "$id"');
+        expect(
+          RiskEngine.ruleDescriptions.containsKey(id),
+          isTrue,
+          reason: 'no description for rule "$id"',
+        );
       }
     });
 
@@ -619,16 +707,20 @@ void main() {
       for (final rule in a.firedRules) {
         expect(rule.display, isNot(contains('Vulnerability.')));
         expect(rule.display, isNot(contains('RiskBand.')));
-        expect(rule.display, isNot(contains('_')),
-            reason: 'snake_case in "${rule.display}" looks like a raw id');
+        expect(
+          rule.display,
+          isNot(contains('_')),
+          reason: 'snake_case in "${rule.display}" looks like a raw id',
+        );
       }
     });
   });
 
   group('recommended action and escalation', () {
     test('each band maps to a distinct action and escalation level', () {
-      final actions =
-          RiskBand.values.map(RiskEngine.recommendedActionFor).toSet();
+      final actions = RiskBand.values
+          .map(RiskEngine.recommendedActionFor)
+          .toSet();
       expect(actions.length, RiskBand.values.length);
 
       expect(RiskEngine.escalationLevelFor(RiskBand.green), 'NONE');
@@ -640,8 +732,11 @@ void main() {
       for (final band in RiskBand.values) {
         final text = RiskEngine.recommendedActionFor(band).toLowerCase();
         for (final banned in ['diagnos', 'you have', 'confirmed']) {
-          expect(text.contains(banned), isFalse,
-              reason: '"$banned" in ${band.storageValue} action text');
+          expect(
+            text.contains(banned),
+            isFalse,
+            reason: '"$banned" in ${band.storageValue} action text',
+          );
         }
       }
     });

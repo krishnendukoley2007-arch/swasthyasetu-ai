@@ -31,7 +31,8 @@ class SeedReport {
   });
 
   @override
-  String toString() => 'SeedReport(guidelines: $guidelineChunks, '
+  String toString() =>
+      'SeedReport(guidelines: $guidelineChunks, '
       'patients: $patients, screenings: $screenings, '
       'reconciled: $reconciledWaveforms, demo: $seededDemoData)';
 }
@@ -57,13 +58,13 @@ class SeedService {
     required EmergencyRepository emergency,
     required SettingsRepository settings,
     required WaveformStore waveforms,
-  })  : _db = db,
-        _patients = patients,
-        _screenings = screenings,
-        _devices = devices,
-        _emergency = emergency,
-        _settings = settings,
-        _waveforms = waveforms;
+  }) : _db = db,
+       _patients = patients,
+       _screenings = screenings,
+       _devices = devices,
+       _emergency = emergency,
+       _settings = settings,
+       _waveforms = waveforms;
 
   final AppDatabase _db;
   final PatientRepository _patients;
@@ -106,8 +107,9 @@ class SeedService {
   /// Loads the bundled corpus into `guideline_cache` so offline explanation has
   /// something to retrieve from. Returns the number of chunks written.
   Future<int> _seedGuidelines() async {
-    final storedVersion =
-        int.tryParse(await _settings.getString(SettingKeys.guidelineCorpusVersion) ?? '');
+    final storedVersion = int.tryParse(
+      await _settings.getString(SettingKeys.guidelineCorpusVersion) ?? '',
+    );
     final present = await _db.countGuidelineChunks();
 
     // Re-seed when the bundled corpus is newer, or when the table was wiped by
@@ -136,7 +138,8 @@ class SeedService {
       if (id == null || body == null || id.isEmpty || body.isEmpty) continue;
 
       final title = entry['title'] as String? ?? '';
-      final tags = (entry['ruleTags'] as List?)?.whereType<String>().toList() ??
+      final tags =
+          (entry['ruleTags'] as List?)?.whereType<String>().toList() ??
           const <String>[];
 
       companions.add(
@@ -173,12 +176,59 @@ class SeedService {
   }
 
   static const Set<String> _stopwords = {
-    'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'her',
-    'was', 'one', 'our', 'out', 'his', 'has', 'had', 'that', 'this', 'with',
-    'from', 'they', 'them', 'then', 'than', 'have', 'been', 'will', 'when',
-    'what', 'which', 'their', 'there', 'would', 'could', 'should', 'about',
-    'into', 'over', 'under', 'more', 'most', 'some', 'such', 'only', 'other',
-    'also', 'because', 'while', 'does', 'each', 'being', 'very',
+    'the',
+    'and',
+    'for',
+    'are',
+    'but',
+    'not',
+    'you',
+    'all',
+    'can',
+    'her',
+    'was',
+    'one',
+    'our',
+    'out',
+    'his',
+    'has',
+    'had',
+    'that',
+    'this',
+    'with',
+    'from',
+    'they',
+    'them',
+    'then',
+    'than',
+    'have',
+    'been',
+    'will',
+    'when',
+    'what',
+    'which',
+    'their',
+    'there',
+    'would',
+    'could',
+    'should',
+    'about',
+    'into',
+    'over',
+    'under',
+    'more',
+    'most',
+    'some',
+    'such',
+    'only',
+    'other',
+    'also',
+    'because',
+    'while',
+    'does',
+    'each',
+    'being',
+    'very',
   };
 
   // ────────────────────────────── Defaults ──────────────────────────────
@@ -245,8 +295,9 @@ class SeedService {
   /// Refusing to touch a non-empty database is the important part: a field
   /// worker with real records must never find invented patients alongside them.
   Future<SeedReport> _seedDemoData() async {
-    final storedVersion =
-        int.tryParse(await _settings.getString(SettingKeys.seededVersion) ?? '');
+    final storedVersion = int.tryParse(
+      await _settings.getString(SettingKeys.seededVersion) ?? '',
+    );
     if (storedVersion == demoDataVersion) return const SeedReport();
 
     if (await _db.countPatients() > 0) {

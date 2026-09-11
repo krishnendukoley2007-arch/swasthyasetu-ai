@@ -40,8 +40,7 @@ class PatientProfileScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.show_chart_rounded),
             tooltip: 'Trends',
-            onPressed: () =>
-                context.push('/trends?patientId=$patientId'),
+            onPressed: () => context.push('/trends?patientId=$patientId'),
           ),
         ],
       ),
@@ -71,24 +70,25 @@ class PatientProfileScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(AppTheme.spacingMd),
             children: [
-              _PatientHeader(patient: patient, screenings: screenings)
-                  .animate()
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: -0.06),
+              _PatientHeader(
+                patient: patient,
+                screenings: screenings,
+              ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.06),
               const AppSpacing.vlg(),
-              _DetailsCard(patient: patient)
-                  .animate()
-                  .fadeIn(duration: 300.ms, delay: 80.ms),
+              _DetailsCard(
+                patient: patient,
+              ).animate().fadeIn(duration: 300.ms, delay: 80.ms),
               if (screenings.length >= 2) ...[
                 const AppSpacing.vlg(),
-                _TrendsCard(screenings: screenings)
-                    .animate()
-                    .fadeIn(duration: 300.ms, delay: 160.ms),
+                _TrendsCard(
+                  screenings: screenings,
+                ).animate().fadeIn(duration: 300.ms, delay: 160.ms),
               ],
               const AppSpacing.vlg(),
-              _TimelineSection(screenings: screenings, isLoading: screeningsAsync.isLoading)
-                  .animate()
-                  .fadeIn(duration: 300.ms, delay: 240.ms),
+              _TimelineSection(
+                screenings: screenings,
+                isLoading: screeningsAsync.isLoading,
+              ).animate().fadeIn(duration: 300.ms, delay: 240.ms),
               const AppSpacing.vlg(),
               _Actions(patient: patient),
               const AppSpacing.vxxl(),
@@ -110,7 +110,9 @@ class _PatientHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final latest = screenings.isEmpty ? null : screenings.first;
-    final risk = latest == null ? null : RiskStyle.ofStorage(latest.riskLevel, context.l10n);
+    final risk = latest == null
+        ? null
+        : RiskStyle.ofStorage(latest.riskLevel, context.l10n);
     final flags = Vulnerability.parse(patient.vulnerabilityFlags);
 
     return AppCard(
@@ -129,8 +131,7 @@ class _PatientHeader extends StatelessWidget {
                   initialsFor(patient.name),
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color:
-                        risk?.color ?? theme.colorScheme.onPrimaryContainer,
+                    color: risk?.color ?? theme.colorScheme.onPrimaryContainer,
                   ),
                 ),
               ),
@@ -141,8 +142,9 @@ class _PatientHeader extends StatelessWidget {
                   children: [
                     Text(
                       patient.name,
-                      style: theme.textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const AppSpacing.vxs(),
                     Text(
@@ -210,7 +212,8 @@ class _PatientHeader extends StatelessWidget {
                 textColor: theme.colorScheme.onSurfaceVariant,
               ),
               AppBadge(
-                label: '${screenings.length} record'
+                label:
+                    '${screenings.length} record'
                     '${screenings.length == 1 ? '' : 's'}',
                 backgroundColor: theme.colorScheme.surfaceContainerHighest,
                 textColor: theme.colorScheme.onSurfaceVariant,
@@ -239,8 +242,9 @@ class _DetailsCard extends StatelessWidget {
         children: [
           Text(
             'Details',
-            style:
-                theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const AppSpacing.vmd(),
           _DetailRow(
@@ -317,8 +321,9 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -356,8 +361,9 @@ class _TrendsCardState extends State<_TrendsCard> {
         children: [
           Text(
             'Trends',
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const AppSpacing.vxs(),
           Text(
@@ -393,8 +399,8 @@ class _TrendsCardState extends State<_TrendsCard> {
               unit: _unit(),
               yDecimals: _metric == _Metric.temperature ? 1 : 0,
               height: 180,
-              xLabel: (t) => absoluteDate(
-                  DateTime.fromMillisecondsSinceEpoch(t.round())),
+              xLabel: (t) =>
+                  absoluteDate(DateTime.fromMillisecondsSinceEpoch(t.round())),
             )
           else
             Padding(
@@ -411,8 +417,9 @@ class _TrendsCardState extends State<_TrendsCard> {
           const AppSpacing.vlg(),
           Text(
             'Triage band history',
-            style: theme.textTheme.labelLarge
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const AppSpacing.vsm(),
           // Fixed-height scroller: a Wrap of 50 dots would grow the card without
@@ -424,16 +431,19 @@ class _TrendsCardState extends State<_TrendsCard> {
               itemCount: ordered.length,
               separatorBuilder: (_, __) => const AppSpacing.hxs(),
               itemBuilder: (context, index) {
-                final risk = RiskStyle.ofStorage(ordered[index].riskLevel, context.l10n);
+                final risk = RiskStyle.ofStorage(
+                  ordered[index].riskLevel,
+                  context.l10n,
+                );
                 return Tooltip(
-                  message: '${risk.label} · '
+                  message:
+                      '${risk.label} · '
                       '${absoluteDate(ordered[index].timestamp)}',
                   child: Container(
                     width: 20,
                     decoration: BoxDecoration(
                       color: risk.color,
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusSm),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     ),
                   ),
                 );
@@ -446,28 +456,28 @@ class _TrendsCardState extends State<_TrendsCard> {
   }
 
   static String _label(_Metric metric) => switch (metric) {
-        _Metric.heartRate => 'Heart rate',
-        _Metric.spo2 => 'SpO₂',
-        _Metric.temperature => 'Temperature',
-      };
+    _Metric.heartRate => 'Heart rate',
+    _Metric.spo2 => 'SpO₂',
+    _Metric.temperature => 'Temperature',
+  };
 
   double _valueOf(Screening s) => switch (_metric) {
-        _Metric.heartRate => s.heartRate.toDouble(),
-        _Metric.spo2 => s.spo2.toDouble(),
-        _Metric.temperature => s.temperature,
-      };
+    _Metric.heartRate => s.heartRate.toDouble(),
+    _Metric.spo2 => s.spo2.toDouble(),
+    _Metric.temperature => s.temperature,
+  };
 
   String _unit() => switch (_metric) {
-        _Metric.heartRate => 'bpm',
-        _Metric.spo2 => '%',
-        _Metric.temperature => '°C',
-      };
+    _Metric.heartRate => 'bpm',
+    _Metric.spo2 => '%',
+    _Metric.temperature => '°C',
+  };
 
   Color _metricColor() => switch (_metric) {
-        _Metric.heartRate => ClinicalPalette.coral,
-        _Metric.spo2 => ClinicalPalette.cyan,
-        _Metric.temperature => ClinicalPalette.amber,
-      };
+    _Metric.heartRate => ClinicalPalette.coral,
+    _Metric.spo2 => ClinicalPalette.cyan,
+    _Metric.temperature => ClinicalPalette.amber,
+  };
 }
 
 class _TimelineSection extends StatelessWidget {
@@ -488,8 +498,9 @@ class _TimelineSection extends StatelessWidget {
             Expanded(
               child: Text(
                 'Screening timeline',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             if (isLoading)

@@ -69,21 +69,26 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
 
     final screenings = isPatient
         ? (account.patientId == null
-            ? null
-            : ref.read(patientScreeningsProvider(account.patientId!)).valueOrNull)
+              ? null
+              : ref
+                    .read(patientScreeningsProvider(account.patientId!))
+                    .valueOrNull)
         : ref.read(recentScreeningsProvider).valueOrNull;
-    final latest =
-        (screenings == null || screenings.isEmpty) ? null : screenings.first;
+    final latest = (screenings == null || screenings.isEmpty)
+        ? null
+        : screenings.first;
 
     if (latest != null) {
       final whose = isPatient
           ? 'the patient'
           : (ref.read(patientNamesProvider)[latest.patientId] ?? 'a patient');
-      buf.writeln('Latest screening of $whose (${relativeTime(latest.timestamp)}): '
-          'HR ${latest.heartRate} bpm, SpO2 ${latest.spo2}%, '
-          'temp ${latest.temperature.toStringAsFixed(1)}°C, '
-          'risk band ${latest.riskLevel}, score ${latest.riskScore}/100'
-          '${latest.symptoms.isEmpty ? '' : '; symptoms: ${latest.symptoms.join(', ')}'}.');
+      buf.writeln(
+        'Latest screening of $whose (${relativeTime(latest.timestamp)}): '
+        'HR ${latest.heartRate} bpm, SpO2 ${latest.spo2}%, '
+        'temp ${latest.temperature.toStringAsFixed(1)}°C, '
+        'risk band ${latest.riskLevel}, score ${latest.riskScore}/100'
+        '${latest.symptoms.isEmpty ? '' : '; symptoms: ${latest.symptoms.join(', ')}'}.',
+      );
     }
 
     if (!isPatient) {
@@ -100,7 +105,8 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
     _chat.add(
       _Message(
         author: _Author.assistant,
-        text: 'Hi! I am the SwasthyaSetu AI assistant. How can I help you today?',
+        text:
+            'Hi! I am the SwasthyaSetu AI assistant. How can I help you today?',
         at: DateTime.now(),
       ),
     );
@@ -149,7 +155,9 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
 
     final ctx = _contextBlock();
     _grounded = ctx != null;
-    final answer = await ref.read(geminiServiceProvider).generalChat(
+    final answer = await ref
+        .read(geminiServiceProvider)
+        .generalChat(
           question: text,
           audience: ref.read(effectiveAudienceProvider),
           languageCode: ref.read(settingsProvider).locale.languageCode,
@@ -181,18 +189,24 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
         if (account != null) {
           final list = account.role == UserRole.patient
               ? (account.patientId == null
-                  ? const <Screening>[]
-                  : ref
-                      .read(patientScreeningsProvider(account.patientId!))
-                      .valueOrNull ??
-                      const <Screening>[])
-              : ref.read(recentScreeningsProvider).valueOrNull ?? const <Screening>[];
+                    ? const <Screening>[]
+                    : ref
+                              .read(
+                                patientScreeningsProvider(account.patientId!),
+                              )
+                              .valueOrNull ??
+                          const <Screening>[])
+              : ref.read(recentScreeningsProvider).valueOrNull ??
+                    const <Screening>[];
           if (list.isNotEmpty) latest = list.first;
         }
         _chat.add(
           _Message(
             author: _Author.assistant,
-            text: OfflineExplainer.chatFallback(latest: latest, grounded: _grounded),
+            text: OfflineExplainer.chatFallback(
+              latest: latest,
+              grounded: _grounded,
+            ),
             at: DateTime.now(),
             footnote: 'Offline fallback · no online answer came back',
           ),
@@ -518,7 +532,8 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
                   style: IconButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
                     foregroundColor: theme.colorScheme.onPrimary,
-                    disabledBackgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    disabledBackgroundColor:
+                        theme.colorScheme.surfaceContainerHighest,
                     padding: const EdgeInsets.all(12),
                   ),
                 );

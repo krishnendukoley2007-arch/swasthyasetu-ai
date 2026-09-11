@@ -153,9 +153,9 @@ class AuthRepository {
     required UserRole roleForNewAccounts,
   }) async {
     // Check if an account already exists for this phone number
-    final existing = await (_db.select(_db.authAccounts)
-          ..where((t) => t.phoneNumber.equals(phoneNumber)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.authAccounts,
+    )..where((t) => t.phoneNumber.equals(phoneNumber))).getSingleOrNull();
     if (existing != null) {
       await _touchLogin(existing.id);
       await _startSession(existing.id);
@@ -168,7 +168,9 @@ class AuthRepository {
     final account = AuthAccountRow(
       id: id,
       email: syntheticEmail,
-      displayName: displayName.trim().isEmpty ? phoneNumber : displayName.trim(),
+      displayName: displayName.trim().isEmpty
+          ? phoneNumber
+          : displayName.trim(),
       role: roleForNewAccounts.storageValue,
       provider: AuthAccountProvider.phone.storageValue,
       passwordHash: null,
@@ -261,9 +263,7 @@ class AuthRepository {
         weightKg: Value(weightKg),
         conditions: Value(jsonEncode(conditions)),
         problems: Value(
-          problems == null || problems.trim().isEmpty
-              ? null
-              : problems.trim(),
+          problems == null || problems.trim().isEmpty ? null : problems.trim(),
         ),
         profileComplete: const Value(true),
         patientId: Value(patientId),
@@ -278,9 +278,9 @@ class AuthRepository {
   // ──────────────────────────── Internals ────────────────────────────
 
   Future<void> _touchLogin(String id) => _db.patchAuthAccount(
-        id,
-        AuthAccountsCompanion(lastLoginAt: Value(DateTime.now())),
-      );
+    id,
+    AuthAccountsCompanion(lastLoginAt: Value(DateTime.now())),
+  );
 
   static String _normaliseEmail(String raw) => raw.trim().toLowerCase();
 
@@ -337,22 +337,22 @@ class AuthRepository {
   }
 
   static UserAccount _toAccount(AuthAccountRow r) => UserAccount(
-        id: r.id,
-        email: r.email,
-        displayName: r.displayName,
-        role: UserRole.fromStorage(r.role),
-        provider: AuthAccountProvider.fromStorage(r.provider),
-        photoUrl: r.photoUrl,
-        phoneNumber: r.phoneNumber,
-        age: r.age,
-        sex: r.sex,
-        heightCm: r.heightCm,
-        weightKg: r.weightKg,
-        conditions: UserAccount.decodeConditions(r.conditions),
-        problems: r.problems,
-        profileComplete: r.profileComplete,
-        patientId: r.patientId,
-        createdAt: r.createdAt,
-        lastLoginAt: r.lastLoginAt,
-      );
+    id: r.id,
+    email: r.email,
+    displayName: r.displayName,
+    role: UserRole.fromStorage(r.role),
+    provider: AuthAccountProvider.fromStorage(r.provider),
+    photoUrl: r.photoUrl,
+    phoneNumber: r.phoneNumber,
+    age: r.age,
+    sex: r.sex,
+    heightCm: r.heightCm,
+    weightKg: r.weightKg,
+    conditions: UserAccount.decodeConditions(r.conditions),
+    problems: r.problems,
+    profileComplete: r.profileComplete,
+    patientId: r.patientId,
+    createdAt: r.createdAt,
+    lastLoginAt: r.lastLoginAt,
+  );
 }

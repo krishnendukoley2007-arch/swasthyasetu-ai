@@ -36,8 +36,10 @@ class OtpVerificationScreen extends ConsumerStatefulWidget {
 
 class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
   // 6 separate controllers for the pin boxes
-  final List<TextEditingController> _ctls =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _ctls = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _foci = List.generate(6, (_) => FocusNode());
 
   bool _loading = false;
@@ -69,8 +71,12 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
   @override
   void dispose() {
     _timer?.cancel();
-    for (final c in _ctls) c.dispose();
-    for (final f in _foci) f.dispose();
+    for (final c in _ctls) {
+      c.dispose();
+    }
+    for (final f in _foci) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -115,7 +121,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
         code: _otp,
       );
       if (!mounted) return;
-      await ref.read(authStateProvider.notifier).signInWithPhoneOtp(
+      await ref
+          .read(authStateProvider.notifier)
+          .signInWithPhoneOtp(
             result: result,
             displayName: widget.displayName,
             roleForNewAccounts: widget.role,
@@ -127,7 +135,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
           _error = e.detail ?? 'OTP verification failed. Please try again.';
           _loading = false;
           // Clear boxes on bad OTP
-          for (final c in _ctls) c.clear();
+          for (final c in _ctls) {
+            c.clear();
+          }
           _foci.first.requestFocus();
         });
       }
@@ -151,14 +161,16 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       await PhoneAuthService.instance.sendOtp(widget.phoneNumber);
       if (mounted) {
         _startCountdown();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('New OTP sent!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('New OTP sent!')));
       }
     } catch (_) {
       if (mounted) {
-        setState(() =>
-            _error = 'Could not resend OTP. Check your connection and try again.');
+        setState(
+          () => _error =
+              'Could not resend OTP. Check your connection and try again.',
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -173,225 +185,240 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     return AppPageScaffold(
       appBar: null,
       body: SafeArea(
-        child: LayoutBuilder(builder: (context, constraints) {
-          final w = math.min(constraints.maxWidth - 32, 440.0);
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-            child: Center(
-              child: SizedBox(
-                width: w,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header
-                    Center(
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [cs.primary, cs.secondary],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final w = math.min(constraints.maxWidth - 32, 440.0);
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+              child: Center(
+                child: SizedBox(
+                  width: w,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      Center(
+                        child: Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [cs.primary, cs.secondary],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: cs.primary.withValues(alpha: 0.35),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              ),
+                            ],
                           ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: cs.primary.withValues(alpha: 0.35),
-                              blurRadius: 20,
-                              spreadRadius: 2,
-                            )
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.sms_rounded,
-                          color: Colors.white,
-                          size: 34,
-                        ),
-                      ),
-                    ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
-
-                    const SizedBox(height: 24),
-
-                    Text(
-                      'Verify your number',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ).animate().fadeIn(delay: 100.ms),
-
-                    const SizedBox(height: 8),
-
-                    RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          height: 1.5,
-                        ),
-                        children: [
-                          const TextSpan(text: 'We sent a 6-digit code to\n'),
-                          TextSpan(
-                            text: widget.phoneNumber,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: cs.onSurface,
-                            ),
+                          child: const Icon(
+                            Icons.sms_rounded,
+                            color: Colors.white,
+                            size: 34,
                           ),
-                        ],
-                      ),
-                    ).animate().fadeIn(delay: 150.ms),
-
-                    const SizedBox(height: 20),
-
-                    if (widget.session.isMockSession) ...[
-                      ActionChip(
-                        avatar: const Icon(Icons.touch_app_rounded, size: 16),
-                        label: const Text('Test/Demo Code: 123456 (Tap to fill)'),
-                        backgroundColor: cs.primaryContainer,
-                        onPressed: () {
-                          const code = '123456';
-                          for (int i = 0; i < 6; i++) {
-                            _ctls[i].text = code[i];
-                          }
-                          setState(() {});
-                          _verify();
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                    ] else
-                      const SizedBox(height: 16),
-
-                    // OTP Pin Boxes
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(6, (i) {
-                        return _PinBox(
-                          controller: _ctls[i],
-                          focusNode: _foci[i],
-                          onChanged: (v) => _onDigitEntered(i, v),
-                          onBackspace: () => _onBackspace(i),
-                          hasError: _error != null,
-                        );
-                      }),
-                    ).animate().fadeIn(delay: 200.ms),
-
-                    const SizedBox(height: 28),
-
-                    // Verify Button
-                    AnimatedSwitcher(
-                      duration: 200.ms,
-                      child: _loading
-                          ? const Center(
-                              child: SizedBox(
-                                width: 44,
-                                height: 44,
-                                child: CircularProgressIndicator(strokeWidth: 3),
-                              ),
-                            )
-                          : FilledButton(
-                              style: FilledButton.styleFrom(
-                                minimumSize: const Size(double.infinity, 56),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              onPressed: _otpComplete ? _verify : null,
-                              child: const Text(
-                                'Verify & Sign In',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Error Display
-                    if (_error != null)
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: cs.errorContainer,
-                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.error_outline_rounded,
-                                color: cs.error, size: 18),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _error!,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: cs.onErrorContainer,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ],
+                      ).animate().scale(
+                        duration: 400.ms,
+                        curve: Curves.elasticOut,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      Text(
+                        'Verify your number',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
                         ),
-                      ).animate().shake(hz: 4, duration: 400.ms),
+                        textAlign: TextAlign.center,
+                      ).animate().fadeIn(delay: 100.ms),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 8),
 
-                    // Resend + timer
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Didn't receive the code? ",
-                          style: theme.textTheme.bodySmall?.copyWith(
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             color: cs.onSurfaceVariant,
+                            height: 1.5,
                           ),
+                          children: [
+                            const TextSpan(text: 'We sent a 6-digit code to\n'),
+                            TextSpan(
+                              text: widget.phoneNumber,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: cs.onSurface,
+                              ),
+                            ),
+                          ],
                         ),
-                        _secondsLeft > 0
-                            ? Text(
-                                'Resend in ${_secondsLeft}s',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
+                      ).animate().fadeIn(delay: 150.ms),
+
+                      const SizedBox(height: 20),
+
+                      if (widget.session.isMockSession) ...[
+                        ActionChip(
+                          avatar: const Icon(Icons.touch_app_rounded, size: 16),
+                          label: const Text(
+                            'Test/Demo Code: 123456 (Tap to fill)',
+                          ),
+                          backgroundColor: cs.primaryContainer,
+                          onPressed: () {
+                            const code = '123456';
+                            for (int i = 0; i < 6; i++) {
+                              _ctls[i].text = code[i];
+                            }
+                            setState(() {});
+                            _verify();
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ] else
+                        const SizedBox(height: 16),
+
+                      // OTP Pin Boxes
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(6, (i) {
+                          return _PinBox(
+                            controller: _ctls[i],
+                            focusNode: _foci[i],
+                            onChanged: (v) => _onDigitEntered(i, v),
+                            onBackspace: () => _onBackspace(i),
+                            hasError: _error != null,
+                          );
+                        }),
+                      ).animate().fadeIn(delay: 200.ms),
+
+                      const SizedBox(height: 28),
+
+                      // Verify Button
+                      AnimatedSwitcher(
+                        duration: 200.ms,
+                        child: _loading
+                            ? const Center(
+                                child: SizedBox(
+                                  width: 44,
+                                  height: 44,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                  ),
                                 ),
                               )
-                            : TextButton(
-                                onPressed: _loading ? null : _resend,
-                                style: TextButton.styleFrom(
-                                  minimumSize: Size.zero,
-                                  padding: EdgeInsets.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            : FilledButton(
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size(double.infinity, 56),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
-                                child: Text(
-                                  'Resend OTP',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: cs.primary,
+                                onPressed: _otpComplete ? _verify : null,
+                                child: const Text(
+                                  'Verify & Sign In',
+                                  style: TextStyle(
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Change number
-                    Center(
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                        label: const Text('Change Number'),
-                        onPressed: _loading ? null : () => Navigator.of(context).pop(),
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 20),
+
+                      // Error Display
+                      if (_error != null)
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: cs.errorContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.error_outline_rounded,
+                                color: cs.error,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  _error!,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: cs.onErrorContainer,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ).animate().shake(hz: 4, duration: 400.ms),
+
+                      const SizedBox(height: 24),
+
+                      // Resend + timer
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Didn't receive the code? ",
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          _secondsLeft > 0
+                              ? Text(
+                                  'Resend in ${_secondsLeft}s',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                              : TextButton(
+                                  onPressed: _loading ? null : _resend,
+                                  style: TextButton.styleFrom(
+                                    minimumSize: Size.zero,
+                                    padding: EdgeInsets.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    'Resend OTP',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: cs.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Change number
+                      Center(
+                        child: TextButton.icon(
+                          icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                          label: const Text('Change Number'),
+                          onPressed: _loading
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          },
+        ),
       ),
     );
   }
@@ -421,10 +448,10 @@ class _PinBox extends StatelessWidget {
     return SizedBox(
       width: 44,
       height: 56,
-      child: RawKeyboardListener(
+      child: KeyboardListener(
         focusNode: FocusNode(),
-        onKey: (event) {
-          if (event is RawKeyDownEvent &&
+        onKeyEvent: (event) {
+          if (event is KeyDownEvent &&
               event.logicalKey == LogicalKeyboardKey.backspace) {
             onBackspace();
           }

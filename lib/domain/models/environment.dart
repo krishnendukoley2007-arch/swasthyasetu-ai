@@ -52,7 +52,9 @@ class EnvironmentReading {
 
   /// Whether current condition indicates heavy rain or flood hazard
   bool get isHeavyRainOrFloodRisk =>
-      weatherCode == 65 || (weatherCode >= 80 && weatherCode <= 99) || precipitationMm >= 5.0;
+      weatherCode == 65 ||
+      (weatherCode >= 80 && weatherCode <= 99) ||
+      precipitationMm >= 5.0;
 
   /// India Meteorological Department (IMD) Warning Level
   /// 'RED' (Take Action) | 'ORANGE' (Be Prepared) | 'YELLOW' (Be Updated) | 'GREEN' (No Warning)
@@ -87,11 +89,11 @@ class EnvironmentReading {
   }
 
   String get imdAlertBadgeLabel => switch (imdAlertLevel) {
-        'RED' => '🔴 IMD RED ALERT (Take Action)',
-        'ORANGE' => '🟠 IMD ORANGE ALERT (Be Prepared)',
-        'YELLOW' => '🟡 IMD YELLOW WATCH (Be Updated)',
-        _ => '🟢 IMD GREEN (All Clear)',
-      };
+    'RED' => '🔴 IMD RED ALERT (Take Action)',
+    'ORANGE' => '🟠 IMD ORANGE ALERT (Be Prepared)',
+    'YELLOW' => '🟡 IMD YELLOW WATCH (Be Updated)',
+    _ => '🟢 IMD GREEN (All Clear)',
+  };
 
   /// Local advisories go stale slower than a weather app cares about — a
   /// heat-wave warning from this morning is still the right warning tonight.
@@ -100,18 +102,18 @@ class EnvironmentReading {
   bool get isStale => DateTime.now().difference(fetchedAt) > freshFor;
 
   Map<String, dynamic> toJson() => {
-        'temperatureC': temperatureC,
-        'apparentTemperatureC': apparentTemperatureC,
-        'humidityPercent': humidityPercent,
-        'aqiUs': aqiUs,
-        'pm25': pm25,
-        'weatherCode': weatherCode,
-        'weatherDescription': weatherDescription,
-        'precipitationMm': precipitationMm,
-        'windSpeedKmh': windSpeedKmh,
-        'fetchedAt': fetchedAt.toIso8601String(),
-        'source': source,
-      };
+    'temperatureC': temperatureC,
+    'apparentTemperatureC': apparentTemperatureC,
+    'humidityPercent': humidityPercent,
+    'aqiUs': aqiUs,
+    'pm25': pm25,
+    'weatherCode': weatherCode,
+    'weatherDescription': weatherDescription,
+    'precipitationMm': precipitationMm,
+    'windSpeedKmh': windSpeedKmh,
+    'fetchedAt': fetchedAt.toIso8601String(),
+    'source': source,
+  };
 
   factory EnvironmentReading.fromJson(Map<String, dynamic> json) =>
       EnvironmentReading(

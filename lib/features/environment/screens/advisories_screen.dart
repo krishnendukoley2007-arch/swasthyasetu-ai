@@ -71,16 +71,21 @@ class AdvisoriesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildNowSection(ThemeData theme, EnvironmentState? env,
-      List<EnvironmentAdvisory> advisories) {
+  Widget _buildNowSection(
+    ThemeData theme,
+    EnvironmentState? env,
+    List<EnvironmentAdvisory> advisories,
+  ) {
     if (env == null || !env.consentGranted) {
       return AppCard(
         padding: const EdgeInsets.all(AppTheme.spacingLg),
         child: Text(
           'Turn on local weather (from the card on your home screen) to see '
           'heat and air alerts for your area here.',
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant, height: 1.4),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
         ),
       );
     }
@@ -91,8 +96,10 @@ class AdvisoriesScreen extends ConsumerWidget {
         child: Text(
           'No reading yet — this needs a moment of internet once, then works '
           'offline from the last reading.',
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant, height: 1.4),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
         ),
       );
     }
@@ -101,8 +108,11 @@ class AdvisoriesScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(AppTheme.spacingLg),
         child: Row(
           children: [
-            Icon(Icons.check_circle_outline_rounded,
-                color: theme.colorScheme.primary, size: 24),
+            Icon(
+              Icons.check_circle_outline_rounded,
+              color: theme.colorScheme.primary,
+              size: 24,
+            ),
             const AppSpacing.hmd(),
             Expanded(
               child: Text(
@@ -138,25 +148,25 @@ class _AdvisoryCard extends StatelessWidget {
     // teal = informational.
     final (color, container, icon) = switch (advisory.level) {
       AdvisoryLevel.danger => (
-          Colors.white,
-          ClinicalPalette.coral,
-          Icons.warning_amber_rounded,
-        ),
+        Colors.white,
+        ClinicalPalette.coral,
+        Icons.warning_amber_rounded,
+      ),
       AdvisoryLevel.warning => (
-          ClinicalPalette.coral,
-          ClinicalPalette.coral.withValues(alpha: 0.10),
-          Icons.warning_amber_rounded,
-        ),
+        ClinicalPalette.coral,
+        ClinicalPalette.coral.withValues(alpha: 0.10),
+        Icons.warning_amber_rounded,
+      ),
       AdvisoryLevel.advice => (
-          ClinicalPalette.amber,
-          ClinicalPalette.amber.withValues(alpha: 0.10),
-          Icons.info_outline_rounded,
-        ),
+        ClinicalPalette.amber,
+        ClinicalPalette.amber.withValues(alpha: 0.10),
+        Icons.info_outline_rounded,
+      ),
       AdvisoryLevel.info => (
-          ClinicalPalette.teal,
-          ClinicalPalette.teal.withValues(alpha: 0.08),
-          Icons.tips_and_updates_outlined,
-        ),
+        ClinicalPalette.teal,
+        ClinicalPalette.teal.withValues(alpha: 0.08),
+        Icons.tips_and_updates_outlined,
+      ),
     };
 
     return AppCard(
@@ -172,8 +182,10 @@ class _AdvisoryCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   advisory.title,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700, color: color),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
                 ),
               ),
             ],
@@ -198,13 +210,13 @@ class _GuideCard extends StatelessWidget {
   const _GuideCard(this.guide);
 
   IconData get _icon => switch (guide.id) {
-        'heat_wave' => Icons.wb_sunny_rounded,
-        'flood' => Icons.flood_rounded,
-        'cyclone' => Icons.cyclone_rounded,
-        'poor_air' => Icons.masks_rounded,
-        'outbreak' => Icons.coronavirus_rounded,
-        _ => Icons.info_outline_rounded,
-      };
+    'heat_wave' => Icons.wb_sunny_rounded,
+    'flood' => Icons.flood_rounded,
+    'cyclone' => Icons.cyclone_rounded,
+    'poor_air' => Icons.masks_rounded,
+    'outbreak' => Icons.coronavirus_rounded,
+    _ => Icons.info_outline_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -219,8 +231,9 @@ class _GuideCard extends StatelessWidget {
           leading: Icon(_icon, color: theme.colorScheme.primary),
           title: Text(
             guide.title,
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
           subtitle: guide.forWhom.isEmpty
               ? null
@@ -249,8 +262,11 @@ class _GuideCard extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.call_rounded,
-                        color: theme.colorScheme.primary, size: 18),
+                    Icon(
+                      Icons.call_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
                     const AppSpacing.hsm(),
                     Expanded(
                       child: Text(

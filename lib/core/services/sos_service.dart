@@ -33,12 +33,12 @@ class SosDispatchResult {
   bool get isSuccess => outcome == SosDispatchOutcome.composerOpened;
 
   String get failureReason => switch (outcome) {
-        SosDispatchOutcome.composerOpened => '',
-        SosDispatchOutcome.noContacts =>
-          'No emergency contact is set up yet. Add one in Settings first.',
-        SosDispatchOutcome.launchFailed =>
-          'This phone could not open its messaging app. Try calling instead.',
-      };
+    SosDispatchOutcome.composerOpened => '',
+    SosDispatchOutcome.noContacts =>
+      'No emergency contact is set up yet. Add one in Settings first.',
+    SosDispatchOutcome.launchFailed =>
+      'This phone could not open its messaging app. Try calling instead.',
+  };
 }
 
 /// Everything an SOS message needs to say, gathered in one object so the body
@@ -181,8 +181,9 @@ class SosService {
   /// exactly the kind of thing a supervisor needs to see afterwards.
   Future<SosDispatchResult> dispatch(SosPayload payload) async {
     final contacts = await _emergency.getContacts();
-    final reachable =
-        contacts.where((c) => EmergencyRepository.isDiallable(c.phone)).toList();
+    final reachable = contacts
+        .where((c) => EmergencyRepository.isDiallable(c.phone))
+        .toList();
     final body = composeMessage(payload);
 
     if (reachable.isEmpty) {
@@ -236,22 +237,25 @@ class SosService {
   /// that the detector is too sensitive, and that is only visible if the
   /// cancellations are kept.
   Future<void> logCancellation(SosPayload payload) => _emergency.logEvent(
-        SosEvent(
-          id: _uuid.v4(),
-          patientId: payload.patientId,
-          screeningId: payload.screeningId,
-          trigger: payload.trigger,
-          triggeredAt: DateTime.now(),
-          message: composeMessage(payload),
-          status: SosStatus.cancelled,
-        ),
-      );
+    SosEvent(
+      id: _uuid.v4(),
+      patientId: payload.patientId,
+      screeningId: payload.screeningId,
+      trigger: payload.trigger,
+      triggeredAt: DateTime.now(),
+      message: composeMessage(payload),
+      status: SosStatus.cancelled,
+    ),
+  );
 
   /// Places a voice call. Offered alongside SMS because a call gets attention
   /// that a text message may not, and it needs no data connection either.
   Future<bool> call(String phone) async {
     try {
-      return await launchUrl(telUri(phone), mode: LaunchMode.externalApplication);
+      return await launchUrl(
+        telUri(phone),
+        mode: LaunchMode.externalApplication,
+      );
     } catch (_) {
       return false;
     }

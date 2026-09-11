@@ -21,12 +21,15 @@ class MutuallyExclusiveScreeningScreen extends ConsumerStatefulWidget {
   const MutuallyExclusiveScreeningScreen({super.key});
 
   @override
-  ConsumerState<MutuallyExclusiveScreeningScreen> createState() => _MutuallyExclusiveScreeningScreenState();
+  ConsumerState<MutuallyExclusiveScreeningScreen> createState() =>
+      _MutuallyExclusiveScreeningScreenState();
 }
 
-class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclusiveScreeningScreen> with TickerProviderStateMixin {
+class _MutuallyExclusiveScreeningScreenState
+    extends ConsumerState<MutuallyExclusiveScreeningScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
-  
+
   bool _demoMode = false;
   ClinicalScenario _selectedScenario = ClinicalScenario.defaultScenario;
 
@@ -47,7 +50,7 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
   int _liveHr = 0;
   int _liveSpo2 = 0;
   double _liveTemp = 0.0;
-  
+
   List<int> _ecgBuffer = [];
   StreamSubscription? _telemetrySub;
   StreamSubscription? _ecgSub;
@@ -56,7 +59,7 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bleService = ref.read(bleServiceProvider);
       _telemetrySub = bleService.telemetry.listen((frame) {
@@ -73,13 +76,15 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
           if (s.ecgSignalQuality > 0) _finalEcgQuality = s.ecgSignalQuality;
         });
       });
-      
+
       _ecgSub = bleService.ecg.listen((frame) {
         if (!mounted || !_isMeasuring || _activeMode != 2) return;
         setState(() {
           _ecgBuffer.addAll(frame.samples);
           if (_ecgBuffer.length > 250 * 5) {
-             _ecgBuffer = _ecgBuffer.sublist(_ecgBuffer.length - 250 * 5); // 5s trailing window
+            _ecgBuffer = _ecgBuffer.sublist(
+              _ecgBuffer.length - 250 * 5,
+            ); // 5s trailing window
           }
         });
       });
@@ -116,7 +121,9 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppTheme.radiusXl),
+        ),
       ),
       builder: (bottomSheetContext) {
         final theme = Theme.of(bottomSheetContext);
@@ -128,23 +135,35 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacingLg,
+                  ),
                   child: Row(
                     children: [
-                      Icon(Icons.science_rounded, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.science_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
                       const AppSpacing.hsm(),
                       Text(
                         'Virtual Patient Simulator',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacingLg,
+                    vertical: 4,
+                  ),
                   child: Text(
                     'Select a clinical scenario for zero-hardware testing:',
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 const Divider(),
@@ -168,28 +187,50 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
                             color: bandColor.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.medical_information_rounded, color: bandColor, size: 20),
+                          child: Icon(
+                            Icons.medical_information_rounded,
+                            color: bandColor,
+                            size: 20,
+                          ),
                         ),
                         title: Text(
                           scenario.name,
                           style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected ? theme.colorScheme.primary : null,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : null,
                           ),
                         ),
-                        subtitle: Text('${scenario.subtitle}\n${scenario.description}'),
+                        subtitle: Text(
+                          '${scenario.subtitle}\n${scenario.description}',
+                        ),
                         isThreeLine: true,
                         trailing: isSelected
-                            ? Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary)
+                            ? Icon(
+                                Icons.check_circle_rounded,
+                                color: theme.colorScheme.primary,
+                              )
                             : Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: bandColor.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusFull,
+                                  ),
                                 ),
                                 child: Text(
                                   scenario.expectedBand.name.toUpperCase(),
-                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: bandColor),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: bandColor,
+                                  ),
                                 ),
                               ),
                         onTap: () {
@@ -200,7 +241,9 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
                           Navigator.of(bottomSheetContext).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Switched to scenario: ${scenario.name}'),
+                              content: Text(
+                                'Switched to scenario: ${scenario.name}',
+                              ),
                               duration: const Duration(seconds: 2),
                             ),
                           );
@@ -233,18 +276,20 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
           _liveSpo2 = _selectedScenario.spo2Percent;
         } else if (mode == 2) {
           _finalEcgQuality = _selectedScenario.ecgQuality;
-          _finalRr = _selectedScenario.isArrhythmia ? 650 : (60000 / _selectedScenario.heartRateBpm).round();
+          _finalRr = _selectedScenario.isArrhythmia
+              ? 650
+              : (60000 / _selectedScenario.heartRateBpm).round();
         } else if (mode == 3) {
           _liveTemp = _selectedScenario.temperatureC;
         }
       }
     });
-    
+
     if (isLive) {
       final bleService = ref.read(bleServiceProvider);
       bleService.beginCapture(mode: mode);
     }
-    
+
     _measurementTimer?.cancel();
     _measurementTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
@@ -253,15 +298,21 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
 
         if (!isLive) {
           if (_activeMode == 1) {
-            _liveHr = (_selectedScenario.heartRateBpm + random.nextInt(5) - 2).clamp(40, 200);
-            _liveSpo2 = (_selectedScenario.spo2Percent + random.nextInt(3) - 1).clamp(70, 100);
+            _liveHr = (_selectedScenario.heartRateBpm + random.nextInt(5) - 2)
+                .clamp(40, 200);
+            _liveSpo2 = (_selectedScenario.spo2Percent + random.nextInt(3) - 1)
+                .clamp(70, 100);
           } else if (_activeMode == 2) {
-            _ecgBuffer.addAll(_generateSyntheticEcgChunk(_selectedScenario.heartRateBpm));
+            _ecgBuffer.addAll(
+              _generateSyntheticEcgChunk(_selectedScenario.heartRateBpm),
+            );
             if (_ecgBuffer.length > 250 * 5) {
               _ecgBuffer = _ecgBuffer.sublist(_ecgBuffer.length - 250 * 5);
             }
           } else if (_activeMode == 3) {
-            _liveTemp = _selectedScenario.temperatureC + (random.nextDouble() - 0.5) * 0.2;
+            _liveTemp =
+                _selectedScenario.temperatureC +
+                (random.nextDouble() - 0.5) * 0.2;
           }
         }
 
@@ -279,7 +330,7 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
       final bleService = ref.read(bleServiceProvider);
       bleService.setMode(0); // Return to IDLE
     }
-    
+
     setState(() {
       _isMeasuring = false;
       if (_activeMode == 1) {
@@ -292,7 +343,9 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
           _finalEcg = _ecgBuffer.isNotEmpty
               ? List.from(_ecgBuffer)
               : _generateSyntheticEcgChunk(_selectedScenario.heartRateBpm);
-          _finalRr ??= _selectedScenario.isArrhythmia ? 650 : (60000 / _selectedScenario.heartRateBpm).round();
+          _finalRr ??= _selectedScenario.isArrhythmia
+              ? 650
+              : (60000 / _selectedScenario.heartRateBpm).round();
           _finalEcgQuality ??= _selectedScenario.ecgQuality;
         }
       } else if (_activeMode == 3) {
@@ -301,16 +354,26 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
       _activeMode = 0;
     });
   }
-  
+
   void _finishScreening() {
     final isLive = ref.read(bleLinkProvider).isLive;
-    final hr = _finalHr ?? (_liveHr > 0 ? _liveHr : _selectedScenario.heartRateBpm);
-    final spo2 = _finalSpo2 ?? (_liveSpo2 > 0 ? _liveSpo2 : _selectedScenario.spo2Percent);
-    final temp = _finalTemp ?? (_liveTemp > 0 ? _liveTemp : _selectedScenario.temperatureC);
+    final hr =
+        _finalHr ?? (_liveHr > 0 ? _liveHr : _selectedScenario.heartRateBpm);
+    final spo2 =
+        _finalSpo2 ??
+        (_liveSpo2 > 0 ? _liveSpo2 : _selectedScenario.spo2Percent);
+    final temp =
+        _finalTemp ??
+        (_liveTemp > 0 ? _liveTemp : _selectedScenario.temperatureC);
 
     final ptt = 200 + (60000 / hr * 0.25).round();
     final bpEst = VitalsEstimator.estimateBP(pttMs: ptt, heartRate: hr);
-    final glucoseEst = VitalsEstimator.estimateGlucose(pttMs: ptt, heartRate: hr, spo2: spo2, tempC: temp);
+    final glucoseEst = VitalsEstimator.estimateGlucose(
+      pttMs: ptt,
+      heartRate: hr,
+      spo2: spo2,
+      tempC: temp,
+    );
 
     final sample = HealthSample(
       timestamp: DateTime.now().millisecondsSinceEpoch,
@@ -322,35 +385,43 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
       rrIntervalMs: _finalRr ?? (60000 / hr).round(),
       pttMs: ptt,
       estimatedSystolic: isLive ? bpEst.systolic : _selectedScenario.systolicBp,
-      estimatedDiastolic: isLive ? bpEst.diastolic : _selectedScenario.diastolicBp,
-      estimatedGlucose: isLive ? glucoseEst.glucoseMgDl : _selectedScenario.estimatedGlucose,
+      estimatedDiastolic: isLive
+          ? bpEst.diastolic
+          : _selectedScenario.diastolicBp,
+      estimatedGlucose: isLive
+          ? glucoseEst.glucoseMgDl
+          : _selectedScenario.estimatedGlucose,
       bpConfidence: 'EXPERIMENTAL',
       glucoseConfidence: 'EXPERIMENTAL',
       batteryPercent: ref.read(bleServiceProvider).state.batteryPercent ?? 100,
       isDemo: !isLive,
     );
-    
+
     // Ensure draft has a patient attached so TriageResultScreen persists to SQLite
     if (!ref.read(screeningDraftProvider).hasPatient) {
-      ref.read(screeningDraftProvider.notifier).begin(
-        patient: Patient.create(
-          id: 'PT-${DateTime.now().millisecondsSinceEpoch}',
-          name: 'Walk-In Patient',
-          age: 35,
-          sex: 'M',
-        ),
-      );
+      ref
+          .read(screeningDraftProvider.notifier)
+          .begin(
+            patient: Patient.create(
+              id: 'PT-${DateTime.now().millisecondsSinceEpoch}',
+              name: 'Walk-In Patient',
+              age: 35,
+              sex: 'M',
+            ),
+          );
     }
 
-    if (!isLive && _selectedScenario.typicalSymptoms.isNotEmpty && ref.read(screeningDraftProvider).symptoms.isEmpty) {
-      ref.read(screeningDraftProvider.notifier).setSymptoms(_selectedScenario.typicalSymptoms);
+    if (!isLive &&
+        _selectedScenario.typicalSymptoms.isNotEmpty &&
+        ref.read(screeningDraftProvider).symptoms.isEmpty) {
+      ref
+          .read(screeningDraftProvider.notifier)
+          .setSymptoms(_selectedScenario.typicalSymptoms);
     }
 
-    ref.read(screeningDraftProvider.notifier).setSample(
-      sample,
-      ecgSamples: _finalEcg,
-      ecgSampleRate: 250,
-    );
+    ref
+        .read(screeningDraftProvider.notifier)
+        .setSample(sample, ecgSamples: _finalEcg, ecgSampleRate: 250);
     context.go('/screening/symptoms', extra: {'liveSample': sample});
   }
 
@@ -408,18 +479,27 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
           ],
         ),
       ),
-      body: (!isConnected && !_demoMode) 
+      body: (!isConnected && !_demoMode)
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.bluetooth_disabled, size: 64, color: theme.colorScheme.error),
+                  Icon(
+                    Icons.bluetooth_disabled,
+                    size: 64,
+                    color: theme.colorScheme.error,
+                  ),
                   const SizedBox(height: 16),
-                  Text('Device Disconnected', style: theme.textTheme.titleLarge),
+                  Text(
+                    'Device Disconnected',
+                    style: theme.textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'No ESP32 board connected.',
-                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -431,7 +511,10 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
                         onPressed: () => setState(() => _demoMode = true),
                       ),
                       const SizedBox(width: 12),
-                      AppButton(label: 'Connect Board', onPressed: () => context.go('/devices/scan')),
+                      AppButton(
+                        label: 'Connect Board',
+                        onPressed: () => context.go('/devices/scan'),
+                      ),
                     ],
                   ),
                 ],
@@ -442,7 +525,9 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
-                    physics: _isMeasuring ? const NeverScrollableScrollPhysics() : null,
+                    physics: _isMeasuring
+                        ? const NeverScrollableScrollPhysics()
+                        : null,
                     children: [
                       _buildPulseOxTab(theme),
                       _buildEcgTab(theme),
@@ -468,7 +553,7 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
                     onPressed: _isMeasuring ? null : _finishScreening,
                     minWidth: double.infinity,
                   ),
-                )
+                ),
               ],
             ),
     );
@@ -480,14 +565,30 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
       title: 'SpO2 & Heart Rate',
       theme: theme,
       hasResult: _finalHr != null,
-      resultText: _finalHr != null ? 'HR: $_finalHr bpm   •   SpO₂: $_finalSpo2%' : null,
+      resultText: _finalHr != null
+          ? 'HR: $_finalHr bpm   •   SpO₂: $_finalSpo2%'
+          : null,
       liveContent: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildLiveMetric(theme, 'Live HR', '$_liveHr', 'bpm', Icons.favorite, theme.colorScheme.primary),
-          _buildLiveMetric(theme, 'Live SpO₂', '$_liveSpo2', '%', Icons.air, theme.colorScheme.secondary),
+          _buildLiveMetric(
+            theme,
+            'Live HR',
+            '$_liveHr',
+            'bpm',
+            Icons.favorite,
+            theme.colorScheme.primary,
+          ),
+          _buildLiveMetric(
+            theme,
+            'Live SpO₂',
+            '$_liveSpo2',
+            '%',
+            Icons.air,
+            theme.colorScheme.secondary,
+          ),
         ],
-      )
+      ),
     );
   }
 
@@ -497,7 +598,9 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
       title: 'Electrocardiogram & PPG Sweep',
       theme: theme,
       hasResult: _finalEcg.isNotEmpty,
-      resultText: _finalEcg.isNotEmpty ? 'ECG Captured (${(_finalEcg.length / 250).toStringAsFixed(1)}s)' : null,
+      resultText: _finalEcg.isNotEmpty
+          ? 'ECG Captured (${(_finalEcg.length / 250).toStringAsFixed(1)}s)'
+          : null,
       liveContent: Column(
         children: [
           DualWaveformSweepMonitor(
@@ -516,12 +619,28 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
       title: 'Body Temperature',
       theme: theme,
       hasResult: _finalTemp != null,
-      resultText: _finalTemp != null ? 'Temperature: ${_finalTemp!.toStringAsFixed(1)} °C' : null,
-      liveContent: _buildLiveMetric(theme, 'Live Temp', _liveTemp.toStringAsFixed(1), '°C', Icons.thermostat, theme.colorScheme.tertiary),
+      resultText: _finalTemp != null
+          ? 'Temperature: ${_finalTemp!.toStringAsFixed(1)} °C'
+          : null,
+      liveContent: _buildLiveMetric(
+        theme,
+        'Live Temp',
+        _liveTemp.toStringAsFixed(1),
+        '°C',
+        Icons.thermostat,
+        theme.colorScheme.tertiary,
+      ),
     );
   }
 
-  Widget _buildLiveMetric(ThemeData theme, String label, String value, String unit, IconData icon, Color color) {
+  Widget _buildLiveMetric(
+    ThemeData theme,
+    String label,
+    String value,
+    String unit,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -531,19 +650,35 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
-            Text(value, style: theme.textTheme.displaySmall?.copyWith(color: color, fontWeight: FontWeight.bold)),
+            Text(
+              value,
+              style: theme.textTheme.displaySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(width: 4),
-            Text(unit, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            Text(
+              unit,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
-        Text(label, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildMeasurementTab({
-    required int mode, 
-    required String title, 
+    required int mode,
+    required String title,
     required ThemeData theme,
     required bool hasResult,
     String? resultText,
@@ -551,21 +686,27 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
   }) {
     bool isThisMeasuring = _isMeasuring && _activeMode == mode;
     bool isOtherMeasuring = _isMeasuring && _activeMode != mode;
-    
+
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            title,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 48),
-          
+
           if (isThisMeasuring) ...[
             Stack(
               alignment: Alignment.center,
               children: [
                 SizedBox(
-                  width: 180, height: 180,
+                  width: 180,
+                  height: 180,
                   child: CircularProgressIndicator(
                     value: (30 - _secondsRemaining) / 30,
                     strokeWidth: 12,
@@ -576,11 +717,17 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('$_secondsRemaining', style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+                    Text(
+                      '$_secondsRemaining',
+                      style: theme.textTheme.displayMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
                     Text('seconds', style: theme.textTheme.labelLarge),
                   ],
                 ),
-              ]
+              ],
             ),
             const SizedBox(height: 48),
             liveContent,
@@ -591,7 +738,13 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
                 children: [
                   const Icon(Icons.check_circle, color: Colors.green, size: 64),
                   const SizedBox(height: 16),
-                  Text('Measurement Complete', style: theme.textTheme.titleMedium?.copyWith(color: Colors.green, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Measurement Complete',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text(resultText!, style: theme.textTheme.titleLarge),
                 ],
@@ -601,28 +754,38 @@ class _MutuallyExclusiveScreeningScreenState extends ConsumerState<MutuallyExclu
             AppOutlinedButton(
               label: 'Retake Measurement',
               icon: const Icon(Icons.refresh),
-              onPressed: isOtherMeasuring ? null : () => _startMeasurement(mode),
+              onPressed: isOtherMeasuring
+                  ? null
+                  : () => _startMeasurement(mode),
             ),
           ] else ...[
-            Icon(Icons.touch_app, size: 80, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
+            Icon(
+              Icons.touch_app,
+              size: 80,
+              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+            ),
             const SizedBox(height: 32),
             AppButton(
               label: 'Start 30s Measurement',
               icon: const Icon(Icons.play_arrow_rounded, size: 28),
-              onPressed: isOtherMeasuring ? null : () => _startMeasurement(mode),
+              onPressed: isOtherMeasuring
+                  ? null
+                  : () => _startMeasurement(mode),
               minWidth: double.infinity,
               minHeight: 64,
             ),
             const SizedBox(height: 16),
             Text(
-              isOtherMeasuring ? 'Another measurement is in progress' : 'Ensure sensor is placed correctly before starting',
-              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              isOtherMeasuring
+                  ? 'Another measurement is in progress'
+                  : 'Ensure sensor is placed correctly before starting',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-          ]
+          ],
         ],
       ),
     );
   }
 }
-
-

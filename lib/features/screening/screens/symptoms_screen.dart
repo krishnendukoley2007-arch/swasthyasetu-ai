@@ -43,15 +43,17 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
     // Vitals come from sensors (live screening), symptoms from patient report.
     // RiskEngine combines both deterministically. No symptom→vitals coupling.
     if (_liveSample == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.screeningNoSample)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.screeningNoSample)));
       return;
     }
     final sample = _liveSample!;
 
     final notes = _notesController.text.trim();
-    ref.read(screeningDraftProvider.notifier).setSymptoms(
+    ref
+        .read(screeningDraftProvider.notifier)
+        .setSymptoms(
           _selectedSymptoms.toList(),
           duration: _selectedDuration,
           notes: notes.isEmpty ? null : notes,
@@ -60,12 +62,15 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
     // The route still carries the reading as well. Triage is reachable directly
     // for the demo walkthrough, and in that case the draft is empty — the extra
     // is what keeps that path working.
-    context.go('/screening/triage', extra: {
-      'sample': sample.toJson(),
-      'symptoms': _selectedSymptoms.toList(),
-      'duration': _selectedDuration,
-      'notes': notes,
-    });
+    context.go(
+      '/screening/triage',
+      extra: {
+        'sample': sample.toJson(),
+        'symptoms': _selectedSymptoms.toList(),
+        'duration': _selectedDuration,
+        'notes': notes,
+      },
+    );
   }
 
   @override
@@ -105,9 +110,9 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
                     Icons.healing_rounded,
                   ),
                   const AppSpacing.vxl(),
-                  ...AppConstants.symptomOptions
-                      .map((symptom) => _buildSymptomChip(symptom))
-                      ,
+                  ...AppConstants.symptomOptions.map(
+                    (symptom) => _buildSymptomChip(symptom),
+                  ),
                   const AppSpacing.vxl(),
                   _buildSectionHeader(l10n.symptomsDuration),
                   const AppSpacing.vmd(),
@@ -150,7 +155,11 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
             ),
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
           ),
-          child: Icon(icon, color: theme.colorScheme.onPrimaryContainer, size: 28),
+          child: Icon(
+            icon,
+            color: theme.colorScheme.onPrimaryContainer,
+            size: 28,
+          ),
         ),
         const AppSpacing.hmd(),
         Expanded(
@@ -159,12 +168,16 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
             children: [
               Text(
                 title,
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const AppSpacing.vxs(),
               Text(
                 subtitle,
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -176,9 +189,14 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
   Widget _buildSymptomChip(String symptom) {
     final theme = Theme.of(context);
     final isSelected = _selectedSymptoms.contains(symptom);
-    final isRespiratory =
-        ['Breathlessness', 'Chest discomfort', 'Cough'].contains(symptom);
-    final color = isRespiratory ? theme.colorScheme.error : theme.colorScheme.primary;
+    final isRespiratory = [
+      'Breathlessness',
+      'Chest discomfort',
+      'Cough',
+    ].contains(symptom);
+    final color = isRespiratory
+        ? theme.colorScheme.error
+        : theme.colorScheme.primary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacingSm),
@@ -210,7 +228,7 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
       '1-3 days',
       '4-7 days',
       '1-2 weeks',
-      '> 2 weeks'
+      '> 2 weeks',
     ];
 
     return Wrap(
@@ -225,11 +243,15 @@ class _SymptomsScreenState extends ConsumerState<SymptomsScreen> {
           selectedColor: theme.colorScheme.primaryContainer,
           checkmarkColor: theme.colorScheme.primary,
           labelStyle: TextStyle(
-            color: isSelected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
+            color: isSelected
+                ? theme.colorScheme.onPrimaryContainer
+                : theme.colorScheme.onSurface,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
           side: BorderSide(
-            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusFull),

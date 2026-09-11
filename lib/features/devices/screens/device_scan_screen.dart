@@ -113,11 +113,12 @@ class _DeviceScanScreenState extends ConsumerState<DeviceScanScreen> {
   @override
   Widget build(BuildContext context) {
     final link = ref.watch(bleLinkProvider);
-    final candidates = ref.watch(bleCandidatesProvider).maybeWhen(
-          data: (list) => list,
-          orElse: () => const <BleCandidate>[],
-        );
-    final paired = ref.watch(pairedDevicesProvider).maybeWhen(
+    final candidates = ref
+        .watch(bleCandidatesProvider)
+        .maybeWhen(data: (list) => list, orElse: () => const <BleCandidate>[]);
+    final paired = ref
+        .watch(pairedDevicesProvider)
+        .maybeWhen(
           data: (list) => list.where((d) => !d.isDemo).toList(),
           orElse: () => const <Device>[],
         );
@@ -152,10 +153,8 @@ class _DeviceScanScreenState extends ConsumerState<DeviceScanScreen> {
             ...paired.map(
               (d) => _PairedDeviceCard(
                 device: d,
-                onConnect: () => _openConnection(
-                  remoteId: d.macAddress,
-                  name: d.name,
-                ),
+                onConnect: () =>
+                    _openConnection(remoteId: d.macAddress, name: d.name),
               ),
             ),
           ],
@@ -228,21 +227,20 @@ class _SectionHeader extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              if (trailing != null) ...[
-                const AppSpacing.hsm(),
-                trailing!,
-              ],
+              if (trailing != null) ...[const AppSpacing.hsm(), trailing!],
             ],
           ),
           const AppSpacing.vxs(),
           Text(
             subtitle,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -287,8 +285,9 @@ class _RadioUnavailableBanner extends StatelessWidget {
               children: [
                 Text(
                   state.label,
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const AppSpacing.vxs(),
                 Text(state.detail, style: theme.textTheme.bodySmall),
@@ -316,8 +315,9 @@ class _PairedDeviceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final compatibility =
-        DeviceRepository.checkFirmware(device.firmwareVersion);
+    final compatibility = DeviceRepository.checkFirmware(
+      device.firmwareVersion,
+    );
 
     return AppCard(
       margin: const EdgeInsets.fromLTRB(
@@ -343,8 +343,9 @@ class _PairedDeviceCard extends StatelessWidget {
                   children: [
                     Text(
                       device.name,
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const AppSpacing.vxs(),
                     Text(
@@ -394,8 +395,9 @@ class _PairedDeviceCard extends StatelessWidget {
             const AppSpacing.vsm(),
             Text(
               compatibility.detail,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.error),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
             ),
           ],
           const AppSpacing.vmd(),
@@ -529,9 +531,10 @@ class _NearbyEmptyState extends StatelessWidget {
             scanning
                 ? 'Hold the board within a metre of the phone.'
                 : 'Check the board is switched on and its light is blinking, '
-                    'then scan again.',
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      'then scan again.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           if (!scanning) ...[
@@ -602,8 +605,9 @@ class _DemoModeSection extends StatelessWidget {
             'Demo mode walks through a complete screening using invented vital '
             'signs. Nothing is measured. Every reading and result it produces is '
             'labelled as a demo, and it is kept out of the community totals.',
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           const AppSpacing.vmd(),
           AppButton(
@@ -678,8 +682,10 @@ class _Pill extends StatelessWidget {
           Flexible(
             child: Text(
               label,
-              style: theme.textTheme.labelSmall
-                  ?.copyWith(fontWeight: FontWeight.w600, color: color),
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ),
         ],

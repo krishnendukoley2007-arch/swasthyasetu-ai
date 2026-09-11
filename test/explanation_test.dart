@@ -18,17 +18,16 @@ HealthSample sampleOf({
   double temp = 36.5,
   double ecgQuality = 0.95,
   int rrInterval = 833,
-}) =>
-    HealthSample(
-      timestamp: 0,
-      heartRateBpm: hr,
-      spo2Percent: spo2,
-      temperatureC: temp,
-      ecgSignalQuality: ecgQuality,
-      rPeakDetected: true,
-      rrIntervalMs: rrInterval,
-      batteryPercent: 90,
-    );
+}) => HealthSample(
+  timestamp: 0,
+  heartRateBpm: hr,
+  spo2Percent: spo2,
+  temperatureC: temp,
+  ecgSignalQuality: ecgQuality,
+  rPeakDetected: true,
+  rrIntervalMs: rrInterval,
+  batteryPercent: 90,
+);
 
 GuidelineChunk chunk(
   String id, {
@@ -36,29 +35,22 @@ GuidelineChunk chunk(
   String title = '',
   String body = '',
   List<String> ruleTags = const [],
-}) =>
-    GuidelineChunk(
-      id: id,
-      source: source,
-      title: title,
-      body: body,
-      keywords: SeedService.tokenise('$title $body'),
-      ruleTags: ruleTags,
-    );
+}) => GuidelineChunk(
+  id: id,
+  source: source,
+  title: title,
+  body: body,
+  keywords: SeedService.tokenise('$title $body'),
+  ruleTags: ruleTags,
+);
 
 void main() {
   group('EcgClassifier', () {
     test('poor signal is reported as noisy, never as a rhythm', () {
       // A classification derived from an unusable trace is worse than none: it
       // would be stored in the screening row and read as clinical fact.
-      expect(
-        EcgClassifier.classify(heartRate: 72, quality: 0.2),
-        'NOISY',
-      );
-      expect(
-        EcgClassifier.classify(heartRate: 150, quality: 0.49),
-        'NOISY',
-      );
+      expect(EcgClassifier.classify(heartRate: 72, quality: 0.2), 'NOISY');
+      expect(EcgClassifier.classify(heartRate: 150, quality: 0.49), 'NOISY');
     });
 
     test('a clean normal trace is sinus rhythm', () {
@@ -203,8 +195,10 @@ void main() {
 
   group('OfflineExplainer', () {
     test('a normal screening explains why nothing fired', () {
-      final assessment =
-          RiskEngine.assess(sample: sampleOf(), symptoms: const []);
+      final assessment = RiskEngine.assess(
+        sample: sampleOf(),
+        symptoms: const [],
+      );
       final explanation = OfflineExplainer.build(assessment: assessment);
 
       expect(explanation.summary, contains('screened as normal'));
@@ -231,17 +225,23 @@ void main() {
     });
 
     test('the patient name is used when given and never invented', () {
-      final assessment =
-          RiskEngine.assess(sample: sampleOf(), symptoms: const []);
+      final assessment = RiskEngine.assess(
+        sample: sampleOf(),
+        symptoms: const [],
+      );
 
       expect(
-        OfflineExplainer.build(assessment: assessment, patientName: 'Asha')
-            .summary,
+        OfflineExplainer.build(
+          assessment: assessment,
+          patientName: 'Asha',
+        ).summary,
         startsWith('Asha'),
       );
       expect(
-        OfflineExplainer.build(assessment: assessment, patientName: '   ')
-            .summary,
+        OfflineExplainer.build(
+          assessment: assessment,
+          patientName: '   ',
+        ).summary,
         startsWith('This person'),
       );
     });
@@ -263,8 +263,10 @@ void main() {
     });
 
     test('retrieved guideline text is quoted verbatim and cited', () {
-      final assessment =
-          RiskEngine.assess(sample: sampleOf(spo2: 86), symptoms: const []);
+      final assessment = RiskEngine.assess(
+        sample: sampleOf(spo2: 86),
+        symptoms: const [],
+      );
       final hit = RetrievedChunk(
         chunk: chunk(
           'spo2-low',
@@ -276,8 +278,10 @@ void main() {
         matchedRule: true,
       );
 
-      final explanation =
-          OfflineExplainer.build(assessment: assessment, retrieved: [hit]);
+      final explanation = OfflineExplainer.build(
+        assessment: assessment,
+        retrieved: [hit],
+      );
 
       // Paraphrasing a clinical instruction with no reviewer is the failure
       // mode this whole path is built to avoid.
@@ -290,8 +294,10 @@ void main() {
 
     test('questions follow the findings', () {
       final breathless = OfflineExplainer.build(
-        assessment:
-            RiskEngine.assess(sample: sampleOf(spo2: 86), symptoms: const []),
+        assessment: RiskEngine.assess(
+          sample: sampleOf(spo2: 86),
+          symptoms: const [],
+        ),
       );
       expect(
         breathless.questionsToAsk.any((q) => q.contains('breathing')),

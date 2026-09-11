@@ -43,7 +43,8 @@ class ScreeningModeDialog extends StatelessWidget {
             _buildModeCard(
               context,
               title: 'Continuous All-in-One Monitor',
-              subtitle: 'Live streaming of SpO₂, ECG, Temp, BP & Glucose on a unified hospital monitor.',
+              subtitle:
+                  'Live streaming of SpO₂, ECG, Temp, BP & Glucose on a unified hospital monitor.',
               badge: 'RECOMMENDED',
               badgeColor: theme.colorScheme.primary,
               icon: Icons.speed_rounded,
@@ -59,7 +60,8 @@ class ScreeningModeDialog extends StatelessWidget {
             _buildModeCard(
               context,
               title: 'Step-by-Step Guided Mode',
-              subtitle: 'Mutually exclusive tabs: isolate SpO₂, then Lead-I ECG strip, then Skin Temp.',
+              subtitle:
+                  'Mutually exclusive tabs: isolate SpO₂, then Lead-I ECG strip, then Skin Temp.',
               badge: 'FIELD WORKER',
               badgeColor: theme.colorScheme.secondary,
               icon: Icons.checklist_rounded,
@@ -75,7 +77,8 @@ class ScreeningModeDialog extends StatelessWidget {
             _buildModeCard(
               context,
               title: 'Virtual Patient Clinical Simulator',
-              subtitle: 'Test 6 realistic medical conditions (Pneumonia, DKA, Hypoglycemia, Arrhythmia, Heat Stroke) with zero hardware.',
+              subtitle:
+                  'Test 6 realistic medical conditions (Pneumonia, DKA, Hypoglycemia, Arrhythmia, Heat Stroke) with zero hardware.',
               badge: 'ZERO HARDWARE',
               badgeColor: theme.colorScheme.tertiary,
               icon: Icons.science_rounded,
@@ -118,7 +121,9 @@ class ScreeningModeDialog extends StatelessWidget {
         padding: const EdgeInsets.all(AppTheme.spacingMd),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6)),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+          ),
           color: theme.colorScheme.surface,
         ),
         child: Row(
@@ -142,14 +147,21 @@ class ScreeningModeDialog extends StatelessWidget {
                       Expanded(
                         child: Text(
                           title,
-                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: badgeColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
+                          ),
                         ),
                         child: Text(
                           badge,

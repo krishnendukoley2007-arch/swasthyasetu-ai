@@ -73,7 +73,8 @@ class BleCandidate {
     return 1;
   }
 
-  String get displayName => name.trim().isEmpty ? 'Unnamed device' : name.trim();
+  String get displayName =>
+      name.trim().isEmpty ? 'Unnamed device' : name.trim();
 }
 
 /// Everything the UI needs to describe the link in one immutable object.
@@ -153,23 +154,22 @@ class BleLinkState {
     bool? hasEcgChannel,
     bool clearRetry = false,
     bool clearMessage = false,
-  }) =>
-      BleLinkState(
-        status: status ?? this.status,
-        deviceId: deviceId ?? this.deviceId,
-        deviceName: deviceName ?? this.deviceName,
-        firmwareVersion: firmwareVersion ?? this.firmwareVersion,
-        compatibility: compatibility ?? this.compatibility,
-        attempt: attempt ?? this.attempt,
-        retryIn: clearRetry ? null : (retryIn ?? this.retryIn),
-        message: clearMessage ? null : (message ?? this.message),
-        batteryPercent: batteryPercent ?? this.batteryPercent,
-        lastFrameAt: lastFrameAt ?? this.lastFrameAt,
-        leadOff: leadOff ?? this.leadOff,
-        fingerOff: fingerOff ?? this.fingerOff,
-        droppedEcgFrames: droppedEcgFrames ?? this.droppedEcgFrames,
-        hasEcgChannel: hasEcgChannel ?? this.hasEcgChannel,
-      );
+  }) => BleLinkState(
+    status: status ?? this.status,
+    deviceId: deviceId ?? this.deviceId,
+    deviceName: deviceName ?? this.deviceName,
+    firmwareVersion: firmwareVersion ?? this.firmwareVersion,
+    compatibility: compatibility ?? this.compatibility,
+    attempt: attempt ?? this.attempt,
+    retryIn: clearRetry ? null : (retryIn ?? this.retryIn),
+    message: clearMessage ? null : (message ?? this.message),
+    batteryPercent: batteryPercent ?? this.batteryPercent,
+    lastFrameAt: lastFrameAt ?? this.lastFrameAt,
+    leadOff: leadOff ?? this.leadOff,
+    fingerOff: fingerOff ?? this.fingerOff,
+    droppedEcgFrames: droppedEcgFrames ?? this.droppedEcgFrames,
+    hasEcgChannel: hasEcgChannel ?? this.hasEcgChannel,
+  );
 
   /// Frames are arriving right now.
   bool get isLive => status == BleLinkStatus.streaming;
@@ -195,18 +195,18 @@ class BleLinkState {
   bool get hasFirmwareWarning => compatibility?.needsWarning ?? false;
 
   String get label => switch (status) {
-        BleLinkStatus.unsupported => 'Bluetooth not available',
-        BleLinkStatus.adapterOff => 'Bluetooth is off',
-        BleLinkStatus.permissionDenied => 'Permission needed',
-        BleLinkStatus.idle => 'Not connected',
-        BleLinkStatus.scanning => 'Searching for devices',
-        BleLinkStatus.connecting => 'Connecting',
-        BleLinkStatus.discovering => 'Reading device services',
-        BleLinkStatus.handshaking => 'Starting sensors',
-        BleLinkStatus.streaming => 'Connected',
-        BleLinkStatus.reconnecting => 'Reconnecting',
-        BleLinkStatus.failed => 'Connection failed',
-      };
+    BleLinkStatus.unsupported => 'Bluetooth not available',
+    BleLinkStatus.adapterOff => 'Bluetooth is off',
+    BleLinkStatus.permissionDenied => 'Permission needed',
+    BleLinkStatus.idle => 'Not connected',
+    BleLinkStatus.scanning => 'Searching for devices',
+    BleLinkStatus.connecting => 'Connecting',
+    BleLinkStatus.discovering => 'Reading device services',
+    BleLinkStatus.handshaking => 'Starting sensors',
+    BleLinkStatus.streaming => 'Connected',
+    BleLinkStatus.reconnecting => 'Reconnecting',
+    BleLinkStatus.failed => 'Connection failed',
+  };
 
   /// The sentence under the label. Written for someone holding a sensor, not for
   /// a developer reading a log.
@@ -227,11 +227,12 @@ class BleLinkState {
       BleLinkStatus.discovering => 'Checking which sensors this board has.',
       BleLinkStatus.handshaking => 'Asking the board to start measuring.',
       BleLinkStatus.streaming => 'Readings are arriving from $_deviceLabel.',
-      BleLinkStatus.reconnecting => retryIn == null
-          ? 'The link dropped. Trying again — captured readings are kept.'
-          : 'The link dropped. Next try in ${retryIn!.inSeconds}s '
-              '(attempt $attempt of ${BleBackoff.maxAttempts}). '
-              'Captured readings are kept.',
+      BleLinkStatus.reconnecting =>
+        retryIn == null
+            ? 'The link dropped. Trying again — captured readings are kept.'
+            : 'The link dropped. Next try in ${retryIn!.inSeconds}s '
+                  '(attempt $attempt of ${BleBackoff.maxAttempts}). '
+                  'Captured readings are kept.',
       BleLinkStatus.failed =>
         'Could not reach the board after ${BleBackoff.maxAttempts} tries. '
             'Check that it is switched on and charged.',
@@ -409,7 +410,9 @@ class BleService {
           for (final r in results) {
             final id = r.device.remoteId.str;
             final advertised = r.advertisementData.advName;
-            final name = advertised.isNotEmpty ? advertised : r.device.platformName;
+            final name = advertised.isNotEmpty
+                ? advertised
+                : r.device.platformName;
             seen[id] = BleCandidate(
               id: id,
               name: name,
@@ -450,7 +453,8 @@ class BleService {
       _emit(
         _state.copyWith(
           status: BleLinkStatus.failed,
-          message: 'The Bluetooth scan could not be started. Check that '
+          message:
+              'The Bluetooth scan could not be started. Check that '
               'Bluetooth and location permissions are granted, then try again.',
         ),
       );
@@ -471,8 +475,7 @@ class BleService {
   static bool matchesSensorBoard({
     required String name,
     List<String> serviceUuids = const [],
-  }) =>
-      _looksLikeSensorBoard(name: name, serviceUuids: serviceUuids);
+  }) => _looksLikeSensorBoard(name: name, serviceUuids: serviceUuids);
 
   static bool _looksLikeSensorBoard({
     required String name,
@@ -480,8 +483,7 @@ class BleService {
   }) {
     for (final uuid in serviceUuids) {
       final text = uuid is Guid ? uuid.str128 : uuid.toString();
-      if (text.toLowerCase() ==
-          AppConstants.deviceServiceUuid.toLowerCase()) {
+      if (text.toLowerCase() == AppConstants.deviceServiceUuid.toLowerCase()) {
         return true;
       }
       // Some stacks advertise the 16-bit alias only.
@@ -614,9 +616,7 @@ class BleService {
       // retrying it would just spin. Stop and say what is wrong.
       _wantConnection = false;
       await _teardownLink();
-      _emit(
-        _state.copyWith(status: BleLinkStatus.failed, message: e.message),
-      );
+      _emit(_state.copyWith(status: BleLinkStatus.failed, message: e.message));
       return false;
     } catch (_) {
       // Anything else — out of range, board asleep, GATT busy — is worth a
@@ -633,19 +633,16 @@ class BleService {
 
   Future<void> _readFirmware(BluetoothCharacteristic? infoChar) async {
     if (infoChar == null) {
-      _emit(
-        _state.copyWith(compatibility: FirmwareCompatibility.unknown),
-      );
+      _emit(_state.copyWith(compatibility: FirmwareCompatibility.unknown));
       return;
     }
     try {
       final version = BleProtocol.parseFirmwareVersion(await infoChar.read());
-      final compatibility = DeviceRepository.checkFirmware(version ?? 'UNKNOWN');
+      final compatibility = DeviceRepository.checkFirmware(
+        version ?? 'UNKNOWN',
+      );
       _emit(
-        _state.copyWith(
-          firmwareVersion: version,
-          compatibility: compatibility,
-        ),
+        _state.copyWith(firmwareVersion: version, compatibility: compatibility),
       );
       // Note what is *not* here: an incompatible firmware does not abort the
       // connection. A board one version behind still measures SpO2 correctly,
@@ -777,7 +774,9 @@ class BleService {
       _retryTicker?.cancel();
       final id = _state.deviceId;
       if (_disposed || !_wantConnection || id == null) return;
-      _emit(_state.copyWith(status: BleLinkStatus.connecting, clearRetry: true));
+      _emit(
+        _state.copyWith(status: BleLinkStatus.connecting, clearRetry: true),
+      );
       _attemptConnect(id);
     });
   }
@@ -819,9 +818,7 @@ class BleService {
 
     if (_lastEcgSequence != null &&
         !BleProtocol.isContiguous(_lastEcgSequence!, frame.sequence)) {
-      _emit(
-        _state.copyWith(droppedEcgFrames: _state.droppedEcgFrames + 1),
-      );
+      _emit(_state.copyWith(droppedEcgFrames: _state.droppedEcgFrames + 1));
     }
     _lastEcgSequence = frame.sequence;
 

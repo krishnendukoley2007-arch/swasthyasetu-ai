@@ -5,7 +5,8 @@ import 'package:swasthyasetu_ai/core/constants/app_constants.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/services/gemini_service.dart'
     show GeminiFailureText;
-import 'package:swasthyasetu_ai/core/services/storage_manager.dart' show formatBytes;
+import 'package:swasthyasetu_ai/core/services/storage_manager.dart'
+    show formatBytes;
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/data/repositories/device_repository.dart';
@@ -148,7 +149,8 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.my_location_rounded,
               title: context.l10n.settingsTagLocation,
               // Off by default. Saying so is part of the consent.
-              subtitle: 'Off by default. Adds a coordinate to new screenings '
+              subtitle:
+                  'Off by default. Adds a coordinate to new screenings '
                   'and to any SOS you send',
               value: settings.locationConsent,
               onChanged: (v) =>
@@ -157,7 +159,8 @@ class SettingsScreen extends ConsumerWidget {
             _Toggle(
               icon: Icons.cloud_outlined,
               title: context.l10n.settingsOnlineAi,
-              subtitle: 'When off, explanations come from the on-device '
+              subtitle:
+                  'When off, explanations come from the on-device '
                   'guideline library instead',
               value: settings.aiConsent,
               onChanged: (v) =>
@@ -170,7 +173,8 @@ class SettingsScreen extends ConsumerWidget {
             _InfoTile(
               icon: Icons.info_outline_rounded,
               title: context.l10n.settingsVersion,
-              value: '${AppConstants.appVersion} '
+              value:
+                  '${AppConstants.appVersion} '
                   '(build ${AppConstants.appBuildNumber})',
             ),
             _NavTile(
@@ -242,7 +246,7 @@ class SettingsScreen extends ConsumerWidget {
       builder: (sheetContext) => _PickerSheet(
         title: context.l10n.settingsCancelWindow,
         blurb: context.l10n.settingsCancelWindowBody2,
-            
+
         children: [
           for (final seconds in options)
             _OptionTile(
@@ -254,9 +258,7 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
     if (chosen != null) {
-      await ref
-          .read(settingsProvider.notifier)
-          .setSosCountdownSeconds(chosen);
+      await ref.read(settingsProvider.notifier).setSosCountdownSeconds(chosen);
     }
   }
 
@@ -295,8 +297,9 @@ class SettingsScreen extends ConsumerWidget {
                         Flexible(
                           child: Text(
                             _humaniseThresholdKey(entry.key),
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w500),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                         const AppSpacing.hsm(),
@@ -355,9 +358,9 @@ enum _AppLanguage {
   final String englishName;
 
   static _AppLanguage of(Locale locale) => values.firstWhere(
-        (l) => l.locale.languageCode == locale.languageCode,
-        orElse: () => english,
-      );
+    (l) => l.locale.languageCode == locale.languageCode,
+    orElse: () => english,
+  );
 }
 
 // ───────────────────────────── Section shell ─────────────────────────────
@@ -450,12 +453,12 @@ class _AudienceTile extends ConsumerWidget {
           child: Text(
             canChoose
                 ? 'This only changes how results are explained. The screening, '
-                    'the sensors and the risk level are the same either way.'
+                      'the sensors and the risk level are the same either way.'
                 : 'Set by the account you signed in with, and not changeable '
-                    'here — the wording a result is explained in has to match '
-                    'who the account belongs to. Sign in with a different '
-                    'account to change it. Either way the screening, the '
-                    'sensors and the risk level are identical.',
+                      'here — the wording a result is explained in has to match '
+                      'who the account belongs to. Sign in with a different '
+                      'account to change it. Either way the screening, the '
+                      'sensors and the risk level are identical.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -503,8 +506,8 @@ class _OptionTile extends StatelessWidget {
           color: selected
               ? theme.colorScheme.primary
               : dimmed
-                  ? theme.colorScheme.onSurfaceVariant
-                  : null,
+              ? theme.colorScheme.onSurfaceVariant
+              : null,
         ),
       ),
       subtitle: subtitle == null
@@ -512,8 +515,9 @@ class _OptionTile extends StatelessWidget {
           : Text(
               subtitle!,
               style: dimmed
-                  ? theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)
+                  ? theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    )
                   : null,
             ),
       trailing: selected
@@ -535,11 +539,7 @@ class _OptionTile extends StatelessWidget {
 /// the height and scrolling means the last option stays reachable at 2.0x text
 /// scale instead of being clipped off the bottom edge.
 class _PickerSheet extends StatelessWidget {
-  const _PickerSheet({
-    required this.title,
-    required this.children,
-    this.blurb,
-  });
+  const _PickerSheet({required this.title, required this.children, this.blurb});
 
   final String title;
   final String? blurb;
@@ -582,15 +582,14 @@ class _SheetTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: AppTheme.spacingSm),
-        child: Text(
-          text,
-          style: Theme.of(context)
-              .textTheme
-              .titleMedium
-              ?.copyWith(fontWeight: FontWeight.w600),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: AppTheme.spacingSm),
+    child: Text(
+      text,
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+    ),
+  );
 }
 
 // ───────────────────────────── Tiles ─────────────────────────────
@@ -621,8 +620,9 @@ class _Toggle extends StatelessWidget {
       title: Text(title, style: theme.textTheme.bodyLarge),
       subtitle: Text(subtitle, style: theme.textTheme.bodySmall),
       secondary: Icon(icon, color: theme.colorScheme.primary),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacingMd,
+      ),
     );
   }
 }
@@ -650,8 +650,9 @@ class _ChoiceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacingMd,
+      ),
       leading: Icon(icon, color: theme.colorScheme.primary),
       title: Text(title, style: theme.textTheme.bodyLarge),
       subtitle: Column(
@@ -696,18 +697,16 @@ class _NavTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacingMd,
+      ),
       leading: Icon(icon, color: theme.colorScheme.primary),
       title: Text(title, style: theme.textTheme.bodyLarge),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(subtitle, style: theme.textTheme.bodySmall),
-          if (badge != null) ...[
-            const AppSpacing.vxs(),
-            badge!,
-          ],
+          if (badge != null) ...[const AppSpacing.vxs(), badge!],
         ],
       ),
       trailing: Icon(
@@ -734,8 +733,9 @@ class _InfoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacingMd,
+      ),
       leading: Icon(icon, color: theme.colorScheme.primary),
       title: Text(title, style: theme.textTheme.bodyLarge),
       subtitle: Text(
@@ -797,9 +797,7 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
   }
 
   Future<void> _save() async {
-    await ref
-        .read(settingsProvider.notifier)
-        .setGeminiApiKey(_controller.text);
+    await ref.read(settingsProvider.notifier).setGeminiApiKey(_controller.text);
     if (!mounted) return;
     setState(() {
       _editing = false;
@@ -814,9 +812,7 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
     });
     // Save first: the service reads the stored value, so testing an unsaved
     // field would test the previous key and report a misleading result.
-    await ref
-        .read(settingsProvider.notifier)
-        .setGeminiApiKey(_controller.text);
+    await ref.read(settingsProvider.notifier).setGeminiApiKey(_controller.text);
     final failure = await ref.read(geminiServiceProvider).testKey();
     if (!mounted) return;
     setState(() {
@@ -836,10 +832,8 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
     final active = service.apiKey;
 
     final subtitle = switch (true) {
-      _ when active.isEmpty =>
-        context.l10n.settingsNotSet,
-      _ when stored.isEmpty =>
-        context.l10n.settingsKeyBuiltin(_mask(active)),
+      _ when active.isEmpty => context.l10n.settingsNotSet,
+      _ when stored.isEmpty => context.l10n.settingsKeyBuiltin(_mask(active)),
       _ => context.l10n.settingsKeyCustom(_mask(stored)),
     };
 
@@ -847,10 +841,14 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacingMd,
+          ),
           leading: Icon(Icons.key_rounded, color: theme.colorScheme.primary),
-          title: Text(context.l10n.settingsGeminiKey, style: theme.textTheme.bodyLarge),
+          title: Text(
+            context.l10n.settingsGeminiKey,
+            style: theme.textTheme.bodyLarge,
+          ),
           subtitle: Text(
             subtitle,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -859,7 +857,9 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
           ),
           trailing: TextButton(
             onPressed: () => setState(() => _editing = !_editing),
-            child: Text(_editing ? context.l10n.actionCancel : context.l10n.actionChange),
+            child: Text(
+              _editing ? context.l10n.actionCancel : context.l10n.actionChange,
+            ),
           ),
         ),
         if (service.keyIsLegacyStandard && !_editing)
@@ -916,7 +916,11 @@ class _GeminiKeyTileState extends ConsumerState<_GeminiKeyTile> {
                     ),
                     FilledButton(
                       onPressed: _testing ? null : _test,
-                      child: Text(_testing ? context.l10n.settingsTesting : context.l10n.actionSave),
+                      child: Text(
+                        _testing
+                            ? context.l10n.settingsTesting
+                            : context.l10n.actionSave,
+                      ),
                     ),
                   ],
                 ),
@@ -958,10 +962,17 @@ class _ThemeTile extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
-          leading: Icon(Icons.palette_outlined, color: theme.colorScheme.primary),
-          title: Text(context.l10n.settingsTheme, style: theme.textTheme.bodyLarge),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacingMd,
+          ),
+          leading: Icon(
+            Icons.palette_outlined,
+            color: theme.colorScheme.primary,
+          ),
+          title: Text(
+            context.l10n.settingsTheme,
+            style: theme.textTheme.bodyLarge,
+          ),
           subtitle: Text(
             context.l10n.settingsThemeBody,
             style: theme.textTheme.bodySmall,
@@ -1034,8 +1045,9 @@ class _WorkerCard extends ConsumerWidget {
               children: [
                 Text(
                   named ? settings.workerName : context.l10n.settingsWorkerName,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const AppSpacing.vxs(),
                 Text(
@@ -1079,8 +1091,8 @@ class _WorkerCard extends ConsumerWidget {
         padding: EdgeInsets.only(
           left: AppTheme.spacingMd,
           right: AppTheme.spacingMd,
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom +
-              AppTheme.spacingMd,
+          bottom:
+              MediaQuery.viewInsetsOf(sheetContext).bottom + AppTheme.spacingMd,
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -1090,9 +1102,15 @@ class _WorkerCard extends ConsumerWidget {
               _SheetTitle(context.l10n.settingsYourDetails),
               AppTextField(controller: name, label: context.l10n.settingsName),
               const AppSpacing.vmd(),
-              AppTextField(controller: id, label: context.l10n.settingsWorkerId),
+              AppTextField(
+                controller: id,
+                label: context.l10n.settingsWorkerId,
+              ),
               const AppSpacing.vmd(),
-              AppTextField(controller: facility, label: context.l10n.settingsFacility),
+              AppTextField(
+                controller: facility,
+                label: context.l10n.settingsFacility,
+              ),
               const AppSpacing.vlg(),
               AppButton(
                 label: context.l10n.actionSave,
@@ -1106,7 +1124,9 @@ class _WorkerCard extends ConsumerWidget {
     );
 
     if (saved == true) {
-      await ref.read(settingsProvider.notifier).setWorkerProfile(
+      await ref
+          .read(settingsProvider.notifier)
+          .setWorkerProfile(
             name: name.text.trim(),
             id: id.text.trim(),
             facility: facility.text.trim(),
@@ -1128,7 +1148,8 @@ class _StorageTile extends ConsumerWidget {
       icon: Icons.storage_rounded,
       title: context.l10n.settingsStorageDeletion,
       subtitle: usage.when(
-        data: (u) => '${formatBytes(u.total)} used · '
+        data: (u) =>
+            '${formatBytes(u.total)} used · '
             '${u.screeningCount} screenings',
         loading: () => 'Measuring…',
         // A failed measurement must not read as "0 bytes used".
@@ -1227,11 +1248,11 @@ class _CalibrationTile extends ConsumerWidget {
   }
 
   static String _ago(int days, AppLocalizations l10n) => switch (days) {
-        0 => l10n.settingsToday,
-        1 => l10n.settingsYesterday,
-        final d when d < 30 => l10n.settingsDaysAgo(d),
-        final d => l10n.settingsMonthsAgo(d ~/ 30),
-      };
+    0 => l10n.settingsToday,
+    1 => l10n.settingsYesterday,
+    final d when d < 30 => l10n.settingsDaysAgo(d),
+    final d => l10n.settingsMonthsAgo(d ~/ 30),
+  };
 }
 
 class _DisclaimerCard extends StatelessWidget {
@@ -1251,7 +1272,10 @@ class _DisclaimerCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: theme.colorScheme.tertiary),
+              Icon(
+                Icons.warning_amber_rounded,
+                color: theme.colorScheme.tertiary,
+              ),
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(

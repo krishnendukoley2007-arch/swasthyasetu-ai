@@ -24,7 +24,8 @@ class DualWaveformSweepMonitor extends StatefulWidget {
   });
 
   @override
-  State<DualWaveformSweepMonitor> createState() => _DualWaveformSweepMonitorState();
+  State<DualWaveformSweepMonitor> createState() =>
+      _DualWaveformSweepMonitorState();
 }
 
 class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
@@ -124,7 +125,9 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
         color: const Color(0xFF0F171A), // Medical dark cathode monitor color
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(
-          color: widget.isLive ? const Color(0xFF00E676) : const Color(0xFF37474F),
+          color: widget.isLive
+              ? const Color(0xFF00E676)
+              : const Color(0xFF37474F),
           width: widget.isLive ? 1.5 : 1.0,
         ),
         boxShadow: [
@@ -145,11 +148,17 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
               children: [
                 // Live/Sim & Lead badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1E293B),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: const Color(0xFF00E676), width: 0.8),
+                    border: Border.all(
+                      color: const Color(0xFF00E676),
+                      width: 0.8,
+                    ),
                   ),
                   child: Text(
                     '$_selectedLead · ${_is50mmSec ? '50 mm/s' : '25 mm/s'}',
@@ -175,7 +184,11 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.favorite_rounded, color: Color(0xFF00E676), size: 14),
+                    const Icon(
+                      Icons.favorite_rounded,
+                      color: Color(0xFF00E676),
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${widget.heartRate.round()}',
@@ -197,7 +210,11 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.air_rounded, color: Color(0xFF00E5FF), size: 14),
+                    const Icon(
+                      Icons.air_rounded,
+                      color: Color(0xFF00E5FF),
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${widget.spo2.round()}',
@@ -222,7 +239,9 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
           SizedBox(
             height: 180,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppTheme.radiusLg)),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(AppTheme.radiusLg),
+              ),
               child: CustomPaint(
                 painter: _DualWaveformSweepPainter(
                   ecgHistory: _ecgHistory,
@@ -242,14 +261,18 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: const BoxDecoration(
                 color: Color(0xFF0B1013),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(AppTheme.radiusLg)),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(AppTheme.radiusLg),
+                ),
               ),
               child: Row(
                 children: [
                   // Freeze / Run
                   IconButton(
                     icon: Icon(
-                      _isFrozen ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                      _isFrozen
+                          ? Icons.play_arrow_rounded
+                          : Icons.pause_rounded,
                       color: _isFrozen ? Colors.amber : Colors.white70,
                       size: 18,
                     ),
@@ -264,8 +287,12 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
                   // Grid Toggle
                   IconButton(
                     icon: Icon(
-                      _showGrid ? Icons.grid_on_rounded : Icons.grid_off_rounded,
-                      color: _showGrid ? const Color(0xFF00E676) : Colors.white38,
+                      _showGrid
+                          ? Icons.grid_on_rounded
+                          : Icons.grid_off_rounded,
+                      color: _showGrid
+                          ? const Color(0xFF00E676)
+                          : Colors.white38,
                       size: 18,
                     ),
                     tooltip: 'Toggle 25mm/s Grid',
@@ -289,7 +316,10 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
                     ),
                     child: Text(
                       _is50mmSec ? '50 mm/s' : '25 mm/s',
-                      style: const TextStyle(color: Colors.white70, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                   const Spacer(),
@@ -298,14 +328,24 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
                     initialValue: _selectedLead,
                     tooltip: 'Select ECG Lead',
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 4,
+                      ),
                       child: Row(
                         children: [
                           Text(
                             _selectedLead,
-                            style: const TextStyle(color: Colors.white70, fontSize: 11),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
                           ),
-                          const Icon(Icons.arrow_drop_down, color: Colors.white70, size: 16),
+                          const Icon(
+                            Icons.arrow_drop_down,
+                            color: Colors.white70,
+                            size: 16,
+                          ),
                         ],
                       ),
                     ),
@@ -315,9 +355,18 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
                       });
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(value: 'Lead I', child: Text('Lead I')),
-                      const PopupMenuItem(value: 'Lead II', child: Text('Lead II (Standard)')),
-                      const PopupMenuItem(value: 'Lead III', child: Text('Lead III')),
+                      const PopupMenuItem(
+                        value: 'Lead I',
+                        child: Text('Lead I'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'Lead II',
+                        child: Text('Lead II (Standard)'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'Lead III',
+                        child: Text('Lead III'),
+                      ),
                       const PopupMenuItem(value: 'aVR', child: Text('aVR')),
                     ],
                   ),

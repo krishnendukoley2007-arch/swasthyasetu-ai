@@ -24,8 +24,11 @@ class EmergencyContact {
   });
 
   String get initials {
-    final parts =
-        name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
     if (parts.isEmpty) return '?';
     if (parts.length == 1) {
       final first = parts.first;
@@ -40,15 +43,14 @@ class EmergencyContact {
     String? relation,
     bool? isPrimary,
     int? sortOrder,
-  }) =>
-      EmergencyContact(
-        id: id,
-        name: name ?? this.name,
-        phone: phone ?? this.phone,
-        relation: relation ?? this.relation,
-        isPrimary: isPrimary ?? this.isPrimary,
-        sortOrder: sortOrder ?? this.sortOrder,
-      );
+  }) => EmergencyContact(
+    id: id,
+    name: name ?? this.name,
+    phone: phone ?? this.phone,
+    relation: relation ?? this.relation,
+    isPrimary: isPrimary ?? this.isPrimary,
+    sortOrder: sortOrder ?? this.sortOrder,
+  );
 
   Map<String, dynamic> toJson() => {'name': name, 'phone': phone};
 }
@@ -61,22 +63,22 @@ enum SosTrigger {
   highRisk;
 
   String get storageValue => switch (this) {
-        SosTrigger.manual => 'MANUAL',
-        SosTrigger.fallDetected => 'FALL_DETECTED',
-        SosTrigger.highRisk => 'HIGH_RISK',
-      };
+    SosTrigger.manual => 'MANUAL',
+    SosTrigger.fallDetected => 'FALL_DETECTED',
+    SosTrigger.highRisk => 'HIGH_RISK',
+  };
 
   String get label => switch (this) {
-        SosTrigger.manual => 'Sent manually',
-        SosTrigger.fallDetected => 'Fall detected',
-        SosTrigger.highRisk => 'High-risk reading',
-      };
+    SosTrigger.manual => 'Sent manually',
+    SosTrigger.fallDetected => 'Fall detected',
+    SosTrigger.highRisk => 'High-risk reading',
+  };
 
   static SosTrigger fromStorage(String raw) => switch (raw) {
-        'FALL_DETECTED' => SosTrigger.fallDetected,
-        'HIGH_RISK' => SosTrigger.highRisk,
-        _ => SosTrigger.manual,
-      };
+    'FALL_DETECTED' => SosTrigger.fallDetected,
+    'HIGH_RISK' => SosTrigger.highRisk,
+    _ => SosTrigger.manual,
+  };
 }
 
 enum SosStatus {
@@ -85,22 +87,22 @@ enum SosStatus {
   failed;
 
   String get storageValue => switch (this) {
-        SosStatus.dispatched => 'DISPATCHED',
-        SosStatus.cancelled => 'CANCELLED',
-        SosStatus.failed => 'FAILED',
-      };
+    SosStatus.dispatched => 'DISPATCHED',
+    SosStatus.cancelled => 'CANCELLED',
+    SosStatus.failed => 'FAILED',
+  };
 
   String get label => switch (this) {
-        SosStatus.dispatched => 'Sent',
-        SosStatus.cancelled => 'Cancelled',
-        SosStatus.failed => 'Failed to send',
-      };
+    SosStatus.dispatched => 'Sent',
+    SosStatus.cancelled => 'Cancelled',
+    SosStatus.failed => 'Failed to send',
+  };
 
   static SosStatus fromStorage(String raw) => switch (raw) {
-        'CANCELLED' => SosStatus.cancelled,
-        'FAILED' => SosStatus.failed,
-        _ => SosStatus.dispatched,
-      };
+    'CANCELLED' => SosStatus.cancelled,
+    'FAILED' => SosStatus.failed,
+    _ => SosStatus.dispatched,
+  };
 }
 
 /// One entry in the SOS log: who was notified, when, for which reading.
@@ -221,47 +223,47 @@ class EmergencyRepository {
       _db.watchSosEvents().map((rows) => rows.map(_toEvent).toList());
 
   Future<void> logEvent(SosEvent event) => _db.insertSosEvent(
-        SosEventsCompanion.insert(
-          id: event.id,
-          trigger: event.trigger.storageValue,
-          triggeredAt: event.triggeredAt,
-          patientId: Value(event.patientId),
-          screeningId: Value(event.screeningId),
-          contactsNotified: Value(
-            jsonEncode(event.contactsNotified.map((c) => c.toJson()).toList()),
-          ),
-          message: Value(event.message),
-          status: Value(event.status.storageValue),
-          latitude: Value(event.latitude),
-          longitude: Value(event.longitude),
-        ),
-      );
+    SosEventsCompanion.insert(
+      id: event.id,
+      trigger: event.trigger.storageValue,
+      triggeredAt: event.triggeredAt,
+      patientId: Value(event.patientId),
+      screeningId: Value(event.screeningId),
+      contactsNotified: Value(
+        jsonEncode(event.contactsNotified.map((c) => c.toJson()).toList()),
+      ),
+      message: Value(event.message),
+      status: Value(event.status.storageValue),
+      latitude: Value(event.latitude),
+      longitude: Value(event.longitude),
+    ),
+  );
 
   Future<void> clearLog() => _db.clearSosEvents();
 
   // ───────────────────────────── Mapping ─────────────────────────────
 
   static EmergencyContact _toContact(EmergencyContactRow r) => EmergencyContact(
-        id: r.id,
-        name: r.name,
-        phone: r.phone,
-        relation: r.relation,
-        isPrimary: r.isPrimary,
-        sortOrder: r.sortOrder,
-      );
+    id: r.id,
+    name: r.name,
+    phone: r.phone,
+    relation: r.relation,
+    isPrimary: r.isPrimary,
+    sortOrder: r.sortOrder,
+  );
 
   static SosEvent _toEvent(SosEventRow r) => SosEvent(
-        id: r.id,
-        patientId: r.patientId,
-        screeningId: r.screeningId,
-        trigger: SosTrigger.fromStorage(r.trigger),
-        triggeredAt: r.triggeredAt,
-        contactsNotified: _decodeContacts(r.contactsNotified),
-        message: r.message,
-        status: SosStatus.fromStorage(r.status),
-        latitude: r.latitude,
-        longitude: r.longitude,
-      );
+    id: r.id,
+    patientId: r.patientId,
+    screeningId: r.screeningId,
+    trigger: SosTrigger.fromStorage(r.trigger),
+    triggeredAt: r.triggeredAt,
+    contactsNotified: _decodeContacts(r.contactsNotified),
+    message: r.message,
+    status: SosStatus.fromStorage(r.status),
+    latitude: r.latitude,
+    longitude: r.longitude,
+  );
 
   static List<EmergencyContact> _decodeContacts(String raw) {
     if (raw.isEmpty) return const [];

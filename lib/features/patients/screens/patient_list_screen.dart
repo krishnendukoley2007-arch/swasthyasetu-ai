@@ -117,8 +117,9 @@ class _SearchField extends StatefulWidget {
 }
 
 class _SearchFieldState extends State<_SearchField> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.value);
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.value,
+  );
 
   @override
   void dispose() {
@@ -173,7 +174,9 @@ class _ActiveFilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final labels = <String>[
-      ...query.riskLevels.map((r) => RiskStyle.ofStorage(r, context.l10n).label),
+      ...query.riskLevels.map(
+        (r) => RiskStyle.ofStorage(r, context.l10n).label,
+      ),
       ...query.vulnerabilityFlags
           .map((f) => Vulnerability.fromId(f)?.shortLabel)
           .whereType<String>(),
@@ -247,8 +250,9 @@ class _PatientCard extends StatelessWidget {
               children: [
                 Text(
                   patient.name,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -316,7 +320,8 @@ class _PatientCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: risk.color,
               borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(AppTheme.radiusSm)),
+                left: Radius.circular(AppTheme.radiusSm),
+              ),
             ),
           ),
         ),
@@ -462,11 +467,11 @@ class _FilterSheet extends ConsumerWidget {
   }
 
   static String _sortLabel(PatientSort sort) => switch (sort) {
-        PatientSort.recentlyScreened => 'Recently screened',
-        PatientSort.nameAsc => 'Name (A–Z)',
-        PatientSort.riskDesc => 'Highest risk',
-        PatientSort.neverScreened => 'Never screened',
-      };
+    PatientSort.recentlyScreened => 'Recently screened',
+    PatientSort.nameAsc => 'Name (A–Z)',
+    PatientSort.riskDesc => 'Highest risk',
+    PatientSort.neverScreened => 'Never screened',
+  };
 }
 
 class _EmptyState extends StatelessWidget {
@@ -513,13 +518,13 @@ class _LoadFailure extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AppEmptyState(
-        icon: Icons.error_outline_rounded,
-        title: 'Could not load patients',
-        subtitle: 'The local database did not respond. No data has been lost.',
-        action: AppOutlinedButton(
-          label: 'Try again',
-          onPressed: onRetry,
-          isExpanded: false,
-        ),
-      );
+    icon: Icons.error_outline_rounded,
+    title: 'Could not load patients',
+    subtitle: 'The local database did not respond. No data has been lost.',
+    action: AppOutlinedButton(
+      label: 'Try again',
+      onPressed: onRetry,
+      isExpanded: false,
+    ),
+  );
 }

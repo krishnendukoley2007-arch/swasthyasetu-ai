@@ -52,7 +52,9 @@ class PdfClinicalReportService {
       theme: pdfTheme,
     );
 
-    final dateStr = DateFormat('dd MMM yyyy, hh:mm a').format(screening.timestamp);
+    final dateStr = DateFormat(
+      'dd MMM yyyy, hh:mm a',
+    ).format(screening.timestamp);
     final isHighRisk = screening.riskLevel == 'high';
 
     pdf.addPage(
@@ -65,7 +67,10 @@ class PdfClinicalReportService {
             children: [
               // 1. Header (ABDM / NHM Government Format)
               pw.Container(
-                padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: const pw.EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
                 decoration: const pw.BoxDecoration(
                   color: PdfColors.blue900,
                   borderRadius: pw.BorderRadius.all(pw.Radius.circular(6)),
@@ -78,7 +83,7 @@ class PdfClinicalReportService {
                       children: [
                         pw.Text(
                           'MINISTRY OF HEALTH & FAMILY WELFARE · GOVT OF INDIA',
-                          style: pw.TextStyle(
+                          style: const pw.TextStyle(
                             color: PdfColors.white,
                             fontSize: 7.5,
                             fontWeight: pw.FontWeight.bold,
@@ -88,7 +93,7 @@ class PdfClinicalReportService {
                         pw.SizedBox(height: 2),
                         pw.Text(
                           'AYUSHMAN BHARAT DIGITAL MISSION (ABDM)',
-                          style: pw.TextStyle(
+                          style: const pw.TextStyle(
                             color: PdfColors.amber,
                             fontSize: 12,
                             fontWeight: pw.FontWeight.bold,
@@ -96,19 +101,27 @@ class PdfClinicalReportService {
                         ),
                         pw.Text(
                           facilityName,
-                          style: const pw.TextStyle(color: PdfColors.white, fontSize: 9),
+                          style: const pw.TextStyle(
+                            color: PdfColors.white,
+                            fontSize: 9,
+                          ),
                         ),
                       ],
                     ),
                     pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const pw.EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: pw.BoxDecoration(
                         color: isHighRisk ? PdfColors.red : PdfColors.green,
-                        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                        borderRadius: const pw.BorderRadius.all(
+                          pw.Radius.circular(4),
+                        ),
                       ),
                       child: pw.Text(
                         'TRIAGE: ${screening.riskLevel.toUpperCase()}',
-                        style: pw.TextStyle(
+                        style: const pw.TextStyle(
                           color: PdfColors.white,
                           fontWeight: pw.FontWeight.bold,
                           fontSize: 11,
@@ -127,7 +140,7 @@ class PdfClinicalReportService {
                 children: [
                   pw.Text(
                     'CLINICAL TELE-TRIAGE & DOCTOR REFERRAL SLIP',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                       fontSize: 13,
                       fontWeight: pw.FontWeight.bold,
                       color: PdfColors.blueGrey900,
@@ -135,7 +148,10 @@ class PdfClinicalReportService {
                   ),
                   pw.Text(
                     'Date: $dateStr',
-                    style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+                    style: const pw.TextStyle(
+                      fontSize: 9,
+                      color: PdfColors.grey700,
+                    ),
                   ),
                 ],
               ),
@@ -146,14 +162,20 @@ class PdfClinicalReportService {
               // 2. Patient Demographics Block
               pw.Text(
                 '1. PATIENT DEMOGRAPHICS & HEALTH IDENTIFIER',
-                style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900),
+                style: const pw.TextStyle(
+                  fontSize: 10,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.blue900,
+                ),
               ),
               pw.SizedBox(height: 4),
               pw.Container(
                 padding: const pw.EdgeInsets.all(8),
                 decoration: pw.BoxDecoration(
                   border: pw.Border.all(color: PdfColors.grey300),
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(4),
+                  ),
                   color: PdfColors.grey100,
                 ),
                 child: pw.Row(
@@ -162,24 +184,46 @@ class PdfClinicalReportService {
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text('Name: ${patient.name}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                        pw.Text(
+                          'Name: ${patient.name}',
+                          style: const pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
                         pw.SizedBox(height: 2),
-                        pw.Text('Age: ${patient.age} yrs  |  Sex: ${patient.sex}', style: const pw.TextStyle(fontSize: 9)),
+                        pw.Text(
+                          'Age: ${patient.age} yrs  |  Sex: ${patient.sex}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
                         pw.SizedBox(height: 2),
-                        pw.Text('Phone: ${patient.phone ?? 'Not provided'}', style: const pw.TextStyle(fontSize: 9)),
+                        pw.Text(
+                          'Phone: ${patient.phone ?? 'Not provided'}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
                       ],
                     ),
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         pw.Text(
-                            'ABHA ID: ${patient.notes?.contains('ABHA:') == true ? patient.notes!.split('ABHA:').last.trim() : '91-8421-9034-7712'}',
-                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.blue800)),
+                          'ABHA ID: ${patient.notes?.contains('ABHA:') == true ? patient.notes!.split('ABHA:').last.trim() : '91-8421-9034-7712'}',
+                          style: const pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 10,
+                            color: PdfColors.blue800,
+                          ),
+                        ),
                         pw.SizedBox(height: 2),
-                        pw.Text('Screening ID: ${screening.id.substring(0, 8)}', style: const pw.TextStyle(fontSize: 9)),
+                        pw.Text(
+                          'Screening ID: ${screening.id.substring(0, 8)}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
                         pw.SizedBox(height: 2),
-                        pw.Text('Mode: ${screening.isDemo ? 'Clinical Simulator' : 'Live Sensor BLE'}',
-                            style: const pw.TextStyle(fontSize: 9)),
+                        pw.Text(
+                          'Mode: ${screening.isDemo ? 'Clinical Simulator' : 'Live Sensor BLE'}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
                       ],
                     ),
                   ],
@@ -191,14 +235,23 @@ class PdfClinicalReportService {
               // 3. Clinical Vitals Summary Table
               pw.Text(
                 '2. PHYSIOLOGICAL VITALS RECORDING',
-                style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900),
+                style: const pw.TextStyle(
+                  fontSize: 10,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.blue900,
+                ),
               ),
               pw.SizedBox(height: 4),
               pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.8),
+                border: pw.TableBorder.all(
+                  color: PdfColors.grey300,
+                  width: 0.8,
+                ),
                 children: [
                   pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                    decoration: const pw.BoxDecoration(
+                      color: PdfColors.grey200,
+                    ),
                     children: [
                       _buildTableCell('Parameter', isHeader: true),
                       _buildTableCell('Observed Value', isHeader: true),
@@ -206,59 +259,93 @@ class PdfClinicalReportService {
                       _buildTableCell('Status', isHeader: true),
                     ],
                   ),
-                  pw.TableRow(children: [
-                    _buildTableCell('Heart Rate (Pulse)'),
-                    _buildTableCell('${screening.heartRate} bpm'),
-                    _buildTableCell('60 - 100 bpm'),
-                    _buildTableCell(
-                      screening.heartRate > 100 ? 'Tachycardia' : (screening.heartRate < 55 ? 'Bradycardia' : 'Normal'),
-                      color: screening.heartRate > 100 ? PdfColors.red700 : PdfColors.green800,
-                    ),
-                  ]),
-                  pw.TableRow(children: [
-                    _buildTableCell('Blood Oxygen (SpO2)'),
-                    _buildTableCell('${screening.spo2} %'),
-                    _buildTableCell('95 - 100 %'),
-                    _buildTableCell(
-                      screening.spo2 < 92 ? 'Hypoxemia' : 'Normal',
-                      color: screening.spo2 < 92 ? PdfColors.red700 : PdfColors.green800,
-                    ),
-                  ]),
-                  pw.TableRow(children: [
-                    _buildTableCell('Body Temperature'),
-                    _buildTableCell('${screening.temperature.toStringAsFixed(1)} C'),
-                    _buildTableCell('36.1 - 37.2 C'),
-                    _buildTableCell(
-                      screening.temperature >= 38.0 ? 'Febrile / Fever' : 'Normal',
-                      color: screening.temperature >= 38.0 ? PdfColors.orange800 : PdfColors.green800,
-                    ),
-                  ]),
-                  pw.TableRow(children: [
-                    _buildTableCell('Blood Pressure (Systolic/Diastolic)'),
-                    _buildTableCell(screening.estimatedSystolic > 0
-                        ? '${screening.estimatedSystolic} / ${screening.estimatedDiastolic} mmHg'
-                        : 'Not recorded'),
-                    _buildTableCell('< 120 / < 80 mmHg'),
-                    _buildTableCell(
-                      screening.estimatedSystolic >= 140
-                          ? 'Hypertensive'
-                          : (screening.estimatedSystolic > 0 ? 'Normal' : '-'),
-                      color: screening.estimatedSystolic >= 140 ? PdfColors.red700 : PdfColors.green800,
-                    ),
-                  ]),
-                  pw.TableRow(children: [
-                    _buildTableCell('Blood Glucose (Estimated Non-invasive)'),
-                    _buildTableCell(screening.estimatedGlucose > 0
-                        ? '${screening.estimatedGlucose} mg/dL'
-                        : 'Not recorded'),
-                    _buildTableCell('70 - 140 mg/dL'),
-                    _buildTableCell(
-                      screening.estimatedGlucose > 180
-                          ? 'Hyperglycemic'
-                          : (screening.estimatedGlucose > 0 ? 'Normal' : '-'),
-                      color: screening.estimatedGlucose > 180 ? PdfColors.orange800 : PdfColors.green800,
-                    ),
-                  ]),
+                  pw.TableRow(
+                    children: [
+                      _buildTableCell('Heart Rate (Pulse)'),
+                      _buildTableCell('${screening.heartRate} bpm'),
+                      _buildTableCell('60 - 100 bpm'),
+                      _buildTableCell(
+                        screening.heartRate > 100
+                            ? 'Tachycardia'
+                            : (screening.heartRate < 55
+                                  ? 'Bradycardia'
+                                  : 'Normal'),
+                        color: screening.heartRate > 100
+                            ? PdfColors.red700
+                            : PdfColors.green800,
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      _buildTableCell('Blood Oxygen (SpO2)'),
+                      _buildTableCell('${screening.spo2} %'),
+                      _buildTableCell('95 - 100 %'),
+                      _buildTableCell(
+                        screening.spo2 < 92 ? 'Hypoxemia' : 'Normal',
+                        color: screening.spo2 < 92
+                            ? PdfColors.red700
+                            : PdfColors.green800,
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      _buildTableCell('Body Temperature'),
+                      _buildTableCell(
+                        '${screening.temperature.toStringAsFixed(1)} C',
+                      ),
+                      _buildTableCell('36.1 - 37.2 C'),
+                      _buildTableCell(
+                        screening.temperature >= 38.0
+                            ? 'Febrile / Fever'
+                            : 'Normal',
+                        color: screening.temperature >= 38.0
+                            ? PdfColors.orange800
+                            : PdfColors.green800,
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      _buildTableCell('Blood Pressure (Systolic/Diastolic)'),
+                      _buildTableCell(
+                        screening.estimatedSystolic > 0
+                            ? '${screening.estimatedSystolic} / ${screening.estimatedDiastolic} mmHg'
+                            : 'Not recorded',
+                      ),
+                      _buildTableCell('< 120 / < 80 mmHg'),
+                      _buildTableCell(
+                        screening.estimatedSystolic >= 140
+                            ? 'Hypertensive'
+                            : (screening.estimatedSystolic > 0
+                                  ? 'Normal'
+                                  : '-'),
+                        color: screening.estimatedSystolic >= 140
+                            ? PdfColors.red700
+                            : PdfColors.green800,
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      _buildTableCell('Blood Glucose (Estimated Non-invasive)'),
+                      _buildTableCell(
+                        screening.estimatedGlucose > 0
+                            ? '${screening.estimatedGlucose} mg/dL'
+                            : 'Not recorded',
+                      ),
+                      _buildTableCell('70 - 140 mg/dL'),
+                      _buildTableCell(
+                        screening.estimatedGlucose > 180
+                            ? 'Hyperglycemic'
+                            : (screening.estimatedGlucose > 0 ? 'Normal' : '-'),
+                        color: screening.estimatedGlucose > 180
+                            ? PdfColors.orange800
+                            : PdfColors.green800,
+                      ),
+                    ],
+                  ),
                 ],
               ),
 
@@ -267,7 +354,11 @@ class PdfClinicalReportService {
               // 4. Lead II ECG Rhythm Strip Representation
               pw.Text(
                 '3. LEAD II ECG WAVEFORM STRIP (25 mm/s, 10 mm/mV Calibration)',
-                style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900),
+                style: const pw.TextStyle(
+                  fontSize: 10,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.blue900,
+                ),
               ),
               pw.SizedBox(height: 4),
               pw.Container(
@@ -282,10 +373,29 @@ class PdfClinicalReportService {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: pw.CrossAxisAlignment.center,
                   children: [
-                    pw.Text('II', style: pw.TextStyle(color: PdfColors.greenAccent, fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                    pw.Text('-^v^--^v^--^v^--^v^--^v^--^v^--^v^--^v^--^v^--^v^-',
-                        style: pw.TextStyle(color: PdfColors.greenAccent, fontSize: 13, letterSpacing: 1.2)),
-                    pw.Text('25mm/s 10mm/mV', style: const pw.TextStyle(color: PdfColors.white, fontSize: 8)),
+                    pw.Text(
+                      'II',
+                      style: const pw.TextStyle(
+                        color: PdfColors.greenAccent,
+                        fontSize: 10,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.Text(
+                      '-^v^--^v^--^v^--^v^--^v^--^v^--^v^--^v^--^v^--^v^-',
+                      style: const pw.TextStyle(
+                        color: PdfColors.greenAccent,
+                        fontSize: 13,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    pw.Text(
+                      '25mm/s 10mm/mV',
+                      style: const pw.TextStyle(
+                        color: PdfColors.white,
+                        fontSize: 8,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -295,15 +405,23 @@ class PdfClinicalReportService {
               // 5. Algorithmic Clinical Assessment & Rules
               pw.Text(
                 '4. CLINICAL DECISION SUPPORT & ESCALATION RULES',
-                style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900),
+                style: const pw.TextStyle(
+                  fontSize: 10,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.blue900,
+                ),
               ),
               pw.SizedBox(height: 4),
               pw.Container(
                 padding: const pw.EdgeInsets.all(8),
                 decoration: pw.BoxDecoration(
-                  border: pw.Border.all(color: isHighRisk ? PdfColors.red300 : PdfColors.green300),
+                  border: pw.Border.all(
+                    color: isHighRisk ? PdfColors.red300 : PdfColors.green300,
+                  ),
                   color: isHighRisk ? PdfColors.red50 : PdfColors.green50,
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(4),
+                  ),
                 ),
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -312,7 +430,9 @@ class PdfClinicalReportService {
                       'Triage Risk Score: ${screening.riskScore} / 100  |  Category: ${screening.riskLevel.toUpperCase()}',
                       style: pw.TextStyle(
                         fontWeight: pw.FontWeight.bold,
-                        color: isHighRisk ? PdfColors.red900 : PdfColors.green900,
+                        color: isHighRisk
+                            ? PdfColors.red900
+                            : PdfColors.green900,
                         fontSize: 10,
                       ),
                     ),
@@ -320,11 +440,19 @@ class PdfClinicalReportService {
                     if (screening.triggeredRules.isNotEmpty)
                       pw.Text(
                         'Triggered Rules: ${screening.triggeredRules.join(' · ')}',
-                        style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey800),
+                        style: const pw.TextStyle(
+                          fontSize: 9,
+                          color: PdfColors.grey800,
+                        ),
                       )
                     else
-                      pw.Text('No critical alert rules triggered. Patient hemodynamically stable.',
-                          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey800)),
+                      pw.Text(
+                        'No critical alert rules triggered. Patient hemodynamically stable.',
+                        style: const pw.TextStyle(
+                          fontSize: 9,
+                          color: PdfColors.grey800,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -338,19 +466,51 @@ class PdfClinicalReportService {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Container(width: 140, height: 1, color: PdfColors.grey600),
+                      pw.Container(
+                        width: 140,
+                        height: 1,
+                        color: PdfColors.grey600,
+                      ),
                       pw.SizedBox(height: 4),
-                      pw.Text(ashaWorkerName, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                      pw.Text('ASHA / Frontline Community Screener', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
+                      pw.Text(
+                        ashaWorkerName,
+                        style: const pw.TextStyle(
+                          fontSize: 9,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                      pw.Text(
+                        'ASHA / Frontline Community Screener',
+                        style: const pw.TextStyle(
+                          fontSize: 8,
+                          color: PdfColors.grey700,
+                        ),
+                      ),
                     ],
                   ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Container(width: 160, height: 1, color: PdfColors.grey600),
+                      pw.Container(
+                        width: 160,
+                        height: 1,
+                        color: PdfColors.grey600,
+                      ),
                       pw.SizedBox(height: 4),
-                      pw.Text('Medical Officer (MBBS) / CHC Sign-off', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                      pw.Text('Stamp & Registration No.', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
+                      pw.Text(
+                        'Medical Officer (MBBS) / CHC Sign-off',
+                        style: const pw.TextStyle(
+                          fontSize: 9,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                      pw.Text(
+                        'Stamp & Registration No.',
+                        style: const pw.TextStyle(
+                          fontSize: 8,
+                          color: PdfColors.grey700,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -359,7 +519,10 @@ class PdfClinicalReportService {
               pw.Center(
                 child: pw.Text(
                   'Generated offline via SwasthyaSetu AI · Ayushman Bharat Digital Mission compliant tele-triage',
-                  style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey500),
+                  style: const pw.TextStyle(
+                    fontSize: 7.5,
+                    color: PdfColors.grey500,
+                  ),
                 ),
               ),
             ],
@@ -383,7 +546,8 @@ class PdfClinicalReportService {
 
     final tempDir = await getTemporaryDirectory();
     final sanitizedName = patient.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-    final filePath = '${tempDir.path}/Referral_Slip_${sanitizedName}_${screening.id.substring(0, 6)}.pdf';
+    final filePath =
+        '${tempDir.path}/Referral_Slip_${sanitizedName}_${screening.id.substring(0, 6)}.pdf';
     final file = File(filePath);
     await file.writeAsBytes(pdfBytes, flush: true);
 
@@ -396,7 +560,11 @@ class PdfClinicalReportService {
     );
   }
 
-  static pw.Widget _buildTableCell(String text, {bool isHeader = false, PdfColor? color}) {
+  static pw.Widget _buildTableCell(
+    String text, {
+    bool isHeader = false,
+    PdfColor? color,
+  }) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       child: pw.Text(

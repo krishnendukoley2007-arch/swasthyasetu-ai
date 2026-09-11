@@ -58,18 +58,21 @@ class AppBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final effectiveColor = color ?? theme.colorScheme.primary;
-    final effectiveBackgroundColor = backgroundColor ?? effectiveColor.withValues(alpha: 0.1);
+    final effectiveBackgroundColor =
+        backgroundColor ?? effectiveColor.withValues(alpha: 0.1);
     final effectiveTextColor = textColor ?? effectiveColor;
 
     Widget badge = Container(
-      padding: padding ??
+      padding:
+          padding ??
           const EdgeInsets.symmetric(
             horizontal: AppTheme.spacingSm,
             vertical: AppTheme.spacingXs,
           ),
       decoration: BoxDecoration(
         color: effectiveBackgroundColor,
-        borderRadius: borderRadius ?? BorderRadius.circular(AppTheme.radiusFull),
+        borderRadius:
+            borderRadius ?? BorderRadius.circular(AppTheme.radiusFull),
         border: border != null ? Border.fromBorderSide(border!) : null,
       ),
       child: Row(
@@ -101,7 +104,8 @@ class AppBadge extends StatelessWidget {
         padding: padding ?? const EdgeInsets.all(AppTheme.spacingXs),
         decoration: BoxDecoration(
           color: effectiveBackgroundColor,
-          borderRadius: borderRadius ?? BorderRadius.circular(AppTheme.radiusFull),
+          borderRadius:
+              borderRadius ?? BorderRadius.circular(AppTheme.radiusFull),
           border: border != null ? Border.fromBorderSide(border!) : null,
         ),
         child: Row(
@@ -176,7 +180,8 @@ class AppAnimatedBadge extends StatefulWidget {
   State<AppAnimatedBadge> createState() => _AppAnimatedBadgeState();
 }
 
-class _AppAnimatedBadgeState extends State<AppAnimatedBadge> with SingleTickerProviderStateMixin {
+class _AppAnimatedBadgeState extends State<AppAnimatedBadge>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -289,13 +294,7 @@ class AppStatusBadge extends StatelessWidget {
   }
 }
 
-enum AppStatusType {
-  success,
-  warning,
-  error,
-  info,
-  neutral,
-}
+enum AppStatusType { success, warning, error, info, neutral }
 
 class AppRiskBadge extends StatefulWidget {
   final String riskLevel;
@@ -317,7 +316,8 @@ class AppRiskBadge extends StatefulWidget {
   State<AppRiskBadge> createState() => _AppRiskBadgeState();
 }
 
-class _AppRiskBadgeState extends State<AppRiskBadge> with SingleTickerProviderStateMixin {
+class _AppRiskBadgeState extends State<AppRiskBadge>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
@@ -335,7 +335,7 @@ class _AppRiskBadgeState extends State<AppRiskBadge> with SingleTickerProviderSt
     _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: AppTheme.curveDecelerate),
     );
-    
+
     if (widget.animate) {
       _controller.forward();
     } else {
@@ -471,11 +471,15 @@ class _AppRiskBadgeState extends State<AppRiskBadge> with SingleTickerProviderSt
           scale: _scaleAnimation.value,
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(widget.isCompact ? AppTheme.radiusFull : AppTheme.radiusLg),
+              borderRadius: BorderRadius.circular(
+                widget.isCompact ? AppTheme.radiusFull : AppTheme.radiusLg,
+              ),
               boxShadow: _glowAnimation.value > 0
                   ? [
                       BoxShadow(
-                        color: color.withValues(alpha: 0.3 * _glowAnimation.value),
+                        color: color.withValues(
+                          alpha: 0.3 * _glowAnimation.value,
+                        ),
                         blurRadius: 16 * _glowAnimation.value,
                         spreadRadius: 2 * _glowAnimation.value,
                       ),
@@ -516,7 +520,8 @@ class AppMetricBadge extends StatefulWidget {
   State<AppMetricBadge> createState() => _AppMetricBadgeState();
 }
 
-class _AppMetricBadgeState extends State<AppMetricBadge> with SingleTickerProviderStateMixin {
+class _AppMetricBadgeState extends State<AppMetricBadge>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
@@ -534,7 +539,7 @@ class _AppMetricBadgeState extends State<AppMetricBadge> with SingleTickerProvid
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: AppTheme.curveDecelerate),
     );
-    
+
     if (widget.animate) {
       _controller.forward();
     } else {
@@ -558,7 +563,9 @@ class _AppMetricBadgeState extends State<AppMetricBadge> with SingleTickerProvid
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
-          padding: EdgeInsets.all(widget.isLarge ? AppTheme.spacingMd : AppTheme.spacingSm),
+          padding: EdgeInsets.all(
+            widget.isLarge ? AppTheme.spacingMd : AppTheme.spacingSm,
+          ),
           decoration: BoxDecoration(
             color: effectiveColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -567,7 +574,11 @@ class _AppMetricBadgeState extends State<AppMetricBadge> with SingleTickerProvid
             mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.icon != null) ...[
-                Icon(widget.icon, size: widget.isLarge ? 24 : 18, color: effectiveColor),
+                Icon(
+                  widget.icon,
+                  size: widget.isLarge ? 24 : 18,
+                  color: effectiveColor,
+                ),
                 const SizedBox(height: AppTheme.spacingXs),
               ],
               RichText(
@@ -635,7 +646,8 @@ class AppPillLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final effectiveColor = color ?? theme.colorScheme.primary;
-    final effectiveBackgroundColor = backgroundColor ??
+    final effectiveBackgroundColor =
+        backgroundColor ??
         (isSelected ? effectiveColor : effectiveColor.withValues(alpha: 0.1));
     final effectiveTextColor = isSelected ? Colors.white : effectiveColor;
 

@@ -42,9 +42,7 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
       final granted = await ref
           .read(environmentServiceProvider)
           .requestLocationPermission();
-      await ref
-          .read(settingsProvider.notifier)
-          .setEnvLocationConsent(granted);
+      await ref.read(settingsProvider.notifier).setEnvLocationConsent(granted);
       // The provider watches consent — invalidation makes it fetch now rather
       // than on the next build cycle.
       ref.invalidate(environmentProvider);
@@ -87,27 +85,27 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
           theme,
           icon: switch (failure) {
             EnvFailure.locationServicesOff ||
-            EnvFailure.permissionBlocked =>
-              Icons.location_off_rounded,
+            EnvFailure.permissionBlocked => Icons.location_off_rounded,
             _ => Icons.cloud_off_rounded,
           },
           title: failure?.title ?? 'No weather data yet',
-          body: failure?.detail ??
+          body:
+              failure?.detail ??
               'Needs a moment of internet once; after that the last reading '
                   'keeps working offline.',
           action: switch (failure) {
             EnvFailure.locationServicesOff => AppTextButton(
-                label: 'Turn on',
-                onPressed: () => Geolocator.openLocationSettings(),
-              ),
+              label: 'Turn on',
+              onPressed: () => Geolocator.openLocationSettings(),
+            ),
             EnvFailure.permissionBlocked => AppTextButton(
-                label: 'Settings',
-                onPressed: () => Geolocator.openAppSettings(),
-              ),
+              label: 'Settings',
+              onPressed: () => Geolocator.openAppSettings(),
+            ),
             _ => AppTextButton(
-                label: 'Retry',
-                onPressed: () => ref.invalidate(environmentProvider),
-              ),
+              label: 'Retry',
+              onPressed: () => ref.invalidate(environmentProvider),
+            ),
           },
         );
       },
@@ -122,14 +120,18 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
         children: [
           Row(
             children: [
-              Icon(Icons.thermostat_rounded,
-                  color: theme.colorScheme.tertiary, size: 26),
+              Icon(
+                Icons.thermostat_rounded,
+                color: theme.colorScheme.tertiary,
+                size: 26,
+              ),
               const AppSpacing.hmd(),
               Expanded(
                 child: Text(
                   'Heat & air alerts for your area',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -163,29 +165,29 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
 
     final (levelColor, levelBg) = switch (worst?.level) {
       AdvisoryLevel.danger => (
-          theme.colorScheme.onErrorContainer,
-          theme.colorScheme.errorContainer
-        ),
+        theme.colorScheme.onErrorContainer,
+        theme.colorScheme.errorContainer,
+      ),
       AdvisoryLevel.warning => (
-          theme.colorScheme.onErrorContainer,
-          theme.colorScheme.errorContainer
-        ),
+        theme.colorScheme.onErrorContainer,
+        theme.colorScheme.errorContainer,
+      ),
       AdvisoryLevel.advice => (
-          theme.colorScheme.onTertiaryContainer,
-          theme.colorScheme.tertiaryContainer
-        ),
+        theme.colorScheme.onTertiaryContainer,
+        theme.colorScheme.tertiaryContainer,
+      ),
       AdvisoryLevel.info || null => (
-          theme.colorScheme.onPrimaryContainer,
-          theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
-        ),
+        theme.colorScheme.onPrimaryContainer,
+        theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+      ),
     };
 
     final age = DateTime.now().difference(r.fetchedAt);
     final ageText = age.inMinutes < 1
         ? 'just now'
         : age.inMinutes < 60
-            ? '${age.inMinutes} min ago'
-            : '${age.inHours} h ago';
+        ? '${age.inMinutes} min ago'
+        : '${age.inHours} h ago';
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -197,18 +199,24 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
           children: [
             Row(
               children: [
-                Icon(Icons.thermostat_rounded,
-                    color: theme.colorScheme.tertiary, size: 26),
+                Icon(
+                  Icons.thermostat_rounded,
+                  color: theme.colorScheme.tertiary,
+                  size: 26,
+                ),
                 const AppSpacing.hmd(),
                 Expanded(
                   child: Text(
                     'Around you now',
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded,
-                    color: theme.colorScheme.onSurfaceVariant),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ],
             ),
             const AppSpacing.vmd(),
@@ -223,10 +231,7 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
                         ? theme.colorScheme.error
                         : theme.colorScheme.tertiary,
                   ),
-                AppBadge(
-                  label: r.weatherDescription,
-                  icon: _getWeatherIcon(r),
-                ),
+                AppBadge(label: r.weatherDescription, icon: _getWeatherIcon(r)),
                 if (r.precipitationMm > 0)
                   AppBadge(
                     label: '${r.precipitationMm.toStringAsFixed(1)} mm rain',
@@ -241,9 +246,7 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
                   icon: Icons.water_drop_outlined,
                 ),
                 AppBadge(
-                  label: r.aqiUs != null
-                      ? 'AQI ${r.aqiUs}'
-                      : 'AQI unavailable',
+                  label: r.aqiUs != null ? 'AQI ${r.aqiUs}' : 'AQI unavailable',
                   icon: Icons.air_rounded,
                 ),
               ],
@@ -290,9 +293,7 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
             ],
             const AppSpacing.vsm(),
             Text(
-              r.isLive
-                  ? 'Live · updated $ageText'
-                  : 'Offline · from $ageText',
+              r.isLive ? 'Live · updated $ageText' : 'Offline · from $ageText',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -303,11 +304,13 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
     );
   }
 
-  Widget _shell(ThemeData theme,
-      {required IconData icon,
-      required String title,
-      String? body,
-      Widget? action}) {
+  Widget _shell(
+    ThemeData theme, {
+    required IconData icon,
+    required String title,
+    String? body,
+    Widget? action,
+  }) {
     return AppCard(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       child: Column(
@@ -318,9 +321,12 @@ class _EnvironmentCardState extends ConsumerState<EnvironmentCard> {
               Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 24),
               const AppSpacing.hmd(),
               Expanded(
-                child: Text(title,
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w600)),
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               if (action != null) action,
             ],

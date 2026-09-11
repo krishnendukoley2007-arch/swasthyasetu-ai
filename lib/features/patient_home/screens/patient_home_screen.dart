@@ -41,8 +41,9 @@ class PatientHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(
           context.l10n.patientHomeTitle,
-          style:
-              theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
         ),
         actions: [_buildMenu(context, ref)],
         elevation: 0,
@@ -119,8 +120,8 @@ class PatientHomeScreen extends ConsumerWidget {
     final greeting = hour < 12
         ? context.l10n.greetingMorning
         : hour < 17
-            ? context.l10n.greetingAfternoon
-            : context.l10n.greetingEvening;
+        ? context.l10n.greetingAfternoon
+        : context.l10n.greetingEvening;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,8 +136,9 @@ class PatientHomeScreen extends ConsumerWidget {
         const AppSpacing.vxs(),
         Text(
           context.l10n.patientHomeTagline,
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -152,8 +154,9 @@ class PatientHomeScreen extends ConsumerWidget {
   Widget _buildTodayCard(BuildContext context, WidgetRef ref, Patient patient) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
-    final screenings =
-        ref.watch(patientScreeningsProvider(patient.id)).valueOrNull;
+    final screenings = ref
+        .watch(patientScreeningsProvider(patient.id))
+        .valueOrNull;
     final now = DateTime.now();
     Screening? today;
     if (screenings != null) {
@@ -191,14 +194,14 @@ class PatientHomeScreen extends ConsumerWidget {
               label: l10n.todayStartCheck,
               icon: const Icon(Icons.play_arrow_rounded),
               minHeight: 60,
-              onPressed: () => _startSelfCheck(context, ref, patient,
-                  demo: false),
+              onPressed: () =>
+                  _startSelfCheck(context, ref, patient, demo: false),
             ),
             Center(
               child: AppTextButton(
                 label: l10n.screeningUseDemoDevice,
-                onPressed: () => _startSelfCheck(context, ref, patient,
-                    demo: true),
+                onPressed: () =>
+                    _startSelfCheck(context, ref, patient, demo: true),
               ),
             ),
           ],
@@ -261,7 +264,8 @@ class PatientHomeScreen extends ConsumerWidget {
                 foregroundColor: theme.colorScheme.onError,
               ),
               onPressed: () => context.push(
-                  '/emergency/sos?patientId=${patient.id}&screeningId=${today!.id}'),
+                '/emergency/sos?patientId=${patient.id}&screeningId=${today!.id}',
+              ),
             )
           else
             AppButton(
@@ -278,7 +282,10 @@ class PatientHomeScreen extends ConsumerWidget {
   // ───────────────────────────── Device / self-check ─────────────────────────────
 
   Widget _buildDeviceCard(
-      BuildContext context, WidgetRef ref, Patient patient) {
+    BuildContext context,
+    WidgetRef ref,
+    Patient patient,
+  ) {
     final theme = Theme.of(context);
     final link = ref.watch(bleLinkProvider);
     final isLive = link.status == BleLinkStatus.streaming;
@@ -287,8 +294,7 @@ class PatientHomeScreen extends ConsumerWidget {
       BleLinkStatus.connecting ||
       BleLinkStatus.discovering ||
       BleLinkStatus.handshaking ||
-      BleLinkStatus.reconnecting =>
-        true,
+      BleLinkStatus.reconnecting => true,
       _ => false,
     };
 
@@ -302,10 +308,11 @@ class PatientHomeScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(AppTheme.spacingMd),
                 decoration: BoxDecoration(
-                  color: (isLive
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.outlineVariant)
-                      .withValues(alpha: isLive ? 0.15 : 0.3),
+                  color:
+                      (isLive
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.outlineVariant)
+                          .withValues(alpha: isLive ? 0.15 : 0.3),
                   borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                 ),
                 child: Icon(
@@ -327,10 +334,11 @@ class PatientHomeScreen extends ConsumerWidget {
                       isLive
                           ? (link.deviceName ?? 'SwasthyaSetu device')
                           : isBusy
-                              ? context.l10n.deviceConnecting
-                              : context.l10n.deviceNotConnected,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                          ? context.l10n.deviceConnecting
+                          : context.l10n.deviceNotConnected,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -338,11 +346,13 @@ class PatientHomeScreen extends ConsumerWidget {
                     Text(
                       isLive
                           ? (link.batteryPercent != null
-                              ? context.l10n.deviceReadyBattery(link.batteryPercent!)
-                              : context.l10n.deviceKeepNearby)
+                                ? context.l10n.deviceReadyBattery(
+                                    link.batteryPercent!,
+                                  )
+                                : context.l10n.deviceKeepNearby)
                           : isBusy
-                              ? context.l10n.deviceKeepNearby
-                              : context.l10n.deviceConnectHint,
+                          ? context.l10n.deviceKeepNearby
+                          : context.l10n.deviceConnectHint,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -354,17 +364,20 @@ class PatientHomeScreen extends ConsumerWidget {
           ),
           const AppSpacing.vlg(),
           AppButton(
-            label: isLive ? context.l10n.startHealthCheck : context.l10n.connectMyDevice,
+            label: isLive
+                ? context.l10n.startHealthCheck
+                : context.l10n.connectMyDevice,
             icon: Icon(
-                isLive
-                    ? Icons.monitor_heart_rounded
-                    : Icons.bluetooth_searching_rounded,
-                size: 24),
+              isLive
+                  ? Icons.monitor_heart_rounded
+                  : Icons.bluetooth_searching_rounded,
+              size: 24,
+            ),
             onPressed: isBusy
                 ? null
                 : () => isLive
-                    ? _startSelfCheck(context, ref, patient, demo: false)
-                    : context.go('/my-device'),
+                      ? _startSelfCheck(context, ref, patient, demo: false)
+                      : context.go('/my-device'),
             minHeight: 56,
           ),
           if (!isLive) ...[
@@ -372,8 +385,8 @@ class PatientHomeScreen extends ConsumerWidget {
             Center(
               child: AppTextButton(
                 label: context.l10n.tryWithDemoData,
-                onPressed: () => _startSelfCheck(context, ref, patient,
-                    demo: true),
+                onPressed: () =>
+                    _startSelfCheck(context, ref, patient, demo: true),
               ),
             ),
           ],
@@ -416,10 +429,14 @@ class PatientHomeScreen extends ConsumerWidget {
   // ───────────────────────────── Latest result ─────────────────────────────
 
   Widget _buildLatestResult(
-      BuildContext context, WidgetRef ref, Patient patient) {
+    BuildContext context,
+    WidgetRef ref,
+    Patient patient,
+  ) {
     final theme = Theme.of(context);
-    final screenings =
-        ref.watch(patientScreeningsProvider(patient.id)).valueOrNull;
+    final screenings = ref
+        .watch(patientScreeningsProvider(patient.id))
+        .valueOrNull;
     final latest = (screenings == null || screenings.isEmpty)
         ? null
         : screenings.first;
@@ -429,7 +446,7 @@ class PatientHomeScreen extends ConsumerWidget {
       children: [
         AppSectionHeader(
           title: context.l10n.myLatestResult,
-          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         ),
         const AppSpacing.vsm(),
         AppCard(
@@ -437,13 +454,17 @@ class PatientHomeScreen extends ConsumerWidget {
           child: latest == null
               ? Column(
                   children: [
-                    Icon(Icons.monitor_heart_outlined,
-                        size: 42, color: theme.colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.monitor_heart_outlined,
+                      size: 42,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     const AppSpacing.vmd(),
                     Text(
                       context.l10n.noChecksYet,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const AppSpacing.vxs(),
                     Text(
@@ -481,19 +502,43 @@ class PatientHomeScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                            child: _vital(context, context.l10n.vitalHeartRate,
-                                latest.heartRate, 'bpm', Icons.favorite_rounded)),
+                          child: _vital(
+                            context,
+                            context.l10n.vitalHeartRate,
+                            latest.heartRate,
+                            'bpm',
+                            Icons.favorite_rounded,
+                          ),
+                        ),
                         Expanded(
-                            child: _vital(context, context.l10n.vitalSpo2, latest.spo2, '%',
-                                Icons.air_rounded)),
+                          child: _vital(
+                            context,
+                            context.l10n.vitalSpo2,
+                            latest.spo2,
+                            '%',
+                            Icons.air_rounded,
+                          ),
+                        ),
                         Expanded(
-                            child: _vital(context, context.l10n.vitalTemperature, latest.temperature,
-                                '°C', Icons.thermostat_rounded,
-                                digits: 1)),
+                          child: _vital(
+                            context,
+                            context.l10n.vitalTemperature,
+                            latest.temperature,
+                            '°C',
+                            Icons.thermostat_rounded,
+                            digits: 1,
+                          ),
+                        ),
                         if (latest.hasGlucoseEstimate)
                           Expanded(
-                              child: _vital(context, context.l10n.vitalGlucose, latest.estimatedGlucose,
-                                  'mg/dL', Icons.water_drop_outlined)),
+                            child: _vital(
+                              context,
+                              context.l10n.vitalGlucose,
+                              latest.estimatedGlucose,
+                              'mg/dL',
+                              Icons.water_drop_outlined,
+                            ),
+                          ),
                       ],
                     ),
                     const AppSpacing.vlg(),
@@ -509,8 +554,10 @@ class PatientHomeScreen extends ConsumerWidget {
                         Expanded(
                           child: AppOutlinedButton(
                             label: context.l10n.fullReport,
-                            icon: const Icon(Icons.description_outlined,
-                                size: 20),
+                            icon: const Icon(
+                              Icons.description_outlined,
+                              size: 20,
+                            ),
                             onPressed: () =>
                                 context.push('/history/${latest.id}'),
                             minHeight: 48,
@@ -522,7 +569,11 @@ class PatientHomeScreen extends ConsumerWidget {
                             label: context.l10n.shareWithDoctor,
                             icon: const Icon(Icons.share_rounded, size: 20),
                             onPressed: () => _shareReport(
-                                ref, patient, screenings ?? const [], latest),
+                              ref,
+                              patient,
+                              screenings ?? const [],
+                              latest,
+                            ),
                             minHeight: 48,
                           ),
                         ),
@@ -535,9 +586,14 @@ class PatientHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _vital(BuildContext context, String label, num value, String unit,
-      IconData icon,
-      {int digits = 0}) {
+  Widget _vital(
+    BuildContext context,
+    String label,
+    num value,
+    String unit,
+    IconData icon, {
+    int digits = 0,
+  }) {
     final theme = Theme.of(context);
     final shown = value <= 0 ? null : value.toStringAsFixed(digits);
     return Column(
@@ -549,25 +605,28 @@ class PatientHomeScreen extends ConsumerWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           text: TextSpan(
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.onSurface,
-              ),
-              children: [
-                TextSpan(text: shown ?? '—'),
-                if (shown != null)
-                  TextSpan(
-                    text: ' $unit',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-              ],
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.onSurface,
             ),
+            children: [
+              TextSpan(text: shown ?? '—'),
+              if (shown != null)
+                TextSpan(
+                  text: ' $unit',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
           ),
-        Text(label,
-            style: theme.textTheme.labelSmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        ),
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
       ],
     );
   }
@@ -575,8 +634,12 @@ class PatientHomeScreen extends ConsumerWidget {
   /// Rebuilds the screening draft from the stored row so the explanation
   /// screen scores the real recorded vitals — never a demo stand-in — and its
   /// cache lookup by screening id reuses anything already written.
-  void _explain(BuildContext context, WidgetRef ref, Patient patient,
-      Screening screening) {
+  void _explain(
+    BuildContext context,
+    WidgetRef ref,
+    Patient patient,
+    Screening screening,
+  ) {
     final draft = ref.read(screeningDraftProvider.notifier);
     draft.begin(
       patient: patient,
@@ -624,8 +687,7 @@ class PatientHomeScreen extends ConsumerWidget {
           child: AppOutlinedButton(
             label: context.l10n.myTrends,
             icon: const Icon(Icons.show_chart_rounded, size: 22),
-            onPressed: () =>
-                context.push('/trends?patientId=${patient.id}'),
+            onPressed: () => context.push('/trends?patientId=${patient.id}'),
             minHeight: 52,
           ),
         ),
@@ -645,8 +707,12 @@ class PatientHomeScreen extends ConsumerWidget {
   /// The real-world loop closer: a summary the patient can show — or WhatsApp
   /// — to a doctor. Built from stored rows only; leaves the phone only
   /// through the OS share sheet under the user's finger.
-  Future<void> _shareReport(WidgetRef ref, Patient patient,
-      List<Screening> screenings, Screening latest) async {
+  Future<void> _shareReport(
+    WidgetRef ref,
+    Patient patient,
+    List<Screening> screenings,
+    Screening latest,
+  ) async {
     final account = ref.read(authStateProvider).account;
     if (account == null) return;
     final env = ref.read(environmentProvider).valueOrNull;
@@ -657,10 +723,13 @@ class PatientHomeScreen extends ConsumerWidget {
       trendNotes: TrendEngine.notes(screenings),
       environment: env?.reading,
     );
-    await SharePlus.instance.share(ShareParams(
-      text: text,
-      subject: 'Health summary — ${patient.name}', // share-sheet only, not UI copy
-    ));
+    await SharePlus.instance.share(
+      ShareParams(
+        text: text,
+        subject:
+            'Health summary — ${patient.name}', // share-sheet only, not UI copy
+      ),
+    );
   }
 
   // ───────────────────────────── Profile ─────────────────────────────
@@ -681,16 +750,25 @@ class PatientHomeScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.person_outline_rounded,
-                  color: theme.colorScheme.primary, size: 22),
+              Icon(
+                Icons.person_outline_rounded,
+                color: theme.colorScheme.primary,
+                size: 22,
+              ),
               const AppSpacing.hsm(),
               Expanded(
-                child: Text(context.l10n.myProfile,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700)),
+                child: Text(
+                  context.l10n.myProfile,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-              Icon(Icons.edit_outlined,
-                  color: theme.colorScheme.onSurfaceVariant, size: 20),
+              Icon(
+                Icons.edit_outlined,
+                color: theme.colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
             ],
           ),
           const AppSpacing.vmd(),
@@ -698,19 +776,24 @@ class PatientHomeScreen extends ConsumerWidget {
             spacing: AppTheme.spacingSm,
             runSpacing: AppTheme.spacingSm,
             children: [
-              if (account.age != null)
-                AppBadge(label: '${account.age} yrs'),
+              if (account.age != null) AppBadge(label: '${account.age} yrs'),
               if (account.sex.isNotEmpty)
-                AppBadge(label: account.sex == 'F' ? context.l10n.sexFemale : account.sex == 'M' ? context.l10n.sexMale : context.l10n.sexOther),
+                AppBadge(
+                  label: account.sex == 'F'
+                      ? context.l10n.sexFemale
+                      : account.sex == 'M'
+                      ? context.l10n.sexMale
+                      : context.l10n.sexOther,
+                ),
               if (account.heightCm != null)
                 AppBadge(label: '${account.heightCm!.toStringAsFixed(0)} cm'),
               if (account.weightKg != null)
                 AppBadge(label: '${account.weightKg!.toStringAsFixed(1)} kg'),
               if (bmiText != null)
                 AppBadge(label: bmiText, color: theme.colorScheme.primary),
-              ...(account.conditions
-                  .map((c) => AppBadge(
-                      label: c, color: theme.colorScheme.secondary))),
+              ...(account.conditions.map(
+                (c) => AppBadge(label: c, color: theme.colorScheme.secondary),
+              )),
             ],
           ),
         ],
@@ -726,7 +809,9 @@ class PatientHomeScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
       border: BorderSide(
-          color: theme.colorScheme.error.withValues(alpha: 0.4), width: 1),
+        color: theme.colorScheme.error.withValues(alpha: 0.4),
+        width: 1,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -748,8 +833,9 @@ class PatientHomeScreen extends ConsumerWidget {
           const AppSpacing.vxs(),
           Text(
             context.l10n.sosExplainer,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           const AppSpacing.vmd(),
           AppButton(
@@ -779,8 +865,11 @@ class PatientHomeScreen extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded,
-              color: theme.colorScheme.onTertiaryContainer, size: 20),
+          Icon(
+            Icons.info_outline_rounded,
+            color: theme.colorScheme.onTertiaryContainer,
+            size: 20,
+          ),
           const AppSpacing.hmd(),
           Expanded(
             child: Text(
@@ -811,7 +900,7 @@ class PatientHomeScreen extends ConsumerWidget {
             isExpanded: false,
           ),
         ],
-    ),
+      ),
     );
   }
 
@@ -819,7 +908,8 @@ class PatientHomeScreen extends ConsumerWidget {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.account_circle_outlined),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      ),
       onSelected: (value) async {
         switch (value) {
           case 'profile':
@@ -837,27 +927,33 @@ class PatientHomeScreen extends ConsumerWidget {
       itemBuilder: (context) => [
         PopupMenuItem(
           value: 'profile',
-          child: Row(children: [
-            const Icon(Icons.edit_outlined, size: 20),
-            const SizedBox(width: 12),
-            Text(context.l10n.editMyProfile),
-          ]),
+          child: Row(
+            children: [
+              const Icon(Icons.edit_outlined, size: 20),
+              const SizedBox(width: 12),
+              Text(context.l10n.editMyProfile),
+            ],
+          ),
         ),
         PopupMenuItem(
           value: 'settings',
-          child: Row(children: [
-            const Icon(Icons.settings_rounded, size: 20),
-            const SizedBox(width: 12),
-            Text(context.l10n.settingsTitle),
-          ]),
+          child: Row(
+            children: [
+              const Icon(Icons.settings_rounded, size: 20),
+              const SizedBox(width: 12),
+              Text(context.l10n.settingsTitle),
+            ],
+          ),
         ),
         PopupMenuItem(
           value: 'signout',
-          child: Row(children: [
-            const Icon(Icons.logout_rounded, size: 20),
-            const SizedBox(width: 12),
-            Text(context.l10n.signOut),
-          ]),
+          child: Row(
+            children: [
+              const Icon(Icons.logout_rounded, size: 20),
+              const SizedBox(width: 12),
+              Text(context.l10n.signOut),
+            ],
+          ),
         ),
       ],
     );

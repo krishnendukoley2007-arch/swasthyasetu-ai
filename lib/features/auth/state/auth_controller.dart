@@ -28,21 +28,17 @@ class AuthState {
 
   const AuthState({required this.status, this.account});
 
-  const AuthState.unknown()
-      : status = AuthStatus.unknown,
-        account = null;
+  const AuthState.unknown() : status = AuthStatus.unknown, account = null;
 
-  const AuthState.signedOut()
-      : status = AuthStatus.signedOut,
-        account = null;
+  const AuthState.signedOut() : status = AuthStatus.signedOut, account = null;
 
   bool get isSignedIn =>
       status == AuthStatus.signedIn || status == AuthStatus.demo;
 
   AuthState copyWith({AuthStatus? status, UserAccount? account}) => AuthState(
-        status: status ?? this.status,
-        account: account ?? this.account,
-      );
+    status: status ?? this.status,
+    account: account ?? this.account,
+  );
 }
 
 class AuthController extends StateNotifier<AuthState> {
@@ -128,8 +124,7 @@ class AuthController extends StateNotifier<AuthState> {
   /// wins, so a patient can never promote themselves to clinician by tapping
   /// the other card.
   Future<void> signInWithGoogle({required UserRole roleForNewAccounts}) async {
-    final identity =
-        await _ref.read(googleAuthServiceProvider).signIn();
+    final identity = await _ref.read(googleAuthServiceProvider).signIn();
     if (identity.email.trim().isEmpty) {
       throw const AuthException(
         AuthFailure.googleUnavailable,
@@ -186,12 +181,20 @@ class AuthController extends StateNotifier<AuthState> {
 
   /// Seamless 1-tap instant sign-in for testing, demonstrations, or when
   /// Google Play Services is unavailable on the device.
-  Future<void> quickSignIn({required UserRole role, String? email, String? name}) async {
-    final effectiveEmail = email ?? (role == UserRole.clinician
-        ? 'asha.worker@health.gov.in'
-        : 'rahul.sharma@patient.local');
+  Future<void> quickSignIn({
+    required UserRole role,
+    String? email,
+    String? name,
+  }) async {
+    final effectiveEmail =
+        email ??
+        (role == UserRole.clinician
+            ? 'asha.worker@health.gov.in'
+            : 'rahul.sharma@patient.local');
     const password = 'Password@123';
-    final displayName = name ?? (role == UserRole.clinician ? 'ASHA S. Devi (PHC)' : 'Rahul Sharma');
+    final displayName =
+        name ??
+        (role == UserRole.clinician ? 'ASHA S. Devi (PHC)' : 'Rahul Sharma');
 
     UserAccount account;
     try {
@@ -282,28 +285,40 @@ class AuthController extends StateNotifier<AuthState> {
       noteParts.add('Reported problems: $complaint');
     }
 
-    final patientId =
-        'PAT-${const Uuid().v4().substring(0, 7).toUpperCase()}';
+    final patientId = 'PAT-${const Uuid().v4().substring(0, 7).toUpperCase()}';
     final patients = _ref.read(patientRepositoryProvider);
     final emergency = _ref.read(emergencyRepositoryProvider);
     final linkedPatientId = account.patientId;
 
-    final updated =
-        await _ref.read(databaseProvider).transaction<UserAccount>(() async {
-      String effectivePatientId;
-      if (linkedPatientId != null) {
-        // Editing (from My Health): update the row the screenings already point
-        // at. Creating a second row would orphan the person's own history.
-        final existing = await patients.getById(linkedPatientId);
-        if (existing != null) {
-          await patients.save(existing.copyWith(
-            name: displayName.trim(),
-            age: age,
-            sex: sex,
-            notes: noteParts.join(' '),
-            vulnerabilityFlags: provisional.vulnerabilityFlags,
-          ));
-          effectivePatientId = linkedPatientId;
+    final updated = await _ref.read(databaseProvider).transaction<UserAccount>(
+      () async {
+        String effectivePatientId;
+        if (linkedPatientId != null) {
+          // Editing (from My Health): update the row the screenings already point
+          // at. Creating a second row would orphan the person's own history.
+          final existing = await patients.getById(linkedPatientId);
+          if (existing != null) {
+            await patients.save(
+              existing.copyWith(
+                name: displayName.trim(),
+                age: age,
+                sex: sex,
+                notes: noteParts.join(' '),
+                vulnerabilityFlags: provisional.vulnerabilityFlags,
+              ),
+            );
+            effectivePatientId = linkedPatientId;
+          } else {
+            final created = await patients.create(
+              id: patientId,
+              name: displayName.trim(),
+              age: age,
+              sex: sex,
+              notes: noteParts.join(' '),
+              vulnerabilityFlags: provisional.vulnerabilityFlags,
+            );
+            effectivePatientId = created.id;
+          }
         } else {
           final created = await patients.create(
             id: patientId,
@@ -315,55 +330,45 @@ class AuthController extends StateNotifier<AuthState> {
           );
           effectivePatientId = created.id;
         }
-      } else {
-        final created = await patients.create(
-          id: patientId,
-          name: displayName.trim(),
+
+        final contactName = emergencyName?.trim() ?? '';
+        final contactPhone = emergencyPhone?.trim() ?? '';
+        if (contactName.isNotEmpty &&
+            EmergencyRepository.isDiallable(contactPhone)) {
+          // Reuse the existing primary's id. Minting a fresh `EC-<uuid>` on every
+          // save filled the SOS list with copies of the same person, each edit
+          // adding one more.
+          final existingPrimary = await emergency.explicitPrimaryContact();
+          await emergency.saveContact(
+            EmergencyContact(
+              id: existingPrimary?.id ?? 'EC-${const Uuid().v4()}',
+              name: contactName,
+              phone: contactPhone,
+              relation: existingPrimary?.relation.isNotEmpty ?? false
+                  ? existingPrimary!.relation
+                  : 'Emergency contact',
+              isPrimary: true,
+            ),
+          );
+        }
+        // Blank fields leave the SOS list alone rather than deleting anyone.
+        // Removing a contact is what the Emergency contacts screen is for, and
+        // silently dropping the only person an SOS can reach because a text field
+        // was cleared is not a trade worth making.
+
+        return _repo.completeProfile(
+          accountId: account.id,
+          displayName: displayName,
           age: age,
           sex: sex,
-          notes: noteParts.join(' '),
-          vulnerabilityFlags: provisional.vulnerabilityFlags,
+          heightCm: heightCm,
+          weightKg: weightKg,
+          conditions: conditions,
+          problems: problems,
+          patientId: effectivePatientId,
         );
-        effectivePatientId = created.id;
-      }
-
-      final contactName = emergencyName?.trim() ?? '';
-      final contactPhone = emergencyPhone?.trim() ?? '';
-      if (contactName.isNotEmpty &&
-          EmergencyRepository.isDiallable(contactPhone)) {
-        // Reuse the existing primary's id. Minting a fresh `EC-<uuid>` on every
-        // save filled the SOS list with copies of the same person, each edit
-        // adding one more.
-        final existingPrimary = await emergency.explicitPrimaryContact();
-        await emergency.saveContact(
-          EmergencyContact(
-            id: existingPrimary?.id ?? 'EC-${const Uuid().v4()}',
-            name: contactName,
-            phone: contactPhone,
-            relation: existingPrimary?.relation.isNotEmpty ?? false
-                ? existingPrimary!.relation
-                : 'Emergency contact',
-            isPrimary: true,
-          ),
-        );
-      }
-      // Blank fields leave the SOS list alone rather than deleting anyone.
-      // Removing a contact is what the Emergency contacts screen is for, and
-      // silently dropping the only person an SOS can reach because a text field
-      // was cleared is not a trade worth making.
-
-      return _repo.completeProfile(
-        accountId: account.id,
-        displayName: displayName,
-        age: age,
-        sex: sex,
-        heightCm: heightCm,
-        weightKg: weightKg,
-        conditions: conditions,
-        problems: problems,
-        patientId: effectivePatientId,
-      );
-    });
+      },
+    );
 
     state = _stateFor(updated);
   }

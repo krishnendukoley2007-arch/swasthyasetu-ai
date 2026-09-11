@@ -69,8 +69,9 @@ class ScreeningDetailsScreen extends ConsumerWidget {
           );
         }
 
-        final patientName =
-            ref.watch(patientNamesProvider)[screening.patientId];
+        final patientName = ref.watch(
+          patientNamesProvider,
+        )[screening.patientId];
         return _ScreeningDetailsView(
           screening: screening,
           patientName: patientName,
@@ -117,23 +118,48 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeaderCard(riskColor, riskIcon).animate().fadeIn(duration: 300.ms).slideY(begin: -0.1),
+            _buildHeaderCard(
+              riskColor,
+              riskIcon,
+            ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.1),
             const AppSpacing.vmd(),
-            _buildVitalsCard().animate().fadeIn(duration: 300.ms, delay: 100.ms).slideY(begin: 0.1),
+            _buildVitalsCard()
+                .animate()
+                .fadeIn(duration: 300.ms, delay: 100.ms)
+                .slideY(begin: 0.1),
             const AppSpacing.vmd(),
-            _buildECGAndBPCard().animate().fadeIn(duration: 300.ms, delay: 200.ms).slideY(begin: 0.1),
+            _buildECGAndBPCard()
+                .animate()
+                .fadeIn(duration: 300.ms, delay: 200.ms)
+                .slideY(begin: 0.1),
             const AppSpacing.vmd(),
             _RecordedStripSection(screening: _screening),
             const AppSpacing.vmd(),
-            _buildSymptomsCard().animate().fadeIn(duration: 300.ms, delay: 300.ms).slideY(begin: 0.1),
+            _buildSymptomsCard()
+                .animate()
+                .fadeIn(duration: 300.ms, delay: 300.ms)
+                .slideY(begin: 0.1),
             const AppSpacing.vmd(),
-            _buildRiskAnalysisCard(riskColor).animate().fadeIn(duration: 300.ms, delay: 400.ms).slideY(begin: 0.1),
+            _buildRiskAnalysisCard(riskColor)
+                .animate()
+                .fadeIn(duration: 300.ms, delay: 400.ms)
+                .slideY(begin: 0.1),
             const AppSpacing.vmd(),
-            if (_screening.aiSummary != null) _buildAICard().animate().fadeIn(duration: 300.ms, delay: 500.ms).slideY(begin: 0.1),
+            if (_screening.aiSummary != null)
+              _buildAICard()
+                  .animate()
+                  .fadeIn(duration: 300.ms, delay: 500.ms)
+                  .slideY(begin: 0.1),
             const AppSpacing.vmd(),
-            _buildMetadataCard().animate().fadeIn(duration: 300.ms, delay: 600.ms).slideY(begin: 0.1),
+            _buildMetadataCard()
+                .animate()
+                .fadeIn(duration: 300.ms, delay: 600.ms)
+                .slideY(begin: 0.1),
             const AppSpacing.vxl(),
-            _buildActionButtons().animate().fadeIn(duration: 300.ms, delay: 700.ms).slideY(begin: 0.1),
+            _buildActionButtons()
+                .animate()
+                .fadeIn(duration: 300.ms, delay: 700.ms)
+                .slideY(begin: 0.1),
           ],
         ),
       ),
@@ -192,7 +218,9 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
                   children: [
                     Text(
                       _formatDate(_screening.timestamp),
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
                       textAlign: TextAlign.end,
                     ),
                     Text(
@@ -232,7 +260,10 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
           if (_screening.isDemo) ...[
             const AppSpacing.vsm(),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingXs),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingMd,
+                vertical: AppTheme.spacingXs,
+              ),
               decoration: BoxDecoration(
                 color: theme.colorScheme.tertiaryContainer,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -262,16 +293,45 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
         children: [
           Text(
             'Vital Signs',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const AppSpacing.vlg(),
           Row(
             children: [
-              Expanded(child: _buildDetailVital('Heart Rate', '${_screening.heartRate}', 'BPM', Icons.favorite_rounded, theme.colorScheme.primary, _screening.heartRate > 100)),
+              Expanded(
+                child: _buildDetailVital(
+                  'Heart Rate',
+                  '${_screening.heartRate}',
+                  'BPM',
+                  Icons.favorite_rounded,
+                  theme.colorScheme.primary,
+                  _screening.heartRate > 100,
+                ),
+              ),
               const AppSpacing.hmd(),
-              Expanded(child: _buildDetailVital('SpO₂', '${_screening.spo2}', '%', Icons.air_rounded, theme.colorScheme.secondary, _screening.spo2 < 95)),
+              Expanded(
+                child: _buildDetailVital(
+                  'SpO₂',
+                  '${_screening.spo2}',
+                  '%',
+                  Icons.air_rounded,
+                  theme.colorScheme.secondary,
+                  _screening.spo2 < 95,
+                ),
+              ),
               const AppSpacing.hmd(),
-              Expanded(child: _buildDetailVital('Temperature', _screening.temperature.toStringAsFixed(1), '°C', Icons.thermostat_rounded, theme.colorScheme.tertiary, _screening.temperature >= 38)),
+              Expanded(
+                child: _buildDetailVital(
+                  'Temperature',
+                  _screening.temperature.toStringAsFixed(1),
+                  '°C',
+                  Icons.thermostat_rounded,
+                  theme.colorScheme.tertiary,
+                  _screening.temperature >= 38,
+                ),
+              ),
             ],
           ),
         ],
@@ -279,7 +339,14 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
     );
   }
 
-  Widget _buildDetailVital(String label, String value, String unit, IconData icon, Color color, bool isAlert) {
+  Widget _buildDetailVital(
+    String label,
+    String value,
+    String unit,
+    IconData icon,
+    Color color,
+    bool isAlert,
+  ) {
     final theme = Theme.of(context);
     final displayColor = isAlert ? theme.colorScheme.error : color;
 
@@ -321,7 +388,10 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
         if (isAlert) ...[
           const AppSpacing.vxs(),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingSm, vertical: AppTheme.spacingXs),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacingSm,
+              vertical: AppTheme.spacingXs,
+            ),
             decoration: BoxDecoration(
               color: theme.colorScheme.errorContainer,
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -350,13 +420,29 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
         children: [
           Text(
             'ECG & Experimental Estimates',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const AppSpacing.vlg(),
           Row(
             children: [
-              Expanded(child: _buildInfoItem('ECG quality', _screening.ecgQualityLabel, Icons.monitor_heart_rounded, theme.colorScheme.primary)),
-              Expanded(child: _buildInfoItem('Rhythm', ecgRhythmLabel(_screening.ecgRhythm, context.l10n), Icons.timeline_rounded, theme.colorScheme.primary)),
+              Expanded(
+                child: _buildInfoItem(
+                  'ECG quality',
+                  _screening.ecgQualityLabel,
+                  Icons.monitor_heart_rounded,
+                  theme.colorScheme.primary,
+                ),
+              ),
+              Expanded(
+                child: _buildInfoItem(
+                  'Rhythm',
+                  ecgRhythmLabel(_screening.ecgRhythm, context.l10n),
+                  Icons.timeline_rounded,
+                  theme.colorScheme.primary,
+                ),
+              ),
             ],
           ),
           if (_screening.pttMs > 0 || _screening.hasGlucoseEstimate) ...[
@@ -364,13 +450,20 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
             AppCard(
               color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.2),
               padding: const EdgeInsets.all(AppTheme.spacingMd),
-              border: BorderSide(color: theme.colorScheme.tertiary.withValues(alpha: 0.3), width: 1),
+              border: BorderSide(
+                color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+                width: 1,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.science_outlined, color: theme.colorScheme.tertiary, size: 18),
+                      Icon(
+                        Icons.science_outlined,
+                        color: theme.colorScheme.tertiary,
+                        size: 18,
+                      ),
                       const AppSpacing.hsm(),
                       Expanded(
                         child: Text(
@@ -390,13 +483,29 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
                     alignment: WrapAlignment.spaceAround,
                     children: [
                       if (_screening.hasBpEstimate) ...[
-                        _buildBPDetail('Systolic', '${_screening.estimatedSystolic} mmHg', theme.colorScheme.error),
-                        _buildBPDetail('Diastolic', '${_screening.estimatedDiastolic} mmHg', theme.colorScheme.secondary),
+                        _buildBPDetail(
+                          'Systolic',
+                          '${_screening.estimatedSystolic} mmHg',
+                          theme.colorScheme.error,
+                        ),
+                        _buildBPDetail(
+                          'Diastolic',
+                          '${_screening.estimatedDiastolic} mmHg',
+                          theme.colorScheme.secondary,
+                        ),
                       ],
                       if (_screening.hasGlucoseEstimate)
-                        _buildBPDetail('Est. Glucose', '${_screening.estimatedGlucose} mg/dL', theme.colorScheme.tertiary),
+                        _buildBPDetail(
+                          'Est. Glucose',
+                          '${_screening.estimatedGlucose} mg/dL',
+                          theme.colorScheme.tertiary,
+                        ),
                       if (_screening.pttMs > 0)
-                        _buildBPDetail('PTT', '${_screening.pttMs} ms', theme.colorScheme.primary),
+                        _buildBPDetail(
+                          'PTT',
+                          '${_screening.pttMs} ms',
+                          theme.colorScheme.primary,
+                        ),
                     ],
                   ),
                   const AppSpacing.vsm(),
@@ -416,7 +525,12 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
     );
   }
 
-  Widget _buildInfoItem(String label, String value, IconData icon, Color color) {
+  Widget _buildInfoItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     final theme = Theme.of(context);
 
     return Column(
@@ -428,18 +542,20 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
             const AppSpacing.hxs(),
             Expanded(
               child: Text(
-                  label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
+              ),
             ),
           ],
         ),
         const AppSpacing.vxs(),
         Text(
           value,
-          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
@@ -478,7 +594,9 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
         children: [
           Text(
             'Reported Symptoms',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const AppSpacing.vmd(),
           if (_screening.symptoms.isEmpty)
@@ -492,18 +610,28 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
             Wrap(
               spacing: AppTheme.spacingSm,
               runSpacing: AppTheme.spacingSm,
-              children: _screening.symptoms.map((s) => Chip(
-                label: Text(s),
-                backgroundColor: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.3),
-                labelStyle: TextStyle(color: theme.colorScheme.tertiary),
-                side: BorderSide(color: theme.colorScheme.tertiary.withValues(alpha: 0.3)),
-              )).toList(),
+              children: _screening.symptoms
+                  .map(
+                    (s) => Chip(
+                      label: Text(s),
+                      backgroundColor: theme.colorScheme.tertiaryContainer
+                          .withValues(alpha: 0.3),
+                      labelStyle: TextStyle(color: theme.colorScheme.tertiary),
+                      side: BorderSide(
+                        color: theme.colorScheme.tertiary.withValues(
+                          alpha: 0.3,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
           if (_screening.symptomDuration != null) ...[
             const AppSpacing.vmd(),
             _buildInfoRow('Duration', _screening.symptomDuration!),
           ],
-          if (_screening.symptomNotes != null && _screening.symptomNotes!.isNotEmpty) ...[
+          if (_screening.symptomNotes != null &&
+              _screening.symptomNotes!.isNotEmpty) ...[
             const AppSpacing.vmd(),
             _buildInfoRow('Notes', _screening.symptomNotes!),
           ],
@@ -522,7 +650,9 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
         children: [
           Text(
             'Risk Analysis',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const AppSpacing.vlg(),
           _buildInfoRow('Escalation Level', _screening.escalationLevel),
@@ -530,37 +660,42 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
           if (_screening.triggeredRules.isNotEmpty) ...[
             Text(
               'Triggered Rules:',
-              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const AppSpacing.vsm(),
-            ..._screening.triggeredRules.map((rule) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppTheme.spacingXs),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.flag_rounded, size: 16, color: riskColor),
-                      const AppSpacing.hsm(),
-                      Expanded(
-                        child: Text(
-                          rule,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
+            ..._screening.triggeredRules.map(
+              (rule) => Padding(
+                padding: const EdgeInsets.only(bottom: AppTheme.spacingXs),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.flag_rounded, size: 16, color: riskColor),
+                    const AppSpacing.hsm(),
+                    Expanded(
+                      child: Text(rule, style: theme.textTheme.bodyMedium),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ] else ...[
             Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary, size: 20),
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
                 const AppSpacing.hsm(),
                 Expanded(
                   child: Text(
-                      'No risk rules triggered',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                      ),
+                    'No risk rules triggered',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.primary,
                     ),
+                  ),
                 ),
               ],
             ),
@@ -576,22 +711,29 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
     return AppCard(
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
       padding: const EdgeInsets.all(AppTheme.spacingLg),
-      border: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.2), width: 1),
+      border: BorderSide(
+        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+        width: 1,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.psychology_outlined, color: theme.colorScheme.primary, size: 20),
+              Icon(
+                Icons.psychology_outlined,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(
-                    'AI Explanation Summary',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                    ),
+                  'AI Explanation Summary',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
                   ),
+                ),
               ),
             ],
           ),
@@ -621,7 +763,9 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
         children: [
           Text(
             'Screening Metadata',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const AppSpacing.vlg(),
           _buildInfoRow('Screening ID', _screening.id),
@@ -655,7 +799,9 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
           Expanded(
             child: Text(
               value,
-              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -700,7 +846,20 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
   }
 
   String _monthName(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months[month - 1];
   }
 }
@@ -726,8 +885,7 @@ class _RecordedStripSection extends ConsumerWidget {
         // Envelope blobs store [min, max, avg] triplets; draw the average so
         // the trace stays a single honest line.
         final samples = data.isEnvelope
-            ? [for (var i = 2; i < data.samples.length; i += 3)
-                data.samples[i]]
+            ? [for (var i = 2; i < data.samples.length; i += 3) data.samples[i]]
             : data.samples.toList();
 
         // The Poincaré plot gets its tachogram from the stored strip itself.

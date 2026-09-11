@@ -76,18 +76,18 @@ class StorageUsage {
   });
 
   const StorageUsage.empty()
-      : patients = 0,
-        screenings = 0,
-        waveforms = 0,
-        explanations = 0,
-        guidelineCache = 0,
-        mapCache = 0,
-        databaseFile = 0,
-        patientCount = 0,
-        screeningCount = 0,
-        waveformFileCount = 0,
-        guidelineChunkCount = 0,
-        budgetBytes = StorageManager.defaultBudgetBytes;
+    : patients = 0,
+      screenings = 0,
+      waveforms = 0,
+      explanations = 0,
+      guidelineCache = 0,
+      mapCache = 0,
+      databaseFile = 0,
+      patientCount = 0,
+      screeningCount = 0,
+      waveformFileCount = 0,
+      guidelineChunkCount = 0,
+      budgetBytes = StorageManager.defaultBudgetBytes;
 
   /// Real bytes this app occupies: the database file as it actually sits on
   /// disk, plus the two blob directories. Deliberately *not* the sum of the
@@ -113,18 +113,25 @@ class StorageUsage {
   }
 
   List<StorageCategory> get breakdown => [
-        StorageCategory(id: 'patients', bytes: patients, itemCount: patientCount),
-        StorageCategory(
-            id: 'screenings', bytes: screenings, itemCount: screeningCount),
-        StorageCategory(
-            id: 'waveforms', bytes: waveforms, itemCount: waveformFileCount),
-        StorageCategory(
-            id: 'guidelines',
-            bytes: guidelineCache,
-            itemCount: guidelineChunkCount),
-        StorageCategory(id: 'explanations', bytes: explanations, itemCount: 0),
-        StorageCategory(id: 'mapTiles', bytes: mapCache, itemCount: 0),
-      ];
+    StorageCategory(id: 'patients', bytes: patients, itemCount: patientCount),
+    StorageCategory(
+      id: 'screenings',
+      bytes: screenings,
+      itemCount: screeningCount,
+    ),
+    StorageCategory(
+      id: 'waveforms',
+      bytes: waveforms,
+      itemCount: waveformFileCount,
+    ),
+    StorageCategory(
+      id: 'guidelines',
+      bytes: guidelineCache,
+      itemCount: guidelineChunkCount,
+    ),
+    StorageCategory(id: 'explanations', bytes: explanations, itemCount: 0),
+    StorageCategory(id: 'mapTiles', bytes: mapCache, itemCount: 0),
+  ];
 
   String get formattedTotal => formatBytes(total);
   String get formattedBudget => formatBytes(budgetBytes);
@@ -189,7 +196,8 @@ class StorageManager {
     for (final s in screenings) {
       final e = await _db.getExplanation(s.id);
       if (e != null) {
-        explanationBytes += _utf8Len(e.summary) +
+        explanationBytes +=
+            _utf8Len(e.summary) +
             _utf8Len(e.whyThisLevel) +
             _utf8Len(e.safeNextSteps) +
             _utf8Len(e.whenToEscalate) +
@@ -201,8 +209,10 @@ class StorageManager {
 
     return StorageUsage(
       patients: patients.fold<int>(0, (sum, r) => sum + _patientRowBytes(r)),
-      screenings:
-          screenings.fold<int>(0, (sum, r) => sum + _screeningRowBytes(r)),
+      screenings: screenings.fold<int>(
+        0,
+        (sum, r) => sum + _screeningRowBytes(r),
+      ),
       waveforms: await _waveforms.totalBytesOnDisk(),
       explanations: explanationBytes,
       guidelineCache: chunks.fold<int>(
@@ -320,7 +330,8 @@ class StorageManager {
               'diastolic': s.estimatedDiastolic,
               'confidence': s.bpConfidence,
               'calibratedAt': s.bpCalibratedAt?.toIso8601String(),
-              'note': 'Cuffless PTT estimate — experimental, not a cuff reading',
+              'note':
+                  'Cuffless PTT estimate — experimental, not a cuff reading',
             },
             'symptoms': jsonDecode(s.symptoms),
             'symptomDuration': s.symptomDuration,

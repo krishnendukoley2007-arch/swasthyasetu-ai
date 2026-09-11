@@ -62,7 +62,11 @@ List<int> ecgFrame({
   bytes[1] = version;
   data.setUint16(2, sequence, Endian.little);
   for (var i = 0; i < samples.length; i++) {
-    data.setInt16(BleProtocol.ecgHeaderLength + i * 2, samples[i], Endian.little);
+    data.setInt16(
+      BleProtocol.ecgHeaderLength + i * 2,
+      samples[i],
+      Endian.little,
+    );
   }
   return bytes;
 }
@@ -102,15 +106,18 @@ void main() {
       expect(frame!.sample.isDemo, isFalse);
     });
 
-    test('temperature is signed, so a cold sensor does not read as 600 degrees', () {
-      // -5.00 C. Read as unsigned this is 64,036 hundredths.
-      final frame = BleProtocol.parseTelemetry(
-        telemetryFrame(temperatureCentiC: -500),
-      );
-      expect(frame!.sample.temperatureC, closeTo(-5.0, 0.001));
-      // And it is correctly flagged as not a human reading.
-      expect(frame.plausible, isFalse);
-    });
+    test(
+      'temperature is signed, so a cold sensor does not read as 600 degrees',
+      () {
+        // -5.00 C. Read as unsigned this is 64,036 hundredths.
+        final frame = BleProtocol.parseTelemetry(
+          telemetryFrame(temperatureCentiC: -500),
+        );
+        expect(frame!.sample.temperatureC, closeTo(-5.0, 0.001));
+        // And it is correctly flagged as not a human reading.
+        expect(frame.plausible, isFalse);
+      },
+    );
 
     test('multi-byte fields are little-endian', () {
       // 0x0341 == 833. A big-endian read gives 0x4103 == 16643, which is a
@@ -183,8 +190,9 @@ void main() {
         isFalse,
       );
       expect(
-        BleProtocol.parseTelemetry(telemetryFrame(temperatureCentiC: 0))!
-            .plausible,
+        BleProtocol.parseTelemetry(
+          telemetryFrame(temperatureCentiC: 0),
+        )!.plausible,
         isFalse,
       );
       // 250 bpm is the documented ceiling and is still accepted.
@@ -194,21 +202,25 @@ void main() {
       );
     });
 
-    test('a finger off the sensor makes the frame unusable, not implausible', () {
-      // Different things: the numbers may be in range, they are just not of a
-      // person's finger.
-      final frame =
-          BleProtocol.parseTelemetry(telemetryFrame(flags: 0x08 | 0x01))!;
-      expect(frame.plausible, isTrue);
-      expect(frame.fingerOff, isTrue);
-      expect(frame.isUsable, isFalse);
-    });
+    test(
+      'a finger off the sensor makes the frame unusable, not implausible',
+      () {
+        // Different things: the numbers may be in range, they are just not of a
+        // person's finger.
+        final frame = BleProtocol.parseTelemetry(
+          telemetryFrame(flags: 0x08 | 0x01),
+        )!;
+        expect(frame.plausible, isTrue);
+        expect(frame.fingerOff, isTrue);
+        expect(frame.isUsable, isFalse);
+      },
+    );
 
     test('an unknown BP confidence code is not upgraded to a real one', () {
       expect(
-        BleProtocol.parseTelemetry(telemetryFrame(bpConfidence: 7))!
-            .sample
-            .bpConfidence,
+        BleProtocol.parseTelemetry(
+          telemetryFrame(bpConfidence: 7),
+        )!.sample.bpConfidence,
         'EXPERIMENTAL',
       );
       expect(BleProtocol.bpConfidenceLabel(0), 'LOW');
@@ -216,8 +228,9 @@ void main() {
     });
 
     test('battery and quality are clamped into their declared ranges', () {
-      final frame =
-          BleProtocol.parseTelemetry(telemetryFrame(battery: 200, quality: 200))!;
+      final frame = BleProtocol.parseTelemetry(
+        telemetryFrame(battery: 200, quality: 200),
+      )!;
       expect(frame.sample.batteryPercent, 100);
       expect(frame.sample.ecgSignalQuality, 1.0);
     });
@@ -242,7 +255,10 @@ void main() {
       // An odd payload length means the last value lost a byte. Keeping the
       // whole-sample prefix would be defensible; inventing the missing byte is
       // not, and telling the difference later is impossible.
-      final odd = [...ecgFrame(samples: const [100, 200]), 0x7F];
+      final odd = [
+        ...ecgFrame(samples: const [100, 200]),
+        0x7F,
+      ];
       expect(BleProtocol.parseEcg(odd), isNull);
     });
 
@@ -293,7 +309,10 @@ void main() {
     });
 
     test('a string with no version yields null, not a guess', () {
-      expect(BleProtocol.parseFirmwareVersion(utf8.encode('SwasthyaSetu')), isNull);
+      expect(
+        BleProtocol.parseFirmwareVersion(utf8.encode('SwasthyaSetu')),
+        isNull,
+      );
       expect(BleProtocol.parseFirmwareVersion(const []), isNull);
     });
 
@@ -306,17 +325,25 @@ void main() {
     });
 
     test('a parsed version feeds the compatibility check', () {
-      final version =
-          BleProtocol.parseFirmwareVersion(utf8.encode('board v1.0.3'))!;
+      final version = BleProtocol.parseFirmwareVersion(
+        utf8.encode('board v1.0.3'),
+      )!;
       expect(
         DeviceRepository.checkFirmware(version),
         FirmwareCompatibility.supported,
       );
       // And a board from the next generation is reported as the app being old,
-      // which is the accurate direction of blame.
+      // which is the accurate direction of blame. v2.x and v3.x are
+      // supported; v4.x is beyond this build.
       expect(
         DeviceRepository.checkFirmware(
           BleProtocol.parseFirmwareVersion(utf8.encode('v2.0.0'))!,
+        ),
+        FirmwareCompatibility.supported,
+      );
+      expect(
+        DeviceRepository.checkFirmware(
+          BleProtocol.parseFirmwareVersion(utf8.encode('v4.0.0'))!,
         ),
         FirmwareCompatibility.tooNew,
       );
@@ -412,12 +439,8 @@ void main() {
 
   group('BleCandidate', () {
     test('signal strength maps to bars, strongest first', () {
-      BleCandidate at(int rssi) => BleCandidate(
-            id: 'x',
-            name: 'board',
-            rssi: rssi,
-            isSensorBoard: true,
-          );
+      BleCandidate at(int rssi) =>
+          BleCandidate(id: 'x', name: 'board', rssi: rssi, isSensorBoard: true);
 
       expect(at(-40).signalBars, 4);
       expect(at(-60).signalBars, 4);
@@ -429,8 +452,12 @@ void main() {
 
     test('an unnamed radio gets a label rather than an empty row', () {
       expect(
-        const BleCandidate(id: 'x', name: '  ', rssi: -50, isSensorBoard: false)
-            .displayName,
+        const BleCandidate(
+          id: 'x',
+          name: '  ',
+          rssi: -50,
+          isSensorBoard: false,
+        ).displayName,
         'Unnamed device',
       );
     });
@@ -464,10 +491,15 @@ void main() {
         isFalse,
       );
       expect(
-        const BleLinkState(status: BleLinkStatus.permissionDenied).isRadioUsable,
+        const BleLinkState(
+          status: BleLinkStatus.permissionDenied,
+        ).isRadioUsable,
         isFalse,
       );
-      expect(const BleLinkState(status: BleLinkStatus.idle).isRadioUsable, isTrue);
+      expect(
+        const BleLinkState(status: BleLinkStatus.idle).isRadioUsable,
+        isTrue,
+      );
     });
 
     test('every status has a label and a detail a worker can act on', () {

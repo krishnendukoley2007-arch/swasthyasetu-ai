@@ -153,9 +153,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      await ref.read(authStateProvider.notifier).signInWithGoogle(
-            roleForNewAccounts: targetRole,
-          );
+      await ref
+          .read(authStateProvider.notifier)
+          .signInWithGoogle(roleForNewAccounts: targetRole);
     } on AuthException catch (e) {
       if (mounted) setState(() => _error = _messageFor(e));
     } catch (e) {
@@ -166,18 +166,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   String _messageFor(AuthException e) => switch (e.failure) {
-        AuthFailure.emailInUse =>
-          'An account with this email exists. Switch to "Sign in".',
-        AuthFailure.wrongCredentials => 'Email or password not recognized.',
-        AuthFailure.weakPassword => 'Password must be at least 6 characters.',
-        AuthFailure.invalidEmail => 'Enter a valid email address.',
-        AuthFailure.googleUnavailable =>
-          e.detail ?? 'Google Sign-In is unavailable on this device.',
-        AuthFailure.googleCancelled =>
-          e.detail ?? 'Google Sign-In was cancelled or dismissed.',
-        AuthFailure.phoneOtpFailed =>
-          e.detail ?? 'OTP verification failed. Try again.',
-      };
+    AuthFailure.emailInUse =>
+      'An account with this email exists. Switch to "Sign in".',
+    AuthFailure.wrongCredentials => 'Email or password not recognized.',
+    AuthFailure.weakPassword => 'Password must be at least 6 characters.',
+    AuthFailure.invalidEmail => 'Enter a valid email address.',
+    AuthFailure.googleUnavailable =>
+      e.detail ?? 'Google Sign-In is unavailable on this device.',
+    AuthFailure.googleCancelled =>
+      e.detail ?? 'Google Sign-In was cancelled or dismissed.',
+    AuthFailure.phoneOtpFailed =>
+      e.detail ?? 'OTP verification failed. Try again.',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -187,66 +187,75 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: LayoutBuilder(builder: (context, constraints) {
-          final w = math.min(constraints.maxWidth - 48, 420.0);
-          return Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: SizedBox(
-                width: w,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 350),
-                  transitionBuilder: (child, anim) => FadeTransition(
-                    opacity: anim,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.04),
-                        end: Offset.zero,
-                      ).animate(CurvedAnimation(
-                          parent: anim, curve: Curves.easeOutCubic)),
-                      child: child,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final w = math.min(constraints.maxWidth - 48, 420.0);
+            return Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 24,
+                ),
+                child: SizedBox(
+                  width: w,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    transitionBuilder: (child, anim) => FadeTransition(
+                      opacity: anim,
+                      child: SlideTransition(
+                        position:
+                            Tween<Offset>(
+                              begin: const Offset(0, 0.04),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: anim,
+                                curve: Curves.easeOutCubic,
+                              ),
+                            ),
+                        child: child,
+                      ),
                     ),
+                    child: _role == null
+                        ? _RolePicker(
+                            key: const ValueKey('picker'),
+                            onPick: _pickRole,
+                            onGoogle: (role) => _signInWithGoogle(role),
+                            onDemo: _demo,
+                            busy: busy,
+                          )
+                        : _AuthPanel(
+                            key: ValueKey('auth-${_role!.name}'),
+                            role: _role!,
+                            mode: _mode,
+                            nameCtrl: _nameCtrl,
+                            phoneCtrl: _phoneCtrl,
+                            emailCtrl: _emailCtrl,
+                            passwordCtrl: _passwordCtrl,
+                            formKey: _formKey,
+                            obscure: _obscure,
+                            loading: _loading,
+                            error: _error,
+                            onModeChange: (m) => setState(() {
+                              _mode = m;
+                              _error = null;
+                            }),
+                            onToggleObscure: () =>
+                                setState(() => _obscure = !_obscure),
+                            onBack: _back,
+                            onSendOtp: _sendOtp,
+                            onEmailSignIn: () => _submitEmail(register: false),
+                            onEmailRegister: () => _submitEmail(register: true),
+                            onAshaQuick: _quickSignIn,
+                            onGoogle: () => _signInWithGoogle(_role),
+                            onDemo: _demo,
+                          ),
                   ),
-                  child: _role == null
-                      ? _RolePicker(
-                          key: const ValueKey('picker'),
-                          onPick: _pickRole,
-                          onGoogle: (role) => _signInWithGoogle(role),
-                          onDemo: _demo,
-                          busy: busy,
-                        )
-                      : _AuthPanel(
-                          key: ValueKey('auth-${_role!.name}'),
-                          role: _role!,
-                          mode: _mode,
-                          nameCtrl: _nameCtrl,
-                          phoneCtrl: _phoneCtrl,
-                          emailCtrl: _emailCtrl,
-                          passwordCtrl: _passwordCtrl,
-                          formKey: _formKey,
-                          obscure: _obscure,
-                          loading: _loading,
-                          error: _error,
-                          onModeChange: (m) =>
-                              setState(() {
-                                _mode = m;
-                                _error = null;
-                              }),
-                          onToggleObscure: () =>
-                              setState(() => _obscure = !_obscure),
-                          onBack: _back,
-                          onSendOtp: _sendOtp,
-                          onEmailSignIn: () => _submitEmail(register: false),
-                          onEmailRegister: () => _submitEmail(register: true),
-                          onAshaQuick: _quickSignIn,
-                          onGoogle: () => _signInWithGoogle(_role),
-                          onDemo: _demo,
-                        ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          },
+        ),
       ),
     );
   }
@@ -292,8 +301,11 @@ class _RolePicker extends StatelessWidget {
                 colors: [ClinicalPalette.tealBright, ClinicalPalette.teal],
               ),
             ),
-            child: const Icon(Icons.health_and_safety_rounded,
-                color: Colors.white, size: 32),
+            child: const Icon(
+              Icons.health_and_safety_rounded,
+              color: Colors.white,
+              size: 32,
+            ),
           ),
         ),
 
@@ -312,8 +324,9 @@ class _RolePicker extends StatelessWidget {
 
         Text(
           'Screening · triage · follow-up',
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: ClinicalPalette.muted(context)),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: ClinicalPalette.muted(context),
+          ),
           textAlign: TextAlign.center,
         ),
 
@@ -415,8 +428,9 @@ class _RoleTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -429,8 +443,10 @@ class _RoleTile extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded,
-                  color: ClinicalPalette.faint(context)),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: ClinicalPalette.faint(context),
+              ),
             ],
           ),
         ),
@@ -514,8 +530,9 @@ class _AuthPanelState extends State<_AuthPanel> {
                 children: [
                   Text(
                     _roleTitle(widget.role),
-                    style: theme.textTheme.titleLarge
-                        ?.copyWith(fontWeight: FontWeight.w800),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   Text(
                     _roleSubtitle(widget.role),
@@ -541,8 +558,7 @@ class _AuthPanelState extends State<_AuthPanel> {
           const SizedBox(height: 16),
         ],
 
-        if (widget.mode == _AuthMode.phone ||
-            widget.mode == _AuthMode.asha)
+        if (widget.mode == _AuthMode.phone || widget.mode == _AuthMode.asha)
           _buildPhoneForm(theme, cs),
 
         if (widget.mode == _AuthMode.email) _buildEmailForm(theme, cs),
@@ -553,10 +569,10 @@ class _AuthPanelState extends State<_AuthPanel> {
             onPressed: widget.loading
                 ? null
                 : () => widget.onModeChange(
-                      widget.mode == _AuthMode.email
-                          ? _AuthMode.phone
-                          : _AuthMode.email,
-                    ),
+                    widget.mode == _AuthMode.email
+                        ? _AuthMode.phone
+                        : _AuthMode.email,
+                  ),
             child: Text(
               widget.mode == _AuthMode.email
                   ? 'Sign in with phone OTP instead'
@@ -577,13 +593,17 @@ class _AuthPanelState extends State<_AuthPanel> {
               color: ClinicalPalette.coral.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                  color: ClinicalPalette.coral.withValues(alpha: 0.3)),
+                color: ClinicalPalette.coral.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.error_outline_rounded,
-                    color: ClinicalPalette.coral, size: 18),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: ClinicalPalette.coral,
+                  size: 18,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -638,7 +658,9 @@ class _AuthPanelState extends State<_AuthPanel> {
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : const Icon(Icons.sms_rounded),
           label: Text(widget.loading ? 'Sending OTP…' : 'Send OTP'),
@@ -708,9 +730,11 @@ class _AuthPanelState extends State<_AuthPanel> {
               hintText: _registerMode ? 'At least 6 characters' : '',
               prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
-                icon: Icon(widget.obscure
-                    ? Icons.visibility_off_rounded
-                    : Icons.visibility_rounded),
+                icon: Icon(
+                  widget.obscure
+                      ? Icons.visibility_off_rounded
+                      : Icons.visibility_rounded,
+                ),
                 onPressed: widget.onToggleObscure,
               ),
             ),
@@ -729,15 +753,17 @@ class _AuthPanelState extends State<_AuthPanel> {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Icon(Icons.login_rounded),
             label: Text(_registerMode ? 'Create account' : 'Sign in'),
             onPressed: widget.loading
                 ? null
                 : (_registerMode
-                    ? widget.onEmailRegister
-                    : widget.onEmailSignIn),
+                      ? widget.onEmailRegister
+                      : widget.onEmailSignIn),
           ),
           const SizedBox(height: 16),
           const _OrDivider(text: 'or'),
@@ -752,24 +778,24 @@ class _AuthPanelState extends State<_AuthPanel> {
   }
 
   String _roleTitle(UserRole role) => switch (role) {
-        UserRole.patient => 'Patient sign-in',
-        UserRole.clinician => 'Clinician sign-in',
-      };
+    UserRole.patient => 'Patient sign-in',
+    UserRole.clinician => 'Clinician sign-in',
+  };
 
   String _roleSubtitle(UserRole role) => switch (role) {
-        UserRole.patient => 'Your records stay on this device.',
-        UserRole.clinician => 'Screen, triage, and refer patients.',
-      };
+    UserRole.patient => 'Your records stay on this device.',
+    UserRole.clinician => 'Screen, triage, and refer patients.',
+  };
 
   String _roleNameHint(UserRole role) => switch (role) {
-        UserRole.patient => 'Your full name',
-        UserRole.clinician => 'Dr. / nurse name',
-      };
+    UserRole.patient => 'Your full name',
+    UserRole.clinician => 'Dr. / nurse name',
+  };
 
   String _roleEmailHint(UserRole role) => switch (role) {
-        UserRole.patient => 'you@example.com',
-        UserRole.clinician => 'doctor@hospital.in',
-      };
+    UserRole.patient => 'you@example.com',
+    UserRole.clinician => 'doctor@hospital.in',
+  };
 }
 
 // ───────────────────────── ASHA quick login ─────────────────────────
@@ -795,7 +821,8 @@ class _QuickLoginTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: ClinicalPalette.teal.withValues(alpha: 0.35)),
+              color: ClinicalPalette.teal.withValues(alpha: 0.35),
+            ),
           ),
           child: Row(
             children: [
@@ -812,11 +839,16 @@ class _QuickLoginTile extends StatelessWidget {
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: ClinicalPalette.teal),
+                            strokeWidth: 2,
+                            color: ClinicalPalette.teal,
+                          ),
                         ),
                       )
-                    : const Icon(Icons.bolt_rounded,
-                        color: ClinicalPalette.teal, size: 24),
+                    : const Icon(
+                        Icons.bolt_rounded,
+                        color: ClinicalPalette.teal,
+                        size: 24,
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -825,8 +857,9 @@ class _QuickLoginTile extends StatelessWidget {
                   children: [
                     Text(
                       'One-tap field login',
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -838,8 +871,10 @@ class _QuickLoginTile extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded,
-                  color: ClinicalPalette.faint(context)),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: ClinicalPalette.faint(context),
+              ),
             ],
           ),
         ),
@@ -858,20 +893,17 @@ class _OrDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-            child: Divider(color: ClinicalPalette.hairline(context))),
+        Expanded(child: Divider(color: ClinicalPalette.hairline(context))),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             text,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: ClinicalPalette.muted(context)),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: ClinicalPalette.muted(context),
+            ),
           ),
         ),
-        Expanded(
-            child: Divider(color: ClinicalPalette.hairline(context))),
+        Expanded(child: Divider(color: ClinicalPalette.hairline(context))),
       ],
     );
   }
@@ -885,16 +917,18 @@ class _FooterNote extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.lock_outline_rounded,
-            size: 13, color: ClinicalPalette.faint(context)),
+        Icon(
+          Icons.lock_outline_rounded,
+          size: 13,
+          color: ClinicalPalette.faint(context),
+        ),
         const SizedBox(width: 5),
         Flexible(
           child: Text(
             'Records stored on this device · screening only, not a diagnosis',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: ClinicalPalette.muted(context)),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: ClinicalPalette.muted(context),
+            ),
             textAlign: TextAlign.center,
           ),
         ),
@@ -907,10 +941,7 @@ class _GoogleSignInButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool loading;
 
-  const _GoogleSignInButton({
-    required this.onTap,
-    this.loading = false,
-  });
+  const _GoogleSignInButton({required this.onTap, this.loading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -929,8 +960,7 @@ class _GoogleSignInButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color:
-                  isDark ? const Color(0xFF444746) : const Color(0xFFDADCE0),
+              color: isDark ? const Color(0xFF444746) : const Color(0xFFDADCE0),
             ),
           ),
           child: Row(
@@ -953,8 +983,7 @@ class _GoogleSignInButton extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color:
-                        isDark ? Colors.white : const Color(0xFF1F1F1F),
+                    color: isDark ? Colors.white : const Color(0xFF1F1F1F),
                     letterSpacing: 0.2,
                   ),
                 ),

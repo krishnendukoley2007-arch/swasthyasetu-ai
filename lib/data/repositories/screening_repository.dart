@@ -64,18 +64,18 @@ class CommunityAggregate {
   });
 
   const CommunityAggregate.empty()
-      : totalScreenings = 0,
-        patientsScreened = 0,
-        riskDistribution = const {},
-        symptomFrequency = const {},
-        topTriggeredRules = const {},
-        dailyCounts = const [],
-        geoPoints = const [],
-        syncedCount = 0,
-        pendingCount = 0,
-        failedCount = 0,
-        earliest = null,
-        latest = null;
+    : totalScreenings = 0,
+      patientsScreened = 0,
+      riskDistribution = const {},
+      symptomFrequency = const {},
+      topTriggeredRules = const {},
+      dailyCounts = const [],
+      geoPoints = const [],
+      syncedCount = 0,
+      pendingCount = 0,
+      failedCount = 0,
+      earliest = null,
+      latest = null;
 
   int get highRiskCount => riskDistribution['RED'] ?? 0;
   int get elevatedCount => riskDistribution['YELLOW'] ?? 0;
@@ -92,7 +92,11 @@ class DailyCount {
   final int total;
   final int high;
 
-  const DailyCount({required this.day, required this.total, required this.high});
+  const DailyCount({
+    required this.day,
+    required this.total,
+    required this.high,
+  });
 }
 
 class ScreeningRepository {
@@ -104,9 +108,10 @@ class ScreeningRepository {
   // ─────────────────────────────── Reads ───────────────────────────────
 
   Future<List<Screening>> getForPatient(String patientId, {int? limit}) async =>
-      (await _db.getScreeningsForPatient(patientId, limit: limit))
-          .map((r) => r.toModel())
-          .toList();
+      (await _db.getScreeningsForPatient(
+        patientId,
+        limit: limit,
+      )).map((r) => r.toModel()).toList();
 
   Stream<List<Screening>> watchForPatient(String patientId) => _db
       .watchScreeningsForPatient(patientId)
@@ -116,9 +121,9 @@ class ScreeningRepository {
       (await _db.getScreening(id))?.toModel();
 
   Future<List<Screening>> getAll({int? limit}) async =>
-      (await _db.getAllScreenings(limit: limit))
-          .map((r) => r.toModel())
-          .toList();
+      (await _db.getAllScreenings(
+        limit: limit,
+      )).map((r) => r.toModel()).toList();
 
   Stream<List<Screening>> watchRecent({int limit = 50}) => _db
       .watchRecentScreenings(limit: limit)
@@ -129,11 +134,14 @@ class ScreeningRepository {
   /// Derived from the screening rows rather than the sync queue so a record
   /// whose queue entry was lost still shows up as pending — losing a queue row
   /// must never silently drop a patient's reading.
-  Stream<List<Screening>> watchUnsynced() =>
-      _db.watchRecentScreenings(limit: 500).map((rows) => rows
-          .map((r) => r.toModel())
-          .where((s) => s.syncStatus != 'SYNCED')
-          .toList());
+  Stream<List<Screening>> watchUnsynced() => _db
+      .watchRecentScreenings(limit: 500)
+      .map(
+        (rows) => rows
+            .map((r) => r.toModel())
+            .where((s) => s.syncStatus != 'SYNCED')
+            .toList(),
+      );
 
   Future<WaveformData?> loadWaveform(String screeningId, String type) =>
       _waveforms.load(screeningId, type);
@@ -172,7 +180,10 @@ class ScreeningRepository {
       );
     }
 
-    await _db.touchPatientLastScreened(screening.patientId, screening.timestamp);
+    await _db.touchPatientLastScreened(
+      screening.patientId,
+      screening.timestamp,
+    );
 
     await _db.enqueueSync(
       SyncQueueCompanion.insert(
@@ -222,12 +233,14 @@ class ScreeningRepository {
       }
 
       if (row.latitude != null && row.longitude != null) {
-        geo.add(ScreeningGeoPoint(
-          latitude: row.latitude!,
-          longitude: row.longitude!,
-          riskLevel: row.riskLevel,
-          timestamp: row.timestamp,
-        ));
+        geo.add(
+          ScreeningGeoPoint(
+            latitude: row.latitude!,
+            longitude: row.longitude!,
+            riskLevel: row.riskLevel,
+            timestamp: row.timestamp,
+          ),
+        );
       }
 
       switch (row.syncStatus) {
@@ -272,21 +285,28 @@ class ScreeningRepository {
       buckets[startOfToday.subtract(Duration(days: i))] = [];
     }
     for (final row in rows) {
-      final day =
-          DateTime(row.timestamp.year, row.timestamp.month, row.timestamp.day);
+      final day = DateTime(
+        row.timestamp.year,
+        row.timestamp.month,
+        row.timestamp.day,
+      );
       buckets[day]?.add(row);
     }
     return buckets.entries
-        .map((e) => DailyCount(
-              day: e.key,
-              total: e.value.length,
-              high: e.value.where((r) => r.riskLevel == 'RED').length,
-            ))
+        .map(
+          (e) => DailyCount(
+            day: e.key,
+            total: e.value.length,
+            high: e.value.where((r) => r.riskLevel == 'RED').length,
+          ),
+        )
         .toList();
   }
 
-  static Map<String, int> _sortedByValueDesc(Map<String, int> input,
-      {int? take}) {
+  static Map<String, int> _sortedByValueDesc(
+    Map<String, int> input, {
+    int? take,
+  }) {
     final entries = input.entries.toList()
       ..sort((a, b) {
         final byCount = b.value.compareTo(a.value);

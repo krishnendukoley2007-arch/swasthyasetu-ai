@@ -45,7 +45,8 @@ class ClinicalScenario {
       id: 'normal_adult',
       name: 'Healthy Adult (Normal)',
       subtitle: 'HR 72, SpO2 98%, Temp 36.6°C, Glucose 95',
-      description: 'Resting normal vitals inside standard clinical safety ranges.',
+      description:
+          'Resting normal vitals inside standard clinical safety ranges.',
       expectedBand: RiskBand.green,
       heartRateBpm: 72,
       spo2Percent: 98,
@@ -60,7 +61,8 @@ class ClinicalScenario {
       id: 'hypoxemia_pneumonia',
       name: 'Severe Hypoxemia (Pneumonia)',
       subtitle: 'HR 118, SpO2 84%, Temp 38.9°C, Glucose 105',
-      description: 'Acute respiratory distress syndrome / severe pneumonia with dangerous oxygen desaturation.',
+      description:
+          'Acute respiratory distress syndrome / severe pneumonia with dangerous oxygen desaturation.',
       expectedBand: RiskBand.red,
       heartRateBpm: 118,
       spo2Percent: 84,
@@ -75,7 +77,8 @@ class ClinicalScenario {
       id: 'hyperglycemia_dka',
       name: 'Diabetic Emergency (Hyperglycemia)',
       subtitle: 'Glucose 285 mg/dL, HR 104, SpO2 97%',
-      description: 'Critical blood glucose above 250 mg/dL with tachycardia, alerting for Diabetic Ketoacidosis risk.',
+      description:
+          'Critical blood glucose above 250 mg/dL with tachycardia, alerting for Diabetic Ketoacidosis risk.',
       expectedBand: RiskBand.red,
       heartRateBpm: 104,
       spo2Percent: 97,
@@ -90,7 +93,8 @@ class ClinicalScenario {
       id: 'hypoglycemia_shock',
       name: 'Hypoglycemic Shock (Severe Low Sugar)',
       subtitle: 'Glucose 52 mg/dL, HR 98, Cold Clammy Skin',
-      description: 'Life-threatening hypoglycemia below 70 mg/dL requiring immediate fast-acting oral glucose.',
+      description:
+          'Life-threatening hypoglycemia below 70 mg/dL requiring immediate fast-acting oral glucose.',
       expectedBand: RiskBand.red,
       heartRateBpm: 98,
       spo2Percent: 96,
@@ -105,7 +109,8 @@ class ClinicalScenario {
       id: 'heat_stroke',
       name: 'Heat Stroke (Hyperthermia Crisis)',
       subtitle: 'Temp 40.2°C, HR 136, Severe Dehydration',
-      description: 'Extreme core temperature elevation during hot climatic conditions triggering multi-organ stress.',
+      description:
+          'Extreme core temperature elevation during hot climatic conditions triggering multi-organ stress.',
       expectedBand: RiskBand.red,
       heartRateBpm: 136,
       spo2Percent: 94,
@@ -120,7 +125,8 @@ class ClinicalScenario {
       id: 'arrhythmia_afib',
       name: 'Cardiac Arrhythmia (Tachy / AFib)',
       subtitle: 'HR 145, Irregular RR intervals, SpO2 95%',
-      description: 'Rapid, irregular heart rhythm exhibiting chaotic beat-to-beat scatter.',
+      description:
+          'Rapid, irregular heart rhythm exhibiting chaotic beat-to-beat scatter.',
       expectedBand: RiskBand.yellow,
       heartRateBpm: 145,
       spo2Percent: 95,
@@ -136,9 +142,6 @@ class ClinicalScenario {
   static ClinicalScenario get defaultScenario => all.first;
 
   static ClinicalScenario findById(String id) {
-    return all.firstWhere(
-      (s) => s.id == id,
-      orElse: () => defaultScenario,
-    );
+    return all.firstWhere((s) => s.id == id, orElse: () => defaultScenario);
   }
 }

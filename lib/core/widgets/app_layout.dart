@@ -36,7 +36,8 @@ class AppPageScaffold extends StatelessWidget {
       floatingActionButtonLocation: floatingActionButtonLocation,
       bottomNavigationBar: bottomNavigationBar,
       bottomSheet: bottomSheet,
-      backgroundColor: backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor:
+          backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       extendBody: extendBody,
       extendBodyBehindAppBar: extendBodyBehindAppBar,
@@ -62,7 +63,9 @@ class AppScrollView extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       controller: controller,
-      physics: physics ? const AlwaysScrollableScrollPhysics() : const NeverScrollableScrollPhysics(),
+      physics: physics
+          ? const AlwaysScrollableScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
       padding: padding,
       child: child,
     );
@@ -258,33 +261,66 @@ class AppSpacing extends StatelessWidget {
 
   const AppSpacing({super.key, this.vertical, this.horizontal});
 
-  const AppSpacing.xs({super.key}) : vertical = AppTheme.spacingXs, horizontal = AppTheme.spacingXs;
-  const AppSpacing.sm({super.key}) : vertical = AppTheme.spacingSm, horizontal = AppTheme.spacingSm;
-  const AppSpacing.md({super.key}) : vertical = AppTheme.spacingMd, horizontal = AppTheme.spacingMd;
-  const AppSpacing.lg({super.key}) : vertical = AppTheme.spacingLg, horizontal = AppTheme.spacingLg;
-  const AppSpacing.xl({super.key}) : vertical = AppTheme.spacingXl, horizontal = AppTheme.spacingXl;
-  const AppSpacing.xxl({super.key}) : vertical = AppTheme.spacingXxl, horizontal = AppTheme.spacingXxl;
+  const AppSpacing.xs({super.key})
+    : vertical = AppTheme.spacingXs,
+      horizontal = AppTheme.spacingXs;
+  const AppSpacing.sm({super.key})
+    : vertical = AppTheme.spacingSm,
+      horizontal = AppTheme.spacingSm;
+  const AppSpacing.md({super.key})
+    : vertical = AppTheme.spacingMd,
+      horizontal = AppTheme.spacingMd;
+  const AppSpacing.lg({super.key})
+    : vertical = AppTheme.spacingLg,
+      horizontal = AppTheme.spacingLg;
+  const AppSpacing.xl({super.key})
+    : vertical = AppTheme.spacingXl,
+      horizontal = AppTheme.spacingXl;
+  const AppSpacing.xxl({super.key})
+    : vertical = AppTheme.spacingXxl,
+      horizontal = AppTheme.spacingXxl;
 
-  const AppSpacing.vxs({super.key}) : vertical = AppTheme.spacingXs, horizontal = null;
-  const AppSpacing.vsm({super.key}) : vertical = AppTheme.spacingSm, horizontal = null;
-  const AppSpacing.vmd({super.key}) : vertical = AppTheme.spacingMd, horizontal = null;
-  const AppSpacing.vlg({super.key}) : vertical = AppTheme.spacingLg, horizontal = null;
-  const AppSpacing.vxl({super.key}) : vertical = AppTheme.spacingXl, horizontal = null;
-  const AppSpacing.vxxl({super.key}) : vertical = AppTheme.spacingXxl, horizontal = null;
+  const AppSpacing.vxs({super.key})
+    : vertical = AppTheme.spacingXs,
+      horizontal = null;
+  const AppSpacing.vsm({super.key})
+    : vertical = AppTheme.spacingSm,
+      horizontal = null;
+  const AppSpacing.vmd({super.key})
+    : vertical = AppTheme.spacingMd,
+      horizontal = null;
+  const AppSpacing.vlg({super.key})
+    : vertical = AppTheme.spacingLg,
+      horizontal = null;
+  const AppSpacing.vxl({super.key})
+    : vertical = AppTheme.spacingXl,
+      horizontal = null;
+  const AppSpacing.vxxl({super.key})
+    : vertical = AppTheme.spacingXxl,
+      horizontal = null;
 
-  const AppSpacing.hxs({super.key}) : vertical = null, horizontal = AppTheme.spacingXs;
-  const AppSpacing.hsm({super.key}) : vertical = null, horizontal = AppTheme.spacingSm;
-  const AppSpacing.hmd({super.key}) : vertical = null, horizontal = AppTheme.spacingMd;
-  const AppSpacing.hlg({super.key}) : vertical = null, horizontal = AppTheme.spacingLg;
-  const AppSpacing.hxl({super.key}) : vertical = null, horizontal = AppTheme.spacingXl;
-  const AppSpacing.hxxl({super.key}) : vertical = null, horizontal = AppTheme.spacingXxl;
+  const AppSpacing.hxs({super.key})
+    : vertical = null,
+      horizontal = AppTheme.spacingXs;
+  const AppSpacing.hsm({super.key})
+    : vertical = null,
+      horizontal = AppTheme.spacingSm;
+  const AppSpacing.hmd({super.key})
+    : vertical = null,
+      horizontal = AppTheme.spacingMd;
+  const AppSpacing.hlg({super.key})
+    : vertical = null,
+      horizontal = AppTheme.spacingLg;
+  const AppSpacing.hxl({super.key})
+    : vertical = null,
+      horizontal = AppTheme.spacingXl;
+  const AppSpacing.hxxl({super.key})
+    : vertical = null,
+      horizontal = AppTheme.spacingXxl;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: horizontal,
-      height: vertical,
-    );
+    return SizedBox(width: horizontal, height: vertical);
   }
 }
 
@@ -385,10 +421,16 @@ class AppCenteredScrollView extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(
               minWidth: constraints.hasBoundedWidth
-                  ? (constraints.maxWidth - insets.horizontal).clamp(0.0, double.infinity)
+                  ? (constraints.maxWidth - insets.horizontal).clamp(
+                      0.0,
+                      double.infinity,
+                    )
                   : 0,
               minHeight: constraints.hasBoundedHeight
-                  ? (constraints.maxHeight - insets.vertical).clamp(0.0, double.infinity)
+                  ? (constraints.maxHeight - insets.vertical).clamp(
+                      0.0,
+                      double.infinity,
+                    )
                   : 0,
             ),
             child: child,
@@ -418,10 +460,12 @@ class AppSectionHeader extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: padding ?? const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacingMd,
-        vertical: AppTheme.spacingSm,
-      ),
+      padding:
+          padding ??
+          const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacingMd,
+            vertical: AppTheme.spacingSm,
+          ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -543,10 +587,7 @@ class AppAspectRatio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: aspectRatio,
-      child: child,
-    );
+    return AspectRatio(aspectRatio: aspectRatio, child: child);
   }
 }
 
@@ -564,11 +605,7 @@ class AppLimitedBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LimitedBox(
-      maxWidth: maxWidth,
-      maxHeight: maxHeight,
-      child: child,
-    );
+    return LimitedBox(maxWidth: maxWidth, maxHeight: maxHeight, child: child);
   }
 }
 
@@ -584,9 +621,6 @@ class AppConstrainedBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: constraints,
-      child: child,
-    );
+    return ConstrainedBox(constraints: constraints, child: child);
   }
 }

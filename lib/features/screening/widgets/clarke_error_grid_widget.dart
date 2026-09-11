@@ -86,7 +86,9 @@ class ClarkeErrorGridWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -116,11 +118,15 @@ class ClarkeErrorGridWidget extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     Text(
                       'ISO 15197 Non-Invasive Accuracy Standard',
-                      style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -232,7 +238,11 @@ class ClarkeErrorGridWidget extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 9.5, color: Colors.grey, fontWeight: FontWeight.w500),
+          style: const TextStyle(
+            fontSize: 9.5,
+            color: Colors.grey,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
@@ -258,7 +268,10 @@ class _ClarkeGridPainter extends CustomPainter {
 
     // Background
     final bgPaint = Paint()..color = const Color(0xFF131A1E);
-    final clipRRect = RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, w, h), const Radius.circular(8));
+    final clipRRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, w, h),
+      const Radius.circular(8),
+    );
     canvas.drawRRect(clipRRect, bgPaint);
 
     // Coordinate converters
@@ -280,7 +293,11 @@ class _ClarkeGridPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.3)
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(toX(0), toY(0)), Offset(toX(maxVal), toY(maxVal)), identityPaint);
+    canvas.drawLine(
+      Offset(toX(0), toY(0)),
+      Offset(toX(maxVal), toY(maxVal)),
+      identityPaint,
+    );
 
     // Zone A Polygons: ±20% boundaries
     // y = 1.2x (from x=58.33 to 400), y = 0.8x (from x=70 to 400)
@@ -331,10 +348,20 @@ class _ClarkeGridPainter extends CustomPainter {
 
     // Zone Labels
     final tp = TextPainter(textDirection: TextDirection.ltr);
-    void drawText(String text, double x, double y, Color col, {double size = 11}) {
+    void drawText(
+      String text,
+      double x,
+      double y,
+      Color col, {
+      double size = 11,
+    }) {
       tp.text = TextSpan(
         text: text,
-        style: TextStyle(color: col, fontSize: size, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: col,
+          fontSize: size,
+          fontWeight: FontWeight.bold,
+        ),
       );
       tp.layout();
       tp.paint(canvas, Offset(x, y));

@@ -42,7 +42,9 @@ class ScreeningExitButton extends ConsumerWidget {
         );
         if (leave == true && context.mounted) {
           final account = ref.read(authStateProvider).account;
-          context.go(account?.role == UserRole.patient ? '/my-health' : '/home');
+          context.go(
+            account?.role == UserRole.patient ? '/my-health' : '/home',
+          );
         }
       },
     );

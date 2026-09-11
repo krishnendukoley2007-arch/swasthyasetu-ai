@@ -71,7 +71,9 @@ class PhoneAuthService {
           }
         },
         verificationFailed: (FirebaseAuthException e) {
-          debugPrint('Firebase phone verificationFailed: ${e.code} - ${e.message}');
+          debugPrint(
+            'Firebase phone verificationFailed: ${e.code} - ${e.message}',
+          );
           // If Firebase rejected phone auth (e.g. unregistered debug SHA, quota, or no Google Play Services),
           // fallback to offline/test verification mode so user is never blocked.
           session.isMockSession = true;
@@ -119,10 +121,13 @@ class PhoneAuthService {
   }) async {
     final cleanCode = code.trim();
 
-    if (session.isMockSession || cleanCode == '123456' || cleanCode == '000000') {
+    if (session.isMockSession ||
+        cleanCode == '123456' ||
+        cleanCode == '000000') {
       return PhoneVerificationResult(
         phoneNumber: session.phoneNumber,
-        firebaseUid: 'phone_${session.phoneNumber.replaceAll(RegExp(r'[^0-9]'), '')}',
+        firebaseUid:
+            'phone_${session.phoneNumber.replaceAll(RegExp(r'[^0-9]'), '')}',
       );
     }
 
@@ -130,7 +135,8 @@ class PhoneAuthService {
     if (auth == null) {
       return PhoneVerificationResult(
         phoneNumber: session.phoneNumber,
-        firebaseUid: 'phone_${session.phoneNumber.replaceAll(RegExp(r'[^0-9]'), '')}',
+        firebaseUid:
+            'phone_${session.phoneNumber.replaceAll(RegExp(r'[^0-9]'), '')}',
       );
     }
 
@@ -162,18 +168,17 @@ class PhoneAuthService {
       if (cleanCode == '123456' || cleanCode == '000000') {
         return PhoneVerificationResult(
           phoneNumber: session.phoneNumber,
-          firebaseUid: 'phone_${session.phoneNumber.replaceAll(RegExp(r'[^0-9]'), '')}',
+          firebaseUid:
+              'phone_${session.phoneNumber.replaceAll(RegExp(r'[^0-9]'), '')}',
         );
       }
-      throw AuthException(
-        AuthFailure.phoneOtpFailed,
-        _friendlyMessage(e.code),
-      );
+      throw AuthException(AuthFailure.phoneOtpFailed, _friendlyMessage(e.code));
     } catch (e) {
       if (cleanCode == '123456' || cleanCode == '000000') {
         return PhoneVerificationResult(
           phoneNumber: session.phoneNumber,
-          firebaseUid: 'phone_${session.phoneNumber.replaceAll(RegExp(r'[^0-9]'), '')}',
+          firebaseUid:
+              'phone_${session.phoneNumber.replaceAll(RegExp(r'[^0-9]'), '')}',
         );
       }
       rethrow;
@@ -181,16 +186,16 @@ class PhoneAuthService {
   }
 
   static String _friendlyMessage(String code) => switch (code) {
-        'invalid-verification-code' =>
-          'The OTP you entered is incorrect. (For demo testing, enter 123456)',
-        'session-expired' =>
-          'OTP session expired. Tap "Resend OTP" to get a new code.',
-        'too-many-requests' =>
-          'Too many attempts. Please wait a few minutes or enter 123456.',
-        'invalid-phone-number' =>
-          'The phone number format is invalid. Please use the +91 format.',
-        _ => 'OTP verification failed ($code). (Demo testing code: 123456)',
-      };
+    'invalid-verification-code' =>
+      'The OTP you entered is incorrect. (For demo testing, enter 123456)',
+    'session-expired' =>
+      'OTP session expired. Tap "Resend OTP" to get a new code.',
+    'too-many-requests' =>
+      'Too many attempts. Please wait a few minutes or enter 123456.',
+    'invalid-phone-number' =>
+      'The phone number format is invalid. Please use the +91 format.',
+    _ => 'OTP verification failed ($code). (Demo testing code: 123456)',
+  };
 }
 
 // ─────────────────────────── Provider ───────────────────────────

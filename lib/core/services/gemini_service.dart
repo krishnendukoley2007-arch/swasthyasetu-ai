@@ -52,39 +52,39 @@ enum GeminiFailure {
 
 extension GeminiFailureText on GeminiFailure {
   String get label => switch (this) {
-        GeminiFailure.notConfigured => 'No AI key entered',
-        GeminiFailure.rejectedKey => 'Key rejected',
-        GeminiFailure.quota => 'Daily limit reached',
-        GeminiFailure.serverBusy => 'Google\'s AI is busy',
-        GeminiFailure.network => 'No connection',
-        GeminiFailure.badResponse => 'Unusable reply',
-      };
+    GeminiFailure.notConfigured => 'No AI key entered',
+    GeminiFailure.rejectedKey => 'Key rejected',
+    GeminiFailure.quota => 'Daily limit reached',
+    GeminiFailure.serverBusy => 'Google\'s AI is busy',
+    GeminiFailure.network => 'No connection',
+    GeminiFailure.badResponse => 'Unusable reply',
+  };
 
   String get detail => switch (this) {
-        GeminiFailure.notConfigured =>
-          'Add a Gemini API key in Settings to ask follow-up questions online. '
-              'The written explanation below was produced on this phone and does '
-              'not need one.',
-        GeminiFailure.rejectedKey =>
-          'Google rejected the key. It may be revoked, restricted to a '
-              'different API, or an old-style "AIza" Standard key — those stop '
-              'being accepted in September 2026. Make a new key at '
-              'aistudio.google.com/apikey and paste it into Settings.',
-        GeminiFailure.quota =>
-          'This key has used its quota for now. The offline explanation still '
-              'works, and online answers should return later.',
-        GeminiFailure.serverBusy =>
-          'Your connection is fine — Google\'s AI service turned the request '
-              'away as overloaded, and it was already retried. Asking again in '
-              'a moment usually works. The explanation below is on this phone '
-              'either way.',
-        GeminiFailure.network =>
-          'The phone could not reach Google. Nothing was sent. The explanation '
-              'below is already saved on this phone.',
-        GeminiFailure.badResponse =>
-          'The model replied with something unusable, so nothing is shown rather '
-              'than a half-parsed answer.',
-      };
+    GeminiFailure.notConfigured =>
+      'Add a Gemini API key in Settings to ask follow-up questions online. '
+          'The written explanation below was produced on this phone and does '
+          'not need one.',
+    GeminiFailure.rejectedKey =>
+      'Google rejected the key. It may be revoked, restricted to a '
+          'different API, or an old-style "AIza" Standard key — those stop '
+          'being accepted in September 2026. Make a new key at '
+          'aistudio.google.com/apikey and paste it into Settings.',
+    GeminiFailure.quota =>
+      'This key has used its quota for now. The offline explanation still '
+          'works, and online answers should return later.',
+    GeminiFailure.serverBusy =>
+      'Your connection is fine — Google\'s AI service turned the request '
+          'away as overloaded, and it was already retried. Asking again in '
+          'a moment usually works. The explanation below is on this phone '
+          'either way.',
+    GeminiFailure.network =>
+      'The phone could not reach Google. Nothing was sent. The explanation '
+          'below is already saved on this phone.',
+    GeminiFailure.badResponse =>
+      'The model replied with something unusable, so nothing is shown rather '
+          'than a half-parsed answer.',
+  };
 
   /// Whether the worker can fix this themselves right now.
   bool get isActionable =>
@@ -181,15 +181,16 @@ class GeminiService {
   final int _maxRetries;
 
   GeminiService({Dio? dio, int maxRetries = maxRetries})
-      : _maxRetries = maxRetries,
-        _dio = dio ??
-            Dio(
-              BaseOptions(
-                connectTimeout: connectTimeout,
-                receiveTimeout: receiveTimeout,
-                headers: {'Content-Type': 'application/json'},
-              ),
-            );
+    : _maxRetries = maxRetries,
+      _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: connectTimeout,
+              receiveTimeout: receiveTimeout,
+              headers: {'Content-Type': 'application/json'},
+            ),
+          );
 
   bool get isConfigured => apiKey.isNotEmpty;
 
@@ -239,7 +240,7 @@ class GeminiService {
   /// Every request in this class goes through here, so the retry policy is in
   /// one place and `explain`, `answerQuestion` and `testKey` cannot drift apart.
   Future<Map<String, dynamic>?> _generate(Map<String, dynamic> body) async {
-    for (var attempt = 0;; attempt++) {
+    for (var attempt = 0; ; attempt++) {
       try {
         final response = await _dio.post<Map<String, dynamic>>(
           '$endpoint/$model:generateContent',
@@ -408,10 +409,16 @@ class GeminiService {
             'parts': [
               {
                 'text': audience.isPatient
-                    ? _patientGeneralPrompt(question: question,
-                        languageCode: languageCode, contextBlock: contextBlock)
-                    : _nurseGeneralPrompt(question: question,
-                        languageCode: languageCode, contextBlock: contextBlock),
+                    ? _patientGeneralPrompt(
+                        question: question,
+                        languageCode: languageCode,
+                        contextBlock: contextBlock,
+                      )
+                    : _nurseGeneralPrompt(
+                        question: question,
+                        languageCode: languageCode,
+                        contextBlock: contextBlock,
+                      ),
               },
             ],
           },
@@ -436,7 +443,11 @@ class GeminiService {
     }
   }
 
-  String _nurseGeneralPrompt({required String question, String? languageCode, String? contextBlock}) {
+  String _nurseGeneralPrompt({
+    required String question,
+    String? languageCode,
+    String? contextBlock,
+  }) {
     final language = _languageName(languageCode);
     final context = (contextBlock == null || contextBlock.trim().isEmpty)
         ? ''
@@ -457,7 +468,11 @@ The health worker asks: "${question.trim()}"
 Answer in plain language. If the question cannot be answered safely, say so and tell them to consult a doctor.''';
   }
 
-  String _patientGeneralPrompt({required String question, String? languageCode, String? contextBlock}) {
+  String _patientGeneralPrompt({
+    required String question,
+    String? languageCode,
+    String? contextBlock,
+  }) {
     final language = _languageName(languageCode);
     final context = (contextBlock == null || contextBlock.trim().isEmpty)
         ? ''
@@ -485,7 +500,11 @@ Answer in plain language they can act on. If the question cannot be answered saf
     try {
       await _generate({
         'contents': [
-          {'parts': [{'text': 'Reply with the single word: ok'}]},
+          {
+            'parts': [
+              {'text': 'Reply with the single word: ok'},
+            ],
+          },
         ],
         'generationConfig': {
           // 8 was enough on a non-thinking model; here the whole budget would
@@ -537,10 +556,10 @@ Use the risk score only as supporting information and explain it in one short li
   /// Not optional for the patient path: the people most likely to be handed
   /// their own result are the ones least likely to read English.
   static String _languageName(String? languageCode) => switch (languageCode) {
-        'bn' => 'Bengali (Bangla script)',
-        'hi' => 'Hindi (Devanagari script)',
-        _ => 'English',
-      };
+    'bn' => 'Bengali (Bangla script)',
+    'hi' => 'Hindi (Devanagari script)',
+    _ => 'English',
+  };
 
   /// The five keys both audiences return.
   ///
@@ -676,8 +695,8 @@ Return ONLY a JSON object with exactly these keys:
     final rules = assessment.firedRules.isEmpty
         ? '- none (all values inside the screening range)'
         : assessment.firedRules
-            .map((r) => '- ${r.id}: ${r.title} — ${r.detail} (+${r.points})')
-            .join('\n');
+              .map((r) => '- ${r.id}: ${r.title} — ${r.detail} (+${r.points})')
+              .join('\n');
 
     return '''
 - Risk band: ${assessment.band.storageValue}
@@ -769,7 +788,8 @@ $rules''';
             : const [],
         // The disclaimer is ours, never the model's. It is the one sentence that
         // must not vary with a generation.
-        disclaimer: '${OfflineExplainer.disclaimer}\n\n'
+        disclaimer:
+            '${OfflineExplainer.disclaimer}\n\n'
             'Explained by $model. The risk band above came from the rule engine, '
             'not from the model.',
         isDemo: assessment.isDemo,

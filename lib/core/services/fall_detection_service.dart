@@ -139,7 +139,7 @@ class FallDetector {
 /// can be the one that goes down. Both feed the same SOS flow.
 class FallDetectionService {
   FallDetectionService({FallDetector? detector})
-      : _detector = detector ?? FallDetector();
+    : _detector = detector ?? FallDetector();
 
   final FallDetector _detector;
   StreamSubscription<AccelerometerEvent>? _sub;
@@ -163,11 +163,7 @@ class FallDetectionService {
         // Game interval is ~20 ms. The normal interval (~200 ms) is far too
         // coarse: an 80 ms free fall would land between two samples.
         samplingPeriod: SensorInterval.gameInterval,
-      ).listen(
-        _onSample,
-        onError: (Object _) => stop(),
-        cancelOnError: true,
-      );
+      ).listen(_onSample, onError: (Object _) => stop(), cancelOnError: true);
       return true;
     } catch (_) {
       _sub = null;

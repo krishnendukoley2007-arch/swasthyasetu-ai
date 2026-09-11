@@ -82,6 +82,7 @@ class AppTheme {
   static const Color glassBorderDark = Color(0x33FFFFFF);
 
   static const double spacingXxs = 2.0;
+
   /// Bundled Inter, for every string in the app.
   ///
   /// Named explicitly rather than left to the platform default: an OEM skin is
@@ -129,107 +130,43 @@ class AppTheme {
   static const Curve curveSpring = Curves.bounceOut;
 
   static const List<BoxShadow> shadowLevel1 = [
-    BoxShadow(
-      color: Color(0x14000000),
-      blurRadius: 4,
-      offset: Offset(0, 1),
-    ),
-    BoxShadow(
-      color: Color(0x0A000000),
-      blurRadius: 2,
-      offset: Offset(0, 1),
-    ),
+    BoxShadow(color: Color(0x14000000), blurRadius: 4, offset: Offset(0, 1)),
+    BoxShadow(color: Color(0x0A000000), blurRadius: 2, offset: Offset(0, 1)),
   ];
 
   static const List<BoxShadow> shadowLevel2 = [
-    BoxShadow(
-      color: Color(0x1A000000),
-      blurRadius: 8,
-      offset: Offset(0, 4),
-    ),
-    BoxShadow(
-      color: Color(0x0D000000),
-      blurRadius: 4,
-      offset: Offset(0, 2),
-    ),
+    BoxShadow(color: Color(0x1A000000), blurRadius: 8, offset: Offset(0, 4)),
+    BoxShadow(color: Color(0x0D000000), blurRadius: 4, offset: Offset(0, 2)),
   ];
 
   static const List<BoxShadow> shadowLevel3 = [
-    BoxShadow(
-      color: Color(0x1F000000),
-      blurRadius: 16,
-      offset: Offset(0, 8),
-    ),
-    BoxShadow(
-      color: Color(0x10000000),
-      blurRadius: 8,
-      offset: Offset(0, 4),
-    ),
+    BoxShadow(color: Color(0x1F000000), blurRadius: 16, offset: Offset(0, 8)),
+    BoxShadow(color: Color(0x10000000), blurRadius: 8, offset: Offset(0, 4)),
   ];
 
   static const List<BoxShadow> shadowLevel4 = [
-    BoxShadow(
-      color: Color(0x26000000),
-      blurRadius: 32,
-      offset: Offset(0, 16),
-    ),
-    BoxShadow(
-      color: Color(0x14000000),
-      blurRadius: 16,
-      offset: Offset(0, 8),
-    ),
+    BoxShadow(color: Color(0x26000000), blurRadius: 32, offset: Offset(0, 16)),
+    BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 8)),
   ];
 
   static const List<BoxShadow> shadowLevel5 = [
-    BoxShadow(
-      color: Color(0x33000000),
-      blurRadius: 48,
-      offset: Offset(0, 24),
-    ),
-    BoxShadow(
-      color: Color(0x1A000000),
-      blurRadius: 24,
-      offset: Offset(0, 12),
-    ),
+    BoxShadow(color: Color(0x33000000), blurRadius: 48, offset: Offset(0, 24)),
+    BoxShadow(color: Color(0x1A000000), blurRadius: 24, offset: Offset(0, 12)),
   ];
 
   static const List<BoxShadow> shadowColoredPrimary = [
-    BoxShadow(
-      color: Color(0x4C006D32),
-      blurRadius: 16,
-      offset: Offset(0, 8),
-    ),
-    BoxShadow(
-      color: Color(0x26006D32),
-      blurRadius: 8,
-      offset: Offset(0, 4),
-    ),
+    BoxShadow(color: Color(0x4C006D32), blurRadius: 16, offset: Offset(0, 8)),
+    BoxShadow(color: Color(0x26006D32), blurRadius: 8, offset: Offset(0, 4)),
   ];
 
   static const List<BoxShadow> shadowColoredError = [
-    BoxShadow(
-      color: Color(0x4CBA1A1A),
-      blurRadius: 16,
-      offset: Offset(0, 8),
-    ),
-    BoxShadow(
-      color: Color(0x26BA1A1A),
-      blurRadius: 8,
-      offset: Offset(0, 4),
-    ),
+    BoxShadow(color: Color(0x4CBA1A1A), blurRadius: 16, offset: Offset(0, 8)),
+    BoxShadow(color: Color(0x26BA1A1A), blurRadius: 8, offset: Offset(0, 4)),
   ];
 
   static const List<BoxShadow> shadowGlowPrimary = [
-    BoxShadow(
-      color: Color(0x66006D32),
-      blurRadius: 24,
-      offset: Offset(0, 0),
-    ),
-    BoxShadow(
-      color: Color(0x33006D32),
-      blurRadius: 12,
-      offset: Offset(0, 0),
-    ),
+    BoxShadow(color: Color(0x66006D32), blurRadius: 24, offset: Offset(0, 0)),
+    BoxShadow(color: Color(0x33006D32), blurRadius: 12, offset: Offset(0, 0)),
   ];
 
   static ThemeData get lightTheme {
@@ -310,43 +247,50 @@ class AppTheme {
           borderRadius: BorderRadius.circular(radiusLg),
           side: const BorderSide(color: outlineVariantLight, width: 0.5),
         ),
-        margin: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingSm),
+        margin: const EdgeInsets.symmetric(
+          horizontal: spacingMd,
+          vertical: spacingSm,
+        ),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryGreen,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: outlineVariantLight,
-          disabledForegroundColor: onSurfaceVariantLight.withValues(alpha: 0.38),
-          minimumSize: const Size(double.infinity, 56),
-          padding: const EdgeInsets.symmetric(horizontal: spacingLg, vertical: spacingMd),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
-          ),
-          elevation: elevationLevel0,
-          shadowColor: Colors.transparent,
-        ).copyWith(
-          overlayColor: WidgetStateProperty.resolveWith<Color?>(
-            (states) {
-              if (states.contains(WidgetState.pressed)) {
-                return primaryGreenDark.withValues(alpha: 0.12);
-              }
-              if (states.contains(WidgetState.hovered)) {
-                return primaryGreenDark.withValues(alpha: 0.08);
-              }
-              if (states.contains(WidgetState.focused)) {
-                return primaryGreenDark.withValues(alpha: 0.12);
-              }
-              return null;
-            },
-          ),
-        ),
+        style:
+            ElevatedButton.styleFrom(
+              backgroundColor: primaryGreen,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: outlineVariantLight,
+              disabledForegroundColor: onSurfaceVariantLight.withValues(
+                alpha: 0.38,
+              ),
+              minimumSize: const Size(double.infinity, 56),
+              padding: const EdgeInsets.symmetric(
+                horizontal: spacingLg,
+                vertical: spacingMd,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(radiusMd),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
+              elevation: elevationLevel0,
+              shadowColor: Colors.transparent,
+            ).copyWith(
+              overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return primaryGreenDark.withValues(alpha: 0.12);
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return primaryGreenDark.withValues(alpha: 0.08);
+                }
+                if (states.contains(WidgetState.focused)) {
+                  return primaryGreenDark.withValues(alpha: 0.12);
+                }
+                return null;
+              }),
+            ),
       ),
 
       filledButtonTheme: FilledButtonThemeData(
@@ -354,7 +298,10 @@ class AppTheme {
           backgroundColor: primaryGreen,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 56),
-          padding: const EdgeInsets.symmetric(horizontal: spacingLg, vertical: spacingMd),
+          padding: const EdgeInsets.symmetric(
+            horizontal: spacingLg,
+            vertical: spacingMd,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusMd),
           ),
@@ -367,74 +314,85 @@ class AppTheme {
       ),
 
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: primaryGreen,
-          disabledForegroundColor: onSurfaceVariantLight.withValues(alpha: 0.38),
-          minimumSize: const Size(double.infinity, 56),
-          padding: const EdgeInsets.symmetric(horizontal: spacingLg, vertical: spacingMd),
-          side: const BorderSide(color: primaryGreen, width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
-          ),
-        ).copyWith(
-          overlayColor: WidgetStateProperty.resolveWith<Color?>(
-            (states) {
-              if (states.contains(WidgetState.pressed)) {
-                return primaryGreen.withValues(alpha: 0.12);
-              }
-              if (states.contains(WidgetState.hovered)) {
-                return primaryGreen.withValues(alpha: 0.08);
-              }
-              if (states.contains(WidgetState.focused)) {
-                return primaryGreen.withValues(alpha: 0.12);
-              }
-              return null;
-            },
-          ),
-        ),
+        style:
+            OutlinedButton.styleFrom(
+              foregroundColor: primaryGreen,
+              disabledForegroundColor: onSurfaceVariantLight.withValues(
+                alpha: 0.38,
+              ),
+              minimumSize: const Size(double.infinity, 56),
+              padding: const EdgeInsets.symmetric(
+                horizontal: spacingLg,
+                vertical: spacingMd,
+              ),
+              side: const BorderSide(color: primaryGreen, width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(radiusMd),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
+            ).copyWith(
+              overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return primaryGreen.withValues(alpha: 0.12);
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return primaryGreen.withValues(alpha: 0.08);
+                }
+                if (states.contains(WidgetState.focused)) {
+                  return primaryGreen.withValues(alpha: 0.12);
+                }
+                return null;
+              }),
+            ),
       ),
 
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: primaryGreen,
-          disabledForegroundColor: onSurfaceVariantLight.withValues(alpha: 0.38),
-          minimumSize: const Size(64, 44),
-          padding: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingSm),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
-          ),
-        ).copyWith(
-          overlayColor: WidgetStateProperty.resolveWith<Color?>(
-            (states) {
-              if (states.contains(WidgetState.pressed)) {
-                return primaryGreen.withValues(alpha: 0.12);
-              }
-              if (states.contains(WidgetState.hovered)) {
-                return primaryGreen.withValues(alpha: 0.08);
-              }
-              if (states.contains(WidgetState.focused)) {
-                return primaryGreen.withValues(alpha: 0.12);
-              }
-              return null;
-            },
-          ),
-        ),
+        style:
+            TextButton.styleFrom(
+              foregroundColor: primaryGreen,
+              disabledForegroundColor: onSurfaceVariantLight.withValues(
+                alpha: 0.38,
+              ),
+              minimumSize: const Size(64, 44),
+              padding: const EdgeInsets.symmetric(
+                horizontal: spacingMd,
+                vertical: spacingSm,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(radiusMd),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
+            ).copyWith(
+              overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return primaryGreen.withValues(alpha: 0.12);
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return primaryGreen.withValues(alpha: 0.08);
+                }
+                if (states.contains(WidgetState.focused)) {
+                  return primaryGreen.withValues(alpha: 0.12);
+                }
+                return null;
+              }),
+            ),
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceLight,
-        contentPadding: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingMd),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: spacingMd,
+          vertical: spacingMd,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
           borderSide: const BorderSide(color: outlineVariantLight, width: 1),
@@ -457,7 +415,10 @@ class AppTheme {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide(color: outlineVariantLight.withValues(alpha: 0.5), width: 1),
+          borderSide: BorderSide(
+            color: outlineVariantLight.withValues(alpha: 0.5),
+            width: 1,
+          ),
         ),
         labelStyle: const TextStyle(
           color: onSurfaceVariantLight,
@@ -623,7 +584,10 @@ class AppTheme {
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: spacingSm, vertical: spacingXs),
+        padding: const EdgeInsets.symmetric(
+          horizontal: spacingSm,
+          vertical: spacingXs,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusFull),
           side: const BorderSide(color: outlineVariantLight, width: 0.5),
@@ -657,38 +621,30 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: surfaceLight,
         indicatorColor: primaryGreenContainer,
-        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
-          (states) {
-            if (states.contains(WidgetState.selected)) {
-              return const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: primaryGreen,
-              );
-            }
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          if (states.contains(WidgetState.selected)) {
             return const TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: onSurfaceVariantLight,
+              fontWeight: FontWeight.w600,
+              color: primaryGreen,
             );
-          },
-        ),
-        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
-          (states) {
-            if (states.contains(WidgetState.selected)) {
-              return const IconThemeData(
-                color: primaryGreen,
-                size: 26,
-                fill: 1,
-              );
-            }
-            return const IconThemeData(
-              color: onSurfaceVariantLight,
-              size: 26,
-              fill: 0,
-            );
-          },
-        ),
+          }
+          return const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: onSurfaceVariantLight,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: primaryGreen, size: 26, fill: 1);
+          }
+          return const IconThemeData(
+            color: onSurfaceVariantLight,
+            size: 26,
+            fill: 0,
+          );
+        }),
         height: 80,
         elevation: elevationLevel3,
         shadowColor: shadowColor.withValues(alpha: 0.1),
@@ -773,7 +729,10 @@ class AppTheme {
           fontSize: 12,
           fontWeight: FontWeight.w400,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingSm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: spacingMd,
+          vertical: spacingSm,
+        ),
         verticalOffset: 24,
       ),
 
@@ -790,7 +749,10 @@ class AppTheme {
         thumbColor: primaryGreen,
         overlayColor: primaryGreen.withValues(alpha: 0.12),
         valueIndicatorColor: primaryGreen,
-        valueIndicatorTextStyle: const TextStyle(color: Colors.white, fontSize: 12),
+        valueIndicatorTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+        ),
         trackHeight: 4,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
@@ -807,31 +769,31 @@ class AppTheme {
           borderRadius: BorderRadius.circular(radiusSm),
           color: primaryGreenContainer,
         ),
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
         dividerColor: Colors.transparent,
-        overlayColor: WidgetStateProperty.resolveWith<Color?>(
-          (states) {
-            if (states.contains(WidgetState.pressed)) {
-              return primaryGreen.withValues(alpha: 0.12);
-            }
-            if (states.contains(WidgetState.hovered)) {
-              return primaryGreen.withValues(alpha: 0.08);
-            }
-            return null;
-          },
-        ),
+        overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.pressed)) {
+            return primaryGreen.withValues(alpha: 0.12);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return primaryGreen.withValues(alpha: 0.08);
+          }
+          return null;
+        }),
       ),
 
       listTileTheme: ListTileThemeData(
-        contentPadding: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingXs),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: spacingMd,
+          vertical: spacingXs,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+        ),
         tileColor: Colors.transparent,
         selectedTileColor: primaryGreenContainer,
         iconColor: onSurfaceVariantLight,
@@ -860,11 +822,17 @@ class AppTheme {
           backgroundColor: const WidgetStatePropertyAll(surfaceLight),
           surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
           elevation: const WidgetStatePropertyAll(elevationLevel3),
-          shadowColor: WidgetStatePropertyAll(shadowColor.withValues(alpha: 0.15)),
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)),
+          shadowColor: WidgetStatePropertyAll(
+            shadowColor.withValues(alpha: 0.15),
           ),
-          padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: spacingSm)),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(radiusMd),
+            ),
+          ),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(vertical: spacingSm),
+          ),
         ),
       ),
 
@@ -873,7 +841,9 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: elevationLevel3,
         shadowColor: shadowColor.withValues(alpha: 0.15),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+        ),
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
@@ -967,43 +937,50 @@ class AppTheme {
           borderRadius: BorderRadius.circular(radiusLg),
           side: const BorderSide(color: outlineVariantDark, width: 0.5),
         ),
-        margin: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingSm),
+        margin: const EdgeInsets.symmetric(
+          horizontal: spacingMd,
+          vertical: spacingSm,
+        ),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF80D6A3),
-          foregroundColor: const Color(0xFF001207),
-          disabledBackgroundColor: outlineVariantDark,
-          disabledForegroundColor: onSurfaceVariantDark.withValues(alpha: 0.38),
-          minimumSize: const Size(double.infinity, 56),
-          padding: const EdgeInsets.symmetric(horizontal: spacingLg, vertical: spacingMd),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
-          ),
-          elevation: elevationLevel0,
-          shadowColor: Colors.transparent,
-        ).copyWith(
-          overlayColor: WidgetStateProperty.resolveWith<Color?>(
-            (states) {
-              if (states.contains(WidgetState.pressed)) {
-                return const Color(0xFF006D32).withValues(alpha: 0.12);
-              }
-              if (states.contains(WidgetState.hovered)) {
-                return const Color(0xFF006D32).withValues(alpha: 0.08);
-              }
-              if (states.contains(WidgetState.focused)) {
-                return const Color(0xFF006D32).withValues(alpha: 0.12);
-              }
-              return null;
-            },
-          ),
-        ),
+        style:
+            ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF80D6A3),
+              foregroundColor: const Color(0xFF001207),
+              disabledBackgroundColor: outlineVariantDark,
+              disabledForegroundColor: onSurfaceVariantDark.withValues(
+                alpha: 0.38,
+              ),
+              minimumSize: const Size(double.infinity, 56),
+              padding: const EdgeInsets.symmetric(
+                horizontal: spacingLg,
+                vertical: spacingMd,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(radiusMd),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
+              elevation: elevationLevel0,
+              shadowColor: Colors.transparent,
+            ).copyWith(
+              overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return const Color(0xFF006D32).withValues(alpha: 0.12);
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return const Color(0xFF006D32).withValues(alpha: 0.08);
+                }
+                if (states.contains(WidgetState.focused)) {
+                  return const Color(0xFF006D32).withValues(alpha: 0.12);
+                }
+                return null;
+              }),
+            ),
       ),
 
       filledButtonTheme: FilledButtonThemeData(
@@ -1011,7 +988,10 @@ class AppTheme {
           backgroundColor: const Color(0xFF80D6A3),
           foregroundColor: const Color(0xFF001207),
           minimumSize: const Size(double.infinity, 56),
-          padding: const EdgeInsets.symmetric(horizontal: spacingLg, vertical: spacingMd),
+          padding: const EdgeInsets.symmetric(
+            horizontal: spacingLg,
+            vertical: spacingMd,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusMd),
           ),
@@ -1024,74 +1004,85 @@ class AppTheme {
       ),
 
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF80D6A3),
-          disabledForegroundColor: onSurfaceVariantDark.withValues(alpha: 0.38),
-          minimumSize: const Size(double.infinity, 56),
-          padding: const EdgeInsets.symmetric(horizontal: spacingLg, vertical: spacingMd),
-          side: const BorderSide(color: Color(0xFF80D6A3), width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
-          ),
-        ).copyWith(
-          overlayColor: WidgetStateProperty.resolveWith<Color?>(
-            (states) {
-              if (states.contains(WidgetState.pressed)) {
-                return const Color(0xFF80D6A3).withValues(alpha: 0.12);
-              }
-              if (states.contains(WidgetState.hovered)) {
-                return const Color(0xFF80D6A3).withValues(alpha: 0.08);
-              }
-              if (states.contains(WidgetState.focused)) {
-                return const Color(0xFF80D6A3).withValues(alpha: 0.12);
-              }
-              return null;
-            },
-          ),
-        ),
+        style:
+            OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF80D6A3),
+              disabledForegroundColor: onSurfaceVariantDark.withValues(
+                alpha: 0.38,
+              ),
+              minimumSize: const Size(double.infinity, 56),
+              padding: const EdgeInsets.symmetric(
+                horizontal: spacingLg,
+                vertical: spacingMd,
+              ),
+              side: const BorderSide(color: Color(0xFF80D6A3), width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(radiusMd),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
+            ).copyWith(
+              overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return const Color(0xFF80D6A3).withValues(alpha: 0.12);
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return const Color(0xFF80D6A3).withValues(alpha: 0.08);
+                }
+                if (states.contains(WidgetState.focused)) {
+                  return const Color(0xFF80D6A3).withValues(alpha: 0.12);
+                }
+                return null;
+              }),
+            ),
       ),
 
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: const Color(0xFF80D6A3),
-          disabledForegroundColor: onSurfaceVariantDark.withValues(alpha: 0.38),
-          minimumSize: const Size(64, 44),
-          padding: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingSm),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
-          ),
-        ).copyWith(
-          overlayColor: WidgetStateProperty.resolveWith<Color?>(
-            (states) {
-              if (states.contains(WidgetState.pressed)) {
-                return const Color(0xFF80D6A3).withValues(alpha: 0.12);
-              }
-              if (states.contains(WidgetState.hovered)) {
-                return const Color(0xFF80D6A3).withValues(alpha: 0.08);
-              }
-              if (states.contains(WidgetState.focused)) {
-                return const Color(0xFF80D6A3).withValues(alpha: 0.12);
-              }
-              return null;
-            },
-          ),
-        ),
+        style:
+            TextButton.styleFrom(
+              foregroundColor: const Color(0xFF80D6A3),
+              disabledForegroundColor: onSurfaceVariantDark.withValues(
+                alpha: 0.38,
+              ),
+              minimumSize: const Size(64, 44),
+              padding: const EdgeInsets.symmetric(
+                horizontal: spacingMd,
+                vertical: spacingSm,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(radiusMd),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
+            ).copyWith(
+              overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return const Color(0xFF80D6A3).withValues(alpha: 0.12);
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return const Color(0xFF80D6A3).withValues(alpha: 0.08);
+                }
+                if (states.contains(WidgetState.focused)) {
+                  return const Color(0xFF80D6A3).withValues(alpha: 0.12);
+                }
+                return null;
+              }),
+            ),
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceDark,
-        contentPadding: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingMd),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: spacingMd,
+          vertical: spacingMd,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
           borderSide: const BorderSide(color: outlineVariantDark, width: 1),
@@ -1114,7 +1105,10 @@ class AppTheme {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide(color: outlineVariantDark.withValues(alpha: 0.5), width: 1),
+          borderSide: BorderSide(
+            color: outlineVariantDark.withValues(alpha: 0.5),
+            width: 1,
+          ),
         ),
         labelStyle: const TextStyle(
           color: onSurfaceVariantDark,
@@ -1280,7 +1274,10 @@ class AppTheme {
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: spacingSm, vertical: spacingXs),
+        padding: const EdgeInsets.symmetric(
+          horizontal: spacingSm,
+          vertical: spacingXs,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusFull),
           side: const BorderSide(color: outlineVariantDark, width: 0.5),
@@ -1314,38 +1311,34 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: surfaceDark,
         indicatorColor: primaryGreenDark,
-        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
-          (states) {
-            if (states.contains(WidgetState.selected)) {
-              return const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF80D6A3),
-              );
-            }
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          if (states.contains(WidgetState.selected)) {
             return const TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: onSurfaceVariantDark,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF80D6A3),
             );
-          },
-        ),
-        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
-          (states) {
-            if (states.contains(WidgetState.selected)) {
-              return const IconThemeData(
-                color: Color(0xFF80D6A3),
-                size: 26,
-                fill: 1,
-              );
-            }
+          }
+          return const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: onSurfaceVariantDark,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+          if (states.contains(WidgetState.selected)) {
             return const IconThemeData(
-              color: onSurfaceVariantDark,
+              color: Color(0xFF80D6A3),
               size: 26,
-              fill: 0,
+              fill: 1,
             );
-          },
-        ),
+          }
+          return const IconThemeData(
+            color: onSurfaceVariantDark,
+            size: 26,
+            fill: 0,
+          );
+        }),
         height: 80,
         elevation: elevationLevel3,
         shadowColor: shadowColor.withValues(alpha: 0.3),
@@ -1430,7 +1423,10 @@ class AppTheme {
           fontSize: 12,
           fontWeight: FontWeight.w400,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingSm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: spacingMd,
+          vertical: spacingSm,
+        ),
         verticalOffset: 24,
       ),
 
@@ -1447,7 +1443,10 @@ class AppTheme {
         thumbColor: const Color(0xFF80D6A3),
         overlayColor: const Color(0xFF80D6A3).withValues(alpha: 0.12),
         valueIndicatorColor: const Color(0xFF80D6A3),
-        valueIndicatorTextStyle: const TextStyle(color: Color(0xFF001207), fontSize: 12),
+        valueIndicatorTextStyle: const TextStyle(
+          color: Color(0xFF001207),
+          fontSize: 12,
+        ),
         trackHeight: 4,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
@@ -1464,31 +1463,31 @@ class AppTheme {
           borderRadius: BorderRadius.circular(radiusSm),
           color: primaryGreenDark,
         ),
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
         dividerColor: Colors.transparent,
-        overlayColor: WidgetStateProperty.resolveWith<Color?>(
-          (states) {
-            if (states.contains(WidgetState.pressed)) {
-              return const Color(0xFF80D6A3).withValues(alpha: 0.12);
-            }
-            if (states.contains(WidgetState.hovered)) {
-              return const Color(0xFF80D6A3).withValues(alpha: 0.08);
-            }
-            return null;
-          },
-        ),
+        overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.pressed)) {
+            return const Color(0xFF80D6A3).withValues(alpha: 0.12);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return const Color(0xFF80D6A3).withValues(alpha: 0.08);
+          }
+          return null;
+        }),
       ),
 
       listTileTheme: ListTileThemeData(
-        contentPadding: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingXs),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: spacingMd,
+          vertical: spacingXs,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+        ),
         tileColor: Colors.transparent,
         selectedTileColor: primaryGreenDark,
         iconColor: onSurfaceVariantDark,
@@ -1517,11 +1516,17 @@ class AppTheme {
           backgroundColor: const WidgetStatePropertyAll(surfaceDark),
           surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
           elevation: const WidgetStatePropertyAll(elevationLevel3),
-          shadowColor: WidgetStatePropertyAll(shadowColor.withValues(alpha: 0.3)),
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)),
+          shadowColor: WidgetStatePropertyAll(
+            shadowColor.withValues(alpha: 0.3),
           ),
-          padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: spacingSm)),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(radiusMd),
+            ),
+          ),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(vertical: spacingSm),
+          ),
         ),
       ),
 
@@ -1530,7 +1535,9 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: elevationLevel3,
         shadowColor: shadowColor.withValues(alpha: 0.3),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+        ),
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
@@ -1565,9 +1572,13 @@ class AppTheme {
       // Secondary text at full contrast too: at 2.0 text scale in bright light
       // the muted variant is the first thing to become unreadable.
       onSurfaceVariant: ink,
-      surfaceContainerHighest: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF0F0F0),
+      surfaceContainerHighest: isDark
+          ? const Color(0xFF1A1A1A)
+          : const Color(0xFFF0F0F0),
       outline: ink,
-      outlineVariant: isDark ? const Color(0xFF9E9E9E) : const Color(0xFF616161),
+      outlineVariant: isDark
+          ? const Color(0xFF9E9E9E)
+          : const Color(0xFF616161),
       surfaceTint: Colors.transparent,
     );
 
@@ -1602,10 +1613,7 @@ class AppTheme {
         labelStyle: TextStyle(color: ink),
         hintStyle: TextStyle(color: ink.withValues(alpha: 0.7)),
       ),
-      textTheme: base.textTheme.apply(
-        bodyColor: ink,
-        displayColor: ink,
-      ),
+      textTheme: base.textTheme.apply(bodyColor: ink, displayColor: ink),
       iconTheme: base.iconTheme.copyWith(color: ink),
       listTileTheme: base.listTileTheme.copyWith(
         textColor: ink,
@@ -1704,11 +1712,11 @@ class AppTheme {
 
 extension ThemeExtensions on BuildContext {
   AppTheme get appTheme => const AppTheme();
-  
+
   ColorScheme get colors => Theme.of(this).colorScheme;
-  
+
   TextTheme get text => Theme.of(this).textTheme;
-  
+
   double get spacingXxs => AppTheme.spacingXxs;
   double get spacingXs => AppTheme.spacingXs;
   double get spacingSm => AppTheme.spacingSm;
@@ -1777,7 +1785,7 @@ class AppGlassContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brightness = theme.brightness;
-    
+
     return Padding(
       padding: margin ?? EdgeInsets.zero,
       child: ClipRRect(
@@ -1786,19 +1794,24 @@ class AppGlassContainer extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
           child: Container(
             decoration: BoxDecoration(
-              color: color ?? (brightness == Brightness.dark 
-                  ? AppTheme.glassDark 
-                  : AppTheme.glassLight),
-              borderRadius: borderRadius ?? BorderRadius.circular(AppTheme.radiusLg),
+              color:
+                  color ??
+                  (brightness == Brightness.dark
+                      ? AppTheme.glassDark
+                      : AppTheme.glassLight),
+              borderRadius:
+                  borderRadius ?? BorderRadius.circular(AppTheme.radiusLg),
               border: Border.all(
-                color: brightness == Brightness.dark 
-                    ? AppTheme.glassBorderDark 
+                color: brightness == Brightness.dark
+                    ? AppTheme.glassBorderDark
                     : AppTheme.glassBorderLight,
                 width: 1,
               ),
-              boxShadow: shadows ?? (brightness == Brightness.dark 
-                  ? AppTheme.shadowLevel2 
-                  : AppTheme.shadowLevel1),
+              boxShadow:
+                  shadows ??
+                  (brightness == Brightness.dark
+                      ? AppTheme.shadowLevel2
+                      : AppTheme.shadowLevel1),
             ),
             child: Padding(
               padding: padding ?? const EdgeInsets.all(AppTheme.spacingMd),
@@ -1835,17 +1848,13 @@ class AppGradientContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return Padding(
       padding: margin ?? EdgeInsets.zero,
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: colors,
-            begin: begin,
-            end: end,
-          ),
-          borderRadius: borderRadius ?? BorderRadius.circular(AppTheme.radiusLg),
+          gradient: LinearGradient(colors: colors, begin: begin, end: end),
+          borderRadius:
+              borderRadius ?? BorderRadius.circular(AppTheme.radiusLg),
           boxShadow: shadows,
         ),
         child: Padding(

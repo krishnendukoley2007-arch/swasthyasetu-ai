@@ -26,14 +26,17 @@ String _makePack({
 }) {
   final path = p.join(tmp.path, '$name.mbtiles');
   if (corrupt) {
-    File(path).writeAsBytesSync(
-        Uint8List.fromList('this is not a database'.codeUnits));
+    File(
+      path,
+    ).writeAsBytesSync(Uint8List.fromList('this is not a database'.codeUnits));
     return path;
   }
   final db = sqlite3.open(path);
   db.execute('CREATE TABLE metadata (name TEXT, value TEXT)');
-  db.execute('CREATE TABLE tiles (zoom_level INTEGER, tile_column INTEGER, '
-      'tile_row INTEGER, tile_data BLOB)');
+  db.execute(
+    'CREATE TABLE tiles (zoom_level INTEGER, tile_column INTEGER, '
+    'tile_row INTEGER, tile_data BLOB)',
+  );
   db.execute("INSERT INTO metadata VALUES ('name', '$name')");
   db.execute("INSERT INTO metadata VALUES ('format', '$format')");
   if (bounds != null) {
@@ -42,7 +45,12 @@ String _makePack({
   final stmt = db.prepare('INSERT INTO tiles VALUES (?,?,?,?)');
   for (final (z, x, y) in xyzTiles) {
     // Store in TMS row order, exactly as a real pack does.
-    stmt.execute([z, x, (1 << z) - 1 - y, Uint8List.fromList([z, x, y])]);
+    stmt.execute([
+      z,
+      x,
+      (1 << z) - 1 - y,
+      Uint8List.fromList([z, x, y]),
+    ]);
   }
   stmt.dispose();
   db.dispose();
@@ -54,24 +62,29 @@ void main() {
   tearDown(() => tmp.deleteSync(recursive: true));
 
   group('opening a pack', () {
-    test('reports the zoom range actually present, not what metadata claims',
-        () {
-      final path = _makePack(name: 'claims_too_much', xyzTiles: [
-        (3, 5, 3),
-        (4, 11, 7),
-      ]);
-      // A pack whose metadata lies about reaching street level.
-      final db = sqlite3.open(path);
-      db.execute("INSERT INTO metadata VALUES ('maxzoom', '16')");
-      db.dispose();
+    test(
+      'reports the zoom range actually present, not what metadata claims',
+      () {
+        final path = _makePack(
+          name: 'claims_too_much',
+          xyzTiles: [(3, 5, 3), (4, 11, 7)],
+        );
+        // A pack whose metadata lies about reaching street level.
+        final db = sqlite3.open(path);
+        db.execute("INSERT INTO metadata VALUES ('maxzoom', '16')");
+        db.dispose();
 
-      final reader = MbTilesReader.open(path)!;
-      addTearDown(reader.close);
-      expect(reader.info.minZoom, 3);
-      expect(reader.info.maxZoom, 4,
-          reason: 'the tiles table is the source of truth, not metadata');
-      expect(reader.info.tileCount, 2);
-    });
+        final reader = MbTilesReader.open(path)!;
+        addTearDown(reader.close);
+        expect(reader.info.minZoom, 3);
+        expect(
+          reader.info.maxZoom,
+          4,
+          reason: 'the tiles table is the source of truth, not metadata',
+        );
+        expect(reader.info.tileCount, 2);
+      },
+    );
 
     test('a missing file returns null instead of throwing', () {
       expect(MbTilesReader.open(p.join(tmp.path, 'nope.mbtiles')), isNull);
@@ -84,23 +97,29 @@ void main() {
 
     test('bounds are parsed, and an absent bounds means unknown not empty', () {
       final withBounds = MbTilesReader.open(
-          _makePack(name: 'bounded', xyzTiles: [(2, 3, 1)]))!;
+        _makePack(name: 'bounded', xyzTiles: [(2, 3, 1)]),
+      )!;
       addTearDown(withBounds.close);
       expect(withBounds.info.bounds, [66.0, 5.0, 98.0, 38.0]);
       expect(withBounds.info.containsPoint(22.0, 78.0), isTrue);
       expect(withBounds.info.containsPoint(51.5, -0.1), isFalse);
 
       final noBounds = MbTilesReader.open(
-          _makePack(name: 'unbounded', xyzTiles: [(2, 3, 1)], bounds: null))!;
+        _makePack(name: 'unbounded', xyzTiles: [(2, 3, 1)], bounds: null),
+      )!;
       addTearDown(noBounds.close);
       expect(noBounds.info.bounds, isNull);
-      expect(noBounds.info.containsPoint(51.5, -0.1), isTrue,
-          reason: 'unknown bounds must not be treated as covering nothing');
+      expect(
+        noBounds.info.containsPoint(51.5, -0.1),
+        isTrue,
+        reason: 'unknown bounds must not be treated as covering nothing',
+      );
     });
 
     test('a vector pack is flagged as not drawable', () {
       final reader = MbTilesReader.open(
-          _makePack(name: 'vector', xyzTiles: [(2, 3, 1)], format: 'pbf'))!;
+        _makePack(name: 'vector', xyzTiles: [(2, 3, 1)], format: 'pbf'),
+      )!;
       addTearDown(reader.close);
       expect(reader.info.isRaster, isFalse);
     });
@@ -110,18 +129,23 @@ void main() {
     test('XYZ y is flipped to TMS on the way in', () {
       // Written at XYZ (4, 11, 7); a reader that forgets the flip would read
       // row 7 instead of row 8 and render a mirrored world.
-      final reader =
-          MbTilesReader.open(_makePack(name: 'flip', xyzTiles: [(4, 11, 7)]))!;
+      final reader = MbTilesReader.open(
+        _makePack(name: 'flip', xyzTiles: [(4, 11, 7)]),
+      )!;
       addTearDown(reader.close);
       expect(reader.tile(4, 11, 7), isNotNull);
-      expect(reader.tile(4, 11, 8), isNull,
-          reason: 'the TMS mirror of the stored tile must not resolve');
+      expect(
+        reader.tile(4, 11, 8),
+        isNull,
+        reason: 'the TMS mirror of the stored tile must not resolve',
+      );
       expect(reader.tile(4, 11, 7), [4, 11, 7]);
     });
 
     test('a tile the pack does not hold returns null, never a placeholder', () {
-      final reader =
-          MbTilesReader.open(_makePack(name: 'sparse', xyzTiles: [(3, 5, 3)]))!;
+      final reader = MbTilesReader.open(
+        _makePack(name: 'sparse', xyzTiles: [(3, 5, 3)]),
+      )!;
       addTearDown(reader.close);
       expect(reader.tile(3, 5, 3), isNotNull);
       expect(reader.tile(3, 6, 3), isNull);
@@ -138,15 +162,17 @@ void main() {
         (3, lonToTileX(lon, 3), latToTileY(lat, 3)),
         (5, 0, 0),
       ];
-      final reader =
-          MbTilesReader.open(_makePack(name: 'ladder', xyzTiles: tiles))!;
+      final reader = MbTilesReader.open(
+        _makePack(name: 'ladder', xyzTiles: tiles),
+      )!;
       addTearDown(reader.close);
       expect(reader.bestZoomFor(lat, lon, wanted: 14), 3);
     });
 
     test('reads survive being called after close', () {
-      final reader =
-          MbTilesReader.open(_makePack(name: 'closed', xyzTiles: [(2, 3, 1)]))!;
+      final reader = MbTilesReader.open(
+        _makePack(name: 'closed', xyzTiles: [(2, 3, 1)]),
+      )!;
       reader.close();
       expect(reader.tile(2, 3, 1), isNull);
       reader.close(); // idempotent
@@ -171,10 +197,14 @@ void main() {
     });
 
     test('x increases with longitude and y increases going south', () {
-      expect(lonToTileXFractional(80, 6),
-          greaterThan(lonToTileXFractional(70, 6)));
-      expect(latToTileYFractional(10, 6),
-          greaterThan(latToTileYFractional(30, 6)));
+      expect(
+        lonToTileXFractional(80, 6),
+        greaterThan(lonToTileXFractional(70, 6)),
+      );
+      expect(
+        latToTileYFractional(10, 6),
+        greaterThan(latToTileYFractional(30, 6)),
+      );
     });
   });
 
@@ -186,9 +216,10 @@ void main() {
       expect(empty.totalTiles, 0);
     });
 
-    test('a raster pack with rows counts as coverage; a vector one does not',
-        () {
-      const raster = MapPackInfo(
+    test(
+      'a raster pack with rows counts as coverage; a vector one does not',
+      () {
+        const raster = MapPackInfo(
           name: 'r',
           format: 'png',
           minZoom: 0,
@@ -196,22 +227,28 @@ void main() {
           tileCount: 84,
           fileBytes: 700000,
           path: 'r',
-          bundled: true);
-      const vector = MapPackInfo(
+          bundled: true,
+        );
+        const vector = MapPackInfo(
           name: 'v',
           format: 'pbf',
           minZoom: 0,
           maxZoom: 14,
           tileCount: 900,
           fileBytes: 1,
-          path: 'v');
+          path: 'v',
+        );
 
-      expect(const MapTileAvailability(packs: [raster]).hasTiles, isTrue);
-      expect(const MapTileAvailability(packs: [vector]).hasTiles, isFalse);
-      expect(const MapTileAvailability(packs: [raster, vector]).bestZoom, 6,
-          reason: 'an undrawable pack must not advertise its zoom depth');
-      expect(const MapTileAvailability(packs: [raster]).bundledOnly, isTrue);
-    });
+        expect(const MapTileAvailability(packs: [raster]).hasTiles, isTrue);
+        expect(const MapTileAvailability(packs: [vector]).hasTiles, isFalse);
+        expect(
+          const MapTileAvailability(packs: [raster, vector]).bestZoom,
+          6,
+          reason: 'an undrawable pack must not advertise its zoom depth',
+        );
+        expect(const MapTileAvailability(packs: [raster]).bundledOnly, isTrue);
+      },
+    );
   });
 
   group('bundled pack', () {
@@ -219,8 +256,11 @@ void main() {
       // Guards the asset itself: a truncated or placeholder file would ship an
       // empty map that the UI would then have to lie about.
       final asset = File(p.join('assets', 'map', 'india_lowzoom.mbtiles'));
-      expect(asset.existsSync(), isTrue,
-          reason: 'assets/map/india_lowzoom.mbtiles is declared in pubspec');
+      expect(
+        asset.existsSync(),
+        isTrue,
+        reason: 'assets/map/india_lowzoom.mbtiles is declared in pubspec',
+      );
 
       final reader = MbTilesReader.open(asset.path, bundled: true)!;
       addTearDown(reader.close);
@@ -233,16 +273,21 @@ void main() {
 
       // Somewhere over central India must resolve at the pack's top zoom.
       final z = reader.info.maxZoom;
-      expect(reader.tile(z, lonToTileX(77.4, z), latToTileY(23.25, z)),
-          isNotNull);
+      expect(
+        reader.tile(z, lonToTileX(77.4, z), latToTileY(23.25, z)),
+        isNotNull,
+      );
       // The tiles are real PNGs, not stub bytes.
       final bytes = reader.tile(0, 0, 0)!;
       expect(bytes.length, greaterThan(1000));
       expect(bytes.sublist(1, 4), [0x50, 0x4E, 0x47]);
 
       // Deliberately low zoom: it is country context, not a street map.
-      expect(reader.info.maxZoom, lessThanOrEqualTo(9),
-          reason: 'the bundled pack must not pretend to street-level detail');
+      expect(
+        reader.info.maxZoom,
+        lessThanOrEqualTo(9),
+        reason: 'the bundled pack must not pretend to street-level detail',
+      );
     });
   });
 }

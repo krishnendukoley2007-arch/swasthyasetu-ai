@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -144,7 +143,8 @@ class _SosScreenState extends ConsumerState<SosScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final contacts = ref.watch(emergencyContactsProvider).valueOrNull ?? const [];
+    final contacts =
+        ref.watch(emergencyContactsProvider).valueOrNull ?? const [];
     final reachable = contacts
         .where((c) => EmergencyRepository.isDiallable(c.phone))
         .toList();
@@ -235,16 +235,13 @@ class _ArmCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.sos_rounded,
-            size: 56,
-            color: theme.colorScheme.error,
-          ),
+          Icon(Icons.sos_rounded, size: 56, color: theme.colorScheme.error),
           const AppSpacing.vmd(),
           Text(
             context.l10n.sosSendSms,
-            style: theme.textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vsm(),
@@ -332,10 +329,12 @@ class _CountdownCard extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: progress,
                     strokeWidth: 11,
-                    backgroundColor:
-                        theme.colorScheme.error.withValues(alpha: 0.15),
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(theme.colorScheme.error),
+                    backgroundColor: theme.colorScheme.error.withValues(
+                      alpha: 0.15,
+                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.colorScheme.error,
+                    ),
                   ),
                 ),
                 // FittedBox, so the numeral shrinks to the ring instead of
@@ -362,8 +361,9 @@ class _CountdownCard extends StatelessWidget {
           const AppSpacing.vmd(),
           Text(
             context.l10n.sosCountdown(secondsLeft),
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vlg(),
@@ -412,16 +412,20 @@ class _ResultCard extends StatelessWidget {
           ),
           const AppSpacing.vmd(),
           Text(
-            ok ? context.l10n.sosMessagingAppOpened : context.l10n.sosCouldNotSend,
-            style: theme.textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold, color: accent),
+            ok
+                ? context.l10n.sosMessagingAppOpened
+                : context.l10n.sosCouldNotSend,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: accent,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vsm(),
           Text(
             ok
                 ? '${context.l10n.sosPressSendToRecipients(result.recipients.length)} '
-                    '${context.l10n.sosRecordedEitherWay}'
+                      '${context.l10n.sosRecordedEitherWay}'
                 : result.failureReason,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -465,8 +469,9 @@ class _RecipientsCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Will be messaged (${recipients.length})',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -524,8 +529,9 @@ class _MessagePreviewCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   context.l10n.sosMessagePreview,
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               // Worth surfacing: on a congested rural cell a multi-part SMS can
@@ -543,8 +549,9 @@ class _MessagePreviewCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(AppTheme.spacingMd),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.5),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.5,
+              ),
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             ),
             child: Text(
@@ -576,8 +583,9 @@ class _SosHistorySection extends ConsumerWidget {
         padding: const EdgeInsets.all(AppTheme.spacingLg),
         child: Text(
           context.l10n.sosLogReadError,
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.colorScheme.error),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.error,
+          ),
         ),
       ),
       data: (list) {
@@ -613,17 +621,17 @@ class _SosEventTile extends StatelessWidget {
     final theme = Theme.of(context);
     final (icon, color) = switch (event.status) {
       SosStatus.dispatched => (
-          Icons.check_circle_outline_rounded,
-          theme.colorScheme.primary,
-        ),
+        Icons.check_circle_outline_rounded,
+        theme.colorScheme.primary,
+      ),
       SosStatus.cancelled => (
-          Icons.cancel_outlined,
-          theme.colorScheme.onSurfaceVariant,
-        ),
+        Icons.cancel_outlined,
+        theme.colorScheme.onSurfaceVariant,
+      ),
       SosStatus.failed => (
-          Icons.error_outline_rounded,
-          theme.colorScheme.error,
-        ),
+        Icons.error_outline_rounded,
+        theme.colorScheme.error,
+      ),
     };
 
     return AppCard(
@@ -643,8 +651,9 @@ class _SosEventTile extends StatelessWidget {
                 // Both humanised through the enum's own label.
                 Text(
                   '${event.status.label} · ${event.trigger.label}',
-                  style: theme.textTheme.bodyLarge
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const AppSpacing.vxs(),
                 Text(

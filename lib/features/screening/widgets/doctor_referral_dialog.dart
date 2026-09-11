@@ -49,9 +49,12 @@ class DoctorReferralDialog extends StatelessWidget {
     final now = DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now());
     final vitals = triageResult.vitals;
     final patientName = patient?.name ?? 'Walk-In Patient';
-    final ageSex = patient != null ? '${patient!.age}y / ${patient!.sex}' : 'Adult';
+    final ageSex = patient != null
+        ? '${patient!.age}y / ${patient!.sex}'
+        : 'Adult';
     final location = patient?.location ?? 'Primary Care Village Post';
-    final refId = screeningId ?? 'SCR-${DateTime.now().millisecondsSinceEpoch % 1000000}';
+    final refId =
+        screeningId ?? 'SCR-${DateTime.now().millisecondsSinceEpoch % 1000000}';
 
     final buffer = StringBuffer();
     buffer.writeln('========================================');
@@ -75,7 +78,9 @@ class DoctorReferralDialog extends StatelessWidget {
       buffer.writeln('• Blood Glucose: ${vitals['glucose']} mg/dL');
     }
     if (vitals['systolic'] != null && vitals['diastolic'] != null) {
-      buffer.writeln('• Est. Blood Pressure: ${vitals['systolic']}/${vitals['diastolic']} mmHg');
+      buffer.writeln(
+        '• Est. Blood Pressure: ${vitals['systolic']}/${vitals['diastolic']} mmHg',
+      );
     }
     if (vitals['ecg_classification'] != null) {
       buffer.writeln('• ECG Rhythm: ${vitals['ecg_classification']}');
@@ -95,7 +100,9 @@ class DoctorReferralDialog extends StatelessWidget {
       }
       buffer.writeln('----------------------------------------');
     }
-    buffer.writeln('Note: Screened by Frontline Health Worker via SwasthyaSetu AI.');
+    buffer.writeln(
+      'Note: Screened by Frontline Health Worker via SwasthyaSetu AI.',
+    );
     buffer.writeln('Requires clinical evaluation by Medical Officer.');
     buffer.writeln('========================================');
 
@@ -107,7 +114,8 @@ class DoctorReferralDialog extends StatelessWidget {
     SharePlus.instance.share(
       ShareParams(
         text: text,
-        subject: 'Urgent Medical Referral: ${patient?.name ?? "Patient"} (${triageResult.level.toUpperCase()})',
+        subject:
+            'Urgent Medical Referral: ${patient?.name ?? "Patient"} (${triageResult.level.toUpperCase()})',
       ),
     );
   }
@@ -134,10 +142,14 @@ class DoctorReferralDialog extends StatelessWidget {
 
     final vitals = triageResult.vitals;
     final patientName = patient?.name ?? 'Walk-In Patient';
-    final ageSex = patient != null ? '${patient!.age} yrs, ${patient!.sex}' : 'Age/Sex Unspecified';
+    final ageSex = patient != null
+        ? '${patient!.age} yrs, ${patient!.sex}'
+        : 'Age/Sex Unspecified';
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXl)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 520, maxHeight: 680),
@@ -148,8 +160,12 @@ class DoctorReferralDialog extends StatelessWidget {
               padding: const EdgeInsets.all(AppTheme.spacingLg),
               decoration: BoxDecoration(
                 color: headerColor.withValues(alpha: 0.12),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
-                border: Border(bottom: BorderSide(color: headerColor.withValues(alpha: 0.3))),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppTheme.radiusXl),
+                ),
+                border: Border(
+                  bottom: BorderSide(color: headerColor.withValues(alpha: 0.3)),
+                ),
               ),
               child: Row(
                 children: [
@@ -159,7 +175,11 @@ class DoctorReferralDialog extends StatelessWidget {
                       color: headerColor,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.local_hospital_rounded, color: Colors.white, size: 22),
+                    child: const Icon(
+                      Icons.local_hospital_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                   const AppSpacing.hmd(),
                   Expanded(
@@ -201,9 +221,14 @@ class DoctorReferralDialog extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(AppTheme.spacingMd),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                        border: Border.all(
+                          color: theme.colorScheme.outlineVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -213,26 +238,38 @@ class DoctorReferralDialog extends StatelessWidget {
                               children: [
                                 Text(
                                   patientName,
-                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   ageSex,
-                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
-                                if (patient?.location != null && patient!.location!.isNotEmpty)
+                                if (patient?.location != null &&
+                                    patient!.location!.isNotEmpty)
                                   Text(
                                     patient!.location!,
-                                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
                               ],
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: headerColor,
-                              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusFull,
+                              ),
                             ),
                             child: Text(
                               '${triageResult.level.toUpperCase()} (${triageResult.score})',
@@ -252,12 +289,17 @@ class DoctorReferralDialog extends StatelessWidget {
                     // Action headline
                     Text(
                       'Clinical Recommendation',
-                      style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.primary),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       triageResult.recommendedAction,
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
 
                     const AppSpacing.vmd(),
@@ -267,22 +309,56 @@ class DoctorReferralDialog extends StatelessWidget {
                     // Measured vitals grid
                     Text(
                       'Recorded Vitals',
-                      style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.primary),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _vitalChip(theme, 'HR', '${vitals['heart_rate'] ?? '—'} BPM', Icons.favorite_rounded),
-                        _vitalChip(theme, 'SpO2', '${vitals['spo2'] ?? '—'}%', Icons.air_rounded),
-                        _vitalChip(theme, 'Temp', '${vitals['temperature'] ?? '—'}°C', Icons.thermostat_rounded),
+                        _vitalChip(
+                          theme,
+                          'HR',
+                          '${vitals['heart_rate'] ?? '—'} BPM',
+                          Icons.favorite_rounded,
+                        ),
+                        _vitalChip(
+                          theme,
+                          'SpO2',
+                          '${vitals['spo2'] ?? '—'}%',
+                          Icons.air_rounded,
+                        ),
+                        _vitalChip(
+                          theme,
+                          'Temp',
+                          '${vitals['temperature'] ?? '—'}°C',
+                          Icons.thermostat_rounded,
+                        ),
                         if (vitals['glucose'] != null)
-                          _vitalChip(theme, 'Glucose', '${vitals['glucose']} mg/dL', Icons.water_drop_rounded),
-                        if (vitals['systolic'] != null && vitals['diastolic'] != null)
-                          _vitalChip(theme, 'BP', '${vitals['systolic']}/${vitals['diastolic']} mmHg', Icons.speed_rounded),
+                          _vitalChip(
+                            theme,
+                            'Glucose',
+                            '${vitals['glucose']} mg/dL',
+                            Icons.water_drop_rounded,
+                          ),
+                        if (vitals['systolic'] != null &&
+                            vitals['diastolic'] != null)
+                          _vitalChip(
+                            theme,
+                            'BP',
+                            '${vitals['systolic']}/${vitals['diastolic']} mmHg',
+                            Icons.speed_rounded,
+                          ),
                         if (vitals['ecg_classification'] != null)
-                          _vitalChip(theme, 'ECG', '${vitals['ecg_classification']}', Icons.monitor_heart_rounded),
+                          _vitalChip(
+                            theme,
+                            'ECG',
+                            '${vitals['ecg_classification']}',
+                            Icons.monitor_heart_rounded,
+                          ),
                       ],
                     ),
 
@@ -292,7 +368,10 @@ class DoctorReferralDialog extends StatelessWidget {
                     if (triageResult.triggeredRules.isNotEmpty) ...[
                       Text(
                         'Clinical Findings & Red Flags',
-                        style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.primary),
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       ...triageResult.triggeredRules.map(
@@ -301,12 +380,18 @@ class DoctorReferralDialog extends StatelessWidget {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.warning_amber_rounded, size: 16, color: headerColor),
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 16,
+                                color: headerColor,
+                              ),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   rule,
-                                  style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ],
@@ -321,13 +406,19 @@ class DoctorReferralDialog extends StatelessWidget {
 
             // Clinical export actions: PDF report & ABHA QR card
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingMd,
+                vertical: 6,
+              ),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.picture_as_pdf_rounded, size: 16),
-                      label: const Text('PDF Report', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'PDF Report',
+                        style: TextStyle(fontSize: 12),
+                      ),
                       onPressed: () => _exportPdf(context),
                     ),
                   ),
@@ -335,7 +426,10 @@ class DoctorReferralDialog extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.qr_code_2_rounded, size: 16),
-                      label: const Text('ABHA QR Card', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'ABHA QR Card',
+                        style: TextStyle(fontSize: 12),
+                      ),
                       onPressed: () => _showAbhaQr(context),
                     ),
                   ),
@@ -348,8 +442,16 @@ class DoctorReferralDialog extends StatelessWidget {
               padding: const EdgeInsets.all(AppTheme.spacingMd),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppTheme.radiusXl)),
-                border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(AppTheme.radiusXl),
+                ),
+                border: Border(
+                  top: BorderSide(
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.5,
+                    ),
+                  ),
+                ),
               ),
               child: Row(
                 children: [
@@ -422,9 +524,9 @@ class DoctorReferralDialog extends StatelessWidget {
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate PDF: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to generate PDF: $e')));
       }
     }
   }
@@ -437,22 +539,26 @@ class DoctorReferralDialog extends StatelessWidget {
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: AbhaQrCard(
-            patient: _getPatient(),
-            screening: _getScreening(),
-          ),
+          child: AbhaQrCard(patient: _getPatient(), screening: _getScreening()),
         ),
       ),
     );
   }
 
-  Widget _vitalChip(ThemeData theme, String label, String value, IconData icon) {
+  Widget _vitalChip(
+    ThemeData theme,
+    String label,
+    String value,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -461,7 +567,10 @@ class DoctorReferralDialog extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             '$label: ',
-            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           Text(
             value,

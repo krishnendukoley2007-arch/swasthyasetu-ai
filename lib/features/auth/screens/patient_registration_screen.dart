@@ -64,8 +64,9 @@ class _PatientRegistrationScreenState
   /// looked like it had lost the contact — or wrote a duplicate once the person
   /// typed it again.
   Future<void> _loadExistingContact() async {
-    final contact =
-        await ref.read(emergencyRepositoryProvider).explicitPrimaryContact();
+    final contact = await ref
+        .read(emergencyRepositoryProvider)
+        .explicitPrimaryContact();
     if (!mounted || contact == null) return;
     // Never clobber something already typed: the read is async and the person
     // may have reached the field first.
@@ -137,7 +138,9 @@ class _PatientRegistrationScreenState
     });
 
     try {
-      await ref.read(authStateProvider.notifier).completePatientProfile(
+      await ref
+          .read(authStateProvider.notifier)
+          .completePatientProfile(
             displayName: _name.text,
             age: int.parse(_age.text.trim()),
             sex: _sex,
@@ -166,8 +169,10 @@ class _PatientRegistrationScreenState
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _error =
-            'Could not save the profile. Nothing was lost — try again.');
+        setState(
+          () => _error =
+              'Could not save the profile. Nothing was lost — try again.',
+        );
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -193,7 +198,9 @@ class _PatientRegistrationScreenState
 
     return AppPageScaffold(
       appBar: AppBar(
-        title: Text(editingName ? 'Edit health profile' : 'Your health profile'),
+        title: Text(
+          editingName ? 'Edit health profile' : 'Your health profile',
+        ),
         automaticallyImplyLeading: false,
       ),
       body: LayoutBuilder(
@@ -209,256 +216,277 @@ class _PatientRegistrationScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                  if (!editingName) ...[
-                    AppCard(
-                      color: theme.colorScheme.primaryContainer
-                          .withValues(alpha: 0.35),
-                      padding: const EdgeInsets.all(AppTheme.spacingMd),
-                      child: Row(
+                      if (!editingName) ...[
+                        AppCard(
+                          color: theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.35,
+                          ),
+                          padding: const EdgeInsets.all(AppTheme.spacingMd),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.favorite_rounded,
+                                color: theme.colorScheme.primary,
+                                size: 22,
+                              ),
+                              const AppSpacing.hmd(),
+                              Expanded(
+                                child: Text(
+                                  'Welcome, ${account.firstName}. A few details '
+                                  'about your body make the readings yours — the '
+                                  'app scores them against your age, your history '
+                                  'and your build, not a stranger\'s.',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const AppSpacing.vlg(),
+                      ],
+                      AppTextField(
+                        controller: _name,
+                        label: 'Full name',
+                        prefixIcon: Icons.badge_outlined,
+                        textCapitalization: TextCapitalization.words,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Please enter your name'
+                            : null,
+                      ),
+                      const AppSpacing.vmd(),
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.favorite_rounded,
-                              color: theme.colorScheme.primary, size: 22),
+                          Expanded(
+                            child: AppTextField(
+                              controller: _age,
+                              label: 'Age',
+                              hint: '32',
+                              prefixIcon: Icons.cake_outlined,
+                              keyboardType: TextInputType.number,
+                              validator: (v) {
+                                final age = int.tryParse(v?.trim() ?? '');
+                                if (age == null || age < 1 || age > 120) {
+                                  return 'Age 1–120';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
                           const AppSpacing.hmd(),
                           Expanded(
-                            child: Text(
-                              'Welcome, ${account.firstName}. A few details '
-                              'about your body make the readings yours — the '
-                              'app scores them against your age, your history '
-                              'and your build, not a stranger\'s.',
-                              style: theme.textTheme.bodyMedium
-                                  ?.copyWith(height: 1.4),
+                            child: AppSelectField<String>(
+                              value: _sex,
+                              label: 'Sex',
+                              prefixIcon: Icons.wc_rounded,
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'F',
+                                  child: Text('Female'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'M',
+                                  child: Text('Male'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'O',
+                                  child: Text('Other'),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                if (value == null) return;
+                                setState(() {
+                                  _sex = value;
+                                  // Pregnancy has no business surviving a sex change.
+                                  if (value != 'F') {
+                                    _conditions = _conditions
+                                        .where((c) => c != 'Pregnancy')
+                                        .toList();
+                                  }
+                                });
+                              },
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const AppSpacing.vlg(),
-                  ],
-                  AppTextField(
-                    controller: _name,
-                    label: 'Full name',
-                    prefixIcon: Icons.badge_outlined,
-                    textCapitalization: TextCapitalization.words,
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Please enter your name'
-                        : null,
-                  ),
-                  const AppSpacing.vmd(),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: AppTextField(
-                          controller: _age,
-                          label: 'Age',
-                          hint: '32',
-                          prefixIcon: Icons.cake_outlined,
-                          keyboardType: TextInputType.number,
-                          validator: (v) {
-                            final age = int.tryParse(v?.trim() ?? '');
-                            if (age == null || age < 1 || age > 120) {
-                              return 'Age 1–120';
-                            }
-                            return null;
-                          },
-                        ),
+                      const AppSpacing.vmd(),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: AppTextField(
+                              controller: _height,
+                              label: 'Height (cm)',
+                              hint: '165',
+                              prefixIcon: Icons.height_rounded,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              onChanged: (_) => setState(() {}),
+                              validator: (v) {
+                                final h = double.tryParse(v?.trim() ?? '');
+                                if (h == null || h < 60 || h > 260) {
+                                  return 'Height 60–260 cm';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const AppSpacing.hmd(),
+                          Expanded(
+                            child: AppTextField(
+                              controller: _weight,
+                              label: 'Weight (kg)',
+                              hint: '58.5',
+                              prefixIcon: Icons.monitor_weight_outlined,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              onChanged: (_) => setState(() {}),
+                              validator: (v) {
+                                final w = double.tryParse(v?.trim() ?? '');
+                                if (w == null || w < 2 || w > 400) {
+                                  return 'Weight 2–400 kg';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                      const AppSpacing.hmd(),
-                      Expanded(
-                        child: AppSelectField<String>(
-                          value: _sex,
-                          label: 'Sex',
-                          prefixIcon: Icons.wc_rounded,
-                          items: const [
-                            DropdownMenuItem(value: 'F', child: Text('Female')),
-                            DropdownMenuItem(value: 'M', child: Text('Male')),
-                            DropdownMenuItem(value: 'O', child: Text('Other')),
-                          ],
-                          onChanged: (value) {
-                            if (value == null) return;
-                            setState(() {
-                              _sex = value;
-                              // Pregnancy has no business surviving a sex change.
-                              if (value != 'F') {
-                                _conditions = _conditions
-                                    .where((c) => c != 'Pregnancy')
-                                    .toList();
-                              }
-                            });
-                          },
+                      if (bmi != null) ...[
+                        const AppSpacing.vsm(),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: AppBadge(
+                            label:
+                                'BMI ${bmi.toStringAsFixed(1)} — ${_bmiBand(bmi)}',
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
+                      ],
+                      const AppSpacing.vlg(),
+                      AppMultiSelectField<String>(
+                        label: 'Do you have any of these? (tap all that apply)',
+                        hint: 'Pick "None of these" if healthy',
+                        selectedValues: _conditions,
+                        availableValues: UserAccount.conditionOptions
+                            .where((c) => c != 'Pregnancy' || _sex == 'F')
+                            .toList(),
+                        getLabel: (c) => c,
+                        onChanged: (values) {
+                          // Replay through the tap rules so "None of these" stays
+                          // exclusive no matter which chip ended the gesture.
+                          final added = values
+                              .where((v) => !_conditions.contains(v))
+                              .toList();
+                          final removed = _conditions
+                              .where((c) => !values.contains(c))
+                              .toList();
+                          if (removed.length + added.length == 1 &&
+                              added.length == 1) {
+                            _toggleCondition(added.single, true);
+                          } else if (removed.length + added.length == 1) {
+                            _toggleCondition(removed.single, false);
+                          } else {
+                            setState(() => _conditions = values);
+                          }
+                        },
                       ),
+                      const AppSpacing.vlg(),
+                      AppTextField(
+                        controller: _problems,
+                        label: 'Anything bothering you right now? (optional)',
+                        hint:
+                            'e.g. fever since yesterday, chest pain on walking…',
+                        prefixIcon: Icons.notes_rounded,
+                        maxLines: 3,
+                      ),
+                      const AppSpacing.vlg(),
+                      const AppSectionHeader(
+                        title: 'Emergency contact',
+                        subtitle:
+                            'The SOS button warns this person first. '
+                            'Strongly recommended.',
+                        padding: EdgeInsets.zero,
+                      ),
+                      const AppSpacing.vmd(),
+                      AppTextField(
+                        controller: _emergencyName,
+                        label: 'Contact name',
+                        hint: 'Family member or friend',
+                        prefixIcon: Icons.person_outline_rounded,
+                        textCapitalization: TextCapitalization.words,
+                      ),
+                      const AppSpacing.vmd(),
+                      AppTextField(
+                        controller: _emergencyPhone,
+                        label: 'Contact phone',
+                        hint: '+91 98765 43210',
+                        prefixIcon: Icons.phone_outlined,
+                        keyboardType: TextInputType.phone,
+                        validator: (v) {
+                          final raw = v?.trim() ?? '';
+                          if (raw.isEmpty) return null; // optional
+                          // Short codes and 10-digit mobiles both valid.
+                          final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+                          if (digits.length < 3 || digits.length > 15) {
+                            return 'That number cannot be dialled';
+                          }
+                          return null;
+                        },
+                      ),
+                      if (_error != null) ...[
+                        const AppSpacing.vmd(),
+                        AppCard(
+                          color: theme.colorScheme.errorContainer,
+                          padding: const EdgeInsets.all(AppTheme.spacingMd),
+                          child: Text(
+                            _error!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const AppSpacing.vxl(),
+                      AppButton(
+                        label: editingName
+                            ? 'Save changes'
+                            : 'Save and start using the app',
+                        icon: const Icon(Icons.check_rounded, size: 24),
+                        isLoading: _saving,
+                        onPressed: _saving ? null : _save,
+                        minHeight: 56,
+                      ),
+                      if (!editingName) ...[
+                        const AppSpacing.vmd(),
+                        Center(
+                          child: AppTextButton(
+                            label: 'Not you? Sign out',
+                            onPressed: _saving
+                                ? null
+                                : () => ref
+                                      .read(authStateProvider.notifier)
+                                      .signOut(),
+                          ),
+                        ),
+                      ],
+                      const AppSpacing.vlg(),
                     ],
                   ),
-                  const AppSpacing.vmd(),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: AppTextField(
-                          controller: _height,
-                          label: 'Height (cm)',
-                          hint: '165',
-                          prefixIcon: Icons.height_rounded,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          onChanged: (_) => setState(() {}),
-                          validator: (v) {
-                            final h = double.tryParse(v?.trim() ?? '');
-                            if (h == null || h < 60 || h > 260) {
-                              return 'Height 60–260 cm';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const AppSpacing.hmd(),
-                      Expanded(
-                        child: AppTextField(
-                          controller: _weight,
-                          label: 'Weight (kg)',
-                          hint: '58.5',
-                          prefixIcon: Icons.monitor_weight_outlined,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          onChanged: (_) => setState(() {}),
-                          validator: (v) {
-                            final w = double.tryParse(v?.trim() ?? '');
-                            if (w == null || w < 2 || w > 400) {
-                              return 'Weight 2–400 kg';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (bmi != null) ...[
-                    const AppSpacing.vsm(),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: AppBadge(
-                        label:
-                            'BMI ${bmi.toStringAsFixed(1)} — ${_bmiBand(bmi)}',
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                  const AppSpacing.vlg(),
-                  AppMultiSelectField<String>(
-                    label: 'Do you have any of these? (tap all that apply)',
-                    hint: 'Pick "None of these" if healthy',
-                    selectedValues: _conditions,
-                    availableValues: UserAccount.conditionOptions
-                        .where((c) => c != 'Pregnancy' || _sex == 'F')
-                        .toList(),
-                    getLabel: (c) => c,
-                    onChanged: (values) {
-                      // Replay through the tap rules so "None of these" stays
-                      // exclusive no matter which chip ended the gesture.
-                      final added = values
-                          .where((v) => !_conditions.contains(v))
-                          .toList();
-                      final removed = _conditions
-                          .where((c) => !values.contains(c))
-                          .toList();
-                      if (removed.length + added.length == 1 &&
-                          added.length == 1) {
-                        _toggleCondition(added.single, true);
-                      } else if (removed.length + added.length == 1) {
-                        _toggleCondition(removed.single, false);
-                      } else {
-                        setState(() => _conditions = values);
-                      }
-                    },
-                  ),
-                  const AppSpacing.vlg(),
-                  AppTextField(
-                    controller: _problems,
-                    label: 'Anything bothering you right now? (optional)',
-                    hint: 'e.g. fever since yesterday, chest pain on walking…',
-                    prefixIcon: Icons.notes_rounded,
-                    maxLines: 3,
-                  ),
-                  const AppSpacing.vlg(),
-                  const AppSectionHeader(
-                    title: 'Emergency contact',
-                    subtitle: 'The SOS button warns this person first. '
-                        'Strongly recommended.',
-                    padding: EdgeInsets.zero,
-                  ),
-                  const AppSpacing.vmd(),
-                  AppTextField(
-                    controller: _emergencyName,
-                    label: 'Contact name',
-                    hint: 'Family member or friend',
-                    prefixIcon: Icons.person_outline_rounded,
-                    textCapitalization: TextCapitalization.words,
-                  ),
-                  const AppSpacing.vmd(),
-                  AppTextField(
-                    controller: _emergencyPhone,
-                    label: 'Contact phone',
-                    hint: '+91 98765 43210',
-                    prefixIcon: Icons.phone_outlined,
-                    keyboardType: TextInputType.phone,
-                    validator: (v) {
-                      final raw = v?.trim() ?? '';
-                      if (raw.isEmpty) return null; // optional
-                      // Short codes and 10-digit mobiles both valid.
-                      final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
-                      if (digits.length < 3 || digits.length > 15) {
-                        return 'That number cannot be dialled';
-                      }
-                      return null;
-                    },
-                  ),
-                  if (_error != null) ...[
-                    const AppSpacing.vmd(),
-                    AppCard(
-                      color: theme.colorScheme.errorContainer,
-                      padding: const EdgeInsets.all(AppTheme.spacingMd),
-                      child: Text(
-                        _error!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onErrorContainer),
-                      ),
-                    ),
-                  ],
-                  const AppSpacing.vxl(),
-                  AppButton(
-                    label: editingName
-                        ? 'Save changes'
-                        : 'Save and start using the app',
-                    icon: const Icon(Icons.check_rounded, size: 24),
-                    isLoading: _saving,
-                    onPressed: _saving ? null : _save,
-                    minHeight: 56,
-                  ),
-                  if (!editingName) ...[
-                    const AppSpacing.vmd(),
-                    Center(
-                      child: AppTextButton(
-                        label: 'Not you? Sign out',
-                        onPressed: _saving
-                            ? null
-                            : () => ref
-                                .read(authStateProvider.notifier)
-                                .signOut(),
-                      ),
-                    ),
-                  ],
-                  const AppSpacing.vlg(),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-      );
-    },
-  ),
-);
+          );
+        },
+      ),
+    );
   }
 
   static String _bmiBand(double bmi) {

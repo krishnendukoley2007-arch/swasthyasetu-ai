@@ -59,15 +59,17 @@ class PoincarePlotWidget extends StatelessWidget {
     final statusColor = hasArrhythmia
         ? AppTheme.riskRed
         : (metrics.sdRatio < 0.25 || metrics.sdRatio > 0.85
-            ? AppTheme.riskYellow
-            : AppTheme.riskGreen);
+              ? AppTheme.riskYellow
+              : AppTheme.riskGreen);
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -88,7 +90,11 @@ class PoincarePlotWidget extends StatelessWidget {
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
-                child: Icon(Icons.bubble_chart_rounded, size: 18, color: statusColor),
+                child: Icon(
+                  Icons.bubble_chart_rounded,
+                  size: 18,
+                  color: statusColor,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -97,11 +103,15 @@ class PoincarePlotWidget extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     Text(
                       'Autonomic Parasympathetic vs Sympathetic Dynamics',
-                      style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -191,7 +201,9 @@ class PoincarePlotWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  hasArrhythmia ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+                  hasArrhythmia
+                      ? Icons.warning_amber_rounded
+                      : Icons.check_circle_outline_rounded,
                   size: 16,
                   color: statusColor,
                 ),
@@ -227,7 +239,9 @@ class PoincarePlotWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +257,13 @@ class PoincarePlotWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(sub, style: TextStyle(fontSize: 9, color: theme.colorScheme.onSurfaceVariant)),
+          Text(
+            sub,
+            style: TextStyle(
+              fontSize: 9,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
@@ -282,12 +302,7 @@ class PoincarePlotWidget extends StatelessWidget {
     final sd2 = math.sqrt(math.max(1.0, 2 * varRR - 0.5 * varDiff));
     final ratio = sd2 > 0 ? (sd1 / sd2) : 0.0;
 
-    return _PoincareMetrics(
-      meanRR: mean,
-      sd1: sd1,
-      sd2: sd2,
-      sdRatio: ratio,
-    );
+    return _PoincareMetrics(meanRR: mean, sd1: sd1, sd2: sd2, sdRatio: ratio);
   }
 }
 
@@ -329,7 +344,10 @@ class _PoincarePainter extends CustomPainter {
 
     // Dark canvas background
     final bgPaint = Paint()..color = const Color(0xFF0F171A);
-    final clipRRect = RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, w, h), const Radius.circular(8));
+    final clipRRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, w, h),
+      const Radius.circular(8),
+    );
     canvas.drawRRect(clipRRect, bgPaint);
 
     double toX(double rr) => ((rr - minRR) / (maxRR - minRR)) * w;
@@ -349,7 +367,11 @@ class _PoincarePainter extends CustomPainter {
     final identityPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.3)
       ..strokeWidth = 1.0;
-    canvas.drawLine(Offset(toX(minRR), toY(minRR)), Offset(toX(maxRR), toY(maxRR)), identityPaint);
+    canvas.drawLine(
+      Offset(toX(minRR), toY(minRR)),
+      Offset(toX(maxRR), toY(maxRR)),
+      identityPaint,
+    );
 
     // 3. Draw Confidence Ellipse (centered at (meanRR, meanRR))
     final cx = toX(metrics.meanRR);
@@ -372,7 +394,11 @@ class _PoincarePainter extends CustomPainter {
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
-    final ellipseRect = Rect.fromCenter(center: Offset.zero, width: rx * 2, height: ry * 2);
+    final ellipseRect = Rect.fromCenter(
+      center: Offset.zero,
+      width: rx * 2,
+      height: ry * 2,
+    );
     canvas.drawOval(ellipseRect, ellipseFillPaint);
     canvas.drawOval(ellipseRect, ellipseStrokePaint);
 

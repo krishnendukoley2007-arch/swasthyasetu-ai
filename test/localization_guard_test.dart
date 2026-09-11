@@ -78,16 +78,22 @@ void main() {
           .replaceFirst('lib/features/', '');
       if (_exemptDirs.contains(relative.split('/').first)) continue;
 
-      final count = regex.allMatches(File(entity.path).readAsStringSync()).length;
+      final count = regex
+          .allMatches(File(entity.path).readAsStringSync())
+          .length;
       final allowance = remainingAllowance[relative];
       if (allowance == null) {
         if (count > 0) {
-          failures.add('$relative: $count literal(s) — new file must be '
-              'localized or consciously allowlisted');
+          failures.add(
+            '$relative: $count literal(s) — new file must be '
+            'localized or consciously allowlisted',
+          );
         }
       } else if (count > allowance) {
-        failures.add('$relative: $count literal(s), allowance was $allowance '
-            '— the count may only go DOWN');
+        failures.add(
+          '$relative: $count literal(s), allowance was $allowance '
+          '— the count may only go DOWN',
+        );
       }
     }
 

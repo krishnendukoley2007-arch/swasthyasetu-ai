@@ -26,7 +26,8 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveBackgroundColor = backgroundColor ?? theme.colorScheme.surface;
+    final effectiveBackgroundColor =
+        backgroundColor ?? theme.colorScheme.surface;
 
     return AppBar(
       title: Text(
@@ -64,7 +65,8 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(64 + (bottom?.preferredSize.height ?? 0));
+  Size get preferredSize =>
+      Size.fromHeight(64 + (bottom?.preferredSize.height ?? 0));
 }
 
 class AppSliverAppBar extends StatelessWidget {
@@ -118,7 +120,11 @@ class AppSliverAppBar extends StatelessWidget {
       flexibleSpace: flexibleSpace != null
           ? FlexibleSpaceBar(
               background: flexibleSpace!,
-              titlePadding: const EdgeInsets.only(left: AppTheme.spacingMd, right: AppTheme.spacingMd, bottom: AppTheme.spacingMd),
+              titlePadding: const EdgeInsets.only(
+                left: AppTheme.spacingMd,
+                right: AppTheme.spacingMd,
+                bottom: AppTheme.spacingMd,
+              ),
             )
           : null,
       shape: Border(
@@ -175,7 +181,9 @@ class _AppSearchAppBarState extends State<AppSearchAppBar> {
       title: Container(
         height: 44,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         ),
         child: TextField(
@@ -186,10 +194,16 @@ class _AppSearchAppBarState extends State<AppSearchAppBar> {
             hintStyle: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
-            prefixIcon: Icon(Icons.search_rounded, color: theme.colorScheme.onSurfaceVariant),
+            prefixIcon: Icon(
+              Icons.search_rounded,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             suffixIcon: _controller.text.isNotEmpty
                 ? IconButton(
-                    icon: Icon(Icons.clear_rounded, color: theme.colorScheme.onSurfaceVariant),
+                    icon: Icon(
+                      Icons.clear_rounded,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     onPressed: () {
                       _controller.clear();
                       widget.onClear?.call();
@@ -199,7 +213,10 @@ class _AppSearchAppBarState extends State<AppSearchAppBar> {
                   )
                 : null,
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingXs),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacingMd,
+              vertical: AppTheme.spacingXs,
+            ),
           ),
           onChanged: (value) {
             setState(() {});
@@ -256,9 +273,14 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
       indicatorColor: indicatorColor ?? theme.colorScheme.primary,
       indicatorSize: indicatorSize,
       labelColor: labelColor ?? theme.colorScheme.primary,
-      unselectedLabelColor: unselectedLabelColor ?? theme.colorScheme.onSurfaceVariant,
-      labelStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-      unselectedLabelStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w400),
+      unselectedLabelColor:
+          unselectedLabelColor ?? theme.colorScheme.onSurfaceVariant,
+      labelStyle: theme.textTheme.labelLarge?.copyWith(
+        fontWeight: FontWeight.w600,
+      ),
+      unselectedLabelStyle: theme.textTheme.labelLarge?.copyWith(
+        fontWeight: FontWeight.w400,
+      ),
       dividerColor: Colors.transparent,
       padding: padding,
       overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {

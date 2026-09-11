@@ -78,11 +78,11 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
   /// direction from jitter and short enough to react within a screening.
   final List<int> _hrTrail = <int>[];
 
-/// Recent R-R intervals (ms) straight from the board, used to compute
-/// RMSSD — the short-window heart-rate-variability figure — on the phone
-/// rather than asking the firmware for another number over the wire.
-final List<int> _rrWindow = <int>[];
-int _rrRepeats = 0;
+  /// Recent R-R intervals (ms) straight from the board, used to compute
+  /// RMSSD — the short-window heart-rate-variability figure — on the phone
+  /// rather than asking the firmware for another number over the wire.
+  final List<int> _rrWindow = <int>[];
+  int _rrRepeats = 0;
   final List<int> _spo2Trail = <int>[];
   final List<double> _tempTrail = <double>[];
 
@@ -111,7 +111,8 @@ int _rrRepeats = 0;
   /// file when the screening is saved, and a clinician reviewing a rhythm needs
   /// more than the last two seconds of it. Thirty-five seconds at 250 Hz is
   /// about 17 KB as int16 — the run length plus headroom for a slow stop.
-  static const int _ecgHistoryLimit = _ecgSampleRateHz * (_screeningSeconds + 5);
+  static const int _ecgHistoryLimit =
+      _ecgSampleRateHz * (_screeningSeconds + 5);
 
   final Random _random = Random();
   final List<_VitalParticle> _vitalParticles = [];
@@ -234,7 +235,8 @@ int _rrRepeats = 0;
       double ppg = 0;
       if (beatPosition < samplesPerBeat * 0.4) {
         final pulseT = beatPosition / (samplesPerBeat * 0.4) * 3.14159;
-        ppg = 0.8 * sin(pulseT) + 0.1 * sin(2 * pulseT) + 0.05 * sin(3 * pulseT);
+        ppg =
+            0.8 * sin(pulseT) + 0.1 * sin(2 * pulseT) + 0.05 * sin(3 * pulseT);
       }
       _ppgWaveform[i] = (ppg * 1000 + 2000).round().clamp(0, 4095);
     }
@@ -242,18 +244,20 @@ int _rrRepeats = 0;
 
   void _generateParticles() {
     for (int i = 0; i < 20; i++) {
-      _vitalParticles.add(_VitalParticle(
-        x: _random.nextDouble(),
-        y: _random.nextDouble(),
-        size: 3 + _random.nextDouble() * 5,
-        speed: 0.05 + _random.nextDouble() * 0.15,
-        opacity: 0.1 + _random.nextDouble() * 0.2,
-        color: [
-          AppTheme.primaryGreen,
-          AppTheme.primaryGreenLight,
-          AppTheme.secondaryTeal,
-        ][_random.nextInt(3)],
-      ));
+      _vitalParticles.add(
+        _VitalParticle(
+          x: _random.nextDouble(),
+          y: _random.nextDouble(),
+          size: 3 + _random.nextDouble() * 5,
+          speed: 0.05 + _random.nextDouble() * 0.15,
+          opacity: 0.1 + _random.nextDouble() * 0.2,
+          color: [
+            AppTheme.primaryGreen,
+            AppTheme.primaryGreenLight,
+            AppTheme.secondaryTeal,
+          ][_random.nextInt(3)],
+        ),
+      );
     }
   }
 
@@ -261,7 +265,9 @@ int _rrRepeats = 0;
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppTheme.radiusXl),
+        ),
       ),
       builder: (bottomSheetContext) {
         final theme = Theme.of(bottomSheetContext);
@@ -273,23 +279,35 @@ int _rrRepeats = 0;
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacingLg,
+                  ),
                   child: Row(
                     children: [
-                      Icon(Icons.science_rounded, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.science_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
                       const AppSpacing.hsm(),
                       Text(
                         'Virtual Patient Simulator',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacingLg,
+                    vertical: 4,
+                  ),
                   child: Text(
                     'Choose a clinical condition to simulate without physical hardware:',
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 const Divider(),
@@ -313,28 +331,50 @@ int _rrRepeats = 0;
                             color: bandColor.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.medical_information_rounded, color: bandColor, size: 20),
+                          child: Icon(
+                            Icons.medical_information_rounded,
+                            color: bandColor,
+                            size: 20,
+                          ),
                         ),
                         title: Text(
                           scenario.name,
                           style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected ? theme.colorScheme.primary : null,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : null,
                           ),
                         ),
-                        subtitle: Text('${scenario.subtitle}\n${scenario.description}'),
+                        subtitle: Text(
+                          '${scenario.subtitle}\n${scenario.description}',
+                        ),
                         isThreeLine: true,
                         trailing: isSelected
-                            ? Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary)
+                            ? Icon(
+                                Icons.check_circle_rounded,
+                                color: theme.colorScheme.primary,
+                              )
                             : Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: bandColor.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusFull,
+                                  ),
                                 ),
                                 child: Text(
                                   scenario.expectedBand.name.toUpperCase(),
-                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: bandColor),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: bandColor,
+                                  ),
                                 ),
                               ),
                         onTap: () {
@@ -347,7 +387,9 @@ int _rrRepeats = 0;
                           Navigator.of(bottomSheetContext).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Switched to scenario: ${scenario.name}'),
+                              content: Text(
+                                'Switched to scenario: ${scenario.name}',
+                              ),
                               duration: const Duration(seconds: 2),
                             ),
                           );
@@ -453,13 +495,17 @@ int _rrRepeats = 0;
         final s = frame.sample;
         final hr = s.heartRateBpm > 0
             ? s.heartRateBpm
-            : (_currentSample.heartRateBpm > 0 ? _currentSample.heartRateBpm : 0);
+            : (_currentSample.heartRateBpm > 0
+                  ? _currentSample.heartRateBpm
+                  : 0);
         final spo2 = s.spo2Percent > 0
             ? s.spo2Percent
             : (_currentSample.spo2Percent > 0 ? _currentSample.spo2Percent : 0);
         final temp = s.temperatureC > 0
             ? s.temperatureC
-            : (_currentSample.temperatureC > 0 ? _currentSample.temperatureC : 0.0);
+            : (_currentSample.temperatureC > 0
+                  ? _currentSample.temperatureC
+                  : 0.0);
         // No PTT without a real heart rate: 60000/0 is not a number, and a
         // fabricated PTT would feed fabricated BP and glucose estimates.
         final ptt = s.pttMs > 0
@@ -526,7 +572,9 @@ int _rrRepeats = 0;
         _ecgFramesReceived++;
         _ecgHistory = [..._ecgHistory, ...frame.samples];
         if (_ecgHistory.length > _ecgHistoryLimit) {
-          _ecgHistory = _ecgHistory.sublist(_ecgHistory.length - _ecgHistoryLimit);
+          _ecgHistory = _ecgHistory.sublist(
+            _ecgHistory.length - _ecgHistoryLimit,
+          );
         }
       });
     });
@@ -580,23 +628,31 @@ int _rrRepeats = 0;
 
     // Ensure draft has a patient attached so TriageResultScreen persists to SQLite
     if (!ref.read(screeningDraftProvider).hasPatient) {
-      ref.read(screeningDraftProvider.notifier).begin(
-        patient: Patient.create(
-          id: 'PT-${DateTime.now().millisecondsSinceEpoch}',
-          name: 'Walk-In Patient',
-          age: 35,
-          sex: 'M',
-        ),
-      );
+      ref
+          .read(screeningDraftProvider.notifier)
+          .begin(
+            patient: Patient.create(
+              id: 'PT-${DateTime.now().millisecondsSinceEpoch}',
+              name: 'Walk-In Patient',
+              age: 35,
+              sex: 'M',
+            ),
+          );
     }
 
     // Attach scenario typical symptoms in demo mode if draft symptoms are empty
-    if (_isDemo && _selectedScenario.typicalSymptoms.isNotEmpty && ref.read(screeningDraftProvider).symptoms.isEmpty) {
-      ref.read(screeningDraftProvider.notifier).setSymptoms(_selectedScenario.typicalSymptoms);
+    if (_isDemo &&
+        _selectedScenario.typicalSymptoms.isNotEmpty &&
+        ref.read(screeningDraftProvider).symptoms.isEmpty) {
+      ref
+          .read(screeningDraftProvider.notifier)
+          .setSymptoms(_selectedScenario.typicalSymptoms);
     }
 
     // The captured ECG goes into the draft, not into the route
-    ref.read(screeningDraftProvider.notifier).setSample(
+    ref
+        .read(screeningDraftProvider.notifier)
+        .setSample(
           _currentSample,
           ecgSamples: List<int>.unmodifiable(captured),
           ecgSampleRate: _ecgSampleRateHz,
@@ -629,7 +685,10 @@ int _rrRepeats = 0;
         final newHR = (baseHR + hrVariation).clamp(40, 200);
         final newSpO2 = (baseSpO2 + spo2Variation).clamp(70, 100);
         final newTemp = (baseTemp + tempVariation).clamp(34.0, 42.0);
-        final newGlucose = (baseGlucose + (_random.nextInt(6) - 3)).clamp(30, 500);
+        final newGlucose = (baseGlucose + (_random.nextInt(6) - 3)).clamp(
+          30,
+          500,
+        );
         final newSys = (baseSys + (_random.nextInt(6) - 3)).clamp(70, 240);
         final newDia = (baseDia + (_random.nextInt(6) - 3)).clamp(40, 140);
 
@@ -663,8 +722,10 @@ int _rrRepeats = 0;
         );
 
         if (!_selectedScenario.isArrhythmia) {
-          assert((60000 / newHR - newRR).abs() / (60000 / newHR) < 0.01,
-              'HR ($newHR BPM) and RR interval (${newRR}ms) must agree within 1%');
+          assert(
+            (60000 / newHR - newRR).abs() / (60000 / newHR) < 0.01,
+            'HR ($newHR BPM) and RR interval (${newRR}ms) must agree within 1%',
+          );
         }
 
         _hrTrail.add(newHR);
@@ -733,8 +794,9 @@ int _rrRepeats = 0;
           // and would have stayed wrong once a board was attached.
           Builder(
             builder: (context) {
-              final demo =
-                  _isScreening ? _isDemo : !ref.watch(bleLinkProvider).isLive;
+              final demo = _isScreening
+                  ? _isDemo
+                  : !ref.watch(bleLinkProvider).isLive;
               final color = demo
                   ? theme.colorScheme.secondaryContainer
                   : theme.colorScheme.primaryContainer;
@@ -753,7 +815,9 @@ int _rrRepeats = 0;
                   Container(
                     margin: const EdgeInsets.only(right: AppTheme.spacingMd),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingXs),
+                      horizontal: AppTheme.spacingMd,
+                      vertical: AppTheme.spacingXs,
+                    ),
                     decoration: BoxDecoration(
                       color: color,
                       borderRadius: BorderRadius.circular(AppTheme.radiusFull),
@@ -782,18 +846,22 @@ int _rrRepeats = 0;
           return FadeTransition(
             opacity: animation,
             child: SlideTransition(
-              position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(animation),
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.1),
+                end: Offset.zero,
+              ).animate(animation),
               child: child,
             ),
           );
         },
-        child: _isScreening ? _buildLiveScreeningView() : _buildPreScreeningView(),
+        child: _isScreening
+            ? _buildLiveScreeningView()
+            : _buildPreScreeningView(),
       ),
     );
   }
 
   Widget _buildPreScreeningView() {
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       child: Column(
@@ -801,23 +869,43 @@ int _rrRepeats = 0;
           const AppSpacing.vxl(),
           _buildSensorStatusGrid()
               .animate()
-              .fadeIn(duration: 600.ms, delay: 200.ms, curve: AppTheme.curveDecelerate)
+              .fadeIn(
+                duration: 600.ms,
+                delay: 200.ms,
+                curve: AppTheme.curveDecelerate,
+              )
               .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
           const AppSpacing.vxl(),
           _buildInstructionCards()
               .animate()
-              .fadeIn(duration: 600.ms, delay: 400.ms, curve: AppTheme.curveDecelerate)
+              .fadeIn(
+                duration: 600.ms,
+                delay: 400.ms,
+                curve: AppTheme.curveDecelerate,
+              )
               .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
           const AppSpacing.vxl(),
           _buildEstimatedTimeCard()
               .animate()
-              .fadeIn(duration: 600.ms, delay: 600.ms, curve: AppTheme.curveDecelerate)
+              .fadeIn(
+                duration: 600.ms,
+                delay: 600.ms,
+                curve: AppTheme.curveDecelerate,
+              )
               .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
           const AppSpacing.vxl(),
           _buildStartButton()
               .animate()
-              .fadeIn(duration: 600.ms, delay: 800.ms, curve: AppTheme.curveSpring)
-              .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.0, 1.0), curve: AppTheme.curveSpring),
+              .fadeIn(
+                duration: 600.ms,
+                delay: 800.ms,
+                curve: AppTheme.curveSpring,
+              )
+              .scale(
+                begin: const Offset(0.9, 0.9),
+                end: const Offset(1.0, 1.0),
+                curve: AppTheme.curveSpring,
+              ),
           const AppSpacing.vxl(),
         ],
       ),
@@ -830,7 +918,10 @@ int _rrRepeats = 0;
     return AppCard(
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
       padding: const EdgeInsets.all(AppTheme.spacingMd),
-      border: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.2), width: 1),
+      border: BorderSide(
+        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+        width: 1,
+      ),
       child: Row(
         children: [
           Container(
@@ -839,7 +930,11 @@ int _rrRepeats = 0;
               color: theme.colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
             ),
-            child: Icon(Icons.timer_outlined, color: theme.colorScheme.primary, size: 24),
+            child: Icon(
+              Icons.timer_outlined,
+              color: theme.colorScheme.primary,
+              size: 24,
+            ),
           ),
           const AppSpacing.hmd(),
           Expanded(
@@ -848,12 +943,16 @@ int _rrRepeats = 0;
               children: [
                 Text(
                   'Estimated Screening Time',
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const AppSpacing.vxs(),
                 Text(
                   '30 seconds \u2022 3 measurement phases\nEnsure device has >20% battery',
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -888,8 +987,8 @@ int _rrRepeats = 0;
         status: !live
             ? 'No board'
             : link.hasEcgChannel
-                ? 'Streaming'
-                : 'Not offered',
+            ? 'Streaming'
+            : 'Not offered',
         isConnected: live && link.hasEcgChannel,
       ),
       _SensorStatus(
@@ -906,13 +1005,17 @@ int _rrRepeats = 0;
       children: [
         Text(
           'Sensor Status',
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const AppSpacing.vmd(),
         AppStaggeredList(
           duration: AppTheme.durationMd,
           delay: const Duration(milliseconds: 100),
-          children: sensors.map((sensor) => _buildAnimatedSensorCard(sensor)).toList(),
+          children: sensors
+              .map((sensor) => _buildAnimatedSensorCard(sensor))
+              .toList(),
         ),
         if (!live) ...[
           const AppSpacing.vmd(),
@@ -926,8 +1029,11 @@ int _rrRepeats = 0;
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.science_outlined,
-                    color: theme.colorScheme.onSecondaryContainer, size: 22),
+                Icon(
+                  Icons.science_outlined,
+                  color: theme.colorScheme.onSecondaryContainer,
+                  size: 22,
+                ),
                 const AppSpacing.hmd(),
                 Expanded(
                   child: Column(
@@ -935,8 +1041,9 @@ int _rrRepeats = 0;
                     children: [
                       Text(
                         'Demonstration mode',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const AppSpacing.vxs(),
                       Text(
@@ -982,7 +1089,10 @@ int _rrRepeats = 0;
               padding: const EdgeInsets.all(AppTheme.spacingMd),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [sensor.color.withValues(alpha: 0.2), sensor.color.withValues(alpha: 0.1)],
+                  colors: [
+                    sensor.color.withValues(alpha: 0.2),
+                    sensor.color.withValues(alpha: 0.1),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -995,7 +1105,9 @@ int _rrRepeats = 0;
           Flexible(
             child: Text(
               sensor.label,
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               maxLines: 2,
@@ -1011,15 +1123,21 @@ int _rrRepeats = 0;
                   width: 10,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: sensor.isConnected ? theme.colorScheme.primary : theme.colorScheme.error,
+                    color: sensor.isConnected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.error,
                     shape: BoxShape.circle,
-                    boxShadow: sensor.isConnected ? [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      ),
-                    ] : null,
+                    boxShadow: sensor.isConnected
+                        ? [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.5,
+                              ),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        : null,
                   ),
                 ),
                 const AppSpacing.hxs(),
@@ -1028,7 +1146,9 @@ int _rrRepeats = 0;
                     sensor.status,
                     style: theme.textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w500,
-                      color: sensor.isConnected ? theme.colorScheme.primary : theme.colorScheme.error,
+                      color: sensor.isConnected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.error,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1049,24 +1169,51 @@ int _rrRepeats = 0;
       children: [
         Text(
           'Quick Guide',
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const AppSpacing.vmd(),
         AppStaggeredList(
           duration: AppTheme.durationMd,
           delay: const Duration(milliseconds: 80),
           children: [
-            _buildAnimatedInstructionRow('1', 'Place finger on PPG sensor', Icons.favorite_rounded, theme.colorScheme.primary),
-            _buildAnimatedInstructionRow('2', 'Attach ECG electrodes (RA, LA, RL)', Icons.monitor_heart_rounded, theme.colorScheme.secondary),
-            _buildAnimatedInstructionRow('3', 'Point temp sensor at forehead', Icons.thermostat_rounded, theme.colorScheme.tertiary),
-            _buildAnimatedInstructionRow('4', 'Stay still for 30 seconds', Icons.accessibility_new_rounded, theme.colorScheme.primary.withValues(alpha: 0.8)),
+            _buildAnimatedInstructionRow(
+              '1',
+              'Place finger on PPG sensor',
+              Icons.favorite_rounded,
+              theme.colorScheme.primary,
+            ),
+            _buildAnimatedInstructionRow(
+              '2',
+              'Attach ECG electrodes (RA, LA, RL)',
+              Icons.monitor_heart_rounded,
+              theme.colorScheme.secondary,
+            ),
+            _buildAnimatedInstructionRow(
+              '3',
+              'Point temp sensor at forehead',
+              Icons.thermostat_rounded,
+              theme.colorScheme.tertiary,
+            ),
+            _buildAnimatedInstructionRow(
+              '4',
+              'Stay still for 30 seconds',
+              Icons.accessibility_new_rounded,
+              theme.colorScheme.primary.withValues(alpha: 0.8),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildAnimatedInstructionRow(String number, String text, IconData icon, Color color) {
+  Widget _buildAnimatedInstructionRow(
+    String number,
+    String text,
+    IconData icon,
+    Color color,
+  ) {
     final theme = Theme.of(context);
 
     return AppRippleEffect(
@@ -1095,9 +1242,7 @@ int _rrRepeats = 0;
             const AppSpacing.hsm(),
             Icon(icon, size: 22, color: color),
             const AppSpacing.hsm(),
-            Expanded(
-              child: Text(text, style: theme.textTheme.bodyMedium),
-            ),
+            Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
           ],
         ),
       ),
@@ -1132,10 +1277,7 @@ int _rrRepeats = 0;
                 // The protocol carries no raw optical waveform, so in live mode
                 // there is nothing to draw here. Shown only for the demo, where
                 // the trace is honestly labelled as generated.
-                if (_isDemo) ...[
-                  _buildPPGCard(),
-                  const AppSpacing.vmd(),
-                ],
+                if (_isDemo) ...[_buildPPGCard(), const AppSpacing.vmd()],
                 _buildExperimentalBPCard(),
                 const AppSpacing.vmd(),
                 _buildSignalQualityCard(),
@@ -1163,25 +1305,25 @@ int _rrRepeats = 0;
 
     final (message, color, icon) = switch (link.status) {
       BleLinkStatus.streaming when stale != null && stale.inSeconds >= 5 => (
-          'The link is open but no reading has arrived for ${stale.inSeconds}s. '
-              'Check the sensor is seated on the finger.',
-          theme.colorScheme.tertiary,
-          Icons.hourglass_empty_rounded,
-        ),
+        'The link is open but no reading has arrived for ${stale.inSeconds}s. '
+            'Check the sensor is seated on the finger.',
+        theme.colorScheme.tertiary,
+        Icons.hourglass_empty_rounded,
+      ),
       BleLinkStatus.streaming => (null, null, null),
       BleLinkStatus.reconnecting => (
-          'Reconnecting to the board — attempt ${link.attempt}'
-              '${link.retryIn != null ? ', retrying in ${link.retryIn!.inSeconds}s' : ''}. '
-              'The $_ecgSeconds s captured so far is kept.',
-          theme.colorScheme.tertiary,
-          Icons.sync_problem_rounded,
-        ),
+        'Reconnecting to the board — attempt ${link.attempt}'
+            '${link.retryIn != null ? ', retrying in ${link.retryIn!.inSeconds}s' : ''}. '
+            'The $_ecgSeconds s captured so far is kept.',
+        theme.colorScheme.tertiary,
+        Icons.sync_problem_rounded,
+      ),
       _ => (
-          'The board is ${link.label.toLowerCase()}. '
-              'The $_ecgSeconds s captured so far is kept.',
-          theme.colorScheme.error,
-          Icons.link_off_rounded,
-        ),
+        'The board is ${link.label.toLowerCase()}. '
+            'The $_ecgSeconds s captured so far is kept.',
+        theme.colorScheme.error,
+        Icons.link_off_rounded,
+      ),
     };
 
     if (message == null) return const SizedBox.shrink();
@@ -1230,13 +1372,16 @@ int _rrRepeats = 0;
 
     final String? message;
     if (hr > 0 && hr < 45) {
-      message = 'Heart rate has stayed below 45 bpm for several beats. '
+      message =
+          'Heart rate has stayed below 45 bpm for several beats. '
           'Keep the patient seated and re-check in a minute.';
     } else if (hr > 0 && hr > 130) {
-      message = 'Heart rate has stayed above 130 bpm for several beats. '
+      message =
+          'Heart rate has stayed above 130 bpm for several beats. '
           'Keep the patient seated and re-check in a minute.';
     } else if (scatter > 150 && hr > 0) {
-      message = 'The beat-to-beat timing is very uneven (±${scatter.round()} ms). '
+      message =
+          'The beat-to-beat timing is very uneven (±${scatter.round()} ms). '
           'Ask the patient to sit still and repeat the strip before deciding.';
     } else {
       message = null;
@@ -1276,16 +1421,19 @@ int _rrRepeats = 0;
   Widget _buildProgressHeader() {
     final theme = Theme.of(context);
     final progress = _secondsElapsed / _screeningSeconds;
-    final phaseNames = ['Vitals Baseline', 'ECG Acquisition', 'Final Verification'];
+    final phaseNames = [
+      'Vitals Baseline',
+      'ECG Acquisition',
+      'Final Verification',
+    ];
     // Derived from elapsed time, not from a frame counter. In live mode frames
     // land at whatever rate the board manages, so counting them made the phase
     // label race ahead on a fast link and stall on a slow one.
-    final currentPhase =
-        (_secondsElapsed * 3 ~/ _screeningSeconds).clamp(0, 2);
+    final currentPhase = (_secondsElapsed * 3 ~/ _screeningSeconds).clamp(0, 2);
     final subtitle = _isDemo
         ? '${phaseNames[currentPhase]} \u2022 generated readings'
         : '${phaseNames[currentPhase]} \u2022 $_framesReceived readings, '
-            '$_ecgFramesReceived ECG frames';
+              '$_ecgFramesReceived ECG frames';
 
     return AnimatedBuilder(
       animation: _phaseController,
@@ -1295,7 +1443,10 @@ int _rrRepeats = 0;
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
             border: Border(
-              bottom: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
+              bottom: BorderSide(
+                color: theme.colorScheme.outlineVariant,
+                width: 1,
+              ),
             ),
           ),
           child: Column(
@@ -1308,7 +1459,9 @@ int _rrRepeats = 0;
                       children: [
                         Text(
                           'Screening in Progress',
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const AppSpacing.vxs(),
                         AnimatedSwitcher(
@@ -1316,7 +1469,9 @@ int _rrRepeats = 0;
                           child: Text(
                             subtitle,
                             key: ValueKey(subtitle),
-                            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ],
@@ -1348,19 +1503,32 @@ int _rrRepeats = 0;
       builder: (context, child) {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingSm),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacingMd,
+            vertical: AppTheme.spacingSm,
+          ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isCritical
-                  ? [theme.colorScheme.error, theme.colorScheme.error.withValues(alpha: 0.7)]
-                  : [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
+                  ? [
+                      theme.colorScheme.error,
+                      theme.colorScheme.error.withValues(alpha: 0.7),
+                    ]
+                  : [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primary.withValues(alpha: 0.7),
+                    ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
             boxShadow: [
               BoxShadow(
-                color: (isCritical ? theme.colorScheme.error : theme.colorScheme.primary).withValues(alpha: 0.3),
+                color:
+                    (isCritical
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.primary)
+                        .withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1369,7 +1537,11 @@ int _rrRepeats = 0;
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.timer_rounded, color: theme.colorScheme.onPrimary, size: 18),
+              Icon(
+                Icons.timer_rounded,
+                color: theme.colorScheme.onPrimary,
+                size: 18,
+              ),
               const AppSpacing.hxs(),
               Text(
                 '${_countdown}s',
@@ -1441,7 +1613,9 @@ int _rrRepeats = 0;
       spacing: AppTheme.spacingMd,
       duration: AppTheme.durationMd,
       delay: const Duration(milliseconds: 100),
-      children: vitals.map((vital) => Expanded(child: _buildAnimatedVitalCard(vital))).toList(),
+      children: vitals
+          .map((vital) => Expanded(child: _buildAnimatedVitalCard(vital)))
+          .toList(),
     );
   }
 
@@ -1471,8 +1645,12 @@ int _rrRepeats = 0;
               const Spacer(),
               if (vital.alert)
                 AppStatusBadge(
-                  label: vital.alertColor == theme.colorScheme.error ? 'HIGH' : 'ATTN',
-                  type: vital.alertColor == theme.colorScheme.error ? AppStatusType.error : AppStatusType.warning,
+                  label: vital.alertColor == theme.colorScheme.error
+                      ? 'HIGH'
+                      : 'ATTN',
+                  type: vital.alertColor == theme.colorScheme.error
+                      ? AppStatusType.error
+                      : AppStatusType.warning,
                   showDot: false,
                   animate: true,
                 ),
@@ -1511,7 +1689,9 @@ int _rrRepeats = 0;
           const AppSpacing.vxs(),
           Text(
             vital.label,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           const AppSpacing.vsm(),
           _buildTrendIndicator(vital.trend),
@@ -1546,7 +1726,11 @@ int _rrRepeats = 0;
         Icon(icon, size: 14, color: color),
         const AppSpacing.hxs(),
         Text(
-          trend == _TrendDirection.up ? 'Rising' : trend == _TrendDirection.down ? 'Falling' : 'Stable',
+          trend == _TrendDirection.up
+              ? 'Rising'
+              : trend == _TrendDirection.down
+              ? 'Falling'
+              : 'Stable',
           style: theme.textTheme.labelSmall?.copyWith(
             fontWeight: FontWeight.w500,
             color: color,
@@ -1564,24 +1748,24 @@ int _rrRepeats = 0;
   /// held in the trail and calls anything inside [deadband] stable, so ordinary
   /// beat-to-beat jitter does not read as a rising rate.
   /// RMSSD in milliseconds over the recent RR window, or null when there
-/// are too few beats to say anything honest. RMSSD is the standard
-/// short-window HRV measure: root-mean-square of successive RR
-/// differences. It needs no firmware support because the board already
-/// reports each R-R interval and this is pure arithmetic on top.
-double? _rmssdMs() {
-  if (_rrWindow.length < 6) return null;
-  var sumSquares = 0.0;
-  var count = 0;
-  for (var i = 1; i < _rrWindow.length; i++) {
-    final d = (_rrWindow[i] - _rrWindow[i - 1]).toDouble();
-    sumSquares += d * d;
-    count++;
+  /// are too few beats to say anything honest. RMSSD is the standard
+  /// short-window HRV measure: root-mean-square of successive RR
+  /// differences. It needs no firmware support because the board already
+  /// reports each R-R interval and this is pure arithmetic on top.
+  double? _rmssdMs() {
+    if (_rrWindow.length < 6) return null;
+    var sumSquares = 0.0;
+    var count = 0;
+    for (var i = 1; i < _rrWindow.length; i++) {
+      final d = (_rrWindow[i] - _rrWindow[i - 1]).toDouble();
+      sumSquares += d * d;
+      count++;
+    }
+    if (count == 0) return null;
+    return sqrt(sumSquares / count);
   }
-  if (count == 0) return null;
-  return sqrt(sumSquares / count);
-}
 
-_TrendDirection _trendOf(List<num> trail, num deadband) {
+  _TrendDirection _trendOf(List<num> trail, num deadband) {
     if (trail.length < 2) return _TrendDirection.stable;
     final delta = trail.last - trail.first;
     if (delta.abs() < deadband) return _TrendDirection.stable;
@@ -1605,17 +1789,17 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
     final qualityColor = !_hasReading
         ? theme.colorScheme.onSurfaceVariant
         : quality >= 0.8
-            ? theme.colorScheme.primary
-            : quality >= 0.5
-                ? theme.colorScheme.tertiary
-                : theme.colorScheme.error;
+        ? theme.colorScheme.primary
+        : quality >= 0.5
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.error;
     final qualityText = !_hasReading
         ? 'WAITING'
         : quality >= 0.8
-            ? 'GOOD'
-            : quality >= 0.5
-                ? 'FAIR'
-                : 'POOR';
+        ? 'GOOD'
+        : quality >= 0.5
+        ? 'FAIR'
+        : 'POOR';
 
     return AppElevatedCard(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
@@ -1624,13 +1808,19 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
         children: [
           Row(
             children: [
-              Icon(Icons.monitor_heart_rounded, color: theme.colorScheme.secondary, size: 22),
+              Icon(
+                Icons.monitor_heart_rounded,
+                color: theme.colorScheme.secondary,
+                size: 22,
+              ),
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(
-                    'ECG Waveform (Lead I)',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  'ECG Waveform (Lead I)',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
               ),
               const Spacer(),
               AppPulseAnimation(
@@ -1638,7 +1828,10 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
                 maxScale: 1.05,
                 duration: const Duration(milliseconds: 1500),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingSm, vertical: AppTheme.spacingXs),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacingSm,
+                    vertical: AppTheme.spacingXs,
+                  ),
                   decoration: BoxDecoration(
                     color: qualityColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppTheme.radiusFull),
@@ -1649,7 +1842,10 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: BoxDecoration(color: qualityColor, shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                          color: qualityColor,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                       const AppSpacing.hxs(),
                       Text(
@@ -1678,7 +1874,9 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
                       waveform: _ecgHistory,
                       color: theme.colorScheme.secondary,
                       animationValue: _ecgController.value,
-                      gridColor: theme.colorScheme.outlineVariant.withValues(alpha: 0.1),
+                      gridColor: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.1,
+                      ),
                     ),
                   );
                 },
@@ -1691,15 +1889,35 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
             spacing: AppTheme.spacingMd,
             duration: AppTheme.durationMd,
             children: [
-              _buildAnimatedECGInfo('Rate', _hasReading ? '${_currentSample.heartRateBpm} BPM' : '--', theme),
-              _buildAnimatedECGInfo('RR Interval', _hasReading ? '${_currentSample.rrIntervalMs} ms' : '--', theme),
+              _buildAnimatedECGInfo(
+                'Rate',
+                _hasReading ? '${_currentSample.heartRateBpm} BPM' : '--',
+                theme,
+              ),
+              _buildAnimatedECGInfo(
+                'RR Interval',
+                _hasReading ? '${_currentSample.rrIntervalMs} ms' : '--',
+                theme,
+              ),
               // HRV from the RR window: '--' until ~6 beats have been seen.
               _buildAnimatedECGInfo('HRV (RMSSD)', () {
                 final hrv = _rmssdMs();
                 return _hasReading && hrv != null ? '${hrv.round()} ms' : '--';
               }(), theme),
-              _buildAnimatedECGInfo('Quality', _hasReading ? '${(quality * 100).round()}%' : '--', theme),
-              _buildAnimatedECGInfo('R-Peaks', !_hasReading ? '--' : _currentSample.rPeakDetected ? 'Detected' : 'Searching', theme),
+              _buildAnimatedECGInfo(
+                'Quality',
+                _hasReading ? '${(quality * 100).round()}%' : '--',
+                theme,
+              ),
+              _buildAnimatedECGInfo(
+                'R-Peaks',
+                !_hasReading
+                    ? '--'
+                    : _currentSample.rPeakDetected
+                    ? 'Detected'
+                    : 'Searching',
+                theme,
+              ),
             ],
           ),
         ],
@@ -1712,9 +1930,19 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
       color: theme.colorScheme.primary.withValues(alpha: 0.2),
       child: Column(
         children: [
-          Text(label, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
           const AppSpacing.vxs(),
-          Text(value, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -1730,13 +1958,19 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
         children: [
           Row(
             children: [
-              Icon(Icons.favorite_rounded, color: theme.colorScheme.primary, size: 22),
+              Icon(
+                Icons.favorite_rounded,
+                color: theme.colorScheme.primary,
+                size: 22,
+              ),
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(
-                    'PPG Waveform (Pulse)',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  'PPG Waveform (Pulse)',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
               ),
               const Spacer(),
               AppPulseAnimation(
@@ -1764,7 +1998,9 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
                   painter: _PPGWaveformPainter(
                     waveform: _ppgWaveform,
                     color: theme.colorScheme.primary,
-                    gridColor: theme.colorScheme.outlineVariant.withValues(alpha: 0.1),
+                    gridColor: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.1,
+                    ),
                   ),
                 ),
                 AnimatedBuilder(
@@ -1793,13 +2029,20 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
     return AppCard(
       color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.1),
       padding: const EdgeInsets.all(AppTheme.spacingMd),
-      border: BorderSide(color: theme.colorScheme.tertiary.withValues(alpha: 0.3), width: 1),
+      border: BorderSide(
+        color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+        width: 1,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.science_outlined, color: theme.colorScheme.tertiary, size: 22),
+              Icon(
+                Icons.science_outlined,
+                color: theme.colorScheme.tertiary,
+                size: 22,
+              ),
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(
@@ -1811,7 +2054,10 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingSm, vertical: AppTheme.spacingXs),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacingSm,
+                  vertical: AppTheme.spacingXs,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.tertiaryContainer,
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
@@ -1832,10 +2078,34 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
             runSpacing: AppTheme.spacingMd,
             alignment: WrapAlignment.spaceAround,
             children: [
-              _buildAnimatedBPValue('Systolic', _hasReading ? _currentSample.estimatedSystolic.toString() : '--', 'mmHg', theme.colorScheme.error),
-              _buildAnimatedBPValue('Diastolic', _hasReading ? _currentSample.estimatedDiastolic.toString() : '--', 'mmHg', theme.colorScheme.secondary),
-              _buildAnimatedBPValue('Est. Glucose', _hasReading ? _currentSample.estimatedGlucose.toString() : '--', 'mg/dL', theme.colorScheme.tertiary),
-              _buildAnimatedBPValue('PTT', _hasReading ? _currentSample.pttMs.toString() : '--', 'ms', theme.colorScheme.primary),
+              _buildAnimatedBPValue(
+                'Systolic',
+                _hasReading
+                    ? _currentSample.estimatedSystolic.toString()
+                    : '--',
+                'mmHg',
+                theme.colorScheme.error,
+              ),
+              _buildAnimatedBPValue(
+                'Diastolic',
+                _hasReading
+                    ? _currentSample.estimatedDiastolic.toString()
+                    : '--',
+                'mmHg',
+                theme.colorScheme.secondary,
+              ),
+              _buildAnimatedBPValue(
+                'Est. Glucose',
+                _hasReading ? _currentSample.estimatedGlucose.toString() : '--',
+                'mg/dL',
+                theme.colorScheme.tertiary,
+              ),
+              _buildAnimatedBPValue(
+                'PTT',
+                _hasReading ? _currentSample.pttMs.toString() : '--',
+                'ms',
+                theme.colorScheme.primary,
+              ),
             ],
           ),
           const AppSpacing.vmd(),
@@ -1847,7 +2117,11 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline_rounded, color: theme.colorScheme.tertiary, size: 18),
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: theme.colorScheme.tertiary,
+                  size: 18,
+                ),
                 const AppSpacing.hsm(),
                 Expanded(
                   child: Text(
@@ -1866,16 +2140,29 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
     );
   }
 
-  Widget _buildAnimatedBPValue(String label, String value, String unit, Color color) {
+  Widget _buildAnimatedBPValue(
+    String label,
+    String value,
+    String unit,
+    Color color,
+  ) {
     return AppRippleEffect(
       color: color.withValues(alpha: 0.2),
       child: Column(
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
           const AppSpacing.vxs(),
           RichText(
             text: TextSpan(
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, color: color),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
               children: [
                 TextSpan(text: value),
                 TextSpan(
@@ -1902,10 +2189,13 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
     Color qualityColor(double q) => q >= 0.8
         ? theme.colorScheme.primary
         : q >= 0.5
-            ? theme.colorScheme.tertiary
-            : theme.colorScheme.error;
-    String qualityLabel(double q) =>
-        q >= 0.8 ? 'GOOD' : q >= 0.5 ? 'FAIR' : 'POOR';
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.error;
+    String qualityLabel(double q) => q >= 0.8
+        ? 'GOOD'
+        : q >= 0.5
+        ? 'FAIR'
+        : 'POOR';
 
     // The middle slot used to read a hardcoded "PPG Quality 95% GOOD" on every
     // run, connected or not. Replaced with sensor contact, which the board
@@ -1914,16 +2204,32 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
       _isDemo,
       ready,
       _fingerOff,
-      _leadOff
+      _leadOff,
     )) {
-      (true, _, _, _) => ('Demo', 'N/A', theme.colorScheme.onSurfaceVariant,
-          Icons.science_outlined),
-      (_, false, _, _) => ('--', 'WAITING',
-          theme.colorScheme.onSurfaceVariant, Icons.touch_app_outlined),
-      (_, _, true, _) => ('Off', 'NO FINGER', theme.colorScheme.error,
-          Icons.do_not_touch_outlined),
-      (_, _, _, true) => ('Partial', 'LEAD OFF', theme.colorScheme.tertiary,
-          Icons.link_off_rounded),
+      (true, _, _, _) => (
+        'Demo',
+        'N/A',
+        theme.colorScheme.onSurfaceVariant,
+        Icons.science_outlined,
+      ),
+      (_, false, _, _) => (
+        '--',
+        'WAITING',
+        theme.colorScheme.onSurfaceVariant,
+        Icons.touch_app_outlined,
+      ),
+      (_, _, true, _) => (
+        'Off',
+        'NO FINGER',
+        theme.colorScheme.error,
+        Icons.do_not_touch_outlined,
+      ),
+      (_, _, _, true) => (
+        'Partial',
+        'LEAD OFF',
+        theme.colorScheme.tertiary,
+        Icons.link_off_rounded,
+      ),
       _ => ('On', 'OK', theme.colorScheme.primary, Icons.touch_app_rounded),
     };
 
@@ -1934,7 +2240,9 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
         children: [
           Text(
             'Signal Quality & Status',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const AppSpacing.vmd(),
           AppStaggeredList(
@@ -1964,13 +2272,13 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
                 !ready
                     ? theme.colorScheme.onSurfaceVariant
                     : batteryPercent > 20
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.error,
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.error,
                 !ready
                     ? 'WAITING'
                     : batteryPercent > 20
-                        ? 'OK'
-                        : 'LOW',
+                    ? 'OK'
+                    : 'LOW',
                 ready && batteryPercent <= 20
                     ? Icons.battery_alert_rounded
                     : Icons.battery_std_rounded,
@@ -1982,7 +2290,13 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
     );
   }
 
-  Widget _buildAnimatedQualityItem(String label, String value, Color color, String status, IconData icon) {
+  Widget _buildAnimatedQualityItem(
+    String label,
+    String value,
+    Color color,
+    String status,
+    IconData icon,
+  ) {
     final theme = Theme.of(context);
 
     return AppRippleEffect(
@@ -1995,7 +2309,12 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
               Icon(icon, size: 18, color: color),
               const AppSpacing.hxs(),
               Expanded(
-                child: Text(label, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                child: Text(
+                  label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             ],
           ),
@@ -2006,21 +2325,30 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
             duration: const Duration(milliseconds: 1500),
             child: RichText(
               text: TextSpan(
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, color: color),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
                 children: [TextSpan(text: value)],
               ),
             ),
           ),
           Container(
             margin: const EdgeInsets.only(top: AppTheme.spacingXs),
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingSm, vertical: AppTheme.spacingXs),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacingSm,
+              vertical: AppTheme.spacingXs,
+            ),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusFull),
             ),
             child: Text(
               status,
-              style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, color: color),
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ),
         ],
@@ -2051,7 +2379,10 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
           Expanded(
             child: AppOutlinedButton(
               label: _isPaused ? 'Resume' : 'Pause',
-              icon: Icon(_isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded, size: 24),
+              icon: Icon(
+                _isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                size: 24,
+              ),
               onPressed: _pauseScreening,
               minHeight: 56,
             ),
@@ -2071,13 +2402,16 @@ _TrendDirection _trendOf(List<num> trail, num deadband) {
   }
 
   void _showStopConfirmation() {
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Stop Screening?'),
-        content: const Text('Current measurements will be saved. Continue to symptom collection?'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXl)),
+        content: const Text(
+          'Current measurements will be saved. Continue to symptom collection?',
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -2158,10 +2492,7 @@ class _ParticlePainter extends CustomPainter {
   final List<_VitalParticle> particles;
   final double animationValue;
 
-  _ParticlePainter({
-    required this.particles,
-    required this.animationValue,
-  });
+  _ParticlePainter({required this.particles, required this.animationValue});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2183,7 +2514,8 @@ class _ParticlePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate is _ParticlePainter && oldDelegate.animationValue != animationValue;
+    return oldDelegate is _ParticlePainter &&
+        oldDelegate.animationValue != animationValue;
   }
 }
 
@@ -2246,8 +2578,8 @@ class _ECGWaveformPainter extends CustomPainter {
     const inset = 0.08;
 
     final path = Path();
-    final visiblePoints =
-        (waveform.length * (0.3 + 0.7 * animationValue)).round();
+    final visiblePoints = (waveform.length * (0.3 + 0.7 * animationValue))
+        .round();
     final last = waveform.length - 1;
 
     for (int i = 0; i < visiblePoints && i < waveform.length; i++) {
@@ -2328,10 +2660,7 @@ class _PPGWaveformPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          color.withValues(alpha: 0.15),
-          color.withValues(alpha: 0.02),
-        ],
+        colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.02)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
 

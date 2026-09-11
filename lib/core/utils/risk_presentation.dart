@@ -41,34 +41,34 @@ class RiskStyle {
   });
 
   static RiskStyle _base(RiskBand band) => switch (band) {
-        RiskBand.green => const RiskStyle(
-            band: RiskBand.green,
-            color: AppTheme.riskGreen,
-            onColor: Colors.white,
-            containerColor: AppTheme.riskGreenContainer,
-            label: 'Normal',
-            shortLabel: 'Normal',
-            icon: Icons.check_circle_outline_rounded,
-          ),
-        RiskBand.yellow => const RiskStyle(
-            band: RiskBand.yellow,
-            color: AppTheme.riskYellow,
-            onColor: Colors.black,
-            containerColor: AppTheme.riskYellowContainer,
-            label: 'Needs attention',
-            shortLabel: 'Attention',
-            icon: Icons.error_outline_rounded,
-          ),
-        RiskBand.red => const RiskStyle(
-            band: RiskBand.red,
-            color: AppTheme.riskRed,
-            onColor: Colors.white,
-            containerColor: AppTheme.riskRedContainer,
-            label: 'Urgent',
-            shortLabel: 'Urgent',
-            icon: Icons.warning_amber_rounded,
-          ),
-      };
+    RiskBand.green => const RiskStyle(
+      band: RiskBand.green,
+      color: AppTheme.riskGreen,
+      onColor: Colors.white,
+      containerColor: AppTheme.riskGreenContainer,
+      label: 'Normal',
+      shortLabel: 'Normal',
+      icon: Icons.check_circle_outline_rounded,
+    ),
+    RiskBand.yellow => const RiskStyle(
+      band: RiskBand.yellow,
+      color: AppTheme.riskYellow,
+      onColor: Colors.black,
+      containerColor: AppTheme.riskYellowContainer,
+      label: 'Needs attention',
+      shortLabel: 'Attention',
+      icon: Icons.error_outline_rounded,
+    ),
+    RiskBand.red => const RiskStyle(
+      band: RiskBand.red,
+      color: AppTheme.riskRed,
+      onColor: Colors.white,
+      containerColor: AppTheme.riskRedContainer,
+      label: 'Urgent',
+      shortLabel: 'Urgent',
+      icon: Icons.warning_amber_rounded,
+    ),
+  };
 
   static RiskStyle of(RiskBand band, [AppLocalizations? l10n]) {
     final base = _base(band);
@@ -104,27 +104,27 @@ class SyncStyle {
   });
 
   static SyncStyle _base(String raw) => switch (raw.toUpperCase()) {
-        'SYNCED' => const SyncStyle(
-            label: 'Uploaded',
-            icon: Icons.cloud_done_outlined,
-            color: AppTheme.riskGreen,
-          ),
-        'SYNCING' => const SyncStyle(
-            label: 'Uploading',
-            icon: Icons.cloud_sync_outlined,
-            color: AppTheme.infoBlue,
-          ),
-        'FAILED' => const SyncStyle(
-            label: 'Upload failed',
-            icon: Icons.cloud_off_outlined,
-            color: AppTheme.riskRed,
-          ),
-        _ => const SyncStyle(
-            label: 'Waiting to upload',
-            icon: Icons.cloud_queue_outlined,
-            color: AppTheme.riskYellow,
-          ),
-      };
+    'SYNCED' => const SyncStyle(
+      label: 'Uploaded',
+      icon: Icons.cloud_done_outlined,
+      color: AppTheme.riskGreen,
+    ),
+    'SYNCING' => const SyncStyle(
+      label: 'Uploading',
+      icon: Icons.cloud_sync_outlined,
+      color: AppTheme.infoBlue,
+    ),
+    'FAILED' => const SyncStyle(
+      label: 'Upload failed',
+      icon: Icons.cloud_off_outlined,
+      color: AppTheme.riskRed,
+    ),
+    _ => const SyncStyle(
+      label: 'Waiting to upload',
+      icon: Icons.cloud_queue_outlined,
+      color: AppTheme.riskYellow,
+    ),
+  };
 
   static SyncStyle of(String raw, [AppLocalizations? l10n]) {
     final base = _base(raw);
@@ -138,32 +138,35 @@ class SyncStyle {
 }
 
 /// Human wording for the escalation levels the rule engine emits.
-String escalationLabel(String raw, [AppLocalizations? l10n]) =>
-    l10n != null ? l10n.escalationText(raw) : switch (raw.toUpperCase()) {
-      'EMERGENCY' => 'Seek care now',
-      'CLINIC_VISIT' => 'Clinic review',
-      'FOLLOW_UP' => 'Follow up',
-      _ => 'Routine monitoring',
-    };
+String escalationLabel(String raw, [AppLocalizations? l10n]) => l10n != null
+    ? l10n.escalationText(raw)
+    : switch (raw.toUpperCase()) {
+        'EMERGENCY' => 'Seek care now',
+        'CLINIC_VISIT' => 'Clinic review',
+        'FOLLOW_UP' => 'Follow up',
+        _ => 'Routine monitoring',
+      };
 
 /// Human wording for the ECG rhythm classes stored on a screening.
-String ecgRhythmLabel(String raw, [AppLocalizations? l10n]) =>
-    l10n != null ? l10n.ecgRhythmText(raw) : switch (raw.toUpperCase()) {
-      'SINUS_RHYTHM' => 'Regular rhythm',
-      'TACHYCARDIA' => 'Fast rhythm',
-      'BRADYCARDIA' => 'Slow rhythm',
-      'IRREGULAR' => 'Irregular rhythm',
-      'NOISY' => 'Signal too noisy',
-      _ => 'Not classified',
-    };
+String ecgRhythmLabel(String raw, [AppLocalizations? l10n]) => l10n != null
+    ? l10n.ecgRhythmText(raw)
+    : switch (raw.toUpperCase()) {
+        'SINUS_RHYTHM' => 'Regular rhythm',
+        'TACHYCARDIA' => 'Fast rhythm',
+        'BRADYCARDIA' => 'Slow rhythm',
+        'IRREGULAR' => 'Irregular rhythm',
+        'NOISY' => 'Signal too noisy',
+        _ => 'Not classified',
+      };
 
 /// Human wording for the cuffless BP confidence tag.
-String bpConfidenceLabel(String raw, [AppLocalizations? l10n]) =>
-    l10n != null ? l10n.bpConfidenceText(raw) : switch (raw.toUpperCase()) {
-      'CALIBRATED' => 'Calibrated estimate',
-      'ESTIMATED' => 'Uncalibrated estimate',
-      _ => 'Experimental — not for clinical use',
-    };
+String bpConfidenceLabel(String raw, [AppLocalizations? l10n]) => l10n != null
+    ? l10n.bpConfidenceText(raw)
+    : switch (raw.toUpperCase()) {
+        'CALIBRATED' => 'Calibrated estimate',
+        'ESTIMATED' => 'Uncalibrated estimate',
+        _ => 'Experimental — not for clinical use',
+      };
 
 /// Initials for an avatar, safe on empty and single-word names.
 String initialsFor(String name) {

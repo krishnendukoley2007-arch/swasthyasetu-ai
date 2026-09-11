@@ -46,11 +46,14 @@ class _ScreeningHistoryScreenState
           subtitle: 'The local database did not respond.',
         ),
         data: (all) {
-          final filtered = all.where((s) {
-            final bandOk = _bands.isEmpty || _bands.contains(s.riskLevel);
-            final patientOk = _patientId == null || s.patientId == _patientId;
-            return bandOk && patientOk;
-          }).toList(growable: false);
+          final filtered = all
+              .where((s) {
+                final bandOk = _bands.isEmpty || _bands.contains(s.riskLevel);
+                final patientOk =
+                    _patientId == null || s.patientId == _patientId;
+                return bandOk && patientOk;
+              })
+              .toList(growable: false);
 
           return Column(
             children: [
@@ -81,33 +84,34 @@ class _ScreeningHistoryScreenState
                         ),
                       )
                     : filtered.isEmpty
-                        ? AppEmptyState(
-                            icon: Icons.filter_alt_off_outlined,
-                            title: 'No matches',
-                            subtitle: 'No screening matches these filters.',
-                            action: AppOutlinedButton(
-                              label: 'Clear filters',
-                              isExpanded: false,
-                              onPressed: () => setState(() {
-                                _bands.clear();
-                                _patientId = null;
-                              }),
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(AppTheme.spacingMd),
-                            itemCount: filtered.length,
-                            itemBuilder: (context, index) => _ScreeningCard(
-                              screening: filtered[index],
-                              patientName: names[filtered[index].patientId],
-                            )
+                    ? AppEmptyState(
+                        icon: Icons.filter_alt_off_outlined,
+                        title: 'No matches',
+                        subtitle: 'No screening matches these filters.',
+                        action: AppOutlinedButton(
+                          label: 'Clear filters',
+                          isExpanded: false,
+                          onPressed: () => setState(() {
+                            _bands.clear();
+                            _patientId = null;
+                          }),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(AppTheme.spacingMd),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) =>
+                            _ScreeningCard(
+                                  screening: filtered[index],
+                                  patientName: names[filtered[index].patientId],
+                                )
                                 .animate()
                                 .fadeIn(
                                   duration: 280.ms,
                                   delay: (40 * (index % 8)).ms,
                                 )
                                 .slideX(begin: 0.05),
-                          ),
+                      ),
               ),
             ],
           );
@@ -141,8 +145,9 @@ class _FilterBar extends StatelessWidget {
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        border:
-            Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant)),
+        border: Border(
+          bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,9 +182,7 @@ class _FilterBar extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
               items: [
-                const DropdownMenuItem<String?>(
-                  child: Text('All patients'),
-                ),
+                const DropdownMenuItem<String?>(child: Text('All patients')),
                 for (final entry in names.entries)
                   DropdownMenuItem<String?>(
                     value: entry.key,
@@ -232,8 +235,9 @@ class _ScreeningCard extends StatelessWidget {
                   children: [
                     Text(
                       patientName ?? 'Unknown patient',
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -295,7 +299,8 @@ class _ScreeningCard extends StatelessWidget {
               if (screening.hasBpEstimate)
                 _VitalChip(
                   label: 'BP',
-                  value: '${screening.estimatedSystolic}/'
+                  value:
+                      '${screening.estimatedSystolic}/'
                       '${screening.estimatedDiastolic}',
                   icon: Icons.monitor_heart_outlined,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -311,8 +316,7 @@ class _ScreeningCard extends StatelessWidget {
                 for (final symptom in screening.symptoms)
                   AppBadge(
                     label: symptom,
-                    backgroundColor: theme
-                        .colorScheme.surfaceContainerHighest
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest
                         .withValues(alpha: 0.6),
                     textColor: theme.colorScheme.onSurfaceVariant,
                   ),

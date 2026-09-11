@@ -257,18 +257,21 @@ class SettingsController extends StateNotifier<AppSettingsSnapshot> {
 
 final settingsProvider =
     StateNotifierProvider<SettingsController, AppSettingsSnapshot>(
-  (ref) => SettingsController(ref.watch(settingsRepositoryProvider)),
-);
+      (ref) => SettingsController(ref.watch(settingsRepositoryProvider)),
+    );
 
 /// Convenience selectors so widgets rebuild on one field, not the whole object.
-final localeProvider =
-    Provider<Locale>((ref) => ref.watch(settingsProvider).locale);
+final localeProvider = Provider<Locale>(
+  (ref) => ref.watch(settingsProvider).locale,
+);
 
-final themeModeProvider =
-    Provider<ThemeMode>((ref) => ref.watch(settingsProvider).themeMode);
+final themeModeProvider = Provider<ThemeMode>(
+  (ref) => ref.watch(settingsProvider).themeMode,
+);
 
-final highContrastProvider =
-    Provider<bool>((ref) => ref.watch(settingsProvider).highContrast);
+final highContrastProvider = Provider<bool>(
+  (ref) => ref.watch(settingsProvider).highContrast,
+);
 
 // ───────────────────────────── Patients ─────────────────────────────
 
@@ -288,7 +291,9 @@ final patientProvider = FutureProvider.family<Patient?, String>(
 /// name the person. One subscription for the whole list, rather than a lookup
 /// per row.
 final patientNamesProvider = Provider<Map<String, String>>((ref) {
-  return ref.watch(patientsProvider).maybeWhen(
+  return ref
+      .watch(patientsProvider)
+      .maybeWhen(
         data: (patients) => {for (final p in patients) p.id: p.name},
         orElse: () => const <String, String>{},
       );
@@ -319,13 +324,12 @@ class PatientQuery {
     Set<String>? vulnerabilityFlags,
     Set<String>? riskLevels,
     PatientSort? sort,
-  }) =>
-      PatientQuery(
-        search: search ?? this.search,
-        vulnerabilityFlags: vulnerabilityFlags ?? this.vulnerabilityFlags,
-        riskLevels: riskLevels ?? this.riskLevels,
-        sort: sort ?? this.sort,
-      );
+  }) => PatientQuery(
+    search: search ?? this.search,
+    vulnerabilityFlags: vulnerabilityFlags ?? this.vulnerabilityFlags,
+    riskLevels: riskLevels ?? this.riskLevels,
+    sort: sort ?? this.sort,
+  );
 }
 
 class PatientQueryController extends StateNotifier<PatientQuery> {
@@ -351,25 +355,25 @@ class PatientQueryController extends StateNotifier<PatientQuery> {
 
 final patientQueryProvider =
     StateNotifierProvider<PatientQueryController, PatientQuery>(
-  (ref) => PatientQueryController(),
-);
+      (ref) => PatientQueryController(),
+    );
 
 /// The list the UI actually renders: summaries from the DB, filtered in memory.
-final filteredPatientsProvider = Provider<AsyncValue<List<PatientSummary>>>(
-  (ref) {
-    final summaries = ref.watch(patientSummariesProvider);
-    final query = ref.watch(patientQueryProvider);
-    return summaries.whenData(
-      (list) => PatientRepository.filter(
-        list,
-        query: query.search,
-        vulnerabilityFlags: query.vulnerabilityFlags,
-        riskLevels: query.riskLevels,
-        sort: query.sort,
-      ),
-    );
-  },
-);
+final filteredPatientsProvider = Provider<AsyncValue<List<PatientSummary>>>((
+  ref,
+) {
+  final summaries = ref.watch(patientSummariesProvider);
+  final query = ref.watch(patientQueryProvider);
+  return summaries.whenData(
+    (list) => PatientRepository.filter(
+      list,
+      query: query.search,
+      vulnerabilityFlags: query.vulnerabilityFlags,
+      riskLevels: query.riskLevels,
+      sort: query.sort,
+    ),
+  );
+});
 
 // ───────────────────────────── Screenings ─────────────────────────────
 
@@ -425,13 +429,16 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
   // many today" means since midnight.
   final now = DateTime.now();
   final midnight = DateTime(now.year, now.month, now.day);
-  final today =
-      screenings.where((s) => !s.timestamp.isBefore(midnight)).toList();
+  final today = screenings
+      .where((s) => !s.timestamp.isBefore(midnight))
+      .toList();
 
   return DashboardStats(
     todayScreenings: today.length,
     pendingSync: pending.valueOrNull?.length ?? 0,
-    highRiskToday: today.where((s) => s.riskLevel.toUpperCase() == 'RED').length,
+    highRiskToday: today
+        .where((s) => s.riskLevel.toUpperCase() == 'RED')
+        .length,
     totalPatients: patients.valueOrNull?.length ?? 0,
     lastScreeningAt: screenings.isEmpty ? null : screenings.first.timestamp,
     lastScreeningRisk: screenings.isEmpty ? null : screenings.first.riskLevel,
@@ -441,9 +448,9 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
 
 final patientScreeningsProvider =
     StreamProvider.family<List<Screening>, String>(
-  (ref, patientId) =>
-      ref.watch(screeningRepositoryProvider).watchForPatient(patientId),
-);
+      (ref, patientId) =>
+          ref.watch(screeningRepositoryProvider).watchForPatient(patientId),
+    );
 
 final screeningProvider = FutureProvider.family<Screening?, String>(
   (ref, id) => ref.watch(screeningRepositoryProvider).getById(id),
@@ -476,10 +483,9 @@ final bleLinkStateProvider = StreamProvider<BleLinkState>((ref) {
 /// Convenience accessor that never sits in a loading state.
 final bleLinkProvider = Provider<BleLinkState>((ref) {
   final service = ref.watch(bleServiceProvider);
-  return ref.watch(bleLinkStateProvider).maybeWhen(
-        data: (s) => s,
-        orElse: () => service.state,
-      );
+  return ref
+      .watch(bleLinkStateProvider)
+      .maybeWhen(data: (s) => s, orElse: () => service.state);
 });
 
 final bleCandidatesProvider = StreamProvider<List<BleCandidate>>(
@@ -518,9 +524,11 @@ final fallDetectionServiceProvider = Provider<FallDetectionService>((ref) {
 /// True when at least one contact has a number that can actually be dialled.
 /// The SOS button uses this to explain itself instead of failing on tap.
 final hasReachableContactProvider = Provider<bool>((ref) {
-  return ref.watch(emergencyContactsProvider).maybeWhen(
-        data: (contacts) => contacts
-            .any((c) => EmergencyRepository.isDiallable(c.phone)),
+  return ref
+      .watch(emergencyContactsProvider)
+      .maybeWhen(
+        data: (contacts) =>
+            contacts.any((c) => EmergencyRepository.isDiallable(c.phone)),
         orElse: () => false,
       );
 });
@@ -540,8 +548,7 @@ final syncQueueProvider = StreamProvider<List<SyncQueueRow>>(
 final pendingSyncCountProvider = Provider<int>((ref) {
   final queue = ref.watch(syncQueueProvider);
   return queue.maybeWhen(
-    data: (items) =>
-        items.where((i) => i.status != 'SYNCED').length,
+    data: (items) => items.where((i) => i.status != 'SYNCED').length,
     orElse: () => 0,
   );
 });

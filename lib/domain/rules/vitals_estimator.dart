@@ -67,8 +67,15 @@ class VitalsEstimator {
     final ageDelta = (age - 30) * 0.20;
     final bmiDelta = (effectiveBmi - 23.0) * 0.30;
 
-    final sbp = (118.0 + (28.0 * logPttRatio) + hrDelta + ageDelta + bmiDelta).round();
-    final dbp = (78.0 + (16.0 * logPttRatio) + (hrDelta * 0.7) + (ageDelta * 0.7) + (bmiDelta * 0.7)).round();
+    final sbp = (118.0 + (28.0 * logPttRatio) + hrDelta + ageDelta + bmiDelta)
+        .round();
+    final dbp =
+        (78.0 +
+                (16.0 * logPttRatio) +
+                (hrDelta * 0.7) +
+                (ageDelta * 0.7) +
+                (bmiDelta * 0.7))
+            .round();
 
     final clampedSbp = sbp.clamp(80, 220);
     final clampedDbp = dbp.clamp(50, 130);
@@ -103,19 +110,27 @@ class VitalsEstimator {
     const double baseline = 95.0;
     final ageComponent = (age - 30) * 0.35;
     final bmiComponent = (effectiveBmi - 22.0) * 0.90;
-    final pttComponent = (210 - effectivePtt) * 0.32; // Higher arterial stiffness (lower PTT) correlates with higher glucose
+    final pttComponent =
+        (210 - effectivePtt) *
+        0.32; // Higher arterial stiffness (lower PTT) correlates with higher glucose
     final hrComponent = (heartRate - 72) * 0.28;
     final spo2Component = (98 - spo2) * 1.2;
     final tempComponent = (tempC > 0 ? (tempC - 36.5) * 2.5 : 0.0);
 
-    final rawGlucose = baseline + ageComponent + bmiComponent + pttComponent + hrComponent + spo2Component + tempComponent;
+    final rawGlucose =
+        baseline +
+        ageComponent +
+        bmiComponent +
+        pttComponent +
+        hrComponent +
+        spo2Component +
+        tempComponent;
     final glucoseMgDl = rawGlucose.round().clamp(65, 320);
 
-    final confidence = (ecgQuality < 0.5 || pttMs <= 0) ? 'LOW_CONFIDENCE' : 'EXPERIMENTAL';
+    final confidence = (ecgQuality < 0.5 || pttMs <= 0)
+        ? 'LOW_CONFIDENCE'
+        : 'EXPERIMENTAL';
 
-    return GlucoseEstimate(
-      glucoseMgDl: glucoseMgDl,
-      confidence: confidence,
-    );
+    return GlucoseEstimate(glucoseMgDl: glucoseMgDl, confidence: confidence);
   }
 }

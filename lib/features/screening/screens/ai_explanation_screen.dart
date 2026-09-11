@@ -160,7 +160,7 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
           );
     final symptoms =
         (extra?['symptoms'] as List<dynamic>?)?.whereType<String>().toList() ??
-            const ['Fever', 'Dizziness'];
+        const ['Fever', 'Dizziness'];
 
     _assessment = RiskEngine.assess(sample: sample, symptoms: symptoms);
     _patientName = extra?['patientName'] as String?;
@@ -215,7 +215,8 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
         _chat.add(
           _Message(
             author: _Author.system,
-            text: 'The written explanation could not be built on this phone. '
+            text:
+                'The written explanation could not be built on this phone. '
                 'The screening itself is saved — only the words failed.',
             at: DateTime.now(),
           ),
@@ -228,7 +229,8 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
 
     // Upgrade only when it can add something: consent given, a key present, and
     // the text on screen not already the online one.
-    final canUpgrade = settings.aiConsent &&
+    final canUpgrade =
+        settings.aiConsent &&
         ref.read(geminiServiceProvider).isConfigured &&
         shown.source != ExplanationSource.gemini;
     if (!canUpgrade) return;
@@ -317,11 +319,7 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
 
     if (notes.isNotEmpty) {
       built.add(
-        _Message(
-          author: _Author.system,
-          text: notes.join('\n\n'),
-          at: now,
-        ),
+        _Message(author: _Author.system, text: notes.join('\n\n'), at: now),
       );
     }
 
@@ -348,8 +346,9 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
   String _provenance(ExplanationResult result) {
     final saved = result.fromCache ? ' · saved on this phone' : '';
     return switch (result.source) {
-      ExplanationSource.gemini => 'Explained online by ${GeminiService.model}'
-          '$saved. The risk level came from the rule engine, not the model.',
+      ExplanationSource.gemini =>
+        'Explained online by ${GeminiService.model}'
+            '$saved. The risk level came from the rule engine, not the model.',
       ExplanationSource.offline =>
         'Explained offline from the guidelines on this phone$saved.',
     };
@@ -378,7 +377,8 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
         _chat.add(
           _Message(
             author: _Author.system,
-            text: 'Online AI is switched off, so nothing left this phone. The '
+            text:
+                'Online AI is switched off, so nothing left this phone. The '
                 'explanation above did not need it.',
             at: DateTime.now(),
           ),
@@ -392,7 +392,9 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     _scrollToEnd();
 
     final answer = await _attempt(
-      () => ref.read(explanationRepositoryProvider).answerQuestion(
+      () => ref
+          .read(explanationRepositoryProvider)
+          .answerQuestion(
             assessment: assessment,
             question: text,
             audience: ref.read(effectiveAudienceProvider),
@@ -475,7 +477,9 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
       if (_patientId != null) 'patientId': _patientId!,
       if (_screeningId != null) 'screeningId': _screeningId!,
     };
-    context.push(Uri(path: '/emergency/sos', queryParameters: query).toString());
+    context.push(
+      Uri(path: '/emergency/sos', queryParameters: query).toString(),
+    );
   }
 
   @override
@@ -485,7 +489,8 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     // Red bands offer the SOS on the result screen. This screen opens on top of
     // that one automatically, so it has to carry the same affordance or the
     // convenience would have cost a worker the emergency button.
-    final offerSos = assessment?.band == RiskBand.red &&
+    final offerSos =
+        assessment?.band == RiskBand.red &&
         ref.watch(settingsProvider).autoSuggestSos;
 
     return AppPageScaffold(
@@ -564,8 +569,8 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     final source = _brief.isEmpty
         ? null
         : _brief.any((m) => m.footnote?.startsWith('Explained online') ?? false)
-            ? ExplanationSource.gemini
-            : ExplanationSource.offline;
+        ? ExplanationSource.gemini
+        : ExplanationSource.offline;
 
     return Container(
       width: double.infinity,
@@ -665,13 +670,13 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     final background = mine
         ? theme.colorScheme.primaryContainer
         : danger
-            ? theme.colorScheme.errorContainer.withValues(alpha: 0.6)
-            : theme.colorScheme.surfaceContainerHighest;
+        ? theme.colorScheme.errorContainer.withValues(alpha: 0.6)
+        : theme.colorScheme.surfaceContainerHighest;
     final foreground = mine
         ? theme.colorScheme.onPrimaryContainer
         : danger
-            ? theme.colorScheme.onErrorContainer
-            : theme.colorScheme.onSurface;
+        ? theme.colorScheme.onErrorContainer
+        : theme.colorScheme.onSurface;
 
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,

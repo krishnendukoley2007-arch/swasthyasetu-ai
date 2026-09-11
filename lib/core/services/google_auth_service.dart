@@ -31,13 +31,14 @@ class GoogleIdentity {
 /// Google button explains itself instead of failing cryptically.
 class GoogleAuthService {
   GoogleAuthService({String? serverClientId})
-      : _serverClientId = (serverClientId ??
-                (const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID')
-                        .trim()
-                        .isNotEmpty
-                    ? const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID')
-                    : defaultServerClientId))
-            .trim();
+    : _serverClientId =
+          (serverClientId ??
+                  (const String.fromEnvironment(
+                        'GOOGLE_SERVER_CLIENT_ID',
+                      ).trim().isNotEmpty
+                      ? const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID')
+                      : defaultServerClientId))
+              .trim();
 
   /// This project's web OAuth client id, compiled in so a build cannot silently
   /// lose Google sign-in by forgetting a flag — which is exactly what happened:
@@ -75,16 +76,14 @@ class GoogleAuthService {
       throw const AuthException(
         AuthFailure.googleUnavailable,
         'Google sign-in is not set up for this build. Email sign-in works '
-            'fully offline — use it, or rebuild with '
-            '--dart-define=GOOGLE_SERVER_CLIENT_ID=<web OAuth client id>.',
+        'fully offline — use it, or rebuild with '
+        '--dart-define=GOOGLE_SERVER_CLIENT_ID=<web OAuth client id>.',
       );
     }
 
     try {
       if (!_initialized) {
-        await GoogleSignIn.instance.initialize(
-          serverClientId: _serverClientId,
-        );
+        await GoogleSignIn.instance.initialize(serverClientId: _serverClientId);
         _initialized = true;
       }
       final account = await GoogleSignIn.instance.authenticate();
@@ -96,21 +95,21 @@ class GoogleAuthService {
     } on GoogleSignInException catch (e) {
       throw switch (e.code) {
         GoogleSignInExceptionCode.canceled => AuthException(
-            AuthFailure.googleCancelled,
-            e.description ??
-                'Google Sign-In was cancelled or rejected by Google Play Services. '
-                'Please ensure the Web Client ID and SHA-1 in Firebase Console match your build.',
-          ),
+          AuthFailure.googleCancelled,
+          e.description ??
+              'Google Sign-In was cancelled or rejected by Google Play Services. '
+                  'Please ensure the Web Client ID and SHA-1 in Firebase Console match your build.',
+        ),
         GoogleSignInExceptionCode.clientConfigurationError => AuthException(
-            AuthFailure.googleUnavailable,
-            'Google rejected this app\'s identity. Check the OAuth client in '
-                'Google Cloud Console: package name and signing SHA-1 must '
-                'match this build. (${e.description ?? 'configuration error'})',
-          ),
+          AuthFailure.googleUnavailable,
+          'Google rejected this app\'s identity. Check the OAuth client in '
+          'Google Cloud Console: package name and signing SHA-1 must '
+          'match this build. (${e.description ?? 'configuration error'})',
+        ),
         _ => AuthException(
-            AuthFailure.googleUnavailable,
-            e.description ?? 'Google sign-in failed (${e.code}).',
-          ),
+          AuthFailure.googleUnavailable,
+          e.description ?? 'Google sign-in failed (${e.code}).',
+        ),
       };
     } catch (e) {
       if (e is AuthException) rethrow;

@@ -48,12 +48,9 @@ class _DeviceDiagnosticsScreenState
         isRunning: true,
       );
     });
-    _sub = BleDiagnostics().run(ref.read(bleServiceProvider)).listen(
-          (report) {
-            if (mounted) setState(() => _report = report);
-          },
-          onDone: () => _sub = null,
-        );
+    _sub = BleDiagnostics().run(ref.read(bleServiceProvider)).listen((report) {
+      if (mounted) setState(() => _report = report);
+    }, onDone: () => _sub = null);
   }
 
   @override
@@ -107,8 +104,14 @@ class _Header extends ConsumerWidget {
     final (badge, badgeColor) = switch (report) {
       _ when report.isRunning => (null, null),
       _ when !report.isComplete => (null, null),
-      _ when report.isConclusive => ('ALL CHECKS PASSED', theme.colorScheme.primary),
-      _ when report.failed > 0 => ('${report.failed} FAILED', theme.colorScheme.error),
+      _ when report.isConclusive => (
+        'ALL CHECKS PASSED',
+        theme.colorScheme.primary,
+      ),
+      _ when report.failed > 0 => (
+        '${report.failed} FAILED',
+        theme.colorScheme.error,
+      ),
       _ => ('INCOMPLETE', theme.colorScheme.tertiary),
     };
 
@@ -136,8 +139,9 @@ class _Header extends ConsumerWidget {
               Expanded(
                 child: Text(
                   'Hardware diagnostics',
-                  style: theme.textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -145,8 +149,9 @@ class _Header extends ConsumerWidget {
           const AppSpacing.vsm(),
           Text(
             report.summary,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           // Board identity, live: name, firmware string and the battery figure
           // from the most recent telemetry frame. Hidden when nothing is
@@ -183,8 +188,9 @@ class _Header extends ConsumerWidget {
             Text(
               'Watching the link for ${report.remaining!.inSeconds}s more. '
               'Keep a finger on the sensor.',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.primary),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+              ),
             ),
           ],
           // Wrap, not Row: the badge next to the title clipped at 2.0x text
@@ -253,25 +259,22 @@ class _CheckCard extends StatelessWidget {
     final theme = Theme.of(context);
     final (icon, color) = switch (check.outcome) {
       DiagnosticOutcome.pending => (
-          Icons.radio_button_unchecked_rounded,
-          theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
-        ),
+        Icons.radio_button_unchecked_rounded,
+        theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
+      ),
       DiagnosticOutcome.running => (
-          Icons.sync_rounded,
-          theme.colorScheme.primary,
-        ),
+        Icons.sync_rounded,
+        theme.colorScheme.primary,
+      ),
       DiagnosticOutcome.pass => (
-          Icons.check_circle_rounded,
-          theme.colorScheme.primary,
-        ),
-      DiagnosticOutcome.fail => (
-          Icons.error_rounded,
-          theme.colorScheme.error,
-        ),
+        Icons.check_circle_rounded,
+        theme.colorScheme.primary,
+      ),
+      DiagnosticOutcome.fail => (Icons.error_rounded, theme.colorScheme.error),
       DiagnosticOutcome.skipped => (
-          Icons.remove_circle_outline_rounded,
-          theme.colorScheme.onSurfaceVariant,
-        ),
+        Icons.remove_circle_outline_rounded,
+        theme.colorScheme.onSurfaceVariant,
+      ),
     };
 
     return AppCard(
@@ -292,8 +295,9 @@ class _CheckCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         check.name,
-                        style: theme.textTheme.bodyLarge
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const AppSpacing.hsm(),
@@ -363,8 +367,8 @@ class _BottomActions extends StatelessWidget {
               label: report.isRunning
                   ? 'Checking…'
                   : report.isComplete
-                      ? 'Run checks again'
-                      : 'Run checks',
+                  ? 'Run checks again'
+                  : 'Run checks',
               icon: const Icon(Icons.play_arrow_rounded),
               isLoading: report.isRunning,
               minHeight: 52,

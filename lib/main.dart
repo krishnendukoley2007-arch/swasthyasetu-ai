@@ -13,7 +13,9 @@ void main() async {
   try {
     await Firebase.initializeApp();
   } catch (e, st) {
-    debugPrint('Firebase initialization warning (running in offline/local mode): $e\n$st');
+    debugPrint(
+      'Firebase initialization warning (running in offline/local mode): $e\n$st',
+    );
   }
   try {
     ErrorHandlerService.initialize();
@@ -90,7 +92,8 @@ class _Bootstrap extends ConsumerWidget {
       error: (error, _) => _BootstrapFailure(
         error: error,
         onRetry: () => ref.invalidate(bootstrapProvider),
-        onContinue: () => ref.read(_bypassBootstrapProvider.notifier).state = true,
+        onContinue: () =>
+            ref.read(_bypassBootstrapProvider.notifier).state = true,
         bypassed: ref.watch(_bypassBootstrapProvider),
         child: child,
       ),
@@ -134,8 +137,9 @@ class _SplashScreen extends StatelessWidget {
               const SizedBox(height: AppTheme.spacingLg),
               Text(
                 l10n.appName,
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppTheme.spacingSm),
@@ -196,8 +200,9 @@ class _BootstrapFailure extends StatelessWidget {
                 const SizedBox(height: AppTheme.spacingLg),
                 Text(
                   'Offline data could not be prepared',
-                  style: theme.textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppTheme.spacingSm),

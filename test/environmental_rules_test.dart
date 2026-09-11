@@ -10,16 +10,15 @@ EnvironmentReading reading({
   double humidity = 50,
   int? aqi,
   DateTime? fetchedAt,
-}) =>
-    EnvironmentReading(
-      temperatureC: temp,
-      apparentTemperatureC: apparent,
-      humidityPercent: humidity,
-      aqiUs: aqi,
-      pm25: null,
-      fetchedAt: fetchedAt ?? DateTime.now(),
-      source: 'live',
-    );
+}) => EnvironmentReading(
+  temperatureC: temp,
+  apparentTemperatureC: apparent,
+  humidityPercent: humidity,
+  aqiUs: aqi,
+  pm25: null,
+  fetchedAt: fetchedAt ?? DateTime.now(),
+  source: 'live',
+);
 
 void main() {
   group('EnvironmentalRules heat', () {
@@ -27,8 +26,7 @@ void main() {
       expect(EnvironmentalRules.evaluate(reading()), isEmpty);
     });
 
-    test('advice band starts at 32°C apparent for the general population',
-        () {
+    test('advice band starts at 32°C apparent for the general population', () {
       final adv = EnvironmentalRules.evaluate(reading(apparent: 33));
       expect(adv.single.id, 'heat_advice');
       expect(adv.single.level, AdvisoryLevel.advice);
@@ -65,8 +63,10 @@ void main() {
 
     test('moderate air only speaks to the vulnerable', () {
       // apparent 25 keeps heat silent so this test measures air alone.
-      expect(EnvironmentalRules.evaluate(reading(apparent: 25, aqi: 80)),
-          isEmpty);
+      expect(
+        EnvironmentalRules.evaluate(reading(apparent: 25, aqi: 80)),
+        isEmpty,
+      );
       final adv = EnvironmentalRules.evaluate(
         reading(apparent: 25, aqi: 80),
         vulnerability: const {Vulnerability.chronic},
@@ -106,16 +106,20 @@ void main() {
   group('combined', () {
     test('heat warning plus air advisory adds the combined note', () {
       final adv = EnvironmentalRules.evaluate(reading(apparent: 44, aqi: 170));
-      expect(adv.map((a) => a.id),
-          containsAll(['heat_danger', 'air_bad', 'combined_heat_air']));
+      expect(
+        adv.map((a) => a.id),
+        containsAll(['heat_danger', 'air_bad', 'combined_heat_air']),
+      );
       // Most serious first: danger now beats warning.
       expect(adv.first.level, AdvisoryLevel.danger);
     });
 
     test('worst-first ordering holds for mixed levels', () {
       final adv = EnvironmentalRules.evaluate(reading(apparent: 34, aqi: 170));
-      expect(adv.map((a) => a.level).toList(),
-          orderedEquals([AdvisoryLevel.warning, AdvisoryLevel.advice]));
+      expect(
+        adv.map((a) => a.level).toList(),
+        orderedEquals([AdvisoryLevel.warning, AdvisoryLevel.advice]),
+      );
     });
   });
 
@@ -150,8 +154,10 @@ void main() {
 
     test('good environment cannot fabricate a combined warning', () {
       final calm = EnvironmentalRules.evaluate(reading(apparent: 25, aqi: 40));
-      final combined =
-          EnvironmentalRules.combineWithVitals(calm, [hrNote, spo2Note]);
+      final combined = EnvironmentalRules.combineWithVitals(calm, [
+        hrNote,
+        spo2Note,
+      ]);
       expect(combined, isEmpty);
     });
   });

@@ -28,8 +28,6 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
   Patient? _selectedPatient;
   Device? _selectedDevice;
 
-
-
   @override
   void initState() {
     super.initState();
@@ -87,10 +85,9 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
       // The draft is what carries the patient into the next three screens.
       // Before this existed, `go('/screening/live')` dropped the selection and
       // the reading was scored against adult defaults and never saved.
-      ref.read(screeningDraftProvider.notifier).begin(
-            patient: _selectedPatient!,
-            device: _selectedDevice,
-          );
+      ref
+          .read(screeningDraftProvider.notifier)
+          .begin(patient: _selectedPatient!, device: _selectedDevice);
       context.go('/screening/live');
     }
   }
@@ -113,7 +110,9 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
       SnackBar(
         content: Text(message),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        ),
       ),
     );
   }
@@ -135,7 +134,10 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
           const ScreeningExitButton(),
           Container(
             margin: const EdgeInsets.only(right: AppTheme.spacingMd),
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd, vertical: AppTheme.spacingXs),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacingMd,
+              vertical: AppTheme.spacingXs,
+            ),
             decoration: BoxDecoration(
               color: theme.colorScheme.secondaryContainer,
               borderRadius: BorderRadius.circular(AppTheme.radiusFull),
@@ -195,11 +197,19 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
       animation: _stepController,
       builder: (context, child) {
         return Container(
-          padding: const EdgeInsets.fromLTRB(AppTheme.spacingLg, AppTheme.spacingMd, AppTheme.spacingLg, AppTheme.spacingLg),
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacingLg,
+            AppTheme.spacingMd,
+            AppTheme.spacingLg,
+            AppTheme.spacingLg,
+          ),
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
             border: Border(
-              bottom: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
+              bottom: BorderSide(
+                color: theme.colorScheme.outlineVariant,
+                width: 1,
+              ),
             ),
           ),
           child: Row(
@@ -235,28 +245,50 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
                 decoration: BoxDecoration(
                   gradient: isCompleted || isActive
                       ? LinearGradient(
-                          colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
+                          colors: [
+                            theme.colorScheme.primary,
+                            theme.colorScheme.primary.withValues(alpha: 0.7),
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         )
                       : null,
-                  color: isCompleted || isActive ? null : theme.colorScheme.surfaceContainerHighest,
+                  color: isCompleted || isActive
+                      ? null
+                      : theme.colorScheme.surfaceContainerHighest,
                   shape: BoxShape.circle,
                   border: (!isCompleted && !isActive)
-                      ? Border.all(color: theme.colorScheme.outlineVariant, width: 2)
+                      ? Border.all(
+                          color: theme.colorScheme.outlineVariant,
+                          width: 2,
+                        )
                       : null,
-                  boxShadow: isActive ? [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ] : null,
+                  boxShadow: isActive
+                      ? [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.4,
+                            ),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Center(
                   child: isCompleted
-                      ? Icon(Icons.check_rounded, color: theme.colorScheme.onPrimary, size: 24)
-                      : Icon(icon, color: isActive ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant, size: 24),
+                      ? Icon(
+                          Icons.check_rounded,
+                          color: theme.colorScheme.onPrimary,
+                          size: 24,
+                        )
+                      : Icon(
+                          icon,
+                          color: isActive
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.onSurfaceVariant,
+                          size: 24,
+                        ),
                 ),
               ),
               if (isActive)
@@ -268,7 +300,9 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.3,
+                          ),
                           width: 2,
                         ),
                       ),
@@ -282,7 +316,9 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
             duration: const Duration(milliseconds: 300),
             style: theme.textTheme.labelSmall!.copyWith(
               fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              color: isActive ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+              color: isActive
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
             ),
             child: Text(label),
           ),
@@ -302,7 +338,9 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
         height: 3,
         margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacingSm),
         decoration: BoxDecoration(
-          color: isCompleted ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+          color: isCompleted
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outlineVariant,
           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         ),
       ),
@@ -310,7 +348,6 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
   }
 
   Widget _buildPatientSelectionStep() {
-
     return _AnimatedPageContent(
       animationController: _contentController,
       pageIndex: 0,
@@ -391,13 +428,20 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
             padding: const EdgeInsets.all(AppTheme.spacingMd),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [theme.colorScheme.primaryContainer, theme.colorScheme.primaryContainer.withValues(alpha: 0.7)],
+                colors: [
+                  theme.colorScheme.primaryContainer,
+                  theme.colorScheme.primaryContainer.withValues(alpha: 0.7),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
             ),
-            child: Icon(icon, color: theme.colorScheme.onPrimaryContainer, size: 28),
+            child: Icon(
+              icon,
+              color: theme.colorScheme.onPrimaryContainer,
+              size: 28,
+            ),
           ),
           const AppSpacing.hmd(),
           Expanded(
@@ -406,12 +450,16 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const AppSpacing.vxs(),
                 Text(
                   subtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -431,7 +479,9 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
       onTap: () => setState(() => _selectedPatient = patient),
       isSelected: isSelected,
       border: BorderSide(
-        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+        color: isSelected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outlineVariant,
         width: isSelected ? 2 : 1,
       ),
       child: Row(
@@ -444,8 +494,16 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isSelected
-                    ? [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)]
-                    : [theme.colorScheme.primaryContainer, theme.colorScheme.primaryContainer.withValues(alpha: 0.7)],
+                    ? [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withValues(alpha: 0.7),
+                      ]
+                    : [
+                        theme.colorScheme.primaryContainer,
+                        theme.colorScheme.primaryContainer.withValues(
+                          alpha: 0.7,
+                        ),
+                      ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -459,7 +517,9 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 20,
-                  color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onPrimaryContainer,
+                  color: isSelected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onPrimaryContainer,
                 ),
               ),
             ),
@@ -474,17 +534,24 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
                     Expanded(
                       child: Text(
                         patient.name,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (patient.isDemo)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingSm, vertical: AppTheme.spacingXs),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacingSm,
+                          vertical: AppTheme.spacingXs,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusFull,
+                          ),
                         ),
                         child: Text(
                           'DEMO',
@@ -499,18 +566,29 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
                 const AppSpacing.vxs(),
                 Text(
                   '${patient.age} years • ${patient.sex}',
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 if (patient.location != null) ...[
                   const AppSpacing.vxs(),
                   Row(
                     children: [
-                      Icon(Icons.location_on_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.7,
+                        ),
+                      ),
                       const AppSpacing.hxs(),
                       Expanded(
                         child: Text(
                           patient.location!,
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.7),
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -521,12 +599,21 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
                   const AppSpacing.vxs(),
                   Row(
                     children: [
-                      Icon(Icons.note_alt_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                      Icon(
+                        Icons.note_alt_outlined,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.7,
+                        ),
+                      ),
                       const AppSpacing.hxs(),
                       Expanded(
                         child: Text(
                           patient.notes!,
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.7),
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -538,10 +625,21 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
           ),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
-            transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+            transitionBuilder: (child, animation) =>
+                ScaleTransition(scale: animation, child: child),
             child: isSelected
-                ? Icon(Icons.check_circle_rounded, key: const ValueKey('selected'), color: theme.colorScheme.primary, size: 28)
-                : Icon(Icons.radio_button_unchecked_rounded, key: const ValueKey('unselected'), color: theme.colorScheme.outlineVariant, size: 28),
+                ? Icon(
+                    Icons.check_circle_rounded,
+                    key: const ValueKey('selected'),
+                    color: theme.colorScheme.primary,
+                    size: 28,
+                  )
+                : Icon(
+                    Icons.radio_button_unchecked_rounded,
+                    key: const ValueKey('unselected'),
+                    color: theme.colorScheme.outlineVariant,
+                    size: 28,
+                  ),
           ),
         ],
       ),
@@ -549,7 +647,6 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
   }
 
   Widget _buildAddPatientButton() {
-
     return AppOutlinedButton(
       label: 'Add New Patient',
       icon: const Icon(Icons.person_add_alt_1_rounded, size: 24),
@@ -605,31 +702,47 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isConnected
-                    ? [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)]
-                    : [theme.colorScheme.surfaceContainerHighest, theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7)],
+                    ? [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withValues(alpha: 0.7),
+                      ]
+                    : [
+                        theme.colorScheme.surfaceContainerHighest,
+                        theme.colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.7,
+                        ),
+                      ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(AppTheme.radiusXxl),
-              boxShadow: isConnected ? [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                  blurRadius: 32,
-                  spreadRadius: 5,
-                  offset: const Offset(0, 12),
-                ),
-              ] : null,
+              boxShadow: isConnected
+                  ? [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                        blurRadius: 32,
+                        spreadRadius: 5,
+                        offset: const Offset(0, 12),
+                      ),
+                    ]
+                  : null,
             ),
             child: Icon(
-              isConnected ? Icons.bluetooth_connected_rounded : Icons.bluetooth_searching_rounded,
+              isConnected
+                  ? Icons.bluetooth_connected_rounded
+                  : Icons.bluetooth_searching_rounded,
               size: 56,
-              color: isConnected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+              color: isConnected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const AppSpacing.vlg(),
           Text(
             _selectedDevice?.name ?? 'No Device Connected',
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vsm(),
@@ -642,26 +755,34 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
                 width: 14,
                 height: 14,
                 decoration: BoxDecoration(
-                  color: isConnected ? theme.colorScheme.primary : theme.colorScheme.tertiary,
+                  color: isConnected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.tertiary,
                   shape: BoxShape.circle,
-                  boxShadow: isConnected ? [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                      blurRadius: 12,
-                      spreadRadius: 3,
-                    ),
-                  ] : null,
+                  boxShadow: isConnected
+                      ? [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.5,
+                            ),
+                            blurRadius: 12,
+                            spreadRadius: 3,
+                          ),
+                        ]
+                      : null,
                 ),
               ),
               const AppSpacing.hsm(),
               Expanded(
                 child: Text(
-                    isConnected ? 'Connected' : 'Disconnected',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: isConnected ? theme.colorScheme.primary : theme.colorScheme.tertiary,
-                    ),
+                  isConnected ? 'Connected' : 'Disconnected',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: isConnected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.tertiary,
                   ),
+                ),
               ),
             ],
           ),
@@ -669,8 +790,9 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
           if (_selectedDevice != null)
             Text(
               'Battery: ${_selectedDevice!.batteryPercent}%',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
         ],
       ),
@@ -678,7 +800,6 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
   }
 
   Widget _buildScanButton() {
-
     return Column(
       children: [
         AppOutlinedButton(
@@ -725,7 +846,9 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
         children: [
           Text(
             'Requirements',
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const AppSpacing.vsm(),
           _buildRequirementItem('Bluetooth enabled on phone'),
@@ -744,12 +867,18 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
       padding: const EdgeInsets.only(bottom: AppTheme.spacingXs),
       child: Row(
         children: [
-          Icon(Icons.check_circle_outline_rounded, size: 16, color: theme.colorScheme.primary),
+          Icon(
+            Icons.check_circle_outline_rounded,
+            size: 16,
+            color: theme.colorScheme.primary,
+          ),
           const AppSpacing.hsm(),
           Expanded(
             child: Text(
               text,
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -764,28 +893,32 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
       _Instruction(
         number: '1',
         title: 'Place Finger on Sensor',
-        description: 'Place your index finger gently on the MAX30102 sensor. Keep still and avoid excessive pressure.',
+        description:
+            'Place your index finger gently on the MAX30102 sensor. Keep still and avoid excessive pressure.',
         icon: Icons.favorite_rounded,
         color: theme.colorScheme.primary,
       ),
       _Instruction(
         number: '2',
         title: 'Attach ECG Electrodes',
-        description: 'Connect the 3 ECG electrodes: RA (right arm), LA (left arm), RL (right leg, reference/ground). Ensure good skin contact.',
+        description:
+            'Connect the 3 ECG electrodes: RA (right arm), LA (left arm), RL (right leg, reference/ground). Ensure good skin contact.',
         icon: Icons.monitor_heart_rounded,
         color: theme.colorScheme.secondary,
       ),
       _Instruction(
         number: '3',
         title: 'Measure Temperature',
-        description: 'Point the MLX90614 sensor at the forehead or temporal artery from 2-5cm distance.',
+        description:
+            'Point the MLX90614 sensor at the forehead or temporal artery from 2-5cm distance.',
         icon: Icons.thermostat_rounded,
         color: theme.colorScheme.tertiary,
       ),
       _Instruction(
         number: '4',
         title: 'Remain Still',
-        description: 'Stay relaxed and quiet for 30 seconds while measurements are taken. Movement affects accuracy.',
+        description:
+            'Stay relaxed and quiet for 30 seconds while measurements are taken. Movement affects accuracy.',
         icon: Icons.accessibility_new_rounded,
         color: theme.colorScheme.primary.withValues(alpha: 0.8),
       ),
@@ -840,7 +973,10 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
             height: 44,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [instruction.color, instruction.color.withValues(alpha: 0.7)],
+                colors: [
+                  instruction.color,
+                  instruction.color.withValues(alpha: 0.7),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -874,12 +1010,16 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
               children: [
                 Text(
                   instruction.title,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const AppSpacing.vxs(),
                 Text(
                   instruction.description,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -895,11 +1035,18 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
     return AppCard(
       color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.3),
       padding: const EdgeInsets.all(AppTheme.spacingMd),
-      border: BorderSide(color: theme.colorScheme.tertiary.withValues(alpha: 0.3), width: 1),
+      border: BorderSide(
+        color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+        width: 1,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.warning_amber_rounded, color: theme.colorScheme.tertiary, size: 24),
+          Icon(
+            Icons.warning_amber_rounded,
+            color: theme.colorScheme.tertiary,
+            size: 24,
+          ),
           const AppSpacing.hmd(),
           Expanded(
             child: Column(
@@ -965,8 +1112,12 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
             flex: _currentStep > 0 ? 1 : 2,
             child: AppButton(
               label: _currentStep == 2 ? 'Start Screening' : 'Next',
-              icon: _currentStep == 2 ? const Icon(Icons.play_arrow_rounded, size: 24) : const Icon(Icons.arrow_forward_rounded, size: 24),
-              trailingIcon: _currentStep != 2 ? const Icon(Icons.arrow_forward_rounded, size: 24) : null,
+              icon: _currentStep == 2
+                  ? const Icon(Icons.play_arrow_rounded, size: 24)
+                  : const Icon(Icons.arrow_forward_rounded, size: 24),
+              trailingIcon: _currentStep != 2
+                  ? const Icon(Icons.arrow_forward_rounded, size: 24)
+                  : null,
               onPressed: _nextStep,
               minHeight: 56,
             ),
@@ -994,7 +1145,8 @@ class _AnimatedPageContent extends StatefulWidget {
   State<_AnimatedPageContent> createState() => _AnimatedPageContentState();
 }
 
-class _AnimatedPageContentState extends State<_AnimatedPageContent> with SingleTickerProviderStateMixin {
+class _AnimatedPageContentState extends State<_AnimatedPageContent>
+    with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -1003,7 +1155,9 @@ class _AnimatedPageContentState extends State<_AnimatedPageContent> with SingleT
         final isCurrentPage = widget.currentStep == widget.pageIndex;
         final progress = widget.animationController.value;
         final fade = isCurrentPage ? 1.0 : (1.0 - progress).clamp(0.0, 1.0);
-        final slide = isCurrentPage ? 0.0 : (0.3 * (1 - progress)).clamp(0.0, 0.3);
+        final slide = isCurrentPage
+            ? 0.0
+            : (0.3 * (1 - progress)).clamp(0.0, 0.3);
 
         return IgnorePointer(
           ignoring: !isCurrentPage,
@@ -1033,7 +1187,8 @@ class _AnimatedHeader extends StatefulWidget {
   State<_AnimatedHeader> createState() => _AnimatedHeaderState();
 }
 
-class _AnimatedHeaderState extends State<_AnimatedHeader> with SingleTickerProviderStateMixin {
+class _AnimatedHeaderState extends State<_AnimatedHeader>
+    with SingleTickerProviderStateMixin {
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
@@ -1041,14 +1196,18 @@ class _AnimatedHeaderState extends State<_AnimatedHeader> with SingleTickerProvi
   void initState() {
     super.initState();
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: widget.animationController, curve: const Interval(0.0, 0.6, curve: AppTheme.curveDecelerate)),
+      CurvedAnimation(
+        parent: widget.animationController,
+        curve: const Interval(0.0, 0.6, curve: AppTheme.curveDecelerate),
+      ),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: widget.animationController, curve: const Interval(0.2, 0.8, curve: AppTheme.curveDecelerate)),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: widget.animationController,
+            curve: const Interval(0.2, 0.8, curve: AppTheme.curveDecelerate),
+          ),
+        );
   }
 
   @override

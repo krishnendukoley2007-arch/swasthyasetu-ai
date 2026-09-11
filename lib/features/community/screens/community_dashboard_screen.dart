@@ -157,8 +157,9 @@ class _SyncIndicatorCard extends ConsumerWidget {
               Expanded(
                 child: Text(
                   'Sync status',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               AppTextButton(
@@ -196,7 +197,7 @@ class _SyncIndicatorCard extends ConsumerWidget {
           Text(
             lastSync == null
                 ? 'Never synced. Everything below is held locally, which is a '
-                    'working state — not an error.'
+                      'working state — not an error.'
                 : 'Last successful sync ${_relative(lastSync)}.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -233,8 +234,9 @@ class _HeadlineCard extends StatelessWidget {
         children: [
           Text(
             'This device',
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const AppSpacing.vsm(),
           // A Wrap of fixed-width stats rather than a Row of Expandeds: at 2.0x
@@ -307,8 +309,10 @@ class _Stat extends StatelessWidget {
             const AppSpacing.hxs(),
             Text(
               value,
-              style: theme.textTheme.headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold, color: tint),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: tint,
+              ),
             ),
           ],
         ),
@@ -351,8 +355,9 @@ class _RiskDistributionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Triage distribution',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -414,7 +419,10 @@ class _BandRow extends StatelessWidget {
           Container(
             width: 12,
             height: 12,
-            decoration: BoxDecoration(color: style.color, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: style.color,
+              shape: BoxShape.circle,
+            ),
           ),
           const AppSpacing.hsm(),
           // Flexible, so the band name wraps at large scales instead of pushing
@@ -428,8 +436,9 @@ class _BandRow extends StatelessWidget {
           ),
           Text(
             '$count · $pct%',
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -463,8 +472,9 @@ class _DailyTrendCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Screenings per day',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -474,15 +484,17 @@ class _DailyTrendCard extends StatelessWidget {
             data: [
               for (var i = 0; i < days.length; i++)
                 SeriesSample(
-                    days[i].day.millisecondsSinceEpoch.toDouble(),
-                    days[i].total.toDouble()),
+                  days[i].day.millisecondsSinceEpoch.toDouble(),
+                  days[i].total.toDouble(),
+                ),
             ],
             stroke: ClinicalPalette.teal,
             overlay: [
               for (var i = 0; i < days.length; i++)
                 SeriesSample(
-                    days[i].day.millisecondsSinceEpoch.toDouble(),
-                    days[i].high.toDouble()),
+                  days[i].day.millisecondsSinceEpoch.toDouble(),
+                  days[i].high.toDouble(),
+                ),
             ],
             overlayStroke: ClinicalPalette.coral,
             unit: 'screenings',
@@ -494,10 +506,10 @@ class _DailyTrendCard extends StatelessWidget {
             },
           ),
           const AppSpacing.vsm(),
-          Wrap(
+          const Wrap(
             spacing: AppTheme.spacingSm,
             runSpacing: AppTheme.spacingXs,
-            children: const [
+            children: [
               AppPillLabel(
                 label: 'All screenings',
                 leadingIcon: Icons.circle,
@@ -535,8 +547,9 @@ class _FrequencyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final top = counts.entries.take(6).toList();
-    final maxCount =
-        top.isEmpty ? 1 : top.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    final maxCount = top.isEmpty
+        ? 1
+        : top.map((e) => e.value).reduce((a, b) => a > b ? a : b);
 
     return AppCard(
       child: Column(
@@ -549,8 +562,9 @@ class _FrequencyCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               if (counts.length > top.length)
@@ -587,8 +601,9 @@ class _FrequencyCard extends StatelessWidget {
                         const AppSpacing.hsm(),
                         Text(
                           '${e.value}',
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -599,7 +614,8 @@ class _FrequencyCard extends StatelessWidget {
                         value: e.value / maxCount,
                         minHeight: 6,
                         backgroundColor: theme
-                            .colorScheme.surfaceContainerHighest
+                            .colorScheme
+                            .surfaceContainerHighest
                             .withValues(alpha: 0.6),
                       ),
                     ),
@@ -690,8 +706,9 @@ class _GeoCardState extends ConsumerState<_GeoCard> {
               Expanded(
                 child: Text(
                   'Screening locations (${data.geoPoints.length})',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

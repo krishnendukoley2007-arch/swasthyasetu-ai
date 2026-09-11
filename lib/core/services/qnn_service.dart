@@ -5,8 +5,8 @@ import 'package:swasthyasetu_ai/domain/rules/vitals_estimator.dart';
 
 enum QnnExecutionBackend {
   snapdragonNpu, // Qualcomm Hexagon NPU (QNN Execution Provider)
-  adrenoGpu,     // Qualcomm Adreno GPU
-  cpuFallback,   // ARM CPU fallback
+  adrenoGpu, // Qualcomm Adreno GPU
+  cpuFallback, // ARM CPU fallback
 }
 
 @immutable
@@ -47,10 +47,11 @@ class QnnVitalsService {
   bool get isNpuAccelerated => _backend == QnnExecutionBackend.snapdragonNpu;
 
   String get backendName => switch (_backend) {
-        QnnExecutionBackend.snapdragonNpu => 'Qualcomm QNN (Snapdragon NPU)',
-        QnnExecutionBackend.adrenoGpu => 'Qualcomm Adreno GPU',
-        QnnExecutionBackend.cpuFallback => 'CPU Fallback (Physiological Physics Engine)',
-      };
+    QnnExecutionBackend.snapdragonNpu => 'Qualcomm QNN (Snapdragon NPU)',
+    QnnExecutionBackend.adrenoGpu => 'Qualcomm Adreno GPU',
+    QnnExecutionBackend.cpuFallback =>
+      'CPU Fallback (Physiological Physics Engine)',
+  };
 
   /// Initializes the Qualcomm QNN runtime engine and checks hardware NPU availability.
   Future<void> _initializeQnnBackend() async {
@@ -62,7 +63,8 @@ class QnnVitalsService {
           final cpuinfo = File('/proc/cpuinfo');
           if (cpuinfo.existsSync()) {
             final content = cpuinfo.readAsStringSync().toLowerCase();
-            isSnapdragon = content.contains('qualcomm') ||
+            isSnapdragon =
+                content.contains('qualcomm') ||
                 content.contains('qcom') ||
                 content.contains('snapdragon');
           }
@@ -77,7 +79,9 @@ class QnnVitalsService {
         } else {
           _backend = QnnExecutionBackend.cpuFallback;
           _isQnnLoaded = false;
-          debugPrint('[QNN] Standard CPU Architecture: Using Physiological Physics Engine.');
+          debugPrint(
+            '[QNN] Standard CPU Architecture: Using Physiological Physics Engine.',
+          );
         }
       } else {
         _backend = QnnExecutionBackend.cpuFallback;

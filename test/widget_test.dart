@@ -7,8 +7,9 @@ import 'package:swasthyasetu_ai/main.dart';
 import 'support/harness.dart';
 
 void main() {
-  testWidgets('bootstrap splash names the app and says what it is doing',
-      (tester) async {
+  testWidgets('bootstrap splash names the app and says what it is doing', (
+    tester,
+  ) async {
     final harness = await TestHarness.create();
     await tester.useSmallPhone();
 
@@ -54,10 +55,16 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text(bootstrapping), findsOneWidget,
-          reason: 'bootstrapping not translated for $locale');
-      expect(find.text('Preparing offline data…'), findsNothing,
-          reason: 'English leaked through for $locale');
+      expect(
+        find.text(bootstrapping),
+        findsOneWidget,
+        reason: 'bootstrapping not translated for $locale',
+      );
+      expect(
+        find.text('Preparing offline data…'),
+        findsNothing,
+        reason: 'English leaked through for $locale',
+      );
     }
   });
 }
@@ -73,9 +80,7 @@ class _SplashProbe extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      body: Column(
-        children: [Text(l10n.appName), Text(l10n.bootstrapping)],
-      ),
+      body: Column(children: [Text(l10n.appName), Text(l10n.bootstrapping)]),
     );
   }
 }

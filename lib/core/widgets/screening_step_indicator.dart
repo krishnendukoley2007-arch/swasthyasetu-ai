@@ -54,7 +54,8 @@ const kTriageSteps = <TriageStep>[
     name: 'Referral',
     subtitle: 'Doctor slip & ABHA export',
     icon: Icons.local_hospital_rounded,
-    route: '/screening/triage', // Same route — the referral dialog opens from triage
+    route:
+        '/screening/triage', // Same route — the referral dialog opens from triage
   ),
 ];
 
@@ -118,8 +119,11 @@ class ScreeningStepIndicator extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.expand_more_rounded,
-                size: 14, color: theme.colorScheme.onPrimaryContainer),
+            Icon(
+              Icons.expand_more_rounded,
+              size: 14,
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
           ],
         ),
       ),
@@ -145,13 +149,16 @@ class ScreeningStepIndicator extends StatelessWidget {
                 // Title bar
                 Row(
                   children: [
-                    Icon(Icons.timeline_rounded,
-                        color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.timeline_rounded,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Clinical Screening Flow',
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const Spacer(),
                     Text(
@@ -213,8 +220,8 @@ class _StepRow extends StatelessWidget {
     final nodeColor = _isCompleted
         ? AppTheme.successGreen
         : _isActive
-            ? theme.colorScheme.primary
-            : theme.colorScheme.surfaceContainerHighest;
+        ? theme.colorScheme.primary
+        : theme.colorScheme.surfaceContainerHighest;
     final iconColor = _isCompleted || _isActive
         ? Colors.white
         : theme.colorScheme.onSurfaceVariant;
@@ -246,15 +253,18 @@ class _StepRow extends StatelessWidget {
                         shape: BoxShape.circle,
                         border: _isActive
                             ? Border.all(
-                                color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.3),
-                                width: 3)
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.3,
+                                ),
+                                width: 3,
+                              )
                             : null,
                         boxShadow: _isActive
                             ? [
                                 BoxShadow(
-                                  color: theme.colorScheme.primary
-                                      .withValues(alpha: 0.25),
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.25,
+                                  ),
                                   blurRadius: 8,
                                   spreadRadius: 1,
                                 ),
@@ -263,8 +273,11 @@ class _StepRow extends StatelessWidget {
                       ),
                       child: Center(
                         child: _isCompleted
-                            ? Icon(Icons.check_rounded,
-                                size: 16, color: iconColor)
+                            ? Icon(
+                                Icons.check_rounded,
+                                size: 16,
+                                color: iconColor,
+                              )
                             : Icon(step.icon, size: 14, color: iconColor),
                       ),
                     ),
@@ -296,20 +309,23 @@ class _StepRow extends StatelessWidget {
                           Text(
                             step.name,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight:
-                                  _isActive ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: _isActive
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                               color: _isUpcoming
                                   ? theme.colorScheme.onSurfaceVariant
                                   : _isActive
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurface,
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface,
                             ),
                           ),
                           if (_isCompleted) ...[
                             const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 1),
+                                horizontal: 6,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppTheme.riskGreenContainer,
                                 borderRadius: BorderRadius.circular(6),
@@ -328,7 +344,9 @@ class _StepRow extends StatelessWidget {
                             const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 1),
+                                horizontal: 6,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(6),
@@ -345,9 +363,11 @@ class _StepRow extends StatelessWidget {
                           ],
                           if (_isCompleted && onTap != null) ...[
                             const Spacer(),
-                            Icon(Icons.arrow_back_ios_rounded,
-                                size: 12,
-                                color: theme.colorScheme.onSurfaceVariant),
+                            Icon(
+                              Icons.arrow_back_ios_rounded,
+                              size: 12,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ],
                         ],
                       ),
@@ -377,11 +397,7 @@ class _StepRow extends StatelessWidget {
 /// LinearProgressIndicator, giving the user a clear sense of where they are
 /// in the 5-step flow.
 class ScreeningStepBar extends StatelessWidget implements PreferredSizeWidget {
-  const ScreeningStepBar({
-    super.key,
-    required this.current,
-    this.total = 5,
-  });
+  const ScreeningStepBar({super.key, required this.current, this.total = 5});
 
   final int current;
   final int total;
@@ -436,12 +452,13 @@ class ScreeningStepBar extends StatelessWidget implements PreferredSizeWidget {
         color: isCompleted
             ? AppTheme.successGreen
             : isActive
-                ? theme.colorScheme.primary
-                : theme.colorScheme.surfaceContainerHighest,
+            ? theme.colorScheme.primary
+            : theme.colorScheme.surfaceContainerHighest,
         border: isActive
             ? Border.all(
                 color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                width: 2.5)
+                width: 2.5,
+              )
             : null,
         boxShadow: isActive
             ? [
@@ -457,15 +474,15 @@ class ScreeningStepBar extends StatelessWidget implements PreferredSizeWidget {
         child: isCompleted
             ? const Icon(Icons.check_rounded, size: 12, color: Colors.white)
             : isActive
-                ? Icon(step.icon, size: 11, color: Colors.white)
-                : Text(
-                    '$stepNum',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+            ? Icon(step.icon, size: 11, color: Colors.white)
+            : Text(
+                '$stepNum',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
       ),
     );
   }

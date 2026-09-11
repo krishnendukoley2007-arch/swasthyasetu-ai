@@ -229,15 +229,18 @@ _ViewPlan? _planView(MbTilesReader reader, List<MapMarker> markers, Size size) {
     final spanX = (xHi - xLo).abs();
     final spanY = (yHi - yLo).abs();
     // Do not ask for a mosaic bigger than the widget can meaningfully show.
-    if (spanX * tileSize > size.width * 3 || spanY * tileSize > size.height * 3) {
+    if (spanX * tileSize > size.width * 3 ||
+        spanY * tileSize > size.height * 3) {
       continue;
     }
 
     // Scale so the whole box fits, then centre it.
     final scale = spanX <= 0 || spanY <= 0
         ? 1.0
-        : (size.width / (spanX * tileSize))
-            .clamp(0.0, size.height / (spanY * tileSize));
+        : (size.width / (spanX * tileSize)).clamp(
+            0.0,
+            size.height / (spanY * tileSize),
+          );
     final drawn = scale <= 0 ? 1.0 : scale;
     final scaledTile = tileSize * drawn;
 
@@ -254,16 +257,18 @@ _ViewPlan? _planView(MbTilesReader reader, List<MapMarker> markers, Size size) {
       for (var y = firstY; y <= lastY; y++) {
         final bytes = reader.tile(z, x, y);
         if (bytes == null) continue; // Missing stays missing.
-        tiles.add(_TileRequest(
-          '$z/$x/$y',
-          bytes,
-          Rect.fromLTWH(
-            originX + x * scaledTile,
-            originY + y * scaledTile,
-            scaledTile,
-            scaledTile,
+        tiles.add(
+          _TileRequest(
+            '$z/$x/$y',
+            bytes,
+            Rect.fromLTWH(
+              originX + x * scaledTile,
+              originY + y * scaledTile,
+              scaledTile,
+              scaledTile,
+            ),
           ),
-        ));
+        );
       }
     }
     if (tiles.isEmpty) continue;
@@ -303,15 +308,23 @@ class _TileMapPainter extends CustomPainter {
     for (final tile in tiles) {
       canvas.drawImageRect(
         tile.image,
-        Rect.fromLTWH(0, 0, tile.image.width.toDouble(),
-            tile.image.height.toDouble()),
+        Rect.fromLTWH(
+          0,
+          0,
+          tile.image.width.toDouble(),
+          tile.image.height.toDouble(),
+        ),
         tile.rect,
         paint,
       );
     }
 
     for (final (offset, colour) in markers) {
-      canvas.drawCircle(offset, 9, Paint()..color = colour.withValues(alpha: 0.28));
+      canvas.drawCircle(
+        offset,
+        9,
+        Paint()..color = colour.withValues(alpha: 0.28),
+      );
       canvas.drawCircle(offset, 4.5, Paint()..color = colour);
       canvas.drawCircle(
         offset,
@@ -345,8 +358,9 @@ class _EmptyCanvas extends StatelessWidget {
       painter: _RelativePositionPainter(
         markers: markers,
         gridColor: theme.colorScheme.outlineVariant,
-        backgroundColor:
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.4,
+        ),
       ),
       child: const SizedBox.expand(),
     );
@@ -396,11 +410,15 @@ class _RelativePositionPainter extends CustomPainter {
       final x =
           inset + (m.longitude - minLon) / lonSpan * (size.width - inset * 2);
       // Latitude increases northward; canvas y increases downward.
-      final y = size.height -
+      final y =
+          size.height -
           inset -
           (m.latitude - minLat) / latSpan * (size.height - inset * 2);
       canvas.drawCircle(
-          Offset(x, y), 7, Paint()..color = m.color.withValues(alpha: 0.25));
+        Offset(x, y),
+        7,
+        Paint()..color = m.color.withValues(alpha: 0.25),
+      );
       canvas.drawCircle(Offset(x, y), 3.5, Paint()..color = m.color);
     }
   }

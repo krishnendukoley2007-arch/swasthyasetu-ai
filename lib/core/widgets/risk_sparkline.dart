@@ -57,12 +57,11 @@ class RiskSparkline extends StatelessWidget {
     );
   }
 
-  static Color _colorFor(int score) =>
-      switch (RiskEngine.bandForScore(score)) {
-        RiskBand.green => AppTheme.riskGreen,
-        RiskBand.yellow => AppTheme.riskYellow,
-        RiskBand.red => AppTheme.riskRed,
-      };
+  static Color _colorFor(int score) => switch (RiskEngine.bandForScore(score)) {
+    RiskBand.green => AppTheme.riskGreen,
+    RiskBand.yellow => AppTheme.riskYellow,
+    RiskBand.red => AppTheme.riskRed,
+  };
 }
 
 class _SparklinePainter extends CustomPainter {

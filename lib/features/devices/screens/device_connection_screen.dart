@@ -115,33 +115,30 @@ class _DeviceConnectionScreenState
       _remember(link);
     }
 
-    return _scaffold(
-      switch (link.status) {
-        BleLinkStatus.unsupported ||
-        BleLinkStatus.adapterOff ||
-        BleLinkStatus.permissionDenied =>
-          _RadioUnusableView(link: link),
-        BleLinkStatus.streaming => _ConnectedView(
-            link: link,
-            onScreening: () => context.go('/screening/new'),
-            onDiagnostics: () => context.go('/devices/diagnostics'),
-          ),
-        BleLinkStatus.failed => _FailedView(link: link, onRetry: _connect),
-        _ => _ConnectingView(link: link, fallbackName: widget.deviceName),
-      },
-    );
+    return _scaffold(switch (link.status) {
+      BleLinkStatus.unsupported ||
+      BleLinkStatus.adapterOff ||
+      BleLinkStatus.permissionDenied => _RadioUnusableView(link: link),
+      BleLinkStatus.streaming => _ConnectedView(
+        link: link,
+        onScreening: () => context.go('/screening/new'),
+        onDiagnostics: () => context.go('/devices/diagnostics'),
+      ),
+      BleLinkStatus.failed => _FailedView(link: link, onRetry: _connect),
+      _ => _ConnectingView(link: link, fallbackName: widget.deviceName),
+    });
   }
 
   Widget _scaffold(Widget body) => AppPageScaffold(
-        appBar: AppBar(
-          title: Text(widget.demo ? 'Demo mode' : 'Device connection'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => context.go('/devices/scan'),
-          ),
-        ),
-        body: body,
-      );
+    appBar: AppBar(
+      title: Text(widget.demo ? 'Demo mode' : 'Device connection'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_rounded),
+        onPressed: () => context.go('/devices/scan'),
+      ),
+    ),
+    body: body,
+  );
 }
 
 // ───────────────────────────── Connecting ─────────────────────────────
@@ -167,14 +164,14 @@ enum _StageState { pending, active, done }
 
 _StageState _stageState(_Stage stage, BleLinkStatus status) {
   int rank(BleLinkStatus s) => switch (s) {
-        BleLinkStatus.connecting => 0,
-        BleLinkStatus.discovering => 1,
-        BleLinkStatus.handshaking => 2,
-        BleLinkStatus.streaming => 3,
-        // Reconnecting re-runs the link stage from the start.
-        BleLinkStatus.reconnecting => 0,
-        _ => -1,
-      };
+    BleLinkStatus.connecting => 0,
+    BleLinkStatus.discovering => 1,
+    BleLinkStatus.handshaking => 2,
+    BleLinkStatus.streaming => 3,
+    // Reconnecting re-runs the link stage from the start.
+    BleLinkStatus.reconnecting => 0,
+    _ => -1,
+  };
 
   final current = rank(status);
   final mine = stage.index;
@@ -224,22 +221,25 @@ class _ConnectingView extends StatelessWidget {
           const AppSpacing.vlg(),
           Text(
             link.label,
-            style: theme.textTheme.headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vxs(),
           Text(
             name,
-            style: theme.textTheme.bodyLarge
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vsm(),
           Text(
             link.detail,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vxl(),
@@ -262,14 +262,14 @@ class _StageRow extends StatelessWidget {
     final theme = Theme.of(context);
     final (icon, color) = switch (state) {
       _StageState.pending => (
-          Icons.radio_button_unchecked_rounded,
-          theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
-        ),
+        Icons.radio_button_unchecked_rounded,
+        theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
+      ),
       _StageState.active => (Icons.sync_rounded, theme.colorScheme.primary),
       _StageState.done => (
-          Icons.check_circle_rounded,
-          theme.colorScheme.primary,
-        ),
+        Icons.check_circle_rounded,
+        theme.colorScheme.primary,
+      ),
     };
 
     return Padding(
@@ -294,8 +294,9 @@ class _StageRow extends StatelessWidget {
                 ),
                 Text(
                   stage.subtitle,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -333,8 +334,9 @@ class _ConnectedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final compatibility =
-        DeviceRepository.checkFirmware(link.firmwareVersion ?? 'UNKNOWN');
+    final compatibility = DeviceRepository.checkFirmware(
+      link.firmwareVersion ?? 'UNKNOWN',
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
@@ -359,10 +361,10 @@ class _ConnectedView extends StatelessWidget {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.15),
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusLg),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.15,
+                        ),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                       ),
                       child: Icon(
                         Icons.check_circle_rounded,
@@ -494,15 +496,17 @@ class _FailedView extends StatelessWidget {
           const AppSpacing.vlg(),
           Text(
             link.label,
-            style: theme.textTheme.headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vsm(),
           Text(
             link.detail,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vxl(),
@@ -544,15 +548,17 @@ class _RadioUnusableView extends StatelessWidget {
           const AppSpacing.vlg(),
           Text(
             link.label,
-            style: theme.textTheme.headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vsm(),
           Text(
             link.detail,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vxl(),
@@ -562,10 +568,8 @@ class _RadioUnusableView extends StatelessWidget {
             label: 'Use demo mode instead',
             icon: const Icon(Icons.science_outlined),
             minHeight: 48,
-            onPressed: () => context.go(
-              '/devices/connect',
-              extra: const {'demo': true},
-            ),
+            onPressed: () =>
+                context.go('/devices/connect', extra: const {'demo': true}),
           ),
         ],
       ),
@@ -591,15 +595,17 @@ class _NoDeviceChosenView extends StatelessWidget {
           const AppSpacing.vlg(),
           Text(
             'No device chosen',
-            style: theme.textTheme.headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vsm(),
           Text(
             'Pick a sensor board from the scan, or start a demo screening.',
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vxl(),
@@ -658,8 +664,9 @@ class _DemoReadyView extends StatelessWidget {
             'No sensor board is connected. Every vital sign in this screening '
             'is invented, each reading and result is labelled as a demo, and '
             'none of it reaches the community totals.',
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const AppSpacing.vxl(),
@@ -723,8 +730,10 @@ class _Fact extends StatelessWidget {
           Flexible(
             child: Text(
               label,
-              style: theme.textTheme.labelSmall
-                  ?.copyWith(fontWeight: FontWeight.w600, color: color),
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ),
         ],
@@ -767,8 +776,9 @@ class _Notice extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const AppSpacing.vxs(),
                 Text(body, style: theme.textTheme.bodySmall),

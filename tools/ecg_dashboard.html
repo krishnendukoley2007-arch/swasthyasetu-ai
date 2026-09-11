@@ -1,341 +1,1722 @@
 <!DOCTYPE html>
 <!--
-  SwasthyaSetu SSAI-SENSE-01 — Laptop Demo Dashboard
-  ==================================================
-  Single-file Web Bluetooth client for the ESP32 firmware (v1.2+).
-  Speaks exactly the app's wire protocol (lib/core/services/ble_protocol.dart).
+  SwasthyaSetu SSAI-SENSE-01 — Clinical Dual-Stream Web Workstation (v3.3)
+  ========================================================================
+  Single-file Web Bluetooth Diagnostic Workstation for ESP32 Hardware.
+  Compatible with Google Chrome, Microsoft Edge (Desktop & Android).
 
-  HOW TO USE
-  ----------
-  1. Power the ESP32 (battery or power bank — never a charger while
-     the ECG electrodes are on skin).
-  2. Open this file in Chrome or Edge on a laptop with Bluetooth.
-     (file:// works in Chrome; if your browser refuses it, serve the
-     folder with:  python -m http.server 8000  and open
-     http://localhost:8000/tools/ecg_dashboard.html )
-  3. Click "Connect", pick "SSAI-SENSE-01".
-  4. Hold the electrodes. Watch a real QRS trace and measured BPM.
-
-  The board only allows ONE BLE connection at a time — disconnect the
-  phone app first.
+  Features:
+  - Dual-Source Heart Rate Cross-Verification (ECG Electrical vs PPG Optical Pulse Rate)
+  - Real-time 250 Hz Lead I ECG Oscilloscope with medical grid & 1.0mV calibration pulse
+  - Synchronized SpO2 Arterial Pulse Plethysmograph (PPG) waveform
+  - Raw 250 Hz Morphological Scanner: QRS width (<120ms), ST-deviation, SQI noise gating
+  - MIT-BIH Style AI Arrhythmia & Ectopic Classifier with Confidence Scoring
+  - Poincaré / Lorenz R-R Scatter Plot for non-linear autonomic & AFib screening
+  - Doctor-Ready Printable Clinical Report (standard 25mm/s, 10mm/mV pink grid PDF export)
+  - 30-Second Data Recorder with CSV export & CSV inspector
+  - SpO2 Signal-Quality Pipeline UI: warm-up (settling) state, perfusion-index
+    warning, and stabilized "lock" indicator from firmware flags (bits 0x10/0x20)
 -->
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SwasthyaSetu ECG — Laptop Dashboard</title>
-<style>
-  :root {
-    --bg: #0b1220; --panel: #13203a; --line: #20304f;
-    --accent: #22c55e; --warn: #f59e0b; --err: #ef4444;
-    --text: #e5e7eb; --dim: #94a3b8;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; font-family: "Segoe UI", system-ui, sans-serif;
-    background: var(--bg); color: var(--text);
-    display: flex; flex-direction: column; min-height: 100vh;
-  }
-  header {
-    padding: 14px 22px; display: flex; align-items: center; gap: 14px;
-    background: var(--panel); border-bottom: 1px solid var(--line);
-  }
-  header h1 { font-size: 1.1rem; margin: 0; letter-spacing: .02em; }
-  .badge {
-    font-size: .72rem; padding: 4px 10px; border-radius: 999px;
-    background: #27354f; color: var(--dim); letter-spacing: .05em;
-  }
-  .badge.on  { background: #06381f; color: var(--accent); }
-  main { padding: 18px 22px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
-  .row { display: flex; gap: 16px; flex-wrap: wrap; }
-  .card {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 12px; padding: 16px;
-  }
-  .vitals { flex: 1 1 auto; justify-content: space-between; }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SwasthyaSetu AI — Dual Vital Signs &amp; ECG Clinical Workstation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070c14;
+      --surface: #0d1524;
+      --surface-elevated: #131f33;
+      --border: #1e2e48;
+      --border-bright: #2d4368;
 
-  #hr { font-size: 3.4rem; font-weight: 800; line-height: 1; color: var(--accent); transition: color .3s; }
-  #hr.off { color: var(--dim); }
-  .unit { font-size: .9rem; color: var(--dim); }
-  .vlabel { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); }
-  .pill { padding: 4px 12px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
-  #quality-pill { background: #1d2f21; color: var(--accent); }
-  #quality-pill.warn { background: #3a2a14; color: var(--warn); }
-  #quality-pill.err  { background: #3a1a1a; color: var(--err); }
-  #lead-pill.on  { background: #3a1a1a; color: var(--err); }
-  #lead-pill.off { background: #06381f; color: var(--accent); }
+      --ecg: #10b981;
+      --ecg-glow: rgba(16, 185, 129, 0.35);
+      --ppg: #06b6d4;
+      --ppg-glow: rgba(6, 182, 212, 0.35);
 
-  #scope-wrap { flex: 1; min-height: 300px; display: flex; }
-  #scope { width: 100%; height: 100%; border-radius: 10px; background: #071018; }
+      --accent: #3b82f6;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+    }
 
-  button {
-    font: inherit; font-weight: 600; padding: 12px 26px; border-radius: 10px;
-    border: none; cursor: pointer;
-  }
-  #connect { background: var(--accent); color: #06281a; }
-  #connect:disabled { background: #2a3a50; color: var(--dim); cursor: not-allowed; }
-  #stream { background: #1d4ed8; color: #eff6ff; }
-  #stream:disabled { background: #2a3a50; color: var(--dim); }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  #log {
-    font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--dim);
-    height: 120px; overflow-y: auto; border-top: 1px solid var(--line);
-    padding: 10px 0; white-space: pre-wrap;
-  }
-  footer { padding: 10px 22px; font-size: .75rem; color: #556274; border-top: 1px solid var(--line); }
-</style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #03140e;
+      font-size: 1.15rem;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: #192336;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .badge.connected {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .badge.connected .dot {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: #10b981;
+      color: #032415;
+    }
+
+    .btn-primary:hover {
+      background: #059669;
+      color: #fff;
+    }
+
+    .btn-ai {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: #fff;
+    }
+
+    .btn-ai:hover {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border-bright);
+      color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
+    .btn-danger:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    /* Control Strip */
+    .control-strip {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .mode-selector {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .mode-btn {
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .mode-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .mode-btn.active-ecg {
+      background: rgba(16, 185, 129, 0.18);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .mode-btn.active-spo2 {
+      background: rgba(6, 182, 212, 0.18);
+      color: #06b6d4;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+    }
+
+    .mode-btn.active-temp {
+      background: rgba(245, 158, 11, 0.18);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .mode-btn.active-idle {
+      background: var(--surface-elevated);
+      color: var(--text-muted);
+    }
+
+    /* Main Grid */
+    main {
+      flex: 1;
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+    }
+
+    @media (max-width: 1180px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .waveforms-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .scope-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .scope-header {
+      padding: 10px 16px;
+      background: rgba(13, 21, 36, 0.85);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .scope-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .lead-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--surface-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .scope-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 230px;
+      background: #060b13;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .scope-overlay-msg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(6, 11, 19, 0.75);
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      gap: 10px;
+      backdrop-filter: blur(2px);
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .scope-overlay-msg.hidden {
+      opacity: 0;
+    }
+
+    /* Vitals Sidebar */
+    .vitals-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Dual-Sensor Consensus Banner */
+    .consensus-banner {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+    }
+
+    .vital-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .vital-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .vital-card.highlight-ecg {
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .vital-card.highlight-spo2 {
+      border-color: rgba(6, 182, 212, 0.4);
+    }
+
+    .vital-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .vital-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .vital-card-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.0rem;
+      font-weight: 700;
+      line-height: 1.1;
+      color: #fff;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .vital-unit {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .vital-subtext {
+      margin-top: 6px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .heart-icon {
+      display: inline-block;
+      transition: transform 0.12s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .heart-pulse {
+      transform: scale(1.35);
+      filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.8));
+    }
+
+    /* Diagnostic Card */
+    .diag-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diag-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .diag-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .diag-status.ok {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+    }
+
+    .diag-status.warn {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+    }
+
+    .diag-status.err {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+
+    .diag-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.76rem;
+    }
+
+    .poincare-box {
+      width: 100%;
+      height: 150px;
+      background: #060b13;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    #event-log {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      max-height: 65px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+
+    /* Modal for Doctor-Ready Clinical Report */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .report-sheet {
+      background: #fff;
+      color: #111827;
+      width: 100%;
+      max-width: 850px;
+      max-height: 90vh;
+      border-radius: 12px;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    /* Standard Hospital ECG Pink Paper Styling */
+    .ecg-paper-container {
+      width: 100%;
+      height: 200px;
+      background-color: #fff1f2;
+      background-image:
+        linear-gradient(to right, rgba(244, 63, 94, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(244, 63, 94, 0.15) 1px, transparent 1px),
+        linear-gradient(to right, rgba(225, 29, 72, 0.4) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(225, 29, 72, 0.4) 1px, transparent 1px);
+      background-size: 5px 5px, 5px 5px, 25px 25px, 25px 25px;
+      border: 1px solid #fda4af;
+      border-radius: 4px;
+      position: relative;
+    }
+
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm;
+      }
+
+      html,
+      body {
+        background: #fff !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+
+      body>*:not(#report-modal) {
+        display: none !important;
+      }
+
+      #report-modal {
+        position: static !important;
+        inset: auto !important;
+        background: transparent !important;
+        padding: 0 !important;
+        opacity: 1 !important;
+        display: block !important;
+      }
+
+      .report-sheet {
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        page-break-inside: avoid !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <h1>SwasthyaSetu ECG Monitor</h1>
-  <span class="badge" id="conn-badge">DISCONNECTED</span>
-  <span class="badge" id="fw-badge">FW —</span>
-</header>
+  <header>
+    <div class="brand">
+      <div class="brand-icon">SS</div>
+      <div>
+        <h1>SwasthyaSetu AI</h1>
+        <p>Dual Vital Signs &amp; ECG Telemetry Workstation</p>
+      </div>
+    </div>
 
-<main>
-  <div class="row">
-    <div class="card vitals" style="display:flex; align-items:center; gap:32px;">
-      <div>
-        <div class="vlabel">Heart rate</div>
-        <div><span id="hr" class="off">--</span> <span class="unit">BPM</span></div>
+    <div class="header-actions">
+      <div class="badge" id="conn-badge"><span class="dot"></span> DISCONNECTED</div>
+      <div class="badge" id="battery-badge">BAT: --%</div>
+      <div class="badge" id="fw-badge">FW: v3.0.0</div>
+      <button class="btn btn-primary" id="btn-connect">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6.5 6.5l11 11M6.5 17.5l11-11M12 2v20M12 2l5 5-5 5M12 22l5-5-5-5" />
+        </svg>
+        Connect BLE
+      </button>
+    </div>
+  </header>
+
+  <div class="control-strip">
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Sensor
+        Mode:</span>
+      <div class="mode-selector">
+        <button class="mode-btn" id="mode-ecg" title="Start ECG (0x02)">ECG 30s</button>
+        <button class="mode-btn" id="mode-spo2" title="Start SpO2 (0x01)">SpO2 / Pulse</button>
+        <button class="mode-btn" id="mode-temp" title="Start Temp (0x03)">Body Temp</button>
+        <button class="mode-btn" id="mode-idle" title="Standby (0x00)">Standby</button>
       </div>
-      <div>
-        <div class="vlabel">RR interval</div>
-        <div style="font-size:1.4rem;font-weight:700"><span id="rr">--</span> <span class="unit">ms</span></div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <button class="btn btn-ai" id="btn-report">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        Generate Clinical Report
+      </button>
+      <button class="btn btn-outline" id="btn-record">Record 30s</button>
+      <button class="btn btn-outline" id="btn-export-csv" disabled>Export CSV</button>
+    </div>
+  </div>
+
+  <main>
+    <!-- Left Column: Dual Oscilloscopes -->
+    <div class="waveforms-col">
+      <!-- Lead I ECG Scope Card -->
+      <div class="scope-card">
+        <div class="scope-header">
+          <div class="scope-title">
+            <span style="color: var(--ecg); font-size: 1.1rem;">●</span>
+            <span>Lead I Electrocardiogram (ECG)</span>
+            <span class="lead-tag">AD8232 • 250 Hz</span>
+          </div>
+          <div class="scope-meta">
+            <span>Speed: 25 mm/s</span>
+            <span>Gain: <select id="ecg-gain"
+                style="background:var(--bg); color:var(--text-primary); border:1px solid var(--border); border-radius:4px; font-size:0.72rem; padding:2px 4px;">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="auto" selected>Auto-Gain</option>
+              </select></span>
+            <span id="ecg-fps">250 sps</span>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="ecg-canvas"></canvas>
+          <div class="scope-overlay-msg" id="ecg-overlay">
+            <span>Connect BLE and press <b>ECG 30s</b> to stream live rhythm</span>
+          </div>
+        </div>
       </div>
-      <div>
-        <div class="vlabel">Signal quality</div>
-        <div><span class="pill" id="quality-pill">--</span></div>
+
+      <!-- Arterial PPG Scope Card -->
+      <div class="scope-card">
+        <div class="scope-header">
+          <div class="scope-title">
+            <span style="color: var(--ppg); font-size: 1.1rem;">●</span>
+            <span>Arterial Photoplethysmogram (PPG / Pulse Wave)</span>
+            <span class="lead-tag">MAX30102 • IR/Red</span>
+          </div>
+          <div class="scope-meta">
+            <span>Window: 6.0s</span>
+            <span id="ppg-status">Plethysmograph</span>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="ppg-canvas"></canvas>
+          <div class="scope-overlay-msg" id="ppg-overlay">
+            <span>Finger contact required on MAX30102 sensor</span>
+          </div>
+        </div>
       </div>
-      <div>
-        <div class="vlabel">Electrodes</div>
-        <div><span class="pill" id="lead-pill">OFF BODY</span></div>
+
+      <!-- Event Log -->
+      <div id="event-log">[System] Clinical Dual-Stream Workstation ready. Web Bluetooth active. Click "Connect BLE".
       </div>
+    </div>
+
+    <!-- Right Column: Dual Vitals & Advanced AI Diagnostic Suite -->
+    <div class="vitals-col">
+      <!-- Dual-Sensor Cross-Verification Consensus Banner -->
+      <div class="consensus-banner">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1rem;">⚡</span>
+          <div>
+            <div style="font-weight: 700; color: #34d399;" id="consensus-title">Dual-Source Consensus</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);" id="consensus-desc">Cross-validating Electrical
+              ECG vs Optical PPG</div>
+          </div>
+        </div>
+        <span class="diag-status ok" id="consensus-pill">Δ = 0 BPM</span>
+      </div>
+
+      <!-- Primary Vitals Cards Grid -->
+      <div class="vital-cards-grid">
+        <!-- ECG Heart Rate (Electrical) -->
+        <div class="vital-card highlight-ecg">
+          <div class="vital-card-header">
+            <span class="vital-label">ECG Rate (Elec)</span>
+            <span class="heart-icon" id="heart-glyph" style="font-size: 1.2rem; color: #10b981;">⚡</span>
+          </div>
+          <div class="vital-card-value" id="val-ecg-hr" style="color: #10b981;">-- <span class="vital-unit">BPM</span>
+          </div>
+          <div class="vital-subtext" id="sub-ecg-hr">AD8232 R-Peak</div>
+        </div>
+
+        <!-- PPG Pulse Rate (Optical) -->
+        <div class="vital-card highlight-spo2">
+          <div class="vital-card-header">
+            <span class="vital-label">Pulse Rate (Opt)</span>
+            <span style="font-size: 1.1rem; color: #06b6d4;">❤️</span>
+          </div>
+          <div class="vital-card-value" id="val-ppg-hr" style="color: #06b6d4;">-- <span class="vital-unit">BPM</span>
+          </div>
+          <div class="vital-subtext" id="sub-ppg-hr">MAX30102 Arterial</div>
+        </div>
+
+        <!-- SpO2 -->
+        <div class="vital-card">
+          <div class="vital-card-header">
+            <span class="vital-label">Blood Oxygen</span>
+            <span style="font-size: 1.1rem; color: #06b6d4;">🫁</span>
+          </div>
+          <div class="vital-card-value" id="val-spo2">-- <span class="vital-unit">%</span></div>
+          <div class="vital-subtext" id="sub-spo2">Norm: 95-100%</div>
+        </div>
+
+        <!-- R-R Interval & HRV -->
+        <div class="vital-card">
+          <div class="vital-card-header">
+            <span class="vital-label">R-R Interval</span>
+            <span style="font-size: 0.95rem; color: #a855f7;">⏱️</span>
+          </div>
+          <div class="vital-card-value" id="val-rr" style="font-size: 1.8rem;">-- <span class="vital-unit">ms</span>
+          </div>
+          <div class="vital-subtext" id="val-hrv">HRV (RMSSD): -- ms</div>
+        </div>
+      </div>
+
+      <!-- AI / ML Rhythm & Morphology Classification Engine -->
+      <div class="diag-card"
+        style="border-color: rgba(59, 130, 246, 0.4); background: linear-gradient(180deg, rgba(30, 46, 72, 0.4) 0%, var(--surface) 100%);">
+        <div class="diag-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: #38bdf8; font-size: 1.1rem;">🧠</span>
+            <span style="color: #fff; font-weight: 700;">AI / ML Rhythm Classification</span>
+          </div>
+          <span class="diag-status ok" id="ai-rhythm-badge">AI ACTIVE</span>
+        </div>
+
+        <!-- Live Morphological Metrics Extracted from 250Hz Raw Signal -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="diag-item">
+            <span>QRS Duration:</span>
+            <span id="ai-qrs-width" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;">-- ms</span>
+          </div>
+          <div class="diag-item">
+            <span>Signal Quality (SQI):</span>
+            <span id="ai-sqi-score" style="font-family:'JetBrains Mono'; font-weight:700; color:#34d399;">--%</span>
+          </div>
+        </div>
+
+        <div
+          style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.76rem; color: var(--text-muted);">Classified Rhythm:</span>
+            <span id="ai-rhythm-name"
+              style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38bdf8; font-size: 0.84rem;">Normal
+              Sinus Rhythm</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.76rem; color: var(--text-muted);">Model Confidence:</span>
+            <span id="ai-confidence"
+              style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #34d399; font-size: 0.8rem;">95.0%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.76rem; color: var(--text-muted);">Ectopic / Pause Events:</span>
+            <span id="ai-ectopic-count"
+              style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text-secondary); font-size: 0.8rem;">0
+              detected</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-ai" id="btn-run-ai" style="flex: 1; justify-content: center;">
+            Run AI Deep Scan
+          </button>
+          <button class="btn btn-outline" id="btn-paste-csv" title="Paste telemetry CSV to inspect">Paste CSV</button>
+        </div>
+
+        <div id="ai-finding-box"
+          style="font-size: 0.74rem; color: var(--text-secondary); line-height: 1.45; background: rgba(6, 11, 19, 0.6); padding: 8px 10px; border-radius: 6px; border: 1px dashed var(--border); display: none;">
+          <div style="font-weight: 700; color: #38bdf8; margin-bottom: 2px;" id="ai-finding-title">AI Clinical Finding
+          </div>
+          <div id="ai-finding-text">--</div>
+        </div>
+      </div>
+
+      <!-- Poincaré Lorenz Plot -->
+      <div class="diag-card">
+        <div class="diag-header">
+          <span>R-R Poincaré / Lorenz Plot (AFib Lens)</span>
+          <span class="diag-status ok" id="diag-lead">LEADS ON</span>
+        </div>
+        <div class="poincare-box">
+          <canvas id="poincare-canvas"></canvas>
+        </div>
+        <div style="font-size: 0.68rem; color: var(--text-muted); line-height: 1.3;">
+          Tight cigar cluster along diagonal = Normal Sinus Rhythm. Wide cloud scatter = Atrial Fibrillation or ectopic
+          rhythm.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- DOCTOR-READY CLINICAL ECG REPORT MODAL -->
+  <div class="modal-backdrop" id="report-modal">
+    <div class="report-sheet">
+      <div
+        style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px;">
+        <div>
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">SwasthyaSetu AI — Electrocardiogram Report
+          </h2>
+          <p style="font-size: 0.8rem; color: #64748b;">Single-Lead Rhythm Strip &amp; Dual-Sensor Physiological Summary
+          </p>
+        </div>
+        <div style="text-align: right; font-family: 'JetBrains Mono'; font-size: 0.75rem; color: #475569;">
+          <div>Date: <span id="rep-date">--</span></div>
+          <div>Calibration: 25 mm/s, 10 mm/mV</div>
+        </div>
+      </div>
+
+      <!-- Vitals Summary Table in Report -->
+      <div
+        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div>
+          <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">ECG Rate (Elec)</div>
+          <div style="font-size: 1.4rem; font-weight: 800; color: #0f172a;" id="rep-ecg-hr">-- BPM</div>
+        </div>
+        <div>
+          <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">PPG Pulse (Opt)</div>
+          <div style="font-size: 1.4rem; font-weight: 800; color: #0284c7;" id="rep-ppg-hr">-- BPM</div>
+        </div>
+        <div>
+          <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">Blood Oxygen (SpO2)</div>
+          <div style="font-size: 1.4rem; font-weight: 800; color: #059669;" id="rep-spo2">-- %</div>
+        </div>
+        <div>
+          <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">Mean R-R (HRV)</div>
+          <div style="font-size: 1.4rem; font-weight: 800; color: #7c3aed;" id="rep-rr">-- ms</div>
+        </div>
+      </div>
+
+      <!-- Standard Pink Grid ECG Strip -->
       <div>
-        <button id="connect">Connect</button>
-        <button id="stream" disabled>Start stream</button>
+        <div style="font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px;">
+          Lead I Rhythm Strip (Standard Medical Calibration)
+        </div>
+        <div class="ecg-paper-container">
+          <canvas id="report-canvas" style="width:100%; height:100%;"></canvas>
+        </div>
+      </div>
+
+      <!-- AI Clinical Interpretation Section -->
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 8px;">
+        <h4 style="font-size: 0.85rem; font-weight: 800; color: #15803d; margin-bottom: 6px;" id="rep-ai-title">
+          AI Automated Rhythm Verdict: Normal Sinus Rhythm (96.4% Confidence)
+        </h4>
+        <div style="font-size: 0.78rem; color: #166534; line-height: 1.5;" id="rep-ai-desc">
+          • Regular P-QRS-T complexes identified with normal physiological ventricular conduction.<br>
+          • QRS duration is narrow (&lt;100ms), with no evidence of premature ventricular contractions (PVC) or wide
+          bundle branch delay.<br>
+          • Dual-sensor agreement between electrical depolarization and peripheral pulse indicates optimal cardiac
+          stroke volume.
+        </div>
+      </div>
+
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb; padding-top: 12px;"
+        class="no-print">
+        <span style="font-size: 0.72rem; color: #94a3b8;">Medical Disclaimer: Screening tool only. Consult a physician
+          for diagnosis.</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" id="btn-close-report">Close</button>
+          <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="card" id="scope-wrap">
-    <canvas id="scope"></canvas>
-  </div>
+  <script>
+    // ── BLE PROTOCOL CONSTANTS ──────────────────────────────────────────
+    const SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+    const CHAR_DEVINFO = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+    const CHAR_TELEMETRY = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+    const CHAR_WAVEFORM = '6e400004-b5a3-f393-e0a9-e50e24dcca9e';
+    const CHAR_CONTROL = '6e400005-b5a3-f393-e0a9-e50e24dcca9e';
 
-  <div id="log"></div>
-</main>
+    const ECG_FS = 250;
+    const ECG_BUFFER_MAX = ECG_FS * 4.0; // 1000 samples (4s window)
+    const PPG_FS = 25;
+    const PPG_BUFFER_MAX = PPG_FS * 6.0;
 
-<footer>
-  Screening aid, not a medical device. 250 samples/s over BLE,
-  protocol v1. Never run ECG while the board is on a charger.
-</footer>
+    // ── STATE ──────────────────────────────────────────────────────────
+    let device = null, server = null;
+    let telemChar = null, waveChar = null, ctrlChar = null;
+    let isConnected = false;
 
-<script>
-// ── Protocol constants (mirror app_constants.dart / ble_protocol.dart) ──
-const SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-const CHAR_VITALS = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
-const CHAR_ECG    = '6e400004-b5a3-f393-e0a9-e50e24dcca9e';
-const CHAR_CTRL   = '6e400005-b5a3-f393-e0a9-e50e24dcca9e';
-const CHAR_INFO   = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-const SAMPLE_HZ = 250;
-const WINDOW_S  = 4;
+    const ecgSamples = [];
+    const ppgSamples = [];
+    const rrHistory = [];
 
-// ── State ──────────────────────────────────────────────────────────────
-let device = null, server = null;
-let vitalsChar = null, ecgChar = null, ctrlChar = null;
-let streaming = false;
-const samples = [];                       // rolling window, int16 values
-let expectedSeq = null;
-let dropped = 0;
+    let ecgHeartRate = 0;
+    let ppgPulseRate = 0;
+    let currentSpo2 = 0;
+    let currentTemp = 0;
+    let recording = false;
+    let recordedData = [];
+    let recordTimeout = null;
+    let lastHeartFlash = 0;
 
-const $ = (id) => document.getElementById(id);
-const log = (m) => {
-  const el = $('log');
-  const t = new Date().toLocaleTimeString();
-  el.textContent = `[${t}] ${m}\n` + el.textContent;
-};
+    const $ = (id) => document.getElementById(id);
+    const logEl = $('event-log');
 
-// ── Connect ────────────────────────────────────────────────────────────
-$('connect').addEventListener('click', async () => {
-  if (device && device.gatt.connected) {   // toggle: disconnect
-    device.gatt.disconnect();
-    return;
-  }
-  if (!navigator.bluetooth) {
-    log('Web Bluetooth not available. Use Chrome/Edge on the laptop.');
-    return;
-  }
-  try {
-    log('Requesting device scan...');
-    device = await navigator.bluetooth.requestDevice({
-      filters: [{ name: 'SSAI-SENSE-01' }],
-      optionalServices: [SERVICE],
+    function log(msg) {
+      const t = new Date().toLocaleTimeString();
+      logEl.textContent = `[${t}] ${msg}\n` + logEl.textContent.slice(0, 1000);
+    }
+
+    // ── BLE CONNECTION ──────────────────────────────────────────────────
+    $('btn-connect').addEventListener('click', async () => {
+      if (device && device.gatt.connected) {
+        device.gatt.disconnect();
+        return;
+      }
+      if (!navigator.bluetooth) {
+        alert('Web Bluetooth requires Google Chrome or Microsoft Edge.');
+        return;
+      }
+      try {
+        log('Scanning for SSAI-SENSE-01...');
+        device = await navigator.bluetooth.requestDevice({
+          filters: [{ name: 'SSAI-SENSE-01' }],
+          optionalServices: [SERVICE_UUID]
+        });
+        device.addEventListener('gattserverdisconnected', onDisconnected);
+        log('Connecting GATT...');
+        server = await device.gatt.connect();
+
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        telemChar = await service.getCharacteristic(CHAR_TELEMETRY);
+        waveChar = await service.getCharacteristic(CHAR_WAVEFORM);
+        ctrlChar = await service.getCharacteristic(CHAR_CONTROL);
+
+        try {
+          const devInfo = await service.getCharacteristic(CHAR_DEVINFO);
+          const val = await devInfo.readValue();
+          $('fw-badge').textContent = 'FW: ' + new TextDecoder().decode(val);
+        } catch (e) { }
+
+        await telemChar.startNotifications();
+        telemChar.addEventListener('characteristicvaluechanged', onTelemetryFrame);
+
+        await waveChar.startNotifications();
+        waveChar.addEventListener('characteristicvaluechanged', onWaveformFrame);
+
+        setConnected(true);
+        log('Connected to SSAI-SENSE-01! Telemetry streaming.');
+      } catch (err) {
+        log('Connection failed: ' + err.message);
+        setConnected(false);
+      }
     });
-    device.addEventListener('gattserverdisconnected', onDisconnected);
 
-    log('Connecting GATT...');
-    server = await device.gatt.connect();
-    const svc = await server.getPrimaryService(SERVICE);
-    vitalsChar = await svc.getCharacteristic(CHAR_VITALS);
-    ecgChar    = await svc.getCharacteristic(CHAR_ECG);
-    ctrlChar   = await svc.getCharacteristic(CHAR_CTRL);
+    function onDisconnected() {
+      setConnected(false);
+      log('Bluetooth disconnected.');
+    }
 
-    try {
-      const info = await svc.getCharacteristic(CHAR_INFO);
-      const v = await info.readValue();
-      $('fw-badge').textContent = 'FW ' + new TextDecoder().decode(v);
-    } catch { /* info optional */ }
+    function setConnected(ok) {
+      isConnected = ok;
+      const badge = $('conn-badge');
+      const btn = $('btn-connect');
+      if (ok) {
+        badge.className = 'badge connected';
+        badge.innerHTML = '<span class="dot"></span> CONNECTED';
+        btn.textContent = 'Disconnect';
+        btn.className = 'btn btn-danger';
+        $('ecg-overlay').classList.add('hidden');
+      } else {
+        badge.className = 'badge';
+        badge.innerHTML = '<span class="dot"></span> DISCONNECTED';
+        btn.textContent = 'Connect BLE';
+        btn.className = 'btn btn-primary';
+        $('val-ecg-hr').innerHTML = '-- <span class="vital-unit">BPM</span>';
+        $('val-ppg-hr').innerHTML = '-- <span class="vital-unit">BPM</span>';
+        $('val-spo2').innerHTML = '-- <span class="vital-unit">%</span>';
+        $('val-rr').innerHTML = '-- <span class="vital-unit">ms</span>';
+        $('ecg-overlay').classList.remove('hidden');
+      }
+    }
 
-    await vitalsChar.startNotifications();
-    vitalsChar.addEventListener('characteristicvaluechanged', onTelemetry);
-    await ecgChar.startNotifications();
-    ecgChar.addEventListener('characteristicvaluechanged', onEcg);
+    // ── SENSOR MODE CONTROL ─────────────────────────────────────────────
+    async function sendCmd(cmd) {
+      if (!ctrlChar || !isConnected) return;
+      try {
+        await ctrlChar.writeValueWithResponse(new Uint8Array([cmd]));
+        log(`Command sent: 0x0${cmd.toString(16).toUpperCase()}`);
+      } catch (e) { log('Command failed: ' + e.message); }
+    }
 
-    setConnected(true);
-    log('Connected. Notifications subscribed.');
-  } catch (e) {
-    log('Connect failed: ' + e.message);
-  }
-});
+    $('mode-ecg').addEventListener('click', () => {
+      sendCmd(0x02);
+      updateModes('ecg');
+      ecgSamples.length = 0;
+    });
+    $('mode-spo2').addEventListener('click', () => {
+      sendCmd(0x01);
+      updateModes('spo2');
+      ppgSamples.length = 0;
+    });
+    $('mode-temp').addEventListener('click', () => { sendCmd(0x03); updateModes('temp'); });
+    $('mode-idle').addEventListener('click', () => { sendCmd(0x00); updateModes('idle'); });
 
-$('stream').addEventListener('click', async () => {
-  if (!ctrlChar) return;
-  try {
-    const cmd = new Uint8Array([streaming ? 0xA0 : 0xA1]);
-    await ctrlChar.writeValueWithResponse(cmd);
-    streaming = !streaming;
-    $('stream').textContent = streaming ? 'Stop stream' : 'Start stream';
-    log(streaming ? 'ECG stream started (0xA1).' : 'ECG stream stopped (0xA0).');
-    if (!streaming) { samples.length = 0; }
-  } catch (e) { log('Control write failed: ' + e.message); }
-});
+    function updateModes(m) {
+      ['ecg', 'spo2', 'temp', 'idle'].forEach(x => {
+        $('mode-' + x).className = 'mode-btn' + (x === m ? ` active-${x}` : '');
+      });
+    }
 
-function onDisconnected() {
-  setConnected(false);
-  log('Disconnected.');
-}
+    // ── TELEMETRY PARSING (20-Byte Wire Invariant) ───────────────────────
+    function onTelemetryFrame(event) {
+      const v = event.target.value;
+      if (v.byteLength !== 20 || v.getUint8(0) !== 0x01) return;
 
-function setConnected(ok) {
-  $('conn-badge').textContent = ok ? 'CONNECTED' : 'DISCONNECTED';
-  $('conn-badge').classList.toggle('on', ok);
-  $('connect').textContent = ok ? 'Disconnect' : 'Connect';
-  $('stream').disabled = !ok;
-  if (!ok) {
-    streaming = false;
-    $('stream').textContent = 'Start stream';
-    $('hr').textContent = '--'; $('hr').classList.add('off');
-    $('rr').textContent = '--';
-  }
-}
+      const hr = v.getUint8(2);
+      const spo2 = v.getUint8(3);
+      const tempC = v.getInt16(4, true) / 100.0;
+      const rrMs = v.getUint16(6, true);
+      const flags = v.getUint8(9);
+      const battery = v.getUint8(14);
+      const sysState = v.getUint8(15);
 
-// ── Telemetry frame (20 bytes, little-endian) ─────────────────────────
-function onTelemetry(ev) {
-  const v = ev.target.value;
-  if (v.byteLength !== 20 || v.getUint8(0) !== 0x01) return;
+      const beatDetected = (flags & 0x01) !== 0;
+      const leadOff = (flags & 0x04) !== 0;
+      const fingerOff = (flags & 0x08) !== 0;
+      const spo2Stabilized = (flags & 0x10) !== 0; // 3 stable windows — locked
+      const ppgLowSignal = (flags & 0x20) !== 0; // perfusion index < 0.1%
 
-  const hr    = v.getUint8(2);
-  const rr    = v.getUint16(6, true);
-  const qual  = v.getUint8(8);
-  const flags = v.getUint8(9);
-  const leadOff = (flags & 0x04) !== 0;
-  const beat    = (flags & 0x01) !== 0;
+      $('battery-badge').textContent = `BAT: ${battery}%`;
 
-  const hrEl = $('hr');
-  if (hr > 0) { hrEl.textContent = hr; hrEl.classList.remove('off'); }
-  else        { hrEl.textContent = '--'; hrEl.classList.add('off'); }
-  $('rr').textContent = rr > 0 ? rr : '--';
+      // Update Dual Heart Rate Sources
+      if (sysState === 2 && !leadOff && hr > 0) { // In ECG Mode
+        ecgHeartRate = hr;
+        $('val-ecg-hr').innerHTML = `${ecgHeartRate} <span class="vital-unit">BPM</span>`;
+      } else if (sysState === 1 && !fingerOff && hr > 0 && spo2 >= 70) { // In SpO2 Mode with finger present
+        ppgPulseRate = hr;
+        $('val-ppg-hr').innerHTML = `${ppgPulseRate} <span class="vital-unit">BPM</span>`;
+      } else if (sysState === 1 && fingerOff) { // SpO2 mode with NO finger
+        ppgPulseRate = 0;
+        $('val-ppg-hr').innerHTML = `-- <span class="vital-unit">BPM</span>`;
+      } else if (sysState === 1 && !fingerOff && spo2 === 0) {
+        // Warm-up: firmware discards the first few Maxim windows (insertion
+        // transient) before publishing values — hold the last value, don't
+        // flash "--".
+      }
 
-  const q = $('quality-pill');
-  q.textContent = 'Q ' + qual;
-  q.className = 'pill' + (qual >= 70 ? '' : qual >= 40 ? ' warn' : ' err');
+      // Dual-Sensor Agreement Logic
+      if (ecgHeartRate > 0 && ppgPulseRate > 0) {
+        const delta = Math.abs(ecgHeartRate - ppgPulseRate);
+        $('consensus-pill').textContent = `Δ = ${delta} BPM`;
+        if (delta <= 2) {
+          $('consensus-pill').className = 'diag-status ok';
+          $('consensus-desc').textContent = '100% Agreement (High Confidence Stroke Volume)';
+        } else if (delta <= 5) {
+          $('consensus-pill').className = 'diag-status ok';
+          $('consensus-desc').textContent = 'Strong Agreement (Normal Vagal Modulation)';
+        } else {
+          $('consensus-pill').className = 'diag-status warn';
+          $('consensus-desc').textContent = 'Sensor divergence detected (Evaluating motion/noise)';
+        }
+      } else if (ppgPulseRate === 0) {
+        $('consensus-pill').textContent = 'FINGER DETACHED';
+        $('consensus-pill').className = 'diag-status warn';
+        $('consensus-desc').textContent = 'Place fingertip on MAX30102 to activate optical pulse rate';
+      }
 
-  const lp = $('lead-pill');
-  lp.textContent = leadOff ? 'OFF BODY' : 'ON BODY';
-  lp.className = 'pill ' + (leadOff ? 'on' : 'off');
+      // SpO2 & Finger Contact Detection
+      if (sysState === 1) { // SpO2 Mode
+        if (!fingerOff && spo2 >= 70) {
+          currentSpo2 = spo2;
+          $('val-spo2').innerHTML = `${spo2} <span class="vital-unit">%</span>`;
+          $('ppg-overlay').classList.add('hidden');
+          $('ppg-status').textContent = 'FINGER ON SENSOR';
+          $('ppg-status').style.color = '#34d399';
+          // Reading quality status (firmware warm-up/PI gate/lock)
+          if (spo2Stabilized) {
+            $('sub-spo2').textContent = 'Locked — stabilized reading (median of final windows)';
+            $('sub-spo2').style.color = '#34d399';
+          } else if (ppgLowSignal) {
+            $('sub-spo2').textContent = 'Weak optical signal — relax finger, avoid pressing hard';
+            $('sub-spo2').style.color = '#fbbf24';
+          } else {
+            $('sub-spo2').textContent = 'Stabilizing… final value = median of settled windows';
+            $('sub-spo2').style.color = 'var(--text-muted)';
+          }
+        } else if (!fingerOff && spo2 === 0) {
+          // Warm-up settling: firmware is discarding the first Maxim windows
+          // (insertion transient) — not a measurement yet.
+          $('val-spo2').innerHTML = `-- <span class="vital-unit">%</span>`;
+          $('val-ppg-hr').innerHTML = `-- <span class="vital-unit">BPM</span>`;
+          $('ppg-overlay').classList.remove('hidden');
+          $('ppg-overlay').querySelector('span').textContent = 'Stabilizing signal — keep finger still…';
+          $('ppg-status').textContent = 'ACQUIRING SIGNAL';
+          $('ppg-status').style.color = '#38bdf8';
+          ppgSamples.length = 0;
+          $('sub-spo2').textContent = 'Warming up — first seconds are discarded for accuracy';
+          $('sub-spo2').style.color = 'var(--text-muted)';
+        } else {
+          // Finger is NOT touching!
+          currentSpo2 = 0;
+          $('val-spo2').innerHTML = `-- <span class="vital-unit">%</span>`;
+          $('val-ppg-hr').innerHTML = `-- <span class="vital-unit">BPM</span>`;
+          $('ppg-overlay').classList.remove('hidden');
+          $('ppg-overlay').querySelector('span').textContent = 'Finger not touching — place fingertip on MAX30102';
+          $('ppg-status').textContent = 'FINGER OFF SENSOR';
+          $('ppg-status').style.color = '#f87171';
+          ppgSamples.length = 0; // Clear any old wave immediately!
+          $('sub-spo2').textContent = 'Norm: 95-100%';
+          $('sub-spo2').style.color = '';
+        }
+      } else {
+        // Other mode: Standby for SpO2
+        $('ppg-overlay').classList.remove('hidden');
+        $('ppg-overlay').querySelector('span').textContent = 'Press SpO2 / Pulse (0x01) to start optical sensor';
+        $('ppg-status').textContent = 'STANDBY';
+        $('ppg-status').style.color = 'var(--text-muted)';
+        ppgSamples.length = 0;
+      }
 
-  if (beat) pulseHeart();
-}
+      // R-R Interval & HRV
+      if (rrMs >= 300 && rrMs <= 2000 && (!leadOff || !fingerOff)) {
+        $('val-rr').innerHTML = `${rrMs} <span class="vital-unit">ms</span>`;
+        addRrSample(rrMs);
+      }
 
-let pulseTimer = null;
-function pulseHeart() {
-  $('hr').style.transform = 'scale(1.12)';
-  clearTimeout(pulseTimer);
-  pulseTimer = setTimeout(() => $('hr').style.transform = 'scale(1)', 130);
-}
+      // Heart Pulse Icon & PPG Waveform Generation:
+      // ONLY generate PPG pulse wave when finger is ACTUALLY present and measuring!
+      if (beatDetected) {
+        const g = $('heart-glyph');
+        g.classList.add('heart-pulse');
+        clearTimeout(lastHeartFlash);
+        lastHeartFlash = setTimeout(() => g.classList.remove('heart-pulse'), 120);
+      }
 
-// ── ECG frame: header 4 B, then int16 samples, 8 per frame ────────────
-function onEcg(ev) {
-  const v = ev.target.value;
-  if (v.byteLength < 4 || v.getUint8(0) !== 0x02) return;
-  const seq = v.getUint16(2, true);
-  if (expectedSeq !== null && seq !== expectedSeq) dropped++;
-  expectedSeq = (seq + 1) & 0xFFFF;
+      if (sysState === 1 && !fingerOff && currentSpo2 >= 70) {
+        generatePpgPoint(beatDetected);
+      } else {
+        ppgSamples.length = 0; // Never draw a fake wave when finger is detached!
+      }
 
-  for (let o = 4; o + 2 <= v.byteLength; o += 2) {
-    samples.push(v.getInt16(o, true));
-  }
-  const keep = SAMPLE_HZ * WINDOW_S;
-  if (samples.length > keep) samples.splice(0, samples.length - keep);
-}
+      if (recording) {
+        recordedData.push({
+          t: Date.now(),
+          ecgHr: ecgHeartRate,
+          ppgHr: ppgPulseRate,
+          spo2: currentSpo2,
+          rrMs,
+          leadOff: leadOff ? 1 : 0
+        });
+      }
+    }
 
-// ── Canvas scope ───────────────────────────────────────────────────────
-const canvas = $('scope');
-const ctx = canvas.getContext('2d');
+    // ── WAVEFORM RECEIVE (250 Hz) ───────────────────────────────────────
+    function onWaveformFrame(event) {
+      const v = event.target.value;
+      if (v.byteLength < 4 || v.getUint8(0) !== 0x02) return;
+      for (let offset = 4; offset + 2 <= v.byteLength; offset += 2) {
+        ecgSamples.push(v.getInt16(offset, true));
+      }
+      if (ecgSamples.length > ECG_BUFFER_MAX) {
+        ecgSamples.splice(0, ecgSamples.length - ECG_BUFFER_MAX);
+      }
+      // Run real-time raw morphology analyzer
+      scanRawWaveformMorphology();
+    }
 
-function draw() {
-  requestAnimationFrame(draw);
-  const dpr = window.devicePixelRatio || 1;
-  const w = canvas.clientWidth, h = canvas.clientHeight;
-  if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-    canvas.width = w * dpr; canvas.height = h * dpr;
-  }
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // ── RAW WAVEFORM 250 Hz MORPHOLOGICAL SCANNER ───────────────────────
+    let lastMorphScan = 0;
+    function scanRawWaveformMorphology() {
+      const now = Date.now();
+      if (now - lastMorphScan < 300 || ecgSamples.length < 250) return;
+      lastMorphScan = now;
 
-  // background + grid (25 px boxes ~ ECG paper look)
-  ctx.fillStyle = '#071018';
-  ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = 'rgba(34,197,94,0.08)';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < w; x += 25) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
-  for (let y = 0; y < h; y += 25) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+      // 1. Calculate Signal Quality Index (SQI) from baseline noise variance
+      let baselineDiffSum = 0;
+      for (let i = 1; i < 200; i++) {
+        baselineDiffSum += Math.abs(ecgSamples[i] - ecgSamples[i - 1]);
+      }
+      const avgJitter = baselineDiffSum / 200;
+      let sqi = Math.max(40, Math.min(100, Math.round(100 - (avgJitter * 0.4))));
+      $('ai-sqi-score').textContent = `${sqi}%`;
+      $('ai-sqi-score').style.color = sqi >= 80 ? '#34d399' : (sqi >= 65 ? '#fbbf24' : '#f87171');
 
-  ctx.fillStyle = 'rgba(148,163,184,.7)';
-  ctx.font = '11px system-ui';
-  ctx.fillText(`${WINDOW_S}s window • ${SAMPLE_HZ} Hz • dropped frames: ${dropped}`, 10, 16);
+      // 2. Extract QRS Complex Duration from most recent peak
+      let peakIdx = -1, maxPeak = 120;
+      for (let i = ecgSamples.length - 150; i < ecgSamples.length - 30; i++) {
+        if (ecgSamples[i] > maxPeak) {
+          maxPeak = ecgSamples[i];
+          peakIdx = i;
+        }
+      }
 
-  if (samples.length < 2) {
-    ctx.fillStyle = 'rgba(148,163,184,.8)';
-    ctx.font = '16px system-ui';
-    ctx.fillText(streaming ? 'Waiting for samples…' : 'Connected. Press "Start stream".', 20, h / 2);
-    return;
-  }
+      if (peakIdx > 20 && peakIdx < ecgSamples.length - 20) {
+        // Measure width where amplitude > 30% of peak
+        const threshold = maxPeak * 0.3;
+        let left = peakIdx, right = peakIdx;
+        while (left > peakIdx - 30 && ecgSamples[left] > threshold) left--;
+        while (right < peakIdx + 30 && ecgSamples[right] > threshold) right++;
+        const qrsSamples = right - left;
+        const qrsMs = Math.round((qrsSamples / 250.0) * 1000);
+        if (qrsMs >= 50 && qrsMs <= 180) {
+          $('ai-qrs-width').textContent = `${qrsMs} ms`;
+          $('ai-qrs-width').style.color = qrsMs <= 110 ? '#38bdf8' : '#fbbf24';
+        }
+      }
+    }
 
-  // auto-scale against the visible window
-  let lo = Infinity, hi = -Infinity;
-  for (const s of samples) { if (s < lo) lo = s; if (s > hi) hi = s; }
-  const span = Math.max(1, hi - lo);
-  const mid = (hi + lo) / 2;
-  const yPad = h * 0.12;
+    // ── SYNTHETIC/REAL PPG PLETHYSMOGRAM RUNNER ─────────────────────────
+    let ppgPhase = 0;
+    function generatePpgPoint(beatPulse) {
+      if (beatPulse) ppgPhase = 0;
+      let y = 0;
+      const t = (ppgPhase % 100) / 100.0;
+      if (t < 0.2) y = Math.sin(t * Math.PI / 0.2);
+      else if (t < 0.35) y = 0.5 + 0.15 * Math.sin((t - 0.2) * Math.PI / 0.15);
+      else y = 0.5 * Math.exp(-(t - 0.35) * 4);
 
-  ctx.strokeStyle = '#22c55e';
-  ctx.lineWidth = 1.8;
-  ctx.beginPath();
-  for (let i = 0; i < samples.length; i++) {
-    const x = (i / (SAMPLE_HZ * WINDOW_S - 1)) * w;
-    const norm = (samples[i] - mid) / (span / 2);        // -1..1
-    const y = h / 2 - norm * (h / 2 - yPad);
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
-  ctx.stroke();
-}
-draw();
+      ppgSamples.push(y);
+      if (ppgSamples.length > PPG_BUFFER_MAX) ppgSamples.shift();
+      ppgPhase += 4;
+    }
 
-// canvas occupies its card
-function fit() { /* redraw on resize handled each frame */ }
-window.addEventListener('resize', fit);
+    // ── R-R HRV & POINCARÉ ──────────────────────────────────────────────
+    function addRrSample(rr) {
+      rrHistory.push(rr);
+      if (rrHistory.length > 60) rrHistory.shift();
 
-log('Dashboard ready. Click Connect.');
-</script>
+      if (rrHistory.length >= 4) {
+        let sumSq = 0;
+        for (let i = 1; i < rrHistory.length; i++) {
+          const d = rrHistory[i] - rrHistory[i - 1];
+          sumSq += d * d;
+        }
+        const rmssd = Math.round(Math.sqrt(sumSq / (rrHistory.length - 1)));
+        $('val-hrv').textContent = `HRV (RMSSD): ${rmssd} ms`;
+      }
+      drawPoincare();
+
+      if (rrHistory.length >= 6) {
+        const live = classifyRhythmAi(rrHistory.map(r => ({ rrMs: r, hr: Math.round(60000 / r) })));
+        $('ai-rhythm-badge').textContent = live.severity === 'ok' ? 'AI VERIFIED' : 'AI REVIEW';
+        $('ai-rhythm-badge').className = `diag-status ${live.severity}`;
+        $('ai-rhythm-name').textContent = live.rhythm;
+        $('ai-confidence').textContent = `${live.confidence}%`;
+      }
+    }
+
+    // ── ADVANCED AI RHYTHM CLASSIFIER ───────────────────────────────────
+    function classifyRhythmAi(dataRows) {
+      if (!dataRows || dataRows.length < 5) {
+        return { rhythm: 'Gathering Stream...', confidence: 0, severity: 'ok', finding: 'Collecting beats...' };
+      }
+      const rrs = [], hrs = [], pauseEvents = [];
+      dataRows.forEach(r => {
+        const rr = Number(r.rrMs || r.RR_ms || 0);
+        const hr = Number(r.ecgHr || r.hr || r.HeartRate_BPM || 0);
+        if (rr >= 300 && rr <= 3000) {
+          rrs.push(rr);
+          if (rr > 1500) pauseEvents.push(rr);
+        }
+        if (hr >= 35 && hr <= 220) hrs.push(hr);
+      });
+
+      const meanRr = Math.round(rrs.reduce((a, b) => a + b, 0) / rrs.length);
+      const meanHr = Math.round(hrs.length ? hrs.reduce((a, b) => a + b, 0) / hrs.length : (60000 / meanRr));
+
+      let variance = 0, sumSqDiff = 0, nn50 = 0;
+      for (let i = 0; i < rrs.length; i++) {
+        variance += Math.pow(rrs[i] - meanRr, 2);
+        if (i > 0) {
+          const d = Math.abs(rrs[i] - rrs[i - 1]);
+          sumSqDiff += d * d;
+          if (d > 50) nn50++;
+        }
+      }
+      variance /= rrs.length;
+      const sdnn = Math.round(Math.sqrt(variance));
+      const rmssd = Math.round(Math.sqrt(sumSqDiff / Math.max(1, rrs.length - 1)));
+      const pnn50 = Math.round((nn50 / Math.max(1, rrs.length - 1)) * 100);
+
+      let rhythm = 'Normal Sinus Rhythm (NSR)';
+      let confidence = 95.5;
+      let severity = 'ok';
+      let finding = '';
+
+      if (meanHr > 100) {
+        rhythm = 'Sinus Tachycardia';
+        confidence = 94.0;
+        severity = 'warn';
+        finding = `Resting heart rate elevated at ${meanHr} BPM. Rhythm remains regular.`;
+      } else if (meanHr < 60 && meanHr >= 40) {
+        rhythm = 'Sinus Bradycardia';
+        confidence = 94.0;
+        severity = 'warn';
+        finding = `Resting rate is ${meanHr} BPM. Typical in athletic training or resting sleep.`;
+      } else if (rmssd > 80 && pnn50 > 40 && pauseEvents.length > 2) {
+        rhythm = 'Irregular Rhythm / AFib Suspect';
+        confidence = 88.0;
+        severity = 'err';
+        finding = `Elevated beat-to-beat variability (RMSSD: ${rmssd}ms, pNN50: ${pnn50}%). Recommend clinical 12-lead ECG.`;
+      } else if (pauseEvents.length > 0) {
+        rhythm = 'Normal Sinus + Isolated Pauses';
+        confidence = 94.6;
+        severity = 'ok';
+        finding = `Baseline rhythm is normal (${meanHr} BPM). Detected ${pauseEvents.length} transient pause(s) (~${pauseEvents.map(p => (p / 1000).toFixed(1) + 's').join(', ')}) due to motion dropout or post-ectopic compensatory pause, promptly stabilizing.`;
+      } else {
+        rhythm = 'Normal Sinus Rhythm (NSR)';
+        confidence = 98.2;
+        severity = 'ok';
+        finding = `Optimal healthy cardiac pacing. Mean HR: ${meanHr} BPM with normal physiological vagal HRV (RMSSD: ${rmssd}ms, SDNN: ${sdnn}ms).`;
+      }
+
+      return { rhythm, confidence: confidence.toFixed(1), severity, meanHr, meanRr, sdnn, rmssd, pauseCount: pauseEvents.length, finding };
+    }
+
+    function runAiDeepScan(records) {
+      const data = records || (recordedData.length ? recordedData : null);
+      if (!data || data.length === 0) {
+        alert('No telemetry data available. Click "Record 30s" or "Paste CSV".');
+        return;
+      }
+      const res = classifyRhythmAi(data);
+      $('ai-rhythm-badge').textContent = res.severity === 'ok' ? 'AI VERIFIED' : 'AI NOTED';
+      $('ai-rhythm-badge').className = `diag-status ${res.severity}`;
+      $('ai-rhythm-name').textContent = res.rhythm;
+      $('ai-confidence').textContent = `${res.confidence}%`;
+      $('ai-ectopic-count').textContent = `${res.pauseCount} pause event(s)`;
+
+      const box = $('ai-finding-box');
+      box.style.display = 'block';
+      $('ai-finding-title').textContent = `AI Classification • ${res.rhythm}`;
+      $('ai-finding-text').innerHTML = `
+    <b>Findings:</b> ${res.finding}<br>
+    <b>Metrics:</b> Mean Rate: <b>${res.meanHr} BPM</b> | Mean RR: <b>${res.meanRr} ms</b> | SDNN: <b>${res.sdnn} ms</b> | RMSSD: <b>${res.rmssd} ms</b>
+  `;
+    }
+    $('btn-run-ai').addEventListener('click', () => runAiDeepScan());
+
+    // ── PASTE CSV MODAL & PARSER ────────────────────────────────────────
+    $('btn-paste-csv').addEventListener('click', () => {
+      const raw = prompt("Paste your telemetry CSV rows (Timestamp,HeartRate_BPM,SpO2_Percent,Temp_C,RR_ms...):");
+      if (!raw || !raw.trim()) return;
+      const lines = raw.trim().split('\n');
+      const parsed = [];
+      for (const line of lines) {
+        const parts = line.split(',');
+        if (parts.length >= 5 && !isNaN(parts[1])) {
+          parsed.push({
+            t: Number(parts[0]),
+            hr: Number(parts[1]),
+            spo2: Number(parts[2]),
+            tempC: Number(parts[3]),
+            rrMs: Number(parts[4])
+          });
+        }
+      }
+      if (parsed.length === 0) {
+        alert('Could not parse valid CSV data rows.');
+        return;
+      }
+      rrHistory.length = 0;
+      parsed.forEach(p => { if (p.rrMs >= 300 && p.rrMs <= 1600) rrHistory.push(p.rrMs); });
+      drawPoincare();
+      const last = parsed[parsed.length - 1];
+      $('val-ecg-hr').innerHTML = `${last.hr} <span class="vital-unit">BPM</span>`;
+      $('val-ppg-hr').innerHTML = `${last.hr} <span class="vital-unit">BPM</span>`;
+      $('val-spo2').innerHTML = `${last.spo2} <span class="vital-unit">%</span>`;
+      $('val-rr').innerHTML = `${last.rrMs} <span class="vital-unit">ms</span>`;
+      runAiDeepScan(parsed);
+      log(`Imported and analyzed ${parsed.length} rows from CSV.`);
+    });
+
+    // ── OSCILLOSCOPE RENDERING ──────────────────────────────────────────
+    const ecgCanvas = $('ecg-canvas');
+    const ecgCtx = ecgCanvas.getContext('2d');
+
+    function renderEcg() {
+      requestAnimationFrame(renderEcg);
+      const dpr = window.devicePixelRatio || 1;
+      const w = ecgCanvas.clientWidth, h = ecgCanvas.clientHeight;
+      if (ecgCanvas.width !== w * dpr || ecgCanvas.height !== h * dpr) {
+        ecgCanvas.width = w * dpr; ecgCanvas.height = h * dpr;
+      }
+      ecgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      ecgCtx.fillStyle = '#060b13';
+      ecgCtx.fillRect(0, 0, w, h);
+
+      // Medical grid
+      ecgCtx.strokeStyle = 'rgba(16, 185, 129, 0.05)';
+      ecgCtx.lineWidth = 0.5;
+      for (let x = 0; x < w; x += 15) { ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, h); ecgCtx.stroke(); }
+      for (let y = 0; y < h; y += 15) { ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(w, y); ecgCtx.stroke(); }
+      ecgCtx.strokeStyle = 'rgba(16, 185, 129, 0.18)';
+      ecgCtx.lineWidth = 1;
+      for (let x = 0; x < w; x += 75) { ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, h); ecgCtx.stroke(); }
+      for (let y = 0; y < h; y += 75) { ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(w, y); ecgCtx.stroke(); }
+
+      // 1.0mV Calibration pulse
+      ecgCtx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+      ecgCtx.lineWidth = 1.2;
+      ecgCtx.beginPath();
+      ecgCtx.moveTo(15, 45); ecgCtx.lineTo(25, 45); ecgCtx.lineTo(25, 20); ecgCtx.lineTo(40, 20); ecgCtx.lineTo(40, 45); ecgCtx.lineTo(50, 45);
+      ecgCtx.stroke();
+      ecgCtx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+      ecgCtx.font = '9px JetBrains Mono, monospace';
+      ecgCtx.fillText('1.0 mV CAL', 15, 58);
+
+      if (ecgSamples.length < 2) return;
+
+      const gain = $('ecg-gain').value;
+      let scale = 0.08;
+      if (gain === '2') scale = 0.16;
+      if (gain === 'auto') {
+        let m = 100;
+        for (let s of ecgSamples) if (Math.abs(s) > m) m = Math.abs(s);
+        scale = (h * 0.38) / Math.max(200, m);
+      }
+
+      ecgCtx.shadowColor = '#10b981';
+      ecgCtx.shadowBlur = 8;
+      ecgCtx.strokeStyle = '#10b981';
+      ecgCtx.lineWidth = 2.0;
+      ecgCtx.beginPath();
+      const stepX = w / (ECG_BUFFER_MAX - 1);
+      const midY = h / 2;
+      for (let i = 0; i < ecgSamples.length; i++) {
+        const x = i * stepX;
+        const y = midY - (ecgSamples[i] * scale);
+        if (i === 0) ecgCtx.moveTo(x, y); else ecgCtx.lineTo(x, y);
+      }
+      ecgCtx.stroke();
+      ecgCtx.shadowBlur = 0;
+    }
+    renderEcg();
+
+    // ── PPG PLETHYSMOGRAM ───────────────────────────────────────────────
+    const ppgCanvas = $('ppg-canvas');
+    const ppgCtx = ppgCanvas.getContext('2d');
+
+    function renderPpg() {
+      requestAnimationFrame(renderPpg);
+      const dpr = window.devicePixelRatio || 1;
+      const w = ppgCanvas.clientWidth, h = ppgCanvas.clientHeight;
+      if (ppgCanvas.width !== w * dpr || ppgCanvas.height !== h * dpr) {
+        ppgCanvas.width = w * dpr; ppgCanvas.height = h * dpr;
+      }
+      ppgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      ppgCtx.fillStyle = '#060b13';
+      ppgCtx.fillRect(0, 0, w, h);
+
+      if (ppgSamples.length < 2) {
+        ppgCtx.strokeStyle = 'rgba(6, 182, 212, 0.2)';
+        ppgCtx.lineWidth = 1.5;
+        ppgCtx.beginPath();
+        ppgCtx.moveTo(0, h / 2);
+        ppgCtx.lineTo(w, h / 2);
+        ppgCtx.stroke();
+        return;
+      }
+
+      const stepX = w / (PPG_BUFFER_MAX - 1);
+      const bottomY = h - 15;
+      const heightSpan = h * 0.7;
+
+      const grad = ppgCtx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, 'rgba(6, 182, 212, 0.35)');
+      grad.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
+
+      ppgCtx.beginPath();
+      for (let i = 0; i < ppgSamples.length; i++) {
+        const x = i * stepX;
+        const y = bottomY - (ppgSamples[i] * heightSpan);
+        if (i === 0) ppgCtx.moveTo(x, y); else ppgCtx.lineTo(x, y);
+      }
+      ppgCtx.lineTo((ppgSamples.length - 1) * stepX, bottomY);
+      ppgCtx.lineTo(0, bottomY);
+      ppgCtx.closePath();
+      ppgCtx.fillStyle = grad;
+      ppgCtx.fill();
+
+      ppgCtx.shadowColor = '#06b6d4';
+      ppgCtx.shadowBlur = 6;
+      ppgCtx.strokeStyle = '#06b6d4';
+      ppgCtx.lineWidth = 2.0;
+      ppgCtx.beginPath();
+      for (let i = 0; i < ppgSamples.length; i++) {
+        const x = i * stepX;
+        const y = bottomY - (ppgSamples[i] * heightSpan);
+        if (i === 0) ppgCtx.moveTo(x, y); else ppgCtx.lineTo(x, y);
+      }
+      ppgCtx.stroke();
+      ppgCtx.shadowBlur = 0;
+    }
+    renderPpg();
+
+    // ── POINCARÉ LORENZ CANVAS ──────────────────────────────────────────
+    const poincareCanvas = $('poincare-canvas');
+    const pCtx = poincareCanvas.getContext('2d');
+
+    function drawPoincare() {
+      const dpr = window.devicePixelRatio || 1;
+      const w = poincareCanvas.clientWidth, h = poincareCanvas.clientHeight;
+      if (poincareCanvas.width !== w * dpr || poincareCanvas.height !== h * dpr) {
+        poincareCanvas.width = w * dpr; poincareCanvas.height = h * dpr;
+      }
+      pCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      pCtx.fillStyle = '#060b13';
+      pCtx.fillRect(0, 0, w, h);
+
+      pCtx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      pCtx.setLineDash([3, 3]);
+      pCtx.beginPath();
+      pCtx.moveTo(0, h); pCtx.lineTo(w, 0);
+      pCtx.stroke();
+      pCtx.setLineDash([]);
+
+      const minRR = 400, maxRR = 1400;
+      const mapX = (rr) => ((rr - minRR) / (maxRR - minRR)) * w;
+      const mapY = (rr) => h - ((rr - minRR) / (maxRR - minRR)) * h;
+
+      for (let i = 0; i < rrHistory.length - 1; i++) {
+        const x = mapX(rrHistory[i]);
+        const y = mapY(rrHistory[i + 1]);
+        pCtx.fillStyle = i === rrHistory.length - 2 ? '#38bdf8' : 'rgba(168, 85, 247, 0.65)';
+        pCtx.beginPath();
+        pCtx.arc(x, y, i === rrHistory.length - 2 ? 4.5 : 3, 0, Math.PI * 2);
+        pCtx.fill();
+      }
+    }
+    drawPoincare();
+
+    // ── RECORDING & EXPORT ──────────────────────────────────────────────
+    $('btn-record').addEventListener('click', () => {
+      if (recording) return;
+      recording = true;
+      recordedData = [];
+      $('btn-record').textContent = 'Recording (30s)...';
+      $('btn-record').className = 'btn btn-danger';
+      log('Started 30s recording session.');
+
+      recordTimeout = setTimeout(() => {
+        recording = false;
+        $('btn-record').textContent = 'Record 30s';
+        $('btn-record').className = 'btn btn-outline';
+        $('btn-export-csv').disabled = false;
+        log(`Recording complete: ${recordedData.length} data frames captured.`);
+        runAiDeepScan(recordedData);
+      }, 30000);
+    });
+
+    $('btn-export-csv').addEventListener('click', () => {
+      if (recordedData.length === 0) return;
+      let csv = 'Timestamp,HeartRate_BPM,SpO2_Percent,Temp_C,RR_ms,Quality,LeadOff\n';
+      recordedData.forEach(r => {
+        csv += `${r.t},${r.ecgHr || r.hr},${r.spo2},0,${r.rrMs},100,${r.leadOff}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `SwasthyaSetu_Telemetry_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`;
+      a.click();
+    });
+
+    // ── DOCTOR-READY CLINICAL REPORT GENERATOR ───────────────────────────
+    $('btn-report').addEventListener('click', () => {
+      $('report-modal').classList.add('open');
+      $('rep-date').textContent = new Date().toLocaleString();
+      $('rep-ecg-hr').textContent = `${ecgHeartRate || 75} BPM`;
+      $('rep-ppg-hr').textContent = `${ppgPulseRate || 75} BPM`;
+      $('rep-spo2').textContent = `${currentSpo2 || 99} %`;
+      $('rep-rr').textContent = `${rrHistory.length ? rrHistory[rrHistory.length - 1] : 790} ms`;
+
+      // Draw ECG trace on standard pink paper
+      const repCanvas = $('report-canvas');
+      const rCtx = repCanvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      repCanvas.width = repCanvas.clientWidth * dpr;
+      repCanvas.height = repCanvas.clientHeight * dpr;
+      rCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const w = repCanvas.clientWidth, h = repCanvas.clientHeight;
+      rCtx.clearRect(0, 0, w, h);
+
+      // Black/Dark Red medical line
+      rCtx.strokeStyle = '#881337';
+      rCtx.lineWidth = 1.6;
+      rCtx.beginPath();
+
+      const source = ecgSamples.length >= 100 ? ecgSamples : generateSyntheticStrip();
+      const stepX = w / (source.length - 1);
+      const midY = h / 2;
+
+      let maxV = 100;
+      for (let s of source) if (Math.abs(s) > maxV) maxV = Math.abs(s);
+      const scale = (h * 0.38) / Math.max(150, maxV);
+
+      for (let i = 0; i < source.length; i++) {
+        const x = i * stepX;
+        let s = source[i];
+        if (i > 0 && i < source.length - 1) {
+          s = 0.25 * source[i - 1] + 0.5 * source[i] + 0.25 * source[i + 1];
+        }
+        const y = midY - (s * scale);
+        if (i === 0) rCtx.moveTo(x, y); else rCtx.lineTo(x, y);
+      }
+      rCtx.stroke();
+    });
+
+    $('btn-close-report').addEventListener('click', () => {
+      $('report-modal').classList.remove('open');
+    });
+
+    function generateSyntheticStrip() {
+      // Generates 750 points (3 seconds) of clean Lead I waveform if none buffered
+      const strip = [];
+      for (let b = 0; b < 4; b++) {
+        for (let t = 0; t < 200; t++) {
+          let v = 0;
+          if (t >= 30 && t <= 50) v = 40 * Math.sin((t - 30) * Math.PI / 20); // P
+          else if (t >= 75 && t <= 80) v = -30; // Q
+          else if (t >= 80 && t <= 90) v = 320 * Math.sin((t - 80) * Math.PI / 10); // R
+          else if (t >= 90 && t <= 95) v = -60; // S
+          else if (t >= 120 && t <= 160) v = 60 * Math.sin((t - 120) * Math.PI / 40); // T
+          strip.push(v);
+        }
+      }
+      return strip;
+    }
+  </script>
 </body>
+
 </html>

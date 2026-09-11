@@ -144,8 +144,8 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
   /// badge.
   _EcgSource _resolveSource(BleLinkState link) =>
       link.isLive && link.hasEcgChannel
-          ? _EcgSource.board
-          : _EcgSource.generated;
+      ? _EcgSource.board
+      : _EcgSource.generated;
 
   /// Point the strip at [source] and drop whatever was on it.
   ///
@@ -458,7 +458,9 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
       // written — attach the blob to the stored record directly. Measured strips
       // only; the generated case is refused in [_saveBlocker].
       try {
-        await ref.read(waveformStoreProvider).save(
+        await ref
+            .read(waveformStoreProvider)
+            .save(
               screeningId: draft.savedScreeningId!,
               type: 'ecg',
               samples: samples,
@@ -481,15 +483,14 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
       return;
     }
 
-    ref.read(screeningDraftProvider.notifier).setEcg(
-          samples,
-          sampleRate: sampleRateHz,
-          generated: generated,
-        );
+    ref
+        .read(screeningDraftProvider.notifier)
+        .setEcg(samples, sampleRate: sampleRateHz, generated: generated);
     final demoNote = generated ? ' The screening is marked as a demo.' : '';
     setState(() {
       _saveFailed = false;
-      _saveNote = '$size attached to ${draft.patient!.name}\'s screening. '
+      _saveNote =
+          '$size attached to ${draft.patient!.name}\'s screening. '
           'It is written to the record when the screening is saved.$demoNote';
     });
   }
@@ -594,8 +595,8 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
                     '200 ms per division • amplitude auto-scaled to the window '
                     '(raw ADC counts, no mV calibration)',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   _buildMeasurementsPanel(),
@@ -625,11 +626,11 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
       child: Text(
         live ? 'LIVE' : 'DEMO',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: live
-                  ? AppTheme.onPrimaryGreenContainer
-                  : scheme.onSecondaryContainer,
-            ),
+          fontWeight: FontWeight.w700,
+          color: live
+              ? AppTheme.onPrimaryGreenContainer
+              : scheme.onSecondaryContainer,
+        ),
       ),
     );
   }
@@ -644,10 +645,10 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
         onPressed: () => _explain(
           onBoard
               ? 'The board streams one ECG channel and the protocol has no '
-                  'lead-select command, so the app cannot switch leads. '
-                  'Reposition the electrodes instead.'
+                    'lead-select command, so the app cannot switch leads. '
+                    'Reposition the electrodes instead.'
               : 'Stop the recording to change lead — the strip would otherwise '
-                  'hold two different morphologies.',
+                    'hold two different morphologies.',
         ),
       );
     }
@@ -669,19 +670,21 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
         _metrics = _EcgMetrics.none;
       }),
       itemBuilder: (context) => _kLeads
-          .map((lead) => PopupMenuItem(
-                value: lead,
-                child: Row(
-                  children: [
-                    Icon(
-                      lead == _kLeads[_leadIndex] ? Icons.check_rounded : null,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(child: Text(lead)),
-                  ],
-                ),
-              ))
+          .map(
+            (lead) => PopupMenuItem(
+              value: lead,
+              child: Row(
+                children: [
+                  Icon(
+                    lead == _kLeads[_leadIndex] ? Icons.check_rounded : null,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(child: Text(lead)),
+                ],
+              ),
+            ),
+          )
           .toList(),
     );
   }
@@ -705,8 +708,11 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
               color: AppTheme.infoBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.monitor_heart,
-                color: AppTheme.infoBlue, size: 24),
+            child: const Icon(
+              Icons.monitor_heart,
+              color: AppTheme.infoBlue,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -717,8 +723,8 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
                 Text(
                   'ECG Monitoring',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   // The old line claimed "0.5-40 Hz filter" for every trace.
@@ -727,12 +733,12 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
                   // claim a band.
                   onBoard
                       ? '${link.deviceName ?? 'Sensor board'} • $sampleRateHz Hz '
-                          '• as streamed'
+                            '• as streamed'
                       : 'Generated ${_kLeads[_leadIndex]} • $sampleRateHz Hz '
-                          '• not a measurement',
+                            '• not a measurement',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -746,8 +752,10 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
             child: Align(
               alignment: Alignment.centerRight,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: _metrics.qualityColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -791,27 +799,33 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
     final banners = <Widget>[];
 
     if (!onBoard) {
-      banners.add(_note(
-        'No board is streaming, so this trace is generated by the app. It is not '
-        'a reading from any patient.',
-        icon: Icons.science_outlined,
-        color: AppTheme.warningAmber,
-      ));
+      banners.add(
+        _note(
+          'No board is streaming, so this trace is generated by the app. It is not '
+          'a reading from any patient.',
+          icon: Icons.science_outlined,
+          color: AppTheme.warningAmber,
+        ),
+      );
     } else {
       if (link.leadOff) {
-        banners.add(_note(
-          'The board reports the electrodes are off the skin. The trace below is '
-          'whatever the front-end is picking up, not a cardiac signal.',
-          icon: Icons.warning_amber_rounded,
-          color: AppTheme.errorRed,
-        ));
+        banners.add(
+          _note(
+            'The board reports the electrodes are off the skin. The trace below is '
+            'whatever the front-end is picking up, not a cardiac signal.',
+            icon: Icons.warning_amber_rounded,
+            color: AppTheme.errorRed,
+          ),
+        );
       }
       if (!link.isLive) {
-        banners.add(_note(
-          '${link.label}. ${link.detail}',
-          icon: Icons.link_off,
-          color: AppTheme.warningAmber,
-        ));
+        banners.add(
+          _note(
+            '${link.label}. ${link.detail}',
+            icon: Icons.link_off,
+            color: AppTheme.warningAmber,
+          ),
+        );
       }
     }
 
@@ -830,10 +844,9 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
             ? 'Waiting for ECG frames from the board…'
             : 'Starting the generated trace…',
         textAlign: TextAlign.center,
-        style: Theme.of(context)
-            .textTheme
-            .bodyMedium
-            ?.copyWith(color: scheme.onSurfaceVariant),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
       ),
     );
   }
@@ -859,23 +872,41 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
               runSpacing: AppTheme.spacingMd,
               children: [
                 _buildMeasurement(
-                    'Heart Rate', _metrics.heartRateBpm?.toString(), 'BPM'),
+                  'Heart Rate',
+                  _metrics.heartRateBpm?.toString(),
+                  'BPM',
+                ),
                 _buildMeasurement(
-                    'RR Interval', _metrics.rrIntervalMs?.toString(), 'ms'),
+                  'RR Interval',
+                  _metrics.rrIntervalMs?.toString(),
+                  'ms',
+                ),
                 _buildMeasurement(
-                    'QRS Duration', _metrics.qrsDurationMs?.toString(), 'ms'),
-                _buildMeasurement('Beats Detected', _metrics.beats?.toString(),
-                    'in $windowSeconds s'),
+                  'QRS Duration',
+                  _metrics.qrsDurationMs?.toString(),
+                  'ms',
+                ),
                 _buildMeasurement(
-                    'RR Scatter', _metrics.rrScatterMs?.toString(), 'ms'),
+                  'Beats Detected',
+                  _metrics.beats?.toString(),
+                  'in $windowSeconds s',
+                ),
+                _buildMeasurement(
+                  'RR Scatter',
+                  _metrics.rrScatterMs?.toString(),
+                  'ms',
+                ),
               ],
             ),
             const Divider(height: 24),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.favorite_outline,
-                    size: 18, color: scheme.onSurfaceVariant),
+                Icon(
+                  Icons.favorite_outline,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: AppTheme.spacingSm),
                 Expanded(
                   child: Column(
@@ -884,17 +915,16 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
                       Text(
                         'Rhythm',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                       Text(
                         rhythm == null
                             ? context.l10n.rhythmUnclassified
                             : ecgRhythmLabel(rhythm, context.l10n),
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         // The classifier's own caveat, carried to the screen
@@ -902,8 +932,8 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
                         'Rule-based summary of rate and regularity — not a '
                         'diagnosis.',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -923,18 +953,16 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
       children: [
         Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: scheme.onSurfaceVariant),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
         RichText(
           text: TextSpan(
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             children: [
               // An em dash where nothing was measured. Showing a plausible
               // number for a reading the signal never produced is the one
@@ -944,9 +972,9 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
                 TextSpan(
                   text: ' $unit',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.normal,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.normal,
+                  ),
                 ),
             ],
           ),
@@ -966,8 +994,9 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
         AppOutlinedButton(
           label: _recording ? 'Stop recording' : 'Record strip',
           icon: Icon(_recording ? Icons.stop : Icons.fiber_manual_record),
-          foregroundColor:
-              _recording ? AppTheme.errorRed : AppTheme.primaryGreen,
+          foregroundColor: _recording
+              ? AppTheme.errorRed
+              : AppTheme.primaryGreen,
           borderColor: _recording ? AppTheme.errorRed : AppTheme.primaryGreen,
           onPressed: _toggleRecording,
         ),
@@ -1001,8 +1030,7 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
             icon: Icons.warning_amber_rounded,
             color: AppTheme.warningAmber,
           ),
-        if (_recordNote != null)
-          _note(_recordNote!, icon: Icons.info_outline),
+        if (_recordNote != null) _note(_recordNote!, icon: Icons.info_outline),
         const SizedBox(height: 12),
         AppButton(
           label: 'Save strip',
@@ -1020,7 +1048,11 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
     );
   }
 
-  Widget _note(String text, {IconData icon = Icons.info_outline, Color? color}) {
+  Widget _note(
+    String text, {
+    IconData icon = Icons.info_outline,
+    Color? color,
+  }) {
     final tint = color ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.only(top: AppTheme.spacingSm),
@@ -1032,10 +1064,9 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
           Expanded(
             child: Text(
               text,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: tint),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: tint),
             ),
           ),
         ],
@@ -1062,13 +1093,13 @@ class _EcgMetrics {
   /// Peaks were found, but not at a rate a heart beats at — artefacts, so the
   /// count is reported and every derived number is withheld.
   const _EcgMetrics.unphysiologic(this.beats)
-      : heartRateBpm = null,
-        rrIntervalMs = null,
-        qrsDurationMs = null,
-        rrScatterMs = null,
-        rrIntervals = const [],
-        peakIndices = const [],
-        unphysiologic = true;
+    : heartRateBpm = null,
+      rrIntervalMs = null,
+      qrsDurationMs = null,
+      rrScatterMs = null,
+      rrIntervals = const [],
+      peakIndices = const [],
+      unphysiologic = true;
 
   static const _EcgMetrics none = _EcgMetrics();
 
@@ -1189,7 +1220,10 @@ class _EcgStripPainter extends CustomPainter {
     for (var i = 0; i <= 10; i++) {
       final y = i * rowHeight;
       canvas.drawLine(
-          Offset(0, y), Offset(size.width, y), i % 5 == 0 ? majorPaint : gridPaint);
+        Offset(0, y),
+        Offset(size.width, y),
+        i % 5 == 0 ? majorPaint : gridPaint,
+      );
     }
 
     if (waveform.length < 2) return;

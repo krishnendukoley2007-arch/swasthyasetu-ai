@@ -5,22 +5,29 @@ import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 /// Tabular-figure numeric style — digits share one width so a live readout
 /// doesn't jitter horizontally as it changes. Every number on a monitoring
 /// surface should use this.
-TextStyle numTab(double size, Color color,
-        {FontWeight weight = FontWeight.w700}) =>
-    TextStyle(
-      fontSize: size,
-      fontWeight: weight,
-      letterSpacing: -0.3,
-      height: 1.05,
-      color: color,
-      fontFeatures: const [FontFeature.tabularFigures()],
-    );
+TextStyle numTab(
+  double size,
+  Color color, {
+  FontWeight weight = FontWeight.w700,
+}) => TextStyle(
+  fontSize: size,
+  fontWeight: weight,
+  letterSpacing: -0.3,
+  height: 1.05,
+  color: color,
+  fontFeatures: const [FontFeature.tabularFigures()],
+);
 
 /// A pulsing placeholder block used instead of a spinner while content loads.
 /// Mimics the shape of the incoming layout so the page doesn't jump when data
 /// arrives.
 class ClinicalSkeleton extends StatefulWidget {
-  const ClinicalSkeleton({super.key, this.width, this.height = 16, this.radius = 10});
+  const ClinicalSkeleton({
+    super.key,
+    this.width,
+    this.height = 16,
+    this.radius = 10,
+  });
   final double? width;
   final double height;
   final double radius;
@@ -32,8 +39,9 @@ class ClinicalSkeleton extends StatefulWidget {
 class _ClinicalSkeletonState extends State<ClinicalSkeleton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1100))
-    ..repeat(reverse: true);
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat(reverse: true);
 
   @override
   void dispose() {
@@ -69,21 +77,26 @@ class Overline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.4,
-          color: color ?? ClinicalPalette.muted(context),
-        ),
-      );
+    text,
+    style: TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 1.4,
+      color: color ?? ClinicalPalette.muted(context),
+    ),
+  );
 }
 
 /// A value that is meaningless without its unit — so the unit is part of the
 /// same widget, baseline-aligned, in reduced size.
 class UnitNumber extends StatelessWidget {
-  const UnitNumber(this.value, this.unit,
-      {super.key, this.size = 26, this.color});
+  const UnitNumber(
+    this.value,
+    this.unit, {
+    super.key,
+    this.size = 26,
+    this.color,
+  });
   final String value;
   final String unit;
   final double size;
@@ -91,27 +104,32 @@ class UnitNumber extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(value,
-              style: numTab(size, color ??
-                  (Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFFE7EEF8)
-                      : const Color(0xFF0F1B2D)))),
-          const SizedBox(width: 3),
-          Text(
-            unit,
-            style: TextStyle(
-              fontSize: size * 0.42,
-              fontWeight: FontWeight.w600,
-              color: ClinicalPalette.muted(context),
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.baseline,
+    textBaseline: TextBaseline.alphabetic,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        value,
+        style: numTab(
+          size,
+          color ??
+              (Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFFE7EEF8)
+                  : const Color(0xFF0F1B2D)),
+        ),
+      ),
+      const SizedBox(width: 3),
+      Text(
+        unit,
+        style: TextStyle(
+          fontSize: size * 0.42,
+          fontWeight: FontWeight.w600,
+          color: ClinicalPalette.muted(context),
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    ],
+  );
 }
 
 /// Where a number came from. A reading and a simulation must never share a
@@ -185,8 +203,8 @@ class DeltaChip extends StatelessWidget {
             neutral
                 ? Icons.remove_rounded
                 : delta > 0
-                    ? Icons.arrow_upward_rounded
-                    : Icons.arrow_downward_rounded,
+                ? Icons.arrow_upward_rounded
+                : Icons.arrow_downward_rounded,
             size: 11,
             color: col,
           ),

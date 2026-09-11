@@ -51,68 +51,89 @@ class EnvironmentalRules {
 
     // Rain & Flood Hazard Evaluation
     if (reading.isHeavyRainOrFloodRisk) {
-      out.add(EnvironmentAdvisory(
-        level: AdvisoryLevel.danger,
-        id: 'rain_flood_danger',
-        title: 'Heavy Rain & Flood Alert (${reading.weatherDescription})',
-        body: 'Heavy rainfall (${reading.precipitationMm > 0 ? '${reading.precipitationMm.toStringAsFixed(1)} mm' : reading.weatherDescription}) indicates high risk of flash floods and waterlogging. Avoid low-lying areas, keep drinking water stored, and stay indoors.',
-      ));
+      out.add(
+        EnvironmentAdvisory(
+          level: AdvisoryLevel.danger,
+          id: 'rain_flood_danger',
+          title: 'Heavy Rain & Flood Alert (${reading.weatherDescription})',
+          body:
+              'Heavy rainfall (${reading.precipitationMm > 0 ? '${reading.precipitationMm.toStringAsFixed(1)} mm' : reading.weatherDescription}) indicates high risk of flash floods and waterlogging. Avoid low-lying areas, keep drinking water stored, and stay indoors.',
+        ),
+      );
     } else if (reading.isRainy) {
-      out.add(EnvironmentAdvisory(
-        level: AdvisoryLevel.info,
-        id: 'rain_info',
-        title: 'Rainy Weather (${reading.weatherDescription})',
-        body: 'Rainy conditions reported (${reading.precipitationMm > 0 ? '${reading.precipitationMm.toStringAsFixed(1)} mm rain' : 'active rainfall'}). Stay dry, keep warm, and avoid standing water.',
-      ));
+      out.add(
+        EnvironmentAdvisory(
+          level: AdvisoryLevel.info,
+          id: 'rain_info',
+          title: 'Rainy Weather (${reading.weatherDescription})',
+          body:
+              'Rainy conditions reported (${reading.precipitationMm > 0 ? '${reading.precipitationMm.toStringAsFixed(1)} mm rain' : 'active rainfall'}). Stay dry, keep warm, and avoid standing water.',
+        ),
+      );
     }
 
     // Thunderstorm Hazard Evaluation
-    if (reading.weatherCode == 95 || reading.weatherCode == 96 || reading.weatherCode == 99) {
-      out.add(EnvironmentAdvisory(
-        level: AdvisoryLevel.danger,
-        id: 'thunderstorm_warning',
-        title: 'Severe Thunderstorm Alert (${reading.weatherDescription})',
-        body: 'Thunderstorms and lightning reported. Stay indoors away from metallic structures, trees, and open ground. Unplug delicate electronics.',
-      ));
+    if (reading.weatherCode == 95 ||
+        reading.weatherCode == 96 ||
+        reading.weatherCode == 99) {
+      out.add(
+        EnvironmentAdvisory(
+          level: AdvisoryLevel.danger,
+          id: 'thunderstorm_warning',
+          title: 'Severe Thunderstorm Alert (${reading.weatherDescription})',
+          body:
+              'Thunderstorms and lightning reported. Stay indoors away from metallic structures, trees, and open ground. Unplug delicate electronics.',
+        ),
+      );
     }
 
     // Dense Fog / Low Visibility Evaluation
     if (reading.weatherCode == 45 || reading.weatherCode == 48) {
-      out.add(EnvironmentAdvisory(
-        level: AdvisoryLevel.warning,
-        id: 'fog_warning',
-        title: 'Dense Fog & Low Visibility (${reading.weatherDescription})',
-        body: 'Dense fog lowers visibility and traps surface pollutants. Drive slowly with low beams and wear a mask if vulnerable to respiratory distress.',
-      ));
+      out.add(
+        EnvironmentAdvisory(
+          level: AdvisoryLevel.warning,
+          id: 'fog_warning',
+          title: 'Dense Fog & Low Visibility (${reading.weatherDescription})',
+          body:
+              'Dense fog lowers visibility and traps surface pollutants. Drive slowly with low beams and wear a mask if vulnerable to respiratory distress.',
+        ),
+      );
     }
 
     // Snow & Extreme Cold Evaluation
-    if (reading.temperatureC <= 5.0 || (reading.weatherCode >= 71 && reading.weatherCode <= 86)) {
-      out.add(EnvironmentAdvisory(
-        level: AdvisoryLevel.warning,
-        id: 'cold_snow_warning',
-        title: 'Cold Weather & Snow Alert (${reading.weatherDescription})',
-        body: 'Cold temperature (${reading.temperatureC.round()}°C) and snow conditions. Dress in warm layered clothing, protect extremities, and prevent hypothermia.',
-      ));
+    if (reading.temperatureC <= 5.0 ||
+        (reading.weatherCode >= 71 && reading.weatherCode <= 86)) {
+      out.add(
+        EnvironmentAdvisory(
+          level: AdvisoryLevel.warning,
+          id: 'cold_snow_warning',
+          title: 'Cold Weather & Snow Alert (${reading.weatherDescription})',
+          body:
+              'Cold temperature (${reading.temperatureC.round()}°C) and snow conditions. Dress in warm layered clothing, protect extremities, and prevent hypothermia.',
+        ),
+      );
     }
 
     // When heat AND air are both bad, one extra line on the combined risk is
     // worth more than a third card.
     if ((heat == AdvisoryLevel.danger || heat == AdvisoryLevel.warning) &&
         out.length > 1) {
-      out.add(const EnvironmentAdvisory(
-        level: AdvisoryLevel.warning,
-        id: 'combined_heat_air',
-        title: 'Heat and poor air together',
-        body:
-            'Hot, polluted air strains the heart and lungs at once. Stay '
-            'indoors in the afternoon, drink water every hour, and keep '
-            'windows closed if outdoor air is worse than indoor.',
-      ));
+      out.add(
+        const EnvironmentAdvisory(
+          level: AdvisoryLevel.warning,
+          id: 'combined_heat_air',
+          title: 'Heat and poor air together',
+          body:
+              'Hot, polluted air strains the heart and lungs at once. Stay '
+              'indoors in the afternoon, drink water every hour, and keep '
+              'windows closed if outdoor air is worse than indoor.',
+        ),
+      );
     }
 
-    out.sort((a, b) =>
-        _ordered.indexOf(a.level).compareTo(_ordered.indexOf(b.level)));
+    out.sort(
+      (a, b) => _ordered.indexOf(a.level).compareTo(_ordered.indexOf(b.level)),
+    );
     return out;
   }
 
@@ -137,14 +158,18 @@ class EnvironmentalRules {
     List<BaselineNote> notes,
   ) {
     final heatActive = advisories.any(
-        (a) => a.id.startsWith('heat_') && a.level != AdvisoryLevel.info);
+      (a) => a.id.startsWith('heat_') && a.level != AdvisoryLevel.info,
+    );
     final hrAbove = notes.any(
-        (n) => n.metricId == 'hr' && n.significant && n.delta > 0);
+      (n) => n.metricId == 'hr' && n.significant && n.delta > 0,
+    );
 
-    final airActive = advisories
-        .any((a) => a.id.startsWith('air_') && a.level != AdvisoryLevel.info);
+    final airActive = advisories.any(
+      (a) => a.id.startsWith('air_') && a.level != AdvisoryLevel.info,
+    );
     final spo2Dropped = notes.any(
-        (n) => n.metricId == 'spo2' && n.significant && n.delta < 0);
+      (n) => n.metricId == 'spo2' && n.significant && n.delta < 0,
+    );
 
     if (!heatActive && !airActive) return advisories;
 
@@ -161,7 +186,8 @@ class EnvironmentalRules {
           level: AdvisoryLevel.warning,
           id: 'combined_heat_vitals',
           title: 'Your body may be feeling this heat',
-          body: 'Your pulse is about $bpm bpm above your usual and today is '
+          body:
+              'Your pulse is about $bpm bpm above your usual and today is '
               'hot. That combination can be early heat strain: get to shade '
               'or indoors, sip water every few minutes, rest, and check '
               'yourself again in half an hour. If you get confused, faint, or '
@@ -176,7 +202,8 @@ class EnvironmentalRules {
           level: AdvisoryLevel.warning,
           id: 'combined_air_vitals',
           title: 'Your breathing may be feeling this air',
-          body: 'Your blood-oxygen is below your usual while the air quality '
+          body:
+              'Your blood-oxygen is below your usual while the air quality '
               'is poor. Stay indoors, avoid exertion, and if breathing feels '
               'hard or your lips or fingertips darken, seek medical help '
               'immediately.',
@@ -197,45 +224,51 @@ class EnvironmentalRules {
   }
 
   static EnvironmentAdvisory _heatAdvisory(
-      AdvisoryLevel level, EnvironmentReading r, bool vulnerable) {
+    AdvisoryLevel level,
+    EnvironmentReading r,
+    bool vulnerable,
+  ) {
     final feels = r.apparentTemperatureC.round();
     final who = vulnerable
         ? ' You are in the group heat affects first — take this a step more '
-            'seriously than others around you.'
+              'seriously than others around you.'
         : '';
     return switch (level) {
       AdvisoryLevel.danger => EnvironmentAdvisory(
-          level: level,
-          id: 'heat_danger',
-          title: 'Extreme heat danger (feels like $feels°C)',
-          body: 'Stay indoors. Drink water every 15 minutes even if not '
-              'thirsty. Cancel all outdoor activity. Cool yourself with wet '
-              'cloths, fans, or cool showers. Check on elderly and children '
-              'every 30 minutes. Confusion, fainting, or hot dry skin = '
-              'call 108 immediately.$who',
-        ),
+        level: level,
+        id: 'heat_danger',
+        title: 'Extreme heat danger (feels like $feels°C)',
+        body:
+            'Stay indoors. Drink water every 15 minutes even if not '
+            'thirsty. Cancel all outdoor activity. Cool yourself with wet '
+            'cloths, fans, or cool showers. Check on elderly and children '
+            'every 30 minutes. Confusion, fainting, or hot dry skin = '
+            'call 108 immediately.$who',
+      ),
       AdvisoryLevel.warning => EnvironmentAdvisory(
-          level: level,
-          id: 'heat_warning',
-          title: 'Dangerous heat (feels like $feels°C)',
-          body: 'Stay indoors as much as possible, drink water regularly even '
-              'if not thirsty, avoid outdoor work in the afternoon, and check '
-              'on elderly and children.$who',
-        ),
+        level: level,
+        id: 'heat_warning',
+        title: 'Dangerous heat (feels like $feels°C)',
+        body:
+            'Stay indoors as much as possible, drink water regularly even '
+            'if not thirsty, avoid outdoor work in the afternoon, and check '
+            'on elderly and children.$who',
+      ),
       AdvisoryLevel.advice => EnvironmentAdvisory(
-          level: level,
-          id: 'heat_advice',
-          title: 'Hot day (feels like $feels°C)',
-          body: 'Drink a glass of water every hour, schedule hard outdoor work '
-              'for morning or evening, and watch for headache or dizziness '
-              '— early heat-stress signs.$who',
-        ),
+        level: level,
+        id: 'heat_advice',
+        title: 'Hot day (feels like $feels°C)',
+        body:
+            'Drink a glass of water every hour, schedule hard outdoor work '
+            'for morning or evening, and watch for headache or dizziness '
+            '— early heat-stress signs.$who',
+      ),
       AdvisoryLevel.info => const EnvironmentAdvisory(
-          level: AdvisoryLevel.info,
-          id: 'heat_info',
-          title: 'Warm conditions',
-          body: 'Ordinary warmth — keep normal hydration habits.',
-        ),
+        level: AdvisoryLevel.info,
+        id: 'heat_info',
+        title: 'Warm conditions',
+        body: 'Ordinary warmth — keep normal hydration habits.',
+      ),
     };
   }
 
@@ -255,42 +288,49 @@ class EnvironmentalRules {
   }
 
   static EnvironmentAdvisory _airAdvisory(
-      AdvisoryLevel level, int aqi, bool vulnerable) {
+    AdvisoryLevel level,
+    int aqi,
+    bool vulnerable,
+  ) {
     final who = vulnerable
         ? ' With your health history, this air level means extra care for you.'
         : '';
     return switch (level) {
       AdvisoryLevel.danger => EnvironmentAdvisory(
-          level: level,
-          id: 'air_hazardous',
-          title: 'Hazardous air (AQI $aqi)',
-          body: 'Stay indoors, use air purifiers if available, avoid all '
-              'outdoor activity, and use your reliever inhaler as prescribed '
-              'if you have asthma. This level is rare and indicates a severe '
-              'pollution event.$who',
-        ),
+        level: level,
+        id: 'air_hazardous',
+        title: 'Hazardous air (AQI $aqi)',
+        body:
+            'Stay indoors, use air purifiers if available, avoid all '
+            'outdoor activity, and use your reliever inhaler as prescribed '
+            'if you have asthma. This level is rare and indicates a severe '
+            'pollution event.$who',
+      ),
       AdvisoryLevel.warning => EnvironmentAdvisory(
-          level: level,
-          id: 'air_bad',
-          title: 'Unhealthy air (AQI $aqi)',
-          body: 'Avoid outdoor exercise, keep windows closed, wear a '
-              'well-fitting mask if you must go out, and use your reliever '
-              'inhaler as prescribed if you have asthma.$who',
-        ),
+        level: level,
+        id: 'air_bad',
+        title: 'Unhealthy air (AQI $aqi)',
+        body:
+            'Avoid outdoor exercise, keep windows closed, wear a '
+            'well-fitting mask if you must go out, and use your reliever '
+            'inhaler as prescribed if you have asthma.$who',
+      ),
       AdvisoryLevel.advice => EnvironmentAdvisory(
-          level: level,
-          id: 'air_sensitive',
-          title: 'Air may bother sensitive people (AQI $aqi)',
-          body: 'People with asthma, heart conditions or breathing trouble '
-              'should cut outdoor exertion today.$who',
-        ),
+        level: level,
+        id: 'air_sensitive',
+        title: 'Air may bother sensitive people (AQI $aqi)',
+        body:
+            'People with asthma, heart conditions or breathing trouble '
+            'should cut outdoor exertion today.$who',
+      ),
       AdvisoryLevel.info => EnvironmentAdvisory(
-          level: level,
-          id: 'air_moderate',
-          title: 'Moderate air (AQI $aqi)',
-          body: 'Acceptable for most; if you are sensitive, notice any '
-              'cough or breathing discomfort.$who',
-        ),
+        level: level,
+        id: 'air_moderate',
+        title: 'Moderate air (AQI $aqi)',
+        body:
+            'Acceptable for most; if you are sensitive, notice any '
+            'cough or breathing discomfort.$who',
+      ),
     };
   }
 }

@@ -100,12 +100,17 @@ class TrendEngine {
   }) {
     final cutoff = DateTime.now().subtract(window);
     // Zero is the not-measured sentinel on these columns — never plot it.
-    final points = screenings
-        .where((s) =>
-            !s.timestamp.isBefore(cutoff) && pick(s) >= minValue && pick(s) > 0)
-        .map((s) => TrendPoint(s.timestamp, pick(s)))
-        .toList()
-      ..sort((a, b) => a.at.compareTo(b.at)); // oldest first, for the chart
+    final points =
+        screenings
+            .where(
+              (s) =>
+                  !s.timestamp.isBefore(cutoff) &&
+                  pick(s) >= minValue &&
+                  pick(s) > 0,
+            )
+            .map((s) => TrendPoint(s.timestamp, pick(s)))
+            .toList()
+          ..sort((a, b) => a.at.compareTo(b.at)); // oldest first, for the chart
 
     if (points.isEmpty) {
       return const VitalTrend(points: [], average: 0);

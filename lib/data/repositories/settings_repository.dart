@@ -128,10 +128,10 @@ class AppSettingsSnapshot {
 
   factory AppSettingsSnapshot.fromMap(Map<String, String> m) {
     bool flag(String key, bool fallback) => switch (m[key]) {
-          'true' => true,
-          'false' => false,
-          _ => fallback,
-        };
+      'true' => true,
+      'false' => false,
+      _ => fallback,
+    };
 
     return AppSettingsSnapshot(
       locale: Locale(m[SettingKeys.locale] ?? 'en'),
@@ -153,7 +153,7 @@ class AppSettingsSnapshot {
       demoMode: flag(SettingKeys.demoMode, true),
       storageBudgetBytes:
           int.tryParse(m[SettingKeys.storageBudgetBytes] ?? '') ??
-              200 * 1024 * 1024,
+          200 * 1024 * 1024,
       lastSyncAt: DateTime.tryParse(m[SettingKeys.lastSyncAt] ?? ''),
       geminiApiKey: m[SettingKeys.geminiApiKey] ?? '',
       audience: Audience.fromStorage(m[SettingKeys.audience]),
@@ -161,16 +161,16 @@ class AppSettingsSnapshot {
   }
 
   static ThemeMode _themeModeFrom(String? raw) => switch (raw) {
-        'light' => ThemeMode.light,
-        'dark' => ThemeMode.dark,
-        _ => ThemeMode.system,
-      };
+    'light' => ThemeMode.light,
+    'dark' => ThemeMode.dark,
+    _ => ThemeMode.system,
+  };
 
   static String themeModeToStorage(ThemeMode mode) => switch (mode) {
-        ThemeMode.light => 'light',
-        ThemeMode.dark => 'dark',
-        ThemeMode.system => 'system',
-      };
+    ThemeMode.light => 'light',
+    ThemeMode.dark => 'dark',
+    ThemeMode.system => 'system',
+  };
 
   bool get hasWorkerProfile => workerName.trim().isNotEmpty;
 
@@ -195,29 +195,28 @@ class AppSettingsSnapshot {
     DateTime? lastSyncAt,
     String? geminiApiKey,
     Audience? audience,
-  }) =>
-      AppSettingsSnapshot(
-        locale: locale ?? this.locale,
-        themeMode: themeMode ?? this.themeMode,
-        highContrast: highContrast ?? this.highContrast,
-        reducedMotion: reducedMotion ?? this.reducedMotion,
-        workerName: workerName ?? this.workerName,
-        workerId: workerId ?? this.workerId,
-        facility: facility ?? this.facility,
-        locationConsent: locationConsent ?? this.locationConsent,
-        aiConsent: aiConsent ?? this.aiConsent,
-        syncConsent: syncConsent ?? this.syncConsent,
-        envLocationConsent: envLocationConsent ?? this.envLocationConsent,
-        fallDetection: fallDetection ?? this.fallDetection,
-        autoSuggestSos: autoSuggestSos ?? this.autoSuggestSos,
-        sosCountdownSeconds: sosCountdownSeconds ?? this.sosCountdownSeconds,
-        lastDeviceId: lastDeviceId ?? this.lastDeviceId,
-        demoMode: demoMode ?? this.demoMode,
-        storageBudgetBytes: storageBudgetBytes ?? this.storageBudgetBytes,
-        lastSyncAt: lastSyncAt ?? this.lastSyncAt,
-        geminiApiKey: geminiApiKey ?? this.geminiApiKey,
-        audience: audience ?? this.audience,
-      );
+  }) => AppSettingsSnapshot(
+    locale: locale ?? this.locale,
+    themeMode: themeMode ?? this.themeMode,
+    highContrast: highContrast ?? this.highContrast,
+    reducedMotion: reducedMotion ?? this.reducedMotion,
+    workerName: workerName ?? this.workerName,
+    workerId: workerId ?? this.workerId,
+    facility: facility ?? this.facility,
+    locationConsent: locationConsent ?? this.locationConsent,
+    aiConsent: aiConsent ?? this.aiConsent,
+    syncConsent: syncConsent ?? this.syncConsent,
+    envLocationConsent: envLocationConsent ?? this.envLocationConsent,
+    fallDetection: fallDetection ?? this.fallDetection,
+    autoSuggestSos: autoSuggestSos ?? this.autoSuggestSos,
+    sosCountdownSeconds: sosCountdownSeconds ?? this.sosCountdownSeconds,
+    lastDeviceId: lastDeviceId ?? this.lastDeviceId,
+    demoMode: demoMode ?? this.demoMode,
+    storageBudgetBytes: storageBudgetBytes ?? this.storageBudgetBytes,
+    lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+    geminiApiKey: geminiApiKey ?? this.geminiApiKey,
+    audience: audience ?? this.audience,
+  );
 }
 
 class SettingsRepository {
@@ -256,9 +255,9 @@ class SettingsRepository {
       setString(SettingKeys.locale, locale.languageCode);
 
   Future<void> setThemeMode(ThemeMode mode) => setString(
-        SettingKeys.themeMode,
-        AppSettingsSnapshot.themeModeToStorage(mode),
-      );
+    SettingKeys.themeMode,
+    AppSettingsSnapshot.themeModeToStorage(mode),
+  );
 
   Future<void> setHighContrast(bool on) =>
       setBool(SettingKeys.highContrast, on);

@@ -77,21 +77,20 @@ class ScreeningDraft {
     String? symptomNotes,
     DateTime? startedAt,
     String? savedScreeningId,
-  }) =>
-      ScreeningDraft(
-        patient: patient ?? this.patient,
-        deviceId: deviceId ?? this.deviceId,
-        deviceName: deviceName ?? this.deviceName,
-        isDemoDevice: isDemoDevice ?? this.isDemoDevice,
-        sample: sample ?? this.sample,
-        ecgSamples: ecgSamples ?? this.ecgSamples,
-        ecgSampleRate: ecgSampleRate ?? this.ecgSampleRate,
-        symptoms: symptoms ?? this.symptoms,
-        symptomDuration: symptomDuration ?? this.symptomDuration,
-        symptomNotes: symptomNotes ?? this.symptomNotes,
-        startedAt: startedAt ?? this.startedAt,
-        savedScreeningId: savedScreeningId ?? this.savedScreeningId,
-      );
+  }) => ScreeningDraft(
+    patient: patient ?? this.patient,
+    deviceId: deviceId ?? this.deviceId,
+    deviceName: deviceName ?? this.deviceName,
+    isDemoDevice: isDemoDevice ?? this.isDemoDevice,
+    sample: sample ?? this.sample,
+    ecgSamples: ecgSamples ?? this.ecgSamples,
+    ecgSampleRate: ecgSampleRate ?? this.ecgSampleRate,
+    symptoms: symptoms ?? this.symptoms,
+    symptomDuration: symptomDuration ?? this.symptomDuration,
+    symptomNotes: symptomNotes ?? this.symptomNotes,
+    startedAt: startedAt ?? this.startedAt,
+    savedScreeningId: savedScreeningId ?? this.savedScreeningId,
+  );
 }
 
 class ScreeningDraftController extends StateNotifier<ScreeningDraft> {
@@ -134,11 +133,7 @@ class ScreeningDraftController extends StateNotifier<ScreeningDraft> {
   /// forces the draft to demo and cannot be undone here — provenance only ever
   /// moves towards "not a real reading", so a synthetic strip cannot launder a
   /// screening into looking measured.
-  void setEcg(
-    List<int> samples, {
-    int? sampleRate,
-    bool generated = false,
-  }) {
+  void setEcg(List<int> samples, {int? sampleRate, bool generated = false}) {
     state = state.copyWith(
       ecgSamples: samples,
       ecgSampleRate: sampleRate,
@@ -147,11 +142,7 @@ class ScreeningDraftController extends StateNotifier<ScreeningDraft> {
     );
   }
 
-  void setSymptoms(
-    List<String> symptoms, {
-    String? duration,
-    String? notes,
-  }) {
+  void setSymptoms(List<String> symptoms, {String? duration, String? notes}) {
     state = state.copyWith(
       symptoms: symptoms,
       symptomDuration: duration,
@@ -168,5 +159,5 @@ class ScreeningDraftController extends StateNotifier<ScreeningDraft> {
 
 final screeningDraftProvider =
     StateNotifierProvider<ScreeningDraftController, ScreeningDraft>(
-  (ref) => ScreeningDraftController(),
-);
+      (ref) => ScreeningDraftController(),
+    );

@@ -30,7 +30,10 @@ class AppPageTransitions {
               end: Offset.zero,
             ).animate(curvedAnimation),
             child: ScaleTransition(
-              scale: Tween<double>(begin: 0.95, end: 1.0).animate(curvedAnimation),
+              scale: Tween<double>(
+                begin: 0.95,
+                end: 1.0,
+              ).animate(curvedAnimation),
               child: child,
             ),
           ),
@@ -108,10 +111,7 @@ class AppPageTransitions {
         );
         return ScaleTransition(
           scale: Tween<double>(begin: 0.9, end: 1.0).animate(curvedAnimation),
-          child: FadeTransition(
-            opacity: curvedAnimation,
-            child: child,
-          ),
+          child: FadeTransition(opacity: curvedAnimation, child: child),
         );
       },
     );
@@ -159,7 +159,13 @@ class AppHeroController {
     return Hero(
       tag: tag,
       flightShuttleBuilder: flightShuttleBuilder
-          ? (context, animation, flightDirection, fromHeroContext, toHeroContext) {
+          ? (
+              context,
+              animation,
+              flightDirection,
+              fromHeroContext,
+              toHeroContext,
+            ) {
               return DefaultTextStyle(
                 style: DefaultTextStyle.of(context).style,
                 child: toHeroContext.widget,
@@ -261,13 +267,13 @@ class AppStaggeredList extends StatelessWidget {
   /// animation goes *inside* it rather than around it.
   Widget _animate(int index, Widget child) {
     Widget staggered(Widget inner) => _StaggeredItem(
-          index: index,
-          duration: duration,
-          delay: delay,
-          curve: curve,
-          startOffset: startOffset,
-          child: inner,
-        );
+      index: index,
+      duration: duration,
+      delay: delay,
+      curve: curve,
+      startOffset: startOffset,
+      child: inner,
+    );
 
     if (child is Flexible) {
       return Flexible(
@@ -312,7 +318,8 @@ class _StaggeredItem extends StatefulWidget {
   State<_StaggeredItem> createState() => _StaggeredItemState();
 }
 
-class _StaggeredItemState extends State<_StaggeredItem> with SingleTickerProviderStateMixin {
+class _StaggeredItemState extends State<_StaggeredItem>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -321,13 +328,11 @@ class _StaggeredItemState extends State<_StaggeredItem> with SingleTickerProvide
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve),
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
     _slideAnimation = Tween<Offset>(
       begin: Offset(0, widget.startOffset),
       end: Offset.zero,
@@ -351,10 +356,7 @@ class _StaggeredItemState extends State<_StaggeredItem> with SingleTickerProvide
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: widget.child,
-      ),
+      child: SlideTransition(position: _slideAnimation, child: widget.child),
     );
   }
 }
@@ -379,13 +381,15 @@ class AppShimmer extends StatefulWidget {
   State<AppShimmer> createState() => _AppShimmerState();
 }
 
-class _AppShimmerState extends State<AppShimmer> with SingleTickerProviderStateMixin {
+class _AppShimmerState extends State<AppShimmer>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: widget.period)..repeat();
+    _controller = AnimationController(vsync: this, duration: widget.period)
+      ..repeat();
   }
 
   @override
@@ -397,8 +401,12 @@ class _AppShimmerState extends State<AppShimmer> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final baseColor = widget.baseColor ?? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
-    final highlightColor = widget.highlightColor ?? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8);
+    final baseColor =
+        widget.baseColor ??
+        theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+    final highlightColor =
+        widget.highlightColor ??
+        theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -444,8 +452,11 @@ class AppSkeleton extends StatelessWidget {
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            borderRadius: borderRadius ?? BorderRadius.circular(AppTheme.radiusMd),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            borderRadius:
+                borderRadius ?? BorderRadius.circular(AppTheme.radiusMd),
           ),
         ),
       ),
@@ -474,7 +485,9 @@ class AppSkeletonList extends StatelessWidget {
       child: Column(
         children: List.generate(itemCount, (index) {
           return Padding(
-            padding: EdgeInsets.only(bottom: index == itemCount - 1 ? 0 : spacing),
+            padding: EdgeInsets.only(
+              bottom: index == itemCount - 1 ? 0 : spacing,
+            ),
             child: AppSkeleton(
               height: itemHeight,
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -507,8 +520,10 @@ class AppRippleEffect extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final rippleColor = color ?? theme.colorScheme.primary.withValues(alpha: 0.3);
-    final effectiveBorderRadius = borderRadius ?? BorderRadius.circular(AppTheme.radiusMd);
+    final rippleColor =
+        color ?? theme.colorScheme.primary.withValues(alpha: 0.3);
+    final effectiveBorderRadius =
+        borderRadius ?? BorderRadius.circular(AppTheme.radiusMd);
 
     return Material(
       color: Colors.transparent,
@@ -552,22 +567,20 @@ class AppPulseAnimation extends StatefulWidget {
   State<AppPulseAnimation> createState() => _AppPulseAnimationState();
 }
 
-class _AppPulseAnimationState extends State<AppPulseAnimation> with SingleTickerProviderStateMixin {
+class _AppPulseAnimationState extends State<AppPulseAnimation>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
     _scaleAnimation = Tween<double>(
       begin: widget.minScale,
       end: widget.maxScale,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-    
+
     if (widget.repeat) {
       _controller.repeat(reverse: true);
     } else {
@@ -642,7 +655,8 @@ class AppMorphingContainer extends StatefulWidget {
   State<AppMorphingContainer> createState() => _AppMorphingContainerState();
 }
 
-class _AppMorphingContainerState extends State<AppMorphingContainer> with SingleTickerProviderStateMixin {
+class _AppMorphingContainerState extends State<AppMorphingContainer>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<BorderRadius?>? _borderRadiusAnimation;
   late Animation<double>? _widthAnimation;
@@ -653,39 +667,36 @@ class _AppMorphingContainerState extends State<AppMorphingContainer> with Single
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+
     if (widget.startBorderRadius != null && widget.endBorderRadius != null) {
       _borderRadiusAnimation = BorderRadiusTween(
         begin: widget.startBorderRadius,
         end: widget.endBorderRadius,
       ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
     }
-    
+
     if (widget.startWidth != null && widget.endWidth != null) {
       _widthAnimation = Tween<double>(
         begin: widget.startWidth,
         end: widget.endWidth,
       ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
     }
-    
+
     if (widget.startHeight != null && widget.endHeight != null) {
       _heightAnimation = Tween<double>(
         begin: widget.startHeight,
         end: widget.endHeight,
       ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
     }
-    
+
     if (widget.startColors != null && widget.endColors != null) {
       _colorAnimation = ColorTween(
         begin: widget.startColors!.first,
         end: widget.endColors!.first,
       ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
     }
-    
+
     if (widget.startAlignment != null && widget.endAlignment != null) {
       _alignmentAnimation = AlignmentTween(
         begin: widget.startAlignment as Alignment,
@@ -702,7 +713,8 @@ class _AppMorphingContainerState extends State<AppMorphingContainer> with Single
 
   void forward() => _controller.forward();
   void reverse() => _controller.reverse();
-  void toggle() => _controller.isCompleted ? _controller.reverse() : _controller.forward();
+  void toggle() =>
+      _controller.isCompleted ? _controller.reverse() : _controller.forward();
 
   @override
   Widget build(BuildContext context) {
@@ -715,7 +727,10 @@ class _AppMorphingContainerState extends State<AppMorphingContainer> with Single
           alignment: _alignmentAnimation?.value,
           decoration: BoxDecoration(
             borderRadius: _borderRadiusAnimation?.value,
-            gradient: widget.startColors != null && widget.endColors != null && _colorAnimation != null
+            gradient:
+                widget.startColors != null &&
+                    widget.endColors != null &&
+                    _colorAnimation != null
                 ? LinearGradient(
                     colors: [
                       _colorAnimation!.value ?? widget.startColors!.first,
@@ -757,7 +772,8 @@ class AppParticleSystem extends StatefulWidget {
   State<AppParticleSystem> createState() => _AppParticleSystemState();
 }
 
-class _AppParticleSystemState extends State<AppParticleSystem> with SingleTickerProviderStateMixin {
+class _AppParticleSystemState extends State<AppParticleSystem>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late List<_Particle> _particles;
   final _random = Random();
@@ -765,13 +781,13 @@ class _AppParticleSystemState extends State<AppParticleSystem> with SingleTicker
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+
+    _particles = List.generate(
+      widget.particleCount,
+      (index) => _Particle.random(_random),
     );
-    
-    _particles = List.generate(widget.particleCount, (index) => _Particle.random(_random));
-    
+
     if (widget.repeat) {
       _controller.repeat();
     } else {
@@ -804,10 +820,13 @@ class _AppParticleSystemState extends State<AppParticleSystem> with SingleTicker
     final progress = _controller.value;
     final size = particle.size * (1 - progress * 0.5);
     final opacity = (1 - progress) * particle.opacity;
-    
+
     return Positioned(
       left: particle.startX + (particle.endX - particle.startX) * progress,
-      top: particle.startY + (particle.endY - particle.startY) * progress - progress * particle.height * 0.3,
+      top:
+          particle.startY +
+          (particle.endY - particle.startY) * progress -
+          progress * particle.height * 0.3,
       child: Opacity(
         opacity: opacity.clamp(0.0, 1.0),
         child: Container(
@@ -873,7 +892,8 @@ class AppConfetti extends StatefulWidget {
   State<AppConfetti> createState() => _AppConfettiState();
 }
 
-class _AppConfettiState extends State<AppConfetti> with SingleTickerProviderStateMixin {
+class _AppConfettiState extends State<AppConfetti>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late List<_ConfettiPiece> _pieces;
   final _random = Random();
@@ -881,13 +901,13 @@ class _AppConfettiState extends State<AppConfetti> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+
+    _pieces = List.generate(
+      widget.count,
+      (index) => _ConfettiPiece.random(_random, widget.colors),
     );
-    
-    _pieces = List.generate(widget.count, (index) => _ConfettiPiece.random(_random, widget.colors));
-    
+
     _controller.forward().then((_) {
       widget.onComplete?.call();
     });
@@ -914,10 +934,13 @@ class _AppConfettiState extends State<AppConfetti> with SingleTickerProviderStat
   Widget _buildPiece(_ConfettiPiece piece) {
     final progress = _controller.value;
     final x = piece.startX + (piece.endX - piece.startX) * progress;
-    final y = piece.startY + (piece.endY - piece.startY) * progress + piece.gravity * progress * progress * 0.5;
+    final y =
+        piece.startY +
+        (piece.endY - piece.startY) * progress +
+        piece.gravity * progress * progress * 0.5;
     final rotation = piece.rotation * progress * 4;
     final opacity = (1 - progress).clamp(0.0, 1.0);
-    
+
     return Positioned(
       left: x * MediaQuery.of(context).size.width,
       top: y * MediaQuery.of(context).size.height,
@@ -999,20 +1022,19 @@ class AppNumberTicker extends StatefulWidget {
   State<AppNumberTicker> createState() => _AppNumberTickerState();
 }
 
-class _AppNumberTickerState extends State<AppNumberTicker> with SingleTickerProviderStateMixin {
+class _AppNumberTickerState extends State<AppNumberTicker>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<int> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    _animation = IntTween(begin: 0, end: widget.value).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve),
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    _animation = IntTween(
+      begin: 0,
+      end: widget.value,
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
     _controller.forward();
   }
 
@@ -1020,9 +1042,10 @@ class _AppNumberTickerState extends State<AppNumberTicker> with SingleTickerProv
   void didUpdateWidget(AppNumberTicker oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
-      _animation = IntTween(begin: oldWidget.value, end: widget.value).animate(
-        CurvedAnimation(parent: _controller, curve: widget.curve),
-      );
+      _animation = IntTween(
+        begin: oldWidget.value,
+        end: widget.value,
+      ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
       _controller.forward(from: 0);
     }
   }
@@ -1073,7 +1096,8 @@ class AppTypewriterText extends StatefulWidget {
   State<AppTypewriterText> createState() => _AppTypewriterTextState();
 }
 
-class _AppTypewriterTextState extends State<AppTypewriterText> with SingleTickerProviderStateMixin {
+class _AppTypewriterTextState extends State<AppTypewriterText>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<int> _charCountAnimation;
 
@@ -1081,13 +1105,15 @@ class _AppTypewriterTextState extends State<AppTypewriterText> with SingleTicker
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: widget.characterDelay * widget.text.length + widget.initialDelay,
+      duration:
+          widget.characterDelay * widget.text.length + widget.initialDelay,
       vsync: this,
     );
-    _charCountAnimation = IntTween(begin: 0, end: widget.text.length).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.linear),
-    );
-    
+    _charCountAnimation = IntTween(
+      begin: 0,
+      end: widget.text.length,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
+
     if (widget.initialDelay > Duration.zero) {
       Future.delayed(widget.initialDelay, () {
         if (mounted) _startAnimation();
@@ -1114,7 +1140,10 @@ class _AppTypewriterTextState extends State<AppTypewriterText> with SingleTicker
     return AnimatedBuilder(
       animation: _charCountAnimation,
       builder: (context, child) {
-        final visibleText = widget.text.substring(0, _charCountAnimation.value.clamp(0, widget.text.length));
+        final visibleText = widget.text.substring(
+          0,
+          _charCountAnimation.value.clamp(0, widget.text.length),
+        );
         return Text(
           visibleText,
           style: widget.style ?? Theme.of(context).textTheme.bodyLarge,
@@ -1148,17 +1177,15 @@ class AppProgressRing extends StatefulWidget {
   State<AppProgressRing> createState() => _AppProgressRingState();
 }
 
-class _AppProgressRingState extends State<AppProgressRing> with SingleTickerProviderStateMixin {
+class _AppProgressRingState extends State<AppProgressRing>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _progressAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
     _progressAnimation = Tween<double>(begin: 0, end: widget.progress).animate(
       CurvedAnimation(parent: _controller, curve: AppTheme.curveDecelerate),
     );
@@ -1169,9 +1196,16 @@ class _AppProgressRingState extends State<AppProgressRing> with SingleTickerProv
   void didUpdateWidget(AppProgressRing oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.progress != widget.progress) {
-      _progressAnimation = Tween<double>(begin: oldWidget.progress, end: widget.progress).animate(
-        CurvedAnimation(parent: _controller, curve: AppTheme.curveDecelerate),
-      );
+      _progressAnimation =
+          Tween<double>(
+            begin: oldWidget.progress,
+            end: widget.progress,
+          ).animate(
+            CurvedAnimation(
+              parent: _controller,
+              curve: AppTheme.curveDecelerate,
+            ),
+          );
       _controller.forward(from: 0);
     }
   }
@@ -1186,7 +1220,8 @@ class _AppProgressRingState extends State<AppProgressRing> with SingleTickerProv
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final progressColor = widget.progressColor ?? theme.colorScheme.primary;
-    final backgroundColor = widget.backgroundColor ?? theme.colorScheme.surfaceContainerHighest;
+    final backgroundColor =
+        widget.backgroundColor ?? theme.colorScheme.surfaceContainerHighest;
 
     return AnimatedBuilder(
       animation: _progressAnimation,
@@ -1259,7 +1294,8 @@ class _ProgressRingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate is _ProgressRingPainter && oldDelegate.progress != progress;
+    return oldDelegate is _ProgressRingPainter &&
+        oldDelegate.progress != progress;
   }
 }
 
@@ -1307,7 +1343,10 @@ class AppWaveformPainter extends CustomPainter {
     }
 
     final path = Path();
-    final visiblePoints = (waveform.length * animationValue).round().clamp(0, waveform.length);
+    final visiblePoints = (waveform.length * animationValue).round().clamp(
+      0,
+      waveform.length,
+    );
 
     for (int i = 0; i < visiblePoints; i++) {
       final x = (i / (waveform.length - 1)) * size.width;
@@ -1345,9 +1384,9 @@ class AppWaveformPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate is AppWaveformPainter && 
-           oldDelegate.animationValue != animationValue &&
-           oldDelegate.waveform != waveform;
+    return oldDelegate is AppWaveformPainter &&
+        oldDelegate.animationValue != animationValue &&
+        oldDelegate.waveform != waveform;
   }
 }
 
@@ -1392,7 +1431,11 @@ class ReducedMotion {
     return MediaQuery.of(context).disableAnimations;
   }
 
-  static Duration getDuration(BuildContext context, Duration normal, {Duration? reduced}) {
+  static Duration getDuration(
+    BuildContext context,
+    Duration normal, {
+    Duration? reduced,
+  }) {
     return shouldReduceMotion(context) ? (reduced ?? Duration.zero) : normal;
   }
 

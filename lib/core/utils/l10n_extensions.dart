@@ -32,69 +32,69 @@ extension L10nContext on BuildContext {
 /// use, so a firmware or schema change cannot produce a blank label.
 extension AppVocabulary on AppLocalizations {
   String riskBandLabel(RiskBand band) => switch (band) {
-        RiskBand.green => triageBandGreen,
-        RiskBand.yellow => triageBandYellow,
-        RiskBand.red => triageBandRed,
-      };
+    RiskBand.green => triageBandGreen,
+    RiskBand.yellow => triageBandYellow,
+    RiskBand.red => triageBandRed,
+  };
 
   String riskBandShortLabel(RiskBand band) => switch (band) {
-        RiskBand.green => triageBandGreenShort,
-        RiskBand.yellow => triageBandYellowShort,
-        RiskBand.red => triageBandRedShort,
-      };
+    RiskBand.green => triageBandGreenShort,
+    RiskBand.yellow => triageBandYellowShort,
+    RiskBand.red => triageBandRedShort,
+  };
 
   String syncStatusLabel(String raw) => switch (raw.toUpperCase()) {
-        'SYNCED' => syncUploaded,
-        'SYNCING' => syncUploading,
-        'FAILED' => syncFailed,
-        _ => syncWaiting,
-      };
+    'SYNCED' => syncUploaded,
+    'SYNCING' => syncUploading,
+    'FAILED' => syncFailed,
+    _ => syncWaiting,
+  };
 
   String escalationText(String raw) => switch (raw.toUpperCase()) {
-        'EMERGENCY' => escalationEmergency,
-        'CLINIC_VISIT' => escalationClinicVisit,
-        'FOLLOW_UP' => escalationFollowUp,
-        _ => escalationRoutine,
-      };
+    'EMERGENCY' => escalationEmergency,
+    'CLINIC_VISIT' => escalationClinicVisit,
+    'FOLLOW_UP' => escalationFollowUp,
+    _ => escalationRoutine,
+  };
 
   String ecgRhythmText(String raw) => switch (raw.toUpperCase()) {
-        'SINUS_RHYTHM' => rhythmRegular,
-        'TACHYCARDIA' => rhythmFast,
-        'BRADYCARDIA' => rhythmSlow,
-        'IRREGULAR' => rhythmIrregular,
-        'NOISY' => rhythmNoisy,
-        _ => rhythmUnclassified,
-      };
+    'SINUS_RHYTHM' => rhythmRegular,
+    'TACHYCARDIA' => rhythmFast,
+    'BRADYCARDIA' => rhythmSlow,
+    'IRREGULAR' => rhythmIrregular,
+    'NOISY' => rhythmNoisy,
+    _ => rhythmUnclassified,
+  };
 
   String bpConfidenceText(String raw) => switch (raw.toUpperCase()) {
-        'CALIBRATED' => bpCalibrated,
-        'ESTIMATED' => bpEstimated,
-        _ => bpExperimental,
-      };
+    'CALIBRATED' => bpCalibrated,
+    'ESTIMATED' => bpEstimated,
+    _ => bpExperimental,
+  };
 
   String symptomDurationText(String raw) => switch (raw) {
-        '< 24 hours' => durationUnder24h,
-        '1-3 days' => duration1to3Days,
-        '4-7 days' => duration4to7Days,
-        '1-2 weeks' => duration1to2Weeks,
-        '> 2 weeks' => durationOver2Weeks,
-        // Free-typed or legacy values are shown as stored rather than dropped.
-        _ => raw,
-      };
+    '< 24 hours' => durationUnder24h,
+    '1-3 days' => duration1to3Days,
+    '4-7 days' => duration4to7Days,
+    '1-2 weeks' => duration1to2Weeks,
+    '> 2 weeks' => durationOver2Weeks,
+    // Free-typed or legacy values are shown as stored rather than dropped.
+    _ => raw,
+  };
 
   String symptomText(String raw) => switch (raw) {
-        'Fever' => symptomFever,
-        'Cough' => symptomCough,
-        'Dizziness' => symptomDizziness,
-        'Headache' => symptomHeadache,
-        'Breathlessness' => symptomBreathlessness,
-        'Chest discomfort' => symptomChestDiscomfort,
-        'Fatigue' => symptomFatigue,
-        'Vomiting' => symptomVomiting,
-        'Diarrhea' => symptomDiarrhea,
-        'Body pain' => symptomBodyPain,
-        'Sore throat' => symptomSoreThroat,
-        'Other' => symptomOther,
-        _ => raw,
-      };
+    'Fever' => symptomFever,
+    'Cough' => symptomCough,
+    'Dizziness' => symptomDizziness,
+    'Headache' => symptomHeadache,
+    'Breathlessness' => symptomBreathlessness,
+    'Chest discomfort' => symptomChestDiscomfort,
+    'Fatigue' => symptomFatigue,
+    'Vomiting' => symptomVomiting,
+    'Diarrhea' => symptomDiarrhea,
+    'Body pain' => symptomBodyPain,
+    'Sore throat' => symptomSoreThroat,
+    'Other' => symptomOther,
+    _ => raw,
+  };
 }

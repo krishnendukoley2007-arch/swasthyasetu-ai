@@ -166,8 +166,7 @@ void main() {
           canChooseAudienceProvider.overrideWithValue(false),
           effectiveAudienceProvider.overrideWithValue(accountAudience),
         ],
-        emergencyContactsProvider
-            .overrideWith((ref) => Stream.value(contacts)),
+        emergencyContactsProvider.overrideWith((ref) => Stream.value(contacts)),
         pairedDevicesProvider.overrideWith((ref) => Stream.value(devices)),
         bpCalibrationProvider.overrideWith((ref) async => calibration),
         storageUsageProvider.overrideWith(
@@ -179,10 +178,10 @@ void main() {
           size: const Size(360, 690),
           textScaler: TextScaler.linear(textScale),
         ),
-        child: MaterialApp(
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const SettingsScreen(),
+          home: SettingsScreen(),
         ),
       ),
     );
@@ -221,16 +220,20 @@ void main() {
       });
     }
 
-    testWidgets('the worker card holds a long facility name at 2.0x',
-        (tester) async {
-      await tester.pumpWidget(harness(
-        textScale: 2.0,
-        settings: const AppSettingsSnapshot(
-          workerName: 'Sunita Kumari Das',
-          workerId: 'ASHA-119284',
-          facility: 'Bhangar-II Block Primary Health Centre, South 24 Parganas',
+    testWidgets('the worker card holds a long facility name at 2.0x', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        harness(
+          textScale: 2.0,
+          settings: const AppSettingsSnapshot(
+            workerName: 'Sunita Kumari Das',
+            workerId: 'ASHA-119284',
+            facility:
+                'Bhangar-II Block Primary Health Centre, South 24 Parganas',
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
@@ -261,11 +264,12 @@ void main() {
       expect(controller.calls, contains('setDemoMode:false'));
     });
 
-    testWidgets('a consent switch reflects the snapshot, not a local default',
-        (tester) async {
-      await tester.pumpWidget(harness(
-        settings: const AppSettingsSnapshot(locationConsent: true),
-      ));
+    testWidgets('a consent switch reflects the snapshot, not a local default', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        harness(settings: const AppSettingsSnapshot(locationConsent: true)),
+      );
       await tester.pumpAndSettle();
 
       await reveal(tester, find.text('Tag screenings with location'));
@@ -279,8 +283,9 @@ void main() {
       expect(tile.value, isTrue);
     });
 
-    testWidgets('the language picker persists the chosen locale',
-        (tester) async {
+    testWidgets('the language picker persists the chosen locale', (
+      tester,
+    ) async {
       await tester.pumpWidget(harness());
       await tester.pumpAndSettle();
 
@@ -294,8 +299,9 @@ void main() {
       expect(controller.state.locale.languageCode, 'bn');
     });
 
-    testWidgets('the countdown picker persists the chosen seconds',
-        (tester) async {
+    testWidgets('the countdown picker persists the chosen seconds', (
+      tester,
+    ) async {
       await tester.pumpWidget(harness());
       await tester.pumpAndSettle();
 
@@ -311,15 +317,18 @@ void main() {
   });
 
   group('the nurse/patient mode is locked to the account', () {
-    testWidgets('a signed-in account cannot tap its way to the other mode',
-        (tester) async {
-      await tester.pumpWidget(harness(
-        accountAudience: Audience.nurse,
-        // Deliberately mismatched: this is the state a nurse account reached by
-        // switching the mode before the lock existed. The stored value must not
-        // win over the account.
-        settings: const AppSettingsSnapshot(audience: Audience.patient),
-      ));
+    testWidgets('a signed-in account cannot tap its way to the other mode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        harness(
+          accountAudience: Audience.nurse,
+          // Deliberately mismatched: this is the state a nurse account reached by
+          // switching the mode before the lock existed. The stored value must not
+          // win over the account.
+          settings: const AppSettingsSnapshot(audience: Audience.patient),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await reveal(tester, find.text(Audience.patient.label));
@@ -339,8 +348,9 @@ void main() {
       expect(find.byIcon(Icons.check_rounded), findsNothing);
     });
 
-    testWidgets('the locked tile says why, and points at signing in again',
-        (tester) async {
+    testWidgets('the locked tile says why, and points at signing in again', (
+      tester,
+    ) async {
       await tester.pumpWidget(harness(accountAudience: Audience.patient));
       await tester.pumpAndSettle();
 
@@ -367,8 +377,9 @@ void main() {
   });
 
   group('only the three shipped languages are offered', () {
-    testWidgets('English, Hindi and Bengali — nothing unimplemented',
-        (tester) async {
+    testWidgets('English, Hindi and Bengali — nothing unimplemented', (
+      tester,
+    ) async {
       await tester.pumpWidget(harness());
       await tester.pumpAndSettle();
 
@@ -398,11 +409,16 @@ void main() {
       expect(find.text('SOS not armed'), findsOneWidget);
     });
 
-    testWidgets('drops the warning once a reachable contact exists',
-        (tester) async {
-      await tester.pumpWidget(harness(contacts: const [
-        EmergencyContact(id: '1', name: 'Ward ANM', phone: '+919876543210'),
-      ]));
+    testWidgets('drops the warning once a reachable contact exists', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        harness(
+          contacts: const [
+            EmergencyContact(id: '1', name: 'Ward ANM', phone: '+919876543210'),
+          ],
+        ),
+      );
       await tester.pumpAndSettle();
 
       await reveal(tester, find.text('Emergency contacts'));
@@ -411,24 +427,28 @@ void main() {
       expect(find.text('SOS not armed'), findsNothing);
     });
 
-    testWidgets('an uncalibrated cuff says so rather than showing a blank date',
-        (tester) async {
-      await tester.pumpWidget(harness());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'an uncalibrated cuff says so rather than showing a blank date',
+      (tester) async {
+        await tester.pumpWidget(harness());
+        await tester.pumpAndSettle();
 
-      await reveal(tester, find.text('BP calibration'));
+        await reveal(tester, find.text('BP calibration'));
 
-      expect(find.textContaining('Not calibrated'), findsOneWidget);
-    });
+        expect(find.textContaining('Not calibrated'), findsOneWidget);
+      },
+    );
 
     testWidgets('a fresh calibration shows its readings', (tester) async {
-      await tester.pumpWidget(harness(
-        calibration: BpCalibration(
-          date: DateTime.now().subtract(const Duration(days: 1)),
-          systolic: 118,
-          diastolic: 76,
+      await tester.pumpWidget(
+        harness(
+          calibration: BpCalibration(
+            date: DateTime.now().subtract(const Duration(days: 1)),
+            systolic: 118,
+            diastolic: 76,
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       await reveal(tester, find.text('BP calibration'));
@@ -437,8 +457,9 @@ void main() {
       expect(find.textContaining('yesterday'), findsOneWidget);
     });
 
-    testWidgets('an empty device list does not claim a device is paired',
-        (tester) async {
+    testWidgets('an empty device list does not claim a device is paired', (
+      tester,
+    ) async {
       await tester.pumpWidget(harness());
       await tester.pumpAndSettle();
 
@@ -450,9 +471,9 @@ void main() {
 
   group('nothing raw reaches the screen', () {
     testWidgets('no enum or storage token is rendered', (tester) async {
-      await tester.pumpWidget(harness(
-        settings: const AppSettingsSnapshot(themeMode: ThemeMode.dark),
-      ));
+      await tester.pumpWidget(
+        harness(settings: const AppSettingsSnapshot(themeMode: ThemeMode.dark)),
+      );
       await tester.pumpAndSettle();
 
       // Sweep every Text on the screen for the shapes a raw value would take:

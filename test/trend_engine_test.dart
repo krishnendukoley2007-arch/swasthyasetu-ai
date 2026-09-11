@@ -2,8 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
 import 'package:swasthyasetu_ai/domain/rules/trend_engine.dart';
 
-Screening s(int daysAgo,
-        {int hr = 72, int spo2 = 98, double temp = 36.6}) =>
+Screening s(int daysAgo, {int hr = 72, int spo2 = 98, double temp = 36.6}) =>
     Screening(
       id: 's-$daysAgo',
       patientId: 'p1',
