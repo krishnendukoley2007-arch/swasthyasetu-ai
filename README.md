@@ -9,9 +9,9 @@
 
 <br>
 
-![Version](https://img.shields.io/badge/version-1.4.0%20%28build%205%29-2563eb?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.5.0%20%28build%207%29-2563eb?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Android-7.0%2B-3ddc84?style=for-the-badge&logo=android&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-428%20passing-16a34a?style=for-the-badge)
+![Tests](https://img.shields.io/badge/tests-446%20passing-16a34a?style=for-the-badge)
 ![Offline](https://img.shields.io/badge/works%20offline-yes-0ea5e9?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-7c3aed?style=for-the-badge)
 
@@ -79,12 +79,12 @@
 
 | | APK | Size | Architecture | Use this if… |
 |:--:|-----|:----:|--------------|--------------|
-| 🆕 | **`app-debug.apk`** | ~165 MB | Universal (all) | **← Start here. The current build — works on every Android phone.** |
-| ⚡ | `app-arm64-v8a-debug.apk` | ~92 MB | 64-bit ARM | You want a smaller download — **most phones made since 2018** |
-| 🪶 | `app-armeabi-v7a-debug.apk` | ~72 MB | 32-bit ARM | Older / budget devices |
-| 🖥️ | `app-x86_64-debug.apk` | ~78 MB | x86-64 | Android emulator or an x86 tablet |
+| 🆕 | [**`swasthyasetu-ai-release.apk`**](swasthyasetu-ai-release.apk) | ~34 MB | Release (Optimized) | **← Latest production release build — high performance & compact.** |
+| ⚡ | [**`app-releasenew.apk`**](app-releasenew.apk) | ~70 MB | Release (Full) | Latest full package with bundled offline resources & assets |
+| 🪶 | [**`SwasthyaSetu-v1.4.1.apk`**](SwasthyaSetu-v1.4.1.apk) | ~74 MB | Universal | Stable field-tested milestone APK |
+| 🛠️ | [**`Build-SwasthyaSetu-APK.ps1`**](Build-SwasthyaSetu-APK.ps1) | Script | Any | One-click PowerShell script to build fresh APK locally |
 
-**All four are the same app — `1.4.0 (build 5)`.** The universal APK just carries every architecture at once, which is why it is the largest. If you know your phone is 64-bit ARM (almost all are), `app-arm64-v8a-debug.apk` gets you the identical app for a little over half the download.
+**The latest release build is `v1.5.0 (build 7)`.** All builds are verified with automated 446 passing tests. Direct downloadable APKs are stored directly in this repository root and in [`releases/`](releases/).
 
 </div>
 
@@ -348,7 +348,7 @@ Drawn in **EasyEDA** — see [`hardware/design/circuit-schematic.jpg`](hardware/
 
 1. Install the **Arduino IDE**, then add ESP32 board support (*esp32* by Espressif, 3.x)
 2. Install libraries: **Adafruit SSD1306** and **Adafruit GFX**
-3. Open [`firmware/SSAI_SENSE_01/SSAI_SENSE_01.ino`](firmware/SSAI_SENSE_01/SSAI_SENSE_01.ino) → select board **DOIT ESP32 DEVKIT V1** → **Upload**
+3. Open [`firmware/SSAI_SENSE_final/SSAI_SENSE_final.ino`](firmware/SSAI_SENSE_final/SSAI_SENSE_final.ino) → select board **DOIT ESP32 DEVKIT V1** → **Upload**
 4. On boot the OLED runs a short self-test, then **tap the touch pad** — live HR, scrolling ECG trace, signal-quality bar and battery appear, and BLE starts advertising exactly as the app expects
 
 The live loop contains **no blocking delays**: the OLED animation, R-peak detection and BLE notifications all run off the same non-blocking scheduler, so the ECG trace never stalls while the display updates.
@@ -357,11 +357,20 @@ The live loop contains **no blocking delays**: the OLED animation, R-peak detect
 
 ---
 
-## 💻 Laptop Dashboard
+## 💻 Web & Laptop Dashboards (HTML)
 
-No phone handy? [`tools/ecg_dashboard.html`](tools/ecg_dashboard.html) is a single self-contained file — **no install, no server, no build step**.
+No phone handy? Everything runs directly in modern browsers (Chrome, Edge, Opera) with Web Bluetooth:
 
-Open it in **Chrome** or **Edge** → click **Connect** → pick the ESP32 over **Web Bluetooth** → live ECG strip and vitals render in the browser. Ideal for demos and 30-second hardware sanity checks.
+1. **Live ECG & PPG Workstation ([`tools/ecg_dashboard.html`](tools/ecg_dashboard.html))**:
+   - Single self-contained HTML file — **zero installation, zero dependencies**.
+   - Real-time **ECG Lead I** oscilloscope + **PPG plethysmography** sweep monitoring.
+   - Live heart-rate variance (RR interval), SpO₂ calculation, and **Doctor-ready PDF/Printable clinical report** generator with diagnostic ECG strip.
+   - Click **Connect** → choose the ESP32 SSAI-SENSE device → real-time monitoring begins immediately.
+
+2. **Offline Community Web Application ([`website/app.html`](website/app.html) & [`website/index.html`](website/index.html))**:
+   - Complete offline Progressive Web App (PWA) with Service Worker caching.
+   - Clinical risk engine (`website/risk-engine.js`) running local deterministic triage rules.
+   - Touch-friendly community worker interface for field screening without an Android phone.
 
 ---
 
@@ -369,12 +378,12 @@ Open it in **Chrome** or **Edge** → click **Connect** → pick the ESP32 over 
 
 ```bash
 # Prerequisites: Flutter 3.9+ SDK, Android SDK (via Android Studio)
-git clone https://github.com/krishnendukoley2007-arch/swasthyasetu-ai.git
-cd swasthyasetu-ai
+git clone https://github.com/helloworld3003/swasthya-setu-ai-private.git
+cd swasthya-setu-ai-private
 
 flutter pub get      # 📦 install dependencies
-flutter test         # ✅ 428 tests — all should pass
-flutter build apk --debug   # 📱 → build/app/outputs/flutter-apk/app-debug.apk
+flutter test         # ✅ 446 tests — all passing
+flutter build apk --release   # 📱 → build/app/outputs/flutter-apk/app-release.apk
 ```
 
 <details>
@@ -451,24 +460,19 @@ Nothing is mandatory. Every denial has a defined, non-crashing consequence.
 
 ```
 lib/
-├── core/        🔧 Services (BLE, SMS/SOS, storage, sync, MBTiles), theme, routing, providers
+├── core/        🔧 Services (BLE, SMS/SOS, storage, sync, MBTiles, PDF reports), theme, routing
 ├── data/        💾 Drift/SQLite database, repositories, row mappers
-├── domain/      🧠 Models + the deterministic triage rule engine
+├── domain/      🧠 Models + deterministic triage rule engine + clinical scenarios
 ├── features/    🎯 Per-screen modules — dashboard, patients, screening,
-│                   history, emergency, community, settings
-└── l10n/        🌐 app_en.arb / app_hi.arb / app_bn.arb — all UI strings
+│                   history, emergency, community, settings, trends
+└── l10n/        🌐 app_en.arb / app_hi.arb / app_bn.arb — full vernacular support
 
-test/            🧪 428 tests (2.0× font-scale overflow, offline-map honesty, triage rules…)
-firmware/        🔌 SSAI_SENSE_01 — ESP32 sketch: ECG, touch, OLED, battery, BLE
-tools/           💻 ecg_dashboard.html — Web-Bluetooth live ECG viewer
-hardware/
-├── design/      🎨 3D enclosure renders + circuit schematic
-├── HARDWARE.md  📖 Assembly and bring-up notes
-└── *.svg        📐 Wiring diagram
-assets/
-├── guidelines/  📚 Offline explanation corpus
-├── map/         🗺️ Bundled OSM tile pack
-└── fonts/       🔤 Inter — bundled so vitals never render in an OEM font
+test/            🧪 446 tests (2.0× font scale overflow, MBTiles honesty, BLE protocol, triage…)
+firmware/        🔌 SSAI_SENSE_final — ESP32 firmware (ECG, MAX30102, MLX90614, OLED, touch, BLE)
+tools/           💻 ecg_dashboard.html — Doctor-ready Web-Bluetooth dual waveform workstation
+website/         🌐 Offline PWA web dashboard with clinical risk engine
+hardware/        📐 Schematics, 3D enclosure models, circuit layouts
+research/        📑 Clinical validation papers and engineering specifications
 ```
 
 </details>
