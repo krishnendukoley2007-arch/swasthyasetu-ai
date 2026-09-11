@@ -292,122 +292,114 @@ flowchart LR
 
 ---
 
-### 2. Deterministic Triage Rule Engine Decision Tree
+### 2. Flow (Unified Clinical, Guardian & Disaster Response Engine)
+
+The following unified flowchart maps the complete clinical lifecycle — integrating **deterministic triage**, **overnight sleep dipping**, **climate heat strain calculation**, and **offline disaster mesh relay** into one seamless flow:
 
 ```mermaid
 flowchart TD
-    START(["🩺 Telemetry Frame Received"]) --> VALIDATE{"Any sensor<br/>value missing?"}
-    
-    VALIDATE -->|"Yes"| EM_DASH["Render missing metric as '—'<br/>Never 0, never guessed"]
-    VALIDATE -->|"No"| EVAL["Evaluate Clinical Thresholds"]
-    EM_DASH --> EVAL
+    %% INGESTION & DATA VALIDATION
+    subgraph INGEST["🩺 Live Telemetry & Patient Context"]
+        IN_DATA["Raw BLE 20-Byte Frame + Profile Context<br/>(Age, BMI, Conditions, Complaints)"]
+        IN_CHECK{"Any sensor<br/>value missing?"}
+        IN_DASH["Render missing metric as '—'<br/>(Never 0, never guessed)"]
+        IN_DATA --> IN_CHECK
+        IN_CHECK -->|"Yes"| IN_DASH
+        IN_CHECK -->|"No"| ROUTER{"Select Active<br/>Monitoring Mode"}
+        IN_DASH --> ROUTER
+    end
 
-    EVAL --> RED_CHECK{"Critical Red Threshold?<br/>• SpO2 < 90%<br/>• HR < 40 or > 130 BPM<br/>• Moran PSI > 7.5<br/>• Temp > 39.5°C or < 35°C<br/>• Fall Impact Detected"}
-    
-    RED_CHECK -->|"YES"| URGENT["🔴 URGENT (Red Band)<br/>Score: 70–100"]
-    RED_CHECK -->|"NO"| AMBER_CHECK{"Warning Amber Threshold?<br/>• SpO2 90–94%<br/>• HR 40–50 or 100–130 BPM<br/>• Moran PSI 5.0–7.5<br/>• Mild Fever 38.0–39.4°C"}
-    
-    AMBER_CHECK -->|"YES"| SOON["🟡 SOON (Yellow Band)<br/>Score: 30–69"]
-    AMBER_CHECK -->|"NO"| ROUTINE["🟢 ROUTINE (Green Band)<br/>Score: 0–29"]
+    %% BRANCHING TO SUBSYSTEM ENGINES
+    ROUTER -->|"Point-of-Care Screening"| TRIAGE_SUB
+    ROUTER -->|"Sleep / Recovery Mode"| SLEEP_SUB
+    ROUTER -->|"Extreme Heat / Work"| HEAT_SUB
 
-    URGENT --> DISPATCH["🆘 Auto-Arm Emergency SOS<br/>SMS + Mesh Broadcast"]
-    URGENT --> EXPLAIN["🧠 Two-Tier Explanation<br/>Physiological Mechanism"]
-    SOON --> EXPLAIN
-    ROUTINE --> EXPLAIN
+    %% 1. DETERMINISTIC TRIAGE ENGINE
+    subgraph TRIAGE_SUB["⚡ Deterministic Triage Rule Engine"]
+        CRIT_CHECK{"Critical Red Threshold?<br/>• SpO2 < 90%<br/>• HR < 40 or > 130 BPM<br/>• Temp > 39.5°C or < 35°C<br/>• Severe Fall Detected"}
+        AMB_CHECK{"Warning Amber Threshold?<br/>• SpO2 90–94%<br/>• HR 40–50 or 100–130 BPM<br/>• Mild Fever 38.0–39.4°C"}
+        
+        CRIT_CHECK -->|"YES"| BAND_RED["🔴 URGENT (Red Band)<br/>Score 70–100"]
+        CRIT_CHECK -->|"NO"| AMB_CHECK
+        AMB_CHECK -->|"YES"| BAND_YELLOW["🟡 SOON (Yellow Band)<br/>Score 30–69"]
+        AMB_CHECK -->|"NO"| BAND_GREEN["🟢 ROUTINE (Green Band)<br/>Score 0–29"]
+    end
 
-    style URGENT fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style SOON fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style ROUTINE fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-```
+    %% 2. OVERNIGHT GUARDIAN ENGINE
+    subgraph SLEEP_SUB["🌙 Continuous Overnight Guardian"]
+        SLEEP_STREAM["Passive 8-Hour Telemetry<br/>(Adhesive Lead I + Silicone Sleeve)"]
+        DIP_WINDOW{"Time between<br/>01:00 – 04:30 AM?"}
+        DIP_CALC["Nocturnal Dipping Analyzer<br/>(Compare night vs daytime baseline)"]
+        DIP_NORM["✅ Normal Dipper Pattern<br/>(10%–20% restorative dip)"]
+        DIP_ALERT["⚠️ Non-Dipper Pattern<br/>(Nocturnal hypertension marker)"]
+        SPO2_CHECK{"SpO2 Sustained<br/>Below 90%?"}
+        ODI_ALERT["⚠️ Oxygen Desaturation Event<br/>(Flag Obstructive Sleep Apnea)"]
 
----
+        SLEEP_STREAM --> DIP_WINDOW
+        DIP_WINDOW -->|"YES"| DIP_CALC
+        DIP_CALC -->|"Dip ≥ 10%"| DIP_NORM
+        DIP_CALC -->|"Dip < 10%"| DIP_ALERT
+        SLEEP_STREAM --> SPO2_CHECK
+        SPO2_CHECK -->|"YES"| ODI_ALERT
+    end
 
-### 3. Continuous Overnight Guardian Flow (Sleep & Recovery Tracking)
+    %% 3. HEAT GUARDIAN ENGINE
+    subgraph HEAT_SUB["☀️ Climate Disaster Heat Guardian"]
+        HEAT_INPUT["Biometrics (T_core, HR, HRV)<br/>+ Ambient Wet-Bulb Weather"]
+        PSI_CALC["Moran Physiological Strain Index (PSI)<br/>PSI = 5×ΔT_core + 5×ΔHR"]
+        PSI_DECIDE{"Calculated PSI Level<br/>(0–10 Scale)"}
+        PSI_SAFE["🟢 Low Strain (PSI 0–2.9)<br/>Continue safe field activity"]
+        PSI_WARN["🟡 Moderate Strain (PSI 3.0–6.4)<br/>💧 Hydration Alert: 250ml / 15-20 min"]
+        PSI_DANGER["🔴 Severe Strain (PSI 6.5–10)<br/>🛑 Mandatory Shaded Rest Protocol"]
 
-```mermaid
-flowchart TD
-    SLEEP_START(["🌙 Patient Enters Sleep Mode"]) --> SENSING["Passive Sensor Stream<br/>Adhesive Lead I + Silicone Finger Sleeve"]
-    
-    SENSING --> DUAL_TREND["Dual 8-Hour Real-Time Logging<br/>• Heart Rate (BPM)<br/>• Blood Oxygen (SpO2)"]
-    SENSING --> SWEEP["280-Sample Lead I ECG Oscilloscope<br/>Interpolated cardiac sweep"]
+        HEAT_INPUT --> PSI_CALC
+        PSI_CALC --> PSI_DECIDE
+        PSI_DECIDE -->|"0.0–2.9"| PSI_SAFE
+        PSI_DECIDE -->|"3.0–6.4"| PSI_WARN
+        PSI_DECIDE -->|"6.5–10.0"| PSI_DANGER
+    end
 
-    DUAL_TREND --> WINDOW{"Time between<br/>01:00 AM – 04:30 AM?"}
-    
-    WINDOW -->|"YES"| DIPPING["Nocturnal Dipping Analyzer<br/>Compare Night HR/BP vs Daytime Baseline"]
-    DIPPING --> DIP_EVAL{"HR / BP Drops<br/>by 10% – 20%?"}
-    DIP_EVAL -->|"YES"| DIPPER["✅ Normal Dipper<br/>Restorative Sleep Pattern"]
-    DIP_EVAL -->|"NO (< 10%)"| NON_DIPPER["⚠️ Non-Dipper Pattern<br/>Early Marker for Nocturnal Hypertension"]
+    %% REASSURING EXPLANATION (NON-CRITICAL)
+    BAND_GREEN --> EXPLAIN["🧠 Grounded Two-Tier AI Explanation<br/>(Personalized to Age, BMI, Complaints — Non-Alarmist)"]
+    BAND_YELLOW --> EXPLAIN
+    DIP_NORM --> EXPLAIN
+    DIP_ALERT --> EXPLAIN
+    PSI_SAFE --> EXPLAIN
+    PSI_WARN --> EXPLAIN
 
-    DUAL_TREND --> SPO2_CHECK{"SpO2 Sustained<br/>Below 90%?"}
-    SPO2_CHECK -->|"YES"| ODI_FLAG["⚠️ Oxygen Desaturation Event<br/>Increment Nocturnal ODI Index"]
-    SPO2_CHECK -->|"NO"| ODI_OK["Normal Nocturnal Saturation"]
+    %% EMERGENCY ESCALATION & MESH RELAY (CRITICAL PATH)
+    BAND_RED --> ESCALATE_SUB
+    ODI_ALERT --> ESCALATE_SUB
+    PSI_DANGER --> ESCALATE_SUB
 
-    DIPPER --> SUMMARY["📊 Morning Clinical Summary"]
-    NON_DIPPER --> SUMMARY
-    ODI_FLAG --> SUMMARY
-    ODI_OK --> SUMMARY
-    SUMMARY --> DATASHEET["📋 Clinical Feasibility Datasheet Modal<br/>Duty-Cycling & Artifact Rejection Metrics"]
+    %% 4. DISASTER RELAY & SOS
+    subgraph ESCALATE_SUB["🆘 Emergency Dispatch & Resilient BLE Mesh Relay"]
+        GRID_DETECT{"Cellular Grid<br/>Available?"}
+        SMS_DISPATCH["📱 Instant SMS & WhatsApp Dispatch<br/>(GPS Coordinates + Triage Summary)"]
+        BLE_MESH["📡 Grid Down / Flood Mode:<br/>Broadcast Encrypted 16-Byte BLE Beacon"]
+        P2P_RELAY["👥 Nearby SwasthyaSetu Community Nodes<br/>Store-and-Forward Mesh Hopping"]
+        RELIEF_UPLINK["🏥 Uplink to Emergency Base & Relief Teams<br/>(National Emergency 112)"]
 
-    style SLEEP_START fill:#e0e7ff,stroke:#4338ca,stroke-width:2px
-    style NON_DIPPER fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style DIPPER fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-    style SUMMARY fill:#fef3c7,stroke:#d97706,stroke-width:2px
-```
+        GRID_DETECT -->|"YES"| SMS_DISPATCH
+        GRID_DETECT -->|"NO"| BLE_MESH
+        BLE_MESH --> P2P_RELAY
+        P2P_RELAY --> RELIEF_UPLINK
+    end
 
----
-
-### 4. Climate Disaster "Heat Guardian" (Moran PSI Engine)
-
-```mermaid
-flowchart TD
-    INPUT(["☀️ Field Worker Exposed to Extreme Heat"]) --> VITALS["Hardware Biometrics<br/>• Core Body Temp (T_core)<br/>• Real-Time Heart Rate (HR)<br/>• Autonomic HRV (RMSSD)"]
-    INPUT --> WEATHER["Environmental Inputs<br/>• Ambient Temperature (°C)<br/>• Relative Humidity (%)<br/>• Calculated Wet-Bulb Temp"]
-
-    VITALS --> FUSION["⚡ Moran PSI Computational Engine"]
-    WEATHER --> FUSION
-
-    FUSION --> CALC["PSI = 5 × (T_core,t - T_core,0)/(39.5 - T_core,0) + 5 × (HR_t - HR_0)/(180 - HR_0)"]
-
-    CALC --> PSI_EVAL{"Calculated Strain Index (0–10)"}
-    
-    PSI_EVAL -->|"PSI 0.0 – 2.9"| LOW["🟢 Low Physiological Strain<br/>Safe to continue field activity"]
-    PSI_EVAL -->|"PSI 3.0 – 6.4"| MOD["🟡 Moderate Thermal Strain<br/>Cardiovascular drift detected"]
-    PSI_EVAL -->|"PSI 6.5 – 10.0"| HIGH["🔴 Severe Heat Strain<br/>Imminent risk of heat exhaustion / stroke"]
-
-    MOD --> HYDRATE["💧 Dynamic Hydration Countdown<br/>Alert: Drink 250 ml water every 15–20 min"]
-    HIGH --> REST["🛑 Mandatory Shaded Rest Protocol<br/>Cease manual labor, fan body, apply cool water"]
-
-    style INPUT fill:#ffedd5,stroke:#ea580c,stroke-width:2px
-    style HIGH fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style MOD fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style LOW fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-```
-
----
-
-### 5. Resilient Disaster Offline BLE Mesh Relay
-
-```mermaid
-flowchart TD
-    DISASTER(["🌪️ Cyclone / Flood Event Destroys Telecom Infrastructure"]) --> EMERGENCY["Patient Enters Critical Distress or Presses SOS"]
-    
-    EMERGENCY --> NET_CHECK{"Cellular Network<br/>Available?"}
-    
-    NET_CHECK -->|"YES"| SMS_DISPATCH["Dispatch Instant SMS & WhatsApp<br/>Attach GPS Coordinates + Triage Summary"]
-    
-    NET_CHECK -->|"NO (Grid Down)"| MESH_BROADCAST["Turn Phone into BLE Peripheral<br/>Broadcast Encrypted 16-Byte Beacon"]
-
-    MESH_BROADCAST --> P2P_HOP["Nearby SwasthyaSetu Community Nodes<br/>Capture and Cache Distress Frame"]
-    
-    P2P_HOP --> STORE_FORWARD["Store-and-Forward Mesh Hopping<br/>Relay packet node-to-node across field"]
-    
-    STORE_FORWARD --> UPLINK{"Any relay device<br/>reaches network?"}
-    
-    UPLINK -->|"YES"| RELIEF["Forward to Emergency Response Base<br/>National Emergency 112 / Disaster Relief"]
-
-    style DISASTER fill:#fef2f2,stroke:#991b1b,stroke-width:2px
-    style MESH_BROADCAST fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style RELIEF fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style INGEST fill:#f8fafc,stroke:#64748b,stroke-width:2px
+    style TRIAGE_SUB fill:#f1f5f9,stroke:#475569,stroke-width:2px
+    style SLEEP_SUB fill:#e0e7ff,stroke:#4338ca,stroke-width:2px
+    style HEAT_SUB fill:#ffedd5,stroke:#ea580c,stroke-width:2px
+    style ESCALATE_SUB fill:#fef2f2,stroke:#991b1b,stroke-width:2px
+    style BAND_RED fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    style BAND_YELLOW fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style BAND_GREEN fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style PSI_DANGER fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    style PSI_WARN fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style PSI_SAFE fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style DIP_NORM fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style DIP_ALERT fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    style ODI_ALERT fill:#fee2e2,stroke:#dc2626,stroke-width:2px
 ```
 
 ---
