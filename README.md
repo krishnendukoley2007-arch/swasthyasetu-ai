@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🩺 SwasthyaSetu AI (स्वास्थ्य सेतु)
+# 🩺 SwasthyaSetu AI 
 
 ### *A Secure, AI-Powered Personal Health Companion & Climate Disaster Early-Warning System*
 **Offline-first health screening, continuous overnight monitoring, and resilient triage for India's vulnerable populations**
