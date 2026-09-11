@@ -5,6 +5,7 @@ import 'package:swasthyasetu_ai/core/services/gemini_service.dart';
 import 'package:swasthyasetu_ai/core/services/seed_service.dart';
 import 'package:swasthyasetu_ai/data/database/app_database.dart';
 import 'package:swasthyasetu_ai/domain/models/audience.dart';
+import 'package:swasthyasetu_ai/domain/models/patient_profile_context.dart';
 import 'package:swasthyasetu_ai/domain/models/triage_result.dart';
 import 'package:swasthyasetu_ai/domain/rules/guideline_retriever.dart';
 import 'package:swasthyasetu_ai/domain/rules/offline_explainer.dart';
@@ -130,6 +131,7 @@ class ExplanationRepository {
     Audience audience = Audience.nurse,
     bool preferOnline = true,
     bool forceRefresh = false,
+    PatientProfileContext? profile,
   }) async {
     if (screeningId != null && !forceRefresh) {
       final cached = await _readCache(screeningId, audience);
@@ -143,6 +145,7 @@ class ExplanationRepository {
         patientName: patientName,
         languageCode: languageCode,
         audience: audience,
+        profile: profile,
       );
       if (online != null) return online;
       // Fell through: no key, no network, timeout, or unusable response. Not an
@@ -216,6 +219,7 @@ class ExplanationRepository {
     String? patientName,
     String? languageCode,
     Audience audience = Audience.nurse,
+    PatientProfileContext? profile,
   }) async {
     if (!_gemini.isConfigured) return null;
 
@@ -230,6 +234,7 @@ class ExplanationRepository {
       patientName: patientName,
       languageCode: languageCode,
       audience: audience,
+      profile: profile,
     );
     if (online == null) return null;
 
@@ -257,6 +262,7 @@ class ExplanationRepository {
     required String question,
     Audience audience = Audience.nurse,
     String? languageCode,
+    PatientProfileContext? profile,
   }) async {
     final retrieved = await relevantGuidelines(assessment, limit: 2);
     return _gemini.answerQuestion(
@@ -265,6 +271,7 @@ class ExplanationRepository {
       retrieved: retrieved,
       audience: audience,
       languageCode: languageCode,
+      profile: profile,
     );
   }
 

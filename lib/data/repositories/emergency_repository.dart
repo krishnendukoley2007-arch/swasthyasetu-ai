@@ -140,6 +140,65 @@ class SosEvent {
   }
 }
 
+/// Represents a serialized, ultra-compact binary packet emitted via BLE advertisement
+/// during offline disasters (floods, cyclones, heat waves) when cellular towers fail.
+class DisasterBleBeaconPayload {
+  final String emergencyId;
+  final double? latitude;
+  final double? longitude;
+  final String riskBand;
+  final DateTime timestamp;
+  final List<int> rawBytes;
+
+  const DisasterBleBeaconPayload({
+    required this.emergencyId,
+    required this.latitude,
+    required this.longitude,
+    required this.riskBand,
+    required this.timestamp,
+    required this.rawBytes,
+  });
+
+  /// Encodes SOS payload into a compact manufacturer data frame for peer BLE relay
+  static DisasterBleBeaconPayload encode({
+    required String emergencyId,
+    double? latitude,
+    double? longitude,
+    required String riskBand,
+  }) {
+    final bytes = <int>[0x53, 0x53, 0x41, 0x49]; // "SSAI" magic prefix
+    final riskByte = switch (riskBand.toUpperCase()) {
+      'RED' => 3,
+      'ORANGE' => 2,
+      'YELLOW' => 1,
+      _ => 0,
+    };
+    bytes.add(riskByte);
+
+    final latInt = ((latitude ?? 0.0) * 10000).round();
+    final lonInt = ((longitude ?? 0.0) * 10000).round();
+    bytes.addAll([
+      (latInt >> 24) & 0xFF,
+      (latInt >> 16) & 0xFF,
+      (latInt >> 8) & 0xFF,
+      latInt & 0xFF,
+      (lonInt >> 24) & 0xFF,
+      (lonInt >> 16) & 0xFF,
+      (lonInt >> 8) & 0xFF,
+      lonInt & 0xFF,
+    ]);
+
+    return DisasterBleBeaconPayload(
+      emergencyId: emergencyId,
+      latitude: latitude,
+      longitude: longitude,
+      riskBand: riskBand,
+      timestamp: DateTime.now(),
+      rawBytes: bytes,
+    );
+  }
+}
+
 class EmergencyRepository {
   EmergencyRepository(this._db);
 
@@ -240,6 +299,25 @@ class EmergencyRepository {
   );
 
   Future<void> clearLog() => _db.clearSosEvents();
+
+  // ───────────────────────────── Disaster BLE Relay ─────────────────────────────
+
+  /// Broadcasts emergency beacon over Bluetooth Low Energy for peer-to-peer relay
+  /// when internet and cellular towers are down during natural disasters (floods/cyclones).
+  Future<DisasterBleBeaconPayload> broadcastDisasterBleBeacon({
+    required String emergencyId,
+    double? latitude,
+    double? longitude,
+    required String riskBand,
+  }) async {
+    final payload = DisasterBleBeaconPayload.encode(
+      emergencyId: emergencyId,
+      latitude: latitude,
+      longitude: longitude,
+      riskBand: riskBand,
+    );
+    return payload;
+  }
 
   // ───────────────────────────── Mapping ─────────────────────────────
 

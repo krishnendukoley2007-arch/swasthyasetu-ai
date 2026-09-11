@@ -48,6 +48,8 @@ import 'package:swasthyasetu_ai/features/screening/screens/ecg_live_screen.dart'
 import 'package:swasthyasetu_ai/features/screening/screens/symptoms_screen.dart';
 import 'package:swasthyasetu_ai/features/screening/screens/triage_result_screen.dart';
 import 'package:swasthyasetu_ai/features/screening/screens/ai_explanation_screen.dart';
+import 'package:swasthyasetu_ai/features/screening/screens/heat_guardian_screen.dart';
+import 'package:swasthyasetu_ai/features/screening/screens/overnight_guardian_screen.dart';
 import 'package:swasthyasetu_ai/features/history/screens/screening_history_screen.dart';
 import 'package:swasthyasetu_ai/features/history/screens/screening_details_screen.dart';
 import 'package:swasthyasetu_ai/features/sync/screens/pending_sync_screen.dart';
@@ -88,11 +90,20 @@ class _ClinicalNavBar extends StatelessWidget {
         border: Border(
           top: BorderSide(color: ClinicalPalette.hairline(context)),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.35 : 0.05,
+            ),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 64,
+          height: 66,
           child: LayoutBuilder(
             builder: (context, cons) {
               final slot = cons.maxWidth / n;
@@ -100,23 +111,46 @@ class _ClinicalNavBar extends StatelessWidget {
                 children: [
                   // Sliding pill behind the active tab.
                   AnimatedPositioned(
-                    duration: const Duration(milliseconds: 340),
+                    duration: const Duration(milliseconds: 320),
                     curve: const Cubic(0.34, 1.25, 0.64, 1),
-                    left: slot * currentIndex + 8,
-                    width: slot - 16,
-                    top: 10,
-                    height: 44,
+                    left: slot * currentIndex + 6,
+                    width: slot - 12,
+                    top: 8,
+                    height: 48,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        color: ClinicalPalette.teal.withValues(
-                          alpha: theme.brightness == Brightness.dark
-                              ? 0.16
-                              : 0.10,
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            ClinicalPalette.teal.withValues(
+                              alpha: theme.brightness == Brightness.dark
+                                  ? 0.22
+                                  : 0.14,
+                            ),
+                            ClinicalPalette.teal.withValues(
+                              alpha: theme.brightness == Brightness.dark
+                                  ? 0.08
+                                  : 0.04,
+                            ),
+                          ],
                         ),
                         border: Border.all(
-                          color: ClinicalPalette.teal.withValues(alpha: 0.28),
+                          color: ClinicalPalette.teal.withValues(alpha: 0.35),
+                          width: 1.2,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: ClinicalPalette.teal.withValues(
+                              alpha: theme.brightness == Brightness.dark
+                                  ? 0.18
+                                  : 0.08,
+                            ),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -171,45 +205,66 @@ class _NavTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = selected ? ClinicalPalette.teal : ink.withValues(alpha: 0.55);
     return InkWell(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(3),
-                child: Icon(icon, size: 21, color: color),
-              ),
-              if (liveDot)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: ClinicalPalette.tealBright,
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.surface,
-                        width: 1.5,
+          AnimatedScale(
+            scale: selected ? 1.14 : 1.0,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutBack,
+            child: AnimatedSlide(
+              offset: selected ? const Offset(0, -0.04) : Offset.zero,
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(3),
+                    child: Icon(icon, size: 22, color: color),
+                  ),
+                  if (liveDot)
+                    Positioned(
+                      right: -1,
+                      top: -1,
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: ClinicalPalette.tealBright,
+                          boxShadow: [
+                            BoxShadow(
+                              color: ClinicalPalette.teal.withValues(
+                                alpha: 0.6,
+                              ),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.surface,
+                            width: 1.5,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 3),
-          Text(
-            label,
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
             style: TextStyle(
               fontSize: 10,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
               letterSpacing: 0.3,
               color: color,
             ),
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         ],
       ),
@@ -465,6 +520,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/screening/ai-explanation',
         builder: (context, state) => const AiExplanationScreen(),
+      ),
+      GoRoute(
+        path: '/screening/heat-guardian',
+        builder: (context, state) => const HeatGuardianScreen(),
+      ),
+      GoRoute(
+        path: '/screening/overnight-guardian',
+        builder: (context, state) => const OvernightGuardianScreen(),
       ),
       GoRoute(
         path: '/general-chat',

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:swasthyasetu_ai/data/repositories/auth_repository.dart';
 
@@ -87,6 +88,20 @@ class GoogleAuthService {
         _initialized = true;
       }
       final account = await GoogleSignIn.instance.authenticate();
+
+      // Automatically link to Firebase Auth for zero-key Vertex AI and cloud sync
+      try {
+        final auth = account.authentication;
+        if (auth.idToken != null) {
+          final credential = GoogleAuthProvider.credential(
+            idToken: auth.idToken,
+          );
+          await FirebaseAuth.instance.signInWithCredential(credential);
+        }
+      } catch (_) {
+        // Intentionally swallowed: offline or unlinked fallback works locally.
+      }
+
       return GoogleIdentity(
         email: account.email,
         displayName: account.displayName ?? '',
@@ -128,6 +143,11 @@ class GoogleAuthService {
       await GoogleSignIn.instance.signOut();
     } catch (_) {
       // See doc comment — intentionally swallowed.
+    }
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (_) {
+      // Intentionally swallowed.
     }
   }
 }

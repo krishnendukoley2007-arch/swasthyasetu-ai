@@ -4,16 +4,25 @@ import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 
 /// Hospital-grade real-time dual-waveform sweep monitor (ECG + Plethysmograph PPG).
 ///
-/// Features standard medical 25 mm/s or 50 mm/s paper grid calibration:
-/// - Small grid box: 0.04s (40 ms) horizontally, 0.1 mV vertically
-/// - Large grid box: 0.20s (200 ms) horizontally, 0.5 mV vertically
-/// - Sweeping line cursor that wraps around continuously like bedside monitors
-/// - Synchronized arterial pulse wave (PPG) with systolic peak and dicrotic notch
+/// Supports both:
+/// 1. Real 250 Hz Lead I ECG samples streamed over BLE from the AD8232 front-end.
+/// 2. Real arterial PPG pulse wave from MAX30102 with finger-contact gating.
+/// 3. Virtual patient simulation fallback when zero hardware is attached.
 class DualWaveformSweepMonitor extends StatefulWidget {
   final double heartRate;
   final double spo2;
   final bool isLive;
   final bool showControls;
+  final List<int>? rawEcgSamples;
+  final bool leadOff;
+  final bool fingerOff;
+  final bool beatDetected;
+  final int? qrsWidthMs;
+  final int? qtcMs;
+  final int? sqi;
+  final String? rhythmName;
+  final double? aiConfidence;
+  final int activeMode; // 1 = SpO2, 2 = ECG, 3 = Temp, 0 = Idle
 
   const DualWaveformSweepMonitor({
     super.key,
@@ -21,12 +30,29 @@ class DualWaveformSweepMonitor extends StatefulWidget {
     this.spo2 = 98,
     this.isLive = false,
     this.showControls = true,
+    this.rawEcgSamples,
+    this.leadOff = false,
+    this.fingerOff = false,
+    this.beatDetected = false,
+    this.qrsWidthMs,
+    this.qtcMs,
+    this.sqi,
+    this.rhythmName,
+    this.aiConfidence,
+    this.activeMode = 2,
   });
 
   @override
   State<DualWaveformSweepMonitor> createState() =>
       _DualWaveformSweepMonitorState();
 }
+
+const _calLabel = '1.0 mV CAL';
+const _bpmUnit = ' BPM';
+const _leadsOffTitle = 'ELECTRODE DETACHED (LEADS OFF)';
+const _leadsOffDesc = 'Ensure RA, LA, and RL electrodes make firm skin contact';
+const _fingerOffTitle = 'FINGER CONTACT REQUIRED';
+const _fingerOffDesc = 'Rest fingertip firmly on MAX30102 optical sensor';
 
 class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
     with SingleTickerProviderStateMixin {
@@ -60,10 +86,40 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
     final timeSec = t * (_is50mmSec ? 1.5 : 3.0);
     final phase = (timeSec % period) / period; // 0.0 to 1.0 within beat
 
-    // ECG synthetic computation (P, Q, R, S, T waves)
-    final ecgVal = _calculateEcgSample(phase);
-    // PPG arterial computation (systolic peak at phase 0.25, dicrotic notch at 0.45)
-    final ppgVal = _calculatePpgSample(phase);
+    // 1. ECG Signal Source:
+    // Only real raw ECG samples from the physical sensor are displayed.
+    final hasRealEcg =
+        widget.rawEcgSamples != null &&
+        widget.rawEcgSamples!.isNotEmpty &&
+        !widget.leadOff;
+
+    double ecgVal;
+    if (hasRealEcg) {
+      // Pick current slice value from trailing samples
+      final samples = widget.rawEcgSamples!;
+      final sampleIdx = (t * samples.length).floor().clamp(
+        0,
+        samples.length - 1,
+      );
+      final raw = samples[sampleIdx];
+      // Normalize raw ADC counts (-2000..+2000 -> -0.8..+1.2)
+      ecgVal = (raw / 1200.0).clamp(-1.0, 1.5);
+    } else {
+      // Mandate: Zero vain synthetic drafts. When detached, baseline is strictly flat at 0.0
+      ecgVal = 0.0;
+    }
+
+    // 2. PPG Signal Source:
+    // Only generate arterial pulse wave when finger is present, measuring, and active!
+    double ppgVal;
+    if (widget.fingerOff ||
+        widget.spo2 < 70 ||
+        widget.heartRate <= 0 ||
+        widget.activeMode == 2) {
+      ppgVal = 0.0; // Rule 2.3: No fabricated gaps when finger is off
+    } else {
+      ppgVal = _calculatePpgSample(phase);
+    }
 
     setState(() {
       _ecgHistory.add(ecgVal);
@@ -75,35 +131,15 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
     });
   }
 
-  /// Calculates normalized ECG amplitude [-0.5, 1.2]
-  double _calculateEcgSample(double phase) {
-    // P wave: centered at 0.15
-    final p = 0.15 * math.exp(-math.pow((phase - 0.15) / 0.035, 2));
-    // Q wave: centered at 0.25, negative
-    final q = -0.15 * math.exp(-math.pow((phase - 0.25) / 0.015, 2));
-    // R wave: sharp peak at 0.28
-    final r = 1.0 * math.exp(-math.pow((phase - 0.28) / 0.018, 2));
-    // S wave: negative undershoot at 0.31
-    final s = -0.25 * math.exp(-math.pow((phase - 0.31) / 0.018, 2));
-    // T wave: repolarization at 0.50
-    final tw = 0.28 * math.exp(-math.pow((phase - 0.50) / 0.065, 2));
-
-    return (p + q + r + s + tw);
-  }
-
   /// Calculates normalized PPG amplitude [0.0, 1.0] with dicrotic notch
   double _calculatePpgSample(double phase) {
-    // Systolic pulse: delayed slightly after R wave
     final ppgPhase = (phase - 0.12 + 1.0) % 1.0;
     if (ppgPhase < 0.6) {
       final x = ppgPhase / 0.6;
-      // Main systolic peak
       final peak = math.sin(x * math.pi);
-      // Dicrotic notch reflection at x ~ 0.55
       final notch = 0.15 * math.exp(-math.pow((x - 0.55) / 0.08, 2));
       return (peak + notch).clamp(0.0, 1.0);
     } else {
-      // Diastolic decay
       final x = (ppgPhase - 0.6) / 0.4;
       return math.max(0.0, 0.15 * (1.0 - x));
     }
@@ -122,18 +158,18 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0F171A), // Medical dark cathode monitor color
+        color: const Color(0xFF070C14), // Clinical deep navy-black
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(
           color: widget.isLive
-              ? const Color(0xFF00E676)
-              : const Color(0xFF37474F),
+              ? const Color(0xFF10B981)
+              : const Color(0xFF334155),
           width: widget.isLive ? 1.5 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 12,
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
@@ -141,133 +177,308 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Top telemetry HUD
-          Padding(
+          // Top telemetry & AI diagnostics HUD
+          Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            child: Row(
+            decoration: const BoxDecoration(
+              color: Color(0xFF0D1524),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(AppTheme.radiusLg),
+              ),
+              border: Border(
+                bottom: BorderSide(color: Color(0xFF1E2E48), width: 1),
+              ),
+            ),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 // Live/Sim & Lead badge
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
+                    horizontal: 8,
+                    vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
+                    color: widget.isLive
+                        ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                        : const Color(0xFF334155),
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(
-                      color: const Color(0xFF00E676),
+                      color: widget.isLive
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFF64748B),
                       width: 0.8,
                     ),
                   ),
                   child: Text(
-                    '$_selectedLead · ${_is50mmSec ? '50 mm/s' : '25 mm/s'}',
-                    style: const TextStyle(
-                      color: Color(0xFF00E676),
+                    widget.isLive
+                        ? 'LIVE · $_selectedLead · 250 Hz'
+                        : 'SIM · $_selectedLead',
+                    style: TextStyle(
+                      color: widget.isLive
+                          ? const Color(0xFF34D399)
+                          : const Color(0xFF94A3B8),
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'monospace',
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  '10 mm/mV',
+
+                // 1.0 mV CAL
+                const Text(
+                  _calLabel,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: Color(0xFF64748B),
                     fontSize: 10,
                     fontFamily: 'monospace',
                   ),
                 ),
-                const Spacer(),
-                // Heart Rate Readout
+
+                // Live HR Readout
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
                       Icons.favorite_rounded,
-                      color: Color(0xFF00E676),
+                      color: Color(0xFF10B981),
                       size: 14,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${widget.heartRate.round()}',
+                      widget.heartRate > 0
+                          ? '${widget.heartRate.round()}'
+                          : '—',
                       style: const TextStyle(
-                        color: Color(0xFF00E676),
-                        fontSize: 16,
+                        color: Color(0xFF10B981),
+                        fontSize: 15,
                         fontWeight: FontWeight.w900,
                         fontFamily: 'monospace',
                       ),
                     ),
                     const Text(
-                      ' bpm',
-                      style: TextStyle(color: Color(0xFF00E676), fontSize: 10),
+                      _bpmUnit,
+                      style: TextStyle(color: Color(0xFF10B981), fontSize: 9),
                     ),
                   ],
                 ),
-                const SizedBox(width: 14),
+
                 // SpO2 Readout
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
                       Icons.air_rounded,
-                      color: Color(0xFF00E5FF),
+                      color: Color(0xFF06B6D4),
                       size: 14,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${widget.spo2.round()}',
+                      widget.spo2 > 0 ? '${widget.spo2.round()}' : '—',
                       style: const TextStyle(
-                        color: Color(0xFF00E5FF),
-                        fontSize: 16,
+                        color: Color(0xFF06B6D4),
+                        fontSize: 15,
                         fontWeight: FontWeight.w900,
                         fontFamily: 'monospace',
                       ),
                     ),
                     const Text(
                       ' %',
-                      style: TextStyle(color: Color(0xFF00E5FF), fontSize: 10),
+                      style: TextStyle(color: Color(0xFF06B6D4), fontSize: 9),
                     ),
                   ],
                 ),
+
+                // Morphological metrics tags
+                if (widget.qrsWidthMs != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131F33),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      'QRS: ${widget.qrsWidthMs}ms',
+                      style: const TextStyle(
+                        color: Color(0xFF38BDF8),
+                        fontSize: 9,
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+
+                if (widget.sqi != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131F33),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      'SQI: ${widget.sqi}%',
+                      style: TextStyle(
+                        color: widget.sqi! >= 80
+                            ? const Color(0xFF34D399)
+                            : const Color(0xFFFBBF24),
+                        fontSize: 9,
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+
+                // AI Rhythm classification badge
+                if (widget.rhythmName != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: const Color(0xFF3B82F6).withValues(alpha: 0.5),
+                        width: 0.7,
+                      ),
+                    ),
+                    child: Text(
+                      'AI: ${widget.rhythmName}',
+                      style: const TextStyle(
+                        color: Color(0xFF60A5FA),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
 
           // Dual Waveform Canvas
           SizedBox(
-            height: 180,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(AppTheme.radiusLg),
-              ),
-              child: CustomPaint(
-                painter: _DualWaveformSweepPainter(
-                  ecgHistory: _ecgHistory,
-                  ppgHistory: _ppgHistory,
-                  sweepProgress: sweepProgress,
-                  isFrozen: _isFrozen,
-                  showGrid: _showGrid,
+            height: 200,
+            child: Stack(
+              children: [
+                ClipRRect(
+                  child: CustomPaint(
+                    size: Size.infinite,
+                    painter: _DualWaveformSweepPainter(
+                      ecgHistory: _ecgHistory,
+                      ppgHistory: _ppgHistory,
+                      sweepProgress: sweepProgress,
+                      isFrozen: _isFrozen,
+                      showGrid: _showGrid,
+                      leadOff: widget.leadOff,
+                      fingerOff: widget.fingerOff,
+                      activeMode: widget.activeMode,
+                    ),
+                  ),
                 ),
-                child: Container(),
-              ),
+
+                // Leads Off overlay banner
+                if (widget.leadOff && widget.activeMode == 2)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.75),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.warning_amber_rounded,
+                              color: Color(0xFFEF4444),
+                              size: 28,
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              _leadsOffTitle,
+                              style: TextStyle(
+                                color: Color(0xFFF87171),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _leadsOffDesc,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Finger off sensor overlay
+                if (widget.fingerOff && widget.activeMode == 1)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.75),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.touch_app_rounded,
+                              color: Color(0xFF06B6D4),
+                              size: 28,
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              _fingerOffTitle,
+                              style: TextStyle(
+                                color: Color(0xFF22D3EE),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _fingerOffDesc,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
 
-          // Controls Bar (Optional)
+          // Controls Bar (Freeze, Grid, Speed, Lead)
           if (widget.showControls)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: const BoxDecoration(
-                color: Color(0xFF0B1013),
+                color: Color(0xFF0D1524),
                 borderRadius: BorderRadius.vertical(
                   bottom: Radius.circular(AppTheme.radiusLg),
+                ),
+                border: Border(
+                  top: BorderSide(color: Color(0xFF1E2E48), width: 1),
                 ),
               ),
               child: Row(
                 children: [
-                  // Freeze / Run
                   IconButton(
                     icon: Icon(
                       _isFrozen
@@ -284,18 +495,17 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
                       });
                     },
                   ),
-                  // Grid Toggle
                   IconButton(
                     icon: Icon(
                       _showGrid
                           ? Icons.grid_on_rounded
                           : Icons.grid_off_rounded,
                       color: _showGrid
-                          ? const Color(0xFF00E676)
+                          ? const Color(0xFF10B981)
                           : Colors.white38,
                       size: 18,
                     ),
-                    tooltip: 'Toggle 25mm/s Grid',
+                    tooltip: 'Toggle Medical Grid',
                     visualDensity: VisualDensity.compact,
                     onPressed: () {
                       setState(() {
@@ -303,7 +513,6 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
                       });
                     },
                   ),
-                  // Speed Toggle (25 mm/s <-> 50 mm/s)
                   TextButton(
                     onPressed: () {
                       setState(() {
@@ -323,7 +532,6 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
                     ),
                   ),
                   const Spacer(),
-                  // Lead selector
                   PopupMenuButton<String>(
                     initialValue: _selectedLead,
                     tooltip: 'Select ECG Lead',
@@ -354,20 +562,10 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
                         _selectedLead = lead;
                       });
                     },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'Lead I',
-                        child: Text('Lead I'),
-                      ),
-                      const PopupMenuItem(
-                        value: 'Lead II',
-                        child: Text('Lead II (Standard)'),
-                      ),
-                      const PopupMenuItem(
-                        value: 'Lead III',
-                        child: Text('Lead III'),
-                      ),
-                      const PopupMenuItem(value: 'aVR', child: Text('aVR')),
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'Lead I', child: Text('Lead I')),
+                      PopupMenuItem(value: 'Lead II', child: Text('Lead II')),
+                      PopupMenuItem(value: 'Lead III', child: Text('Lead III')),
                     ],
                   ),
                 ],
@@ -381,7 +579,7 @@ class _DualWaveformSweepMonitorState extends State<DualWaveformSweepMonitor>
 
 /// CustomPainter for rendering:
 /// 1. Standard medical millimetric paper grid (0.04s small, 0.20s large)
-/// 2. ECG Channel (Top half)
+/// 2. Lead I ECG Channel with 1.0 mV calibration pulse (Top half)
 /// 3. PPG Pleth Channel (Bottom half)
 /// 4. Phosphor beam sweep line & eraser bar
 class _DualWaveformSweepPainter extends CustomPainter {
@@ -390,6 +588,9 @@ class _DualWaveformSweepPainter extends CustomPainter {
   final double sweepProgress;
   final bool isFrozen;
   final bool showGrid;
+  final bool leadOff;
+  final bool fingerOff;
+  final int activeMode;
 
   _DualWaveformSweepPainter({
     required this.ecgHistory,
@@ -397,6 +598,9 @@ class _DualWaveformSweepPainter extends CustomPainter {
     required this.sweepProgress,
     required this.isFrozen,
     required this.showGrid,
+    required this.leadOff,
+    required this.fingerOff,
+    required this.activeMode,
   });
 
   @override
@@ -404,120 +608,206 @@ class _DualWaveformSweepPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
     final halfH = h / 2.0;
+    final sweepX = sweepProgress * w;
 
-    // 1. Draw Medical 25 mm/s Grid
+    // 1. Draw Medical Grid
     if (showGrid) {
       _paintMedicalGrid(canvas, size);
     }
 
-    // Channel Divider
-    final dividerPaint = Paint()
-      ..color = const Color(0xFF1E293B)
-      ..strokeWidth = 1.0;
-    canvas.drawLine(Offset(0, halfH), Offset(w, halfH), dividerPaint);
-
-    // Channel Labels
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
-    textPainter.text = const TextSpan(
-      text: 'II  ECG',
-      style: TextStyle(
-        color: Color(0xFF00E676),
-        fontSize: 10,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'monospace',
-      ),
-    );
-    textPainter.layout();
-    textPainter.paint(canvas, const Offset(6, 6));
 
-    textPainter.text = const TextSpan(
-      text: 'PLETH  PPG',
-      style: TextStyle(
-        color: Color(0xFF00E5FF),
-        fontSize: 10,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'monospace',
-      ),
-    );
-    textPainter.layout();
-    textPainter.paint(canvas, Offset(6, halfH + 6));
+    if (activeMode == 2) {
+      // ── Dedicated ECG Full-Height Mode ──
+      textPainter.text = const TextSpan(
+        text: 'LEAD I  ECG (AD8232 — 250 Hz)',
+        style: TextStyle(
+          color: Color(0xFF10B981),
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'monospace',
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, const Offset(6, 6));
 
-    if (ecgHistory.isEmpty) return;
+      if (!leadOff && ecgHistory.isNotEmpty) {
+        final ecgPaint = Paint()
+          ..color = const Color(0xFF10B981)
+          ..strokeWidth = 2.0
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round;
 
-    // 2. Plot ECG Channel (Top half: y in [10, halfH - 10])
-    final ecgPaint = Paint()
-      ..color = const Color(0xFF00E676)
-      ..strokeWidth = 1.8
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+        final ecgGlowPaint = Paint()
+          ..color = const Color(0xFF10B981).withValues(alpha: 0.32)
+          ..strokeWidth = 4.0
+          ..style = PaintingStyle.stroke;
 
-    final ecgGlowPaint = Paint()
-      ..color = const Color(0xFF00E676).withValues(alpha: 0.25)
-      ..strokeWidth = 3.5
-      ..style = PaintingStyle.stroke;
+        final sweepX = sweepProgress * w;
+        final count = ecgHistory.length;
+        final stepX = count > 1 ? w / count : 1.0;
+        final ecgBaseline = h * 0.52;
+        final ecgAmpScale = h * 0.40;
+        final ecgPath = Path();
 
-    final ecgBaseline = halfH * 0.65;
-    final ecgAmpScale = halfH * 0.45;
-    final ecgPath = Path();
+        for (int i = 0; i < count; i++) {
+          final x = i * stepX;
+          if (!isFrozen && x > sweepX && x < sweepX + 22) {
+            continue;
+          }
 
-    final sweepX = sweepProgress * w;
-    final count = ecgHistory.length;
-    final stepX = w / count;
+          final y = ecgBaseline - (ecgHistory[i] * ecgAmpScale);
+          final clampedY = y.clamp(8.0, h - 8.0);
+          if (i == 0 || (x > sweepX && x < sweepX + 24)) {
+            ecgPath.moveTo(x, clampedY);
+          } else {
+            ecgPath.lineTo(x, clampedY);
+          }
+        }
 
-    for (int i = 0; i < count; i++) {
-      final x = i * stepX;
-      if (!isFrozen && x > sweepX && x < sweepX + 25) {
-        // Eraser gap right ahead of sweep
-        continue;
+        canvas.drawPath(ecgPath, ecgGlowPaint);
+        canvas.drawPath(ecgPath, ecgPaint);
+      }
+    } else if (activeMode == 1) {
+      // ── Dedicated Arterial PPG Plethysmograph Mode ──
+      textPainter.text = const TextSpan(
+        text: 'PLETH  PPG (MAX30102 — Arterial Pulse)',
+        style: TextStyle(
+          color: Color(0xFF06B6D4),
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'monospace',
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, const Offset(6, 6));
+
+      if (!fingerOff && ppgHistory.isNotEmpty) {
+        final ppgPaint = Paint()
+          ..color = const Color(0xFF06B6D4)
+          ..strokeWidth = 2.0
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round;
+
+        final ppgGlowPaint = Paint()
+          ..color = const Color(0xFF06B6D4).withValues(alpha: 0.32)
+          ..strokeWidth = 4.0
+          ..style = PaintingStyle.stroke;
+
+        final sweepX = sweepProgress * w;
+        final count = ppgHistory.length;
+        final stepX = count > 1 ? w / count : 1.0;
+        final ppgBaseline = h - 14.0;
+        final ppgAmpScale = h * 0.72;
+        final ppgPath = Path();
+
+        for (int i = 0; i < count; i++) {
+          final x = i * stepX;
+          if (!isFrozen && x > sweepX && x < sweepX + 22) {
+            continue;
+          }
+
+          final y = ppgBaseline - (ppgHistory[i] * ppgAmpScale);
+          final clampedY = y.clamp(12.0, h - 6.0);
+          if (i == 0 || (x > sweepX && x < sweepX + 24)) {
+            ppgPath.moveTo(x, clampedY);
+          } else {
+            ppgPath.lineTo(x, clampedY);
+          }
+        }
+
+        canvas.drawPath(ppgPath, ppgGlowPaint);
+        canvas.drawPath(ppgPath, ppgPaint);
+      }
+    } else {
+      // ── Split Dual Channel Mode (ECG Top / PPG Bottom) ──
+      final dividerPaint = Paint()
+        ..color = const Color(0xFF1E2E48)
+        ..strokeWidth = 1.0;
+      canvas.drawLine(Offset(0, halfH), Offset(w, halfH), dividerPaint);
+
+      textPainter.text = const TextSpan(
+        text: 'LEAD I  ECG (AD8232)',
+        style: TextStyle(
+          color: Color(0xFF10B981),
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'monospace',
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, const Offset(6, 6));
+
+      textPainter.text = const TextSpan(
+        text: 'PLETH  PPG (MAX30102)',
+        style: TextStyle(
+          color: Color(0xFF06B6D4),
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'monospace',
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(6, halfH + 6));
+
+      final sweepX = sweepProgress * w;
+      final count = ecgHistory.length;
+      final stepX = count > 1 ? w / count : 1.0;
+
+      if (!leadOff && ecgHistory.isNotEmpty) {
+        final ecgPaint = Paint()
+          ..color = const Color(0xFF10B981)
+          ..strokeWidth = 1.8
+          ..style = PaintingStyle.stroke;
+        final ecgBaseline = halfH * 0.55;
+        final ecgAmpScale = halfH * 0.38;
+        final ecgPath = Path();
+
+        for (int i = 0; i < count; i++) {
+          final x = i * stepX;
+          if (!isFrozen && x > sweepX && x < sweepX + 22) continue;
+          final y = (ecgBaseline - (ecgHistory[i] * ecgAmpScale)).clamp(
+            8.0,
+            halfH - 6.0,
+          );
+          if (i == 0 || (x > sweepX && x < sweepX + 24)) {
+            ecgPath.moveTo(x, y);
+          } else {
+            ecgPath.lineTo(x, y);
+          }
+        }
+        canvas.drawPath(ecgPath, ecgPaint);
       }
 
-      final y = ecgBaseline - (ecgHistory[i] * ecgAmpScale);
-      if (i == 0 || (x > sweepX && x < sweepX + 26)) {
-        ecgPath.moveTo(x, y.clamp(4.0, halfH - 4.0));
-      } else {
-        ecgPath.lineTo(x, y.clamp(4.0, halfH - 4.0));
+      if (!fingerOff && ppgHistory.isNotEmpty) {
+        final ppgPaint = Paint()
+          ..color = const Color(0xFF06B6D4)
+          ..strokeWidth = 1.8
+          ..style = PaintingStyle.stroke;
+        final ppgBaseline = h - 12;
+        final ppgAmpScale = (halfH - 22);
+        final ppgPath = Path();
+
+        for (int i = 0; i < ppgHistory.length; i++) {
+          final x = i * stepX;
+          if (!isFrozen && x > sweepX && x < sweepX + 22) continue;
+          final y = (ppgBaseline - (ppgHistory[i] * ppgAmpScale)).clamp(
+            halfH + 8.0,
+            h - 4.0,
+          );
+          if (i == 0 || (x > sweepX && x < sweepX + 24)) {
+            ppgPath.moveTo(x, y);
+          } else {
+            ppgPath.lineTo(x, y);
+          }
+        }
+        canvas.drawPath(ppgPath, ppgPaint);
       }
     }
 
-    canvas.drawPath(ecgPath, ecgGlowPaint);
-    canvas.drawPath(ecgPath, ecgPaint);
-
-    // 3. Plot PPG Plethysmograph Channel (Bottom half: y in [halfH + 10, h - 10])
-    final ppgPaint = Paint()
-      ..color = const Color(0xFF00E5FF)
-      ..strokeWidth = 1.8
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final ppgGlowPaint = Paint()
-      ..color = const Color(0xFF00E5FF).withValues(alpha: 0.25)
-      ..strokeWidth = 3.5
-      ..style = PaintingStyle.stroke;
-
-    final ppgBaseline = h - 12;
-    final ppgAmpScale = (halfH - 24);
-    final ppgPath = Path();
-
-    for (int i = 0; i < ppgHistory.length; i++) {
-      final x = i * stepX;
-      if (!isFrozen && x > sweepX && x < sweepX + 25) {
-        continue;
-      }
-
-      final y = ppgBaseline - (ppgHistory[i] * ppgAmpScale);
-      if (i == 0 || (x > sweepX && x < sweepX + 26)) {
-        ppgPath.moveTo(x, y.clamp(halfH + 4.0, h - 4.0));
-      } else {
-        ppgPath.lineTo(x, y.clamp(halfH + 4.0, h - 4.0));
-      }
-    }
-
-    canvas.drawPath(ppgPath, ppgGlowPaint);
-    canvas.drawPath(ppgPath, ppgPaint);
-
-    // 4. Draw Sweeping Cursor & Eraser Bar
+    // 4. Sweeping Beam & Eraser Bar
     if (!isFrozen) {
       final sweepBarPaint = Paint()
         ..shader = LinearGradient(
@@ -528,16 +818,15 @@ class _DualWaveformSweepPainter extends CustomPainter {
           ],
           stops: const [0.0, 0.5, 1.0],
         ).createShader(Rect.fromLTWH(sweepX - 2, 0, 4, h))
-        ..strokeWidth = 2.0;
+        ..strokeWidth = 1.8;
 
       canvas.drawLine(Offset(sweepX, 0), Offset(sweepX, h), sweepBarPaint);
 
-      // Eraser shadow ahead of sweep
-      final eraserRect = Rect.fromLTWH(sweepX, 0, 20.0, h);
+      final eraserRect = Rect.fromLTWH(sweepX, 0, 18.0, h);
       final eraserPaint = Paint()
         ..shader = LinearGradient(
           colors: [
-            const Color(0xFF0F171A).withValues(alpha: 0.95),
+            const Color(0xFF070C14).withValues(alpha: 0.95),
             Colors.transparent,
           ],
         ).createShader(eraserRect);
@@ -546,40 +835,38 @@ class _DualWaveformSweepPainter extends CustomPainter {
   }
 
   void _paintMedicalGrid(Canvas canvas, Size size) {
-    const smallGridSize = 6.0; // 0.04s scale representation
-    const largeGridSize = 30.0; // 0.20s large box (5 small boxes)
+    const smallGrid = 8.0;
+    const largeGrid = 40.0;
 
-    final smallGridPaint = Paint()
-      ..color = const Color(0xFF004D40).withValues(alpha: 0.22)
+    final minorPaint = Paint()
+      ..color = const Color(0xFF10B981).withValues(alpha: 0.05)
       ..strokeWidth = 0.5;
 
-    final largeGridPaint = Paint()
-      ..color = const Color(0xFF00796B).withValues(alpha: 0.45)
-      ..strokeWidth = 0.9;
+    final majorPaint = Paint()
+      ..color = const Color(0xFF10B981).withValues(alpha: 0.15)
+      ..strokeWidth = 0.8;
 
-    // Vertical lines (time)
-    for (double x = 0; x <= size.width; x += smallGridSize) {
-      final isMajor = (x % largeGridSize).abs() < 1.0;
+    for (double x = 0; x <= size.width; x += smallGrid) {
+      final isMajor = (x % largeGrid).abs() < 1.0;
       canvas.drawLine(
         Offset(x, 0),
         Offset(x, size.height),
-        isMajor ? largeGridPaint : smallGridPaint,
+        isMajor ? majorPaint : minorPaint,
       );
     }
 
-    // Horizontal lines (voltage)
-    for (double y = 0; y <= size.height; y += smallGridSize) {
-      final isMajor = (y % largeGridSize).abs() < 1.0;
+    for (double y = 0; y <= size.height; y += smallGrid) {
+      final isMajor = (y % largeGrid).abs() < 1.0;
       canvas.drawLine(
         Offset(0, y),
         Offset(size.width, y),
-        isMajor ? largeGridPaint : smallGridPaint,
+        isMajor ? majorPaint : minorPaint,
       );
     }
   }
 
   @override
   bool shouldRepaint(covariant _DualWaveformSweepPainter oldDelegate) {
-    return true; // Continuously sweeps at 60 FPS
+    return true; // Live 60 FPS sweep
   }
 }

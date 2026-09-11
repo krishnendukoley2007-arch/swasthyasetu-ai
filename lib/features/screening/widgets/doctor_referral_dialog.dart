@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'package:swasthyasetu_ai/core/services/pdf_clinical_report_service.dart';
@@ -404,7 +406,7 @@ class DoctorReferralDialog extends StatelessWidget {
               ),
             ),
 
-            // Clinical export actions: PDF report & ABHA QR card
+            // Clinical export actions: PDF report, CSV data & ABHA QR card
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppTheme.spacingMd,
@@ -420,6 +422,17 @@ class DoctorReferralDialog extends StatelessWidget {
                         style: TextStyle(fontSize: 12),
                       ),
                       onPressed: () => _exportPdf(context),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.table_chart_rounded, size: 16),
+                      label: Text(
+                        ['C', 'S', 'V'].join(),
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      onPressed: () => _exportCsv(context),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -527,6 +540,48 @@ class DoctorReferralDialog extends StatelessWidget {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to generate PDF: $e')));
+      }
+    }
+  }
+
+  Future<void> _exportCsv(BuildContext context) async {
+    try {
+      final p = _getPatient();
+      final s = _getScreening();
+      final dateStr = DateFormat('yyyy-MM-dd_HH-mm-ss').format(s.timestamp);
+
+      final csvContent = StringBuffer();
+      csvContent.writeln(
+        'screening_id,patient_name,age,sex,timestamp,heart_rate_bpm,spo2_percent,temperature_c,systolic_bp,diastolic_bp,ecg_rhythm,ecg_quality,triage_level,triage_score,triggered_rules,recommended_action',
+      );
+
+      final cleanName = p.name.replaceAll('"', '""');
+      final cleanRules = s.triggeredRules.join('; ').replaceAll('"', '""');
+      final cleanAction = s.recommendedAction.replaceAll('"', '""');
+
+      csvContent.writeln(
+        '${s.id},"$cleanName",${p.age},"${p.sex}","${s.timestamp.toIso8601String()}",${s.heartRate},${s.spo2},${s.temperature.toStringAsFixed(1)},${s.estimatedSystolic},${s.estimatedDiastolic},"${s.ecgRhythm}",${s.ecgQualityScore.toStringAsFixed(2)},"${s.riskLevel}",${s.riskScore},"$cleanRules","$cleanAction"',
+      );
+
+      final tempDir = await getTemporaryDirectory();
+      final sanitizedName = p.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+      final filePath =
+          '${tempDir.path}/Screening_${sanitizedName}_$dateStr.csv';
+      final file = File(filePath);
+      await file.writeAsString(csvContent.toString(), flush: true);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(filePath)],
+          text: 'SwasthyaSetu AI Screening CSV Data for ${p.name}',
+          subject: 'Screening Telemetry Data CSV - ${p.name}',
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to export CSV: $e')));
       }
     }
   }

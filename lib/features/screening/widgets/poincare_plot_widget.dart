@@ -9,6 +9,10 @@ import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 /// - Sympathetic tone & overall autonomic variance (SD2 semi-major axis)
 /// - Autonomic balance ratio (SD1 / SD2)
 /// - Arrhythmias: Atrial Fibrillation exhibits an amorphous "cloud", ectopy produces 4-point clusters
+const _sd1Label = 'SD1 (Short-term)';
+const _sd2Label = 'SD2 (Long-term)';
+const _sdRatioLabel = 'SD1/SD2 Ratio';
+
 class PoincarePlotWidget extends StatelessWidget {
   final List<int>? rrIntervalsMs;
   final double heartRateBpm;
@@ -137,54 +141,102 @@ class PoincarePlotWidget extends StatelessWidget {
           const SizedBox(height: 14),
 
           // Poincaré Canvas
-          Center(
-            child: SizedBox(
-              width: 260,
-              height: 260,
-              child: CustomPaint(
-                painter: _PoincarePainter(
-                  rrList: rrs,
-                  metrics: metrics,
-                  hasArrhythmia: hasArrhythmia,
-                  accentColor: statusColor,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final size = math.min(constraints.maxWidth, 260.0);
+              return Center(
+                child: SizedBox(
+                  width: size,
+                  height: size,
+                  child: CustomPaint(
+                    painter: _PoincarePainter(
+                      rrList: rrs,
+                      metrics: metrics,
+                      hasArrhythmia: hasArrhythmia,
+                      accentColor: statusColor,
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
 
           const SizedBox(height: 14),
 
           // HRV Telemetry Metrics Row
-          Row(
-            children: [
-              Expanded(
-                child: _buildMetricTile(
-                  theme,
-                  label: 'SD1 (Short-term)',
-                  value: '${metrics.sd1.toStringAsFixed(1)} ms',
-                  sub: 'Vagal tone',
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildMetricTile(
-                  theme,
-                  label: 'SD2 (Long-term)',
-                  value: '${metrics.sd2.toStringAsFixed(1)} ms',
-                  sub: 'Sympathetic tone',
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildMetricTile(
-                  theme,
-                  label: 'SD1/SD2 Ratio',
-                  value: metrics.sdRatio.toStringAsFixed(2),
-                  sub: 'Target 0.35 - 0.75',
-                  highlightColor: statusColor,
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 340) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 120,
+                        child: _buildMetricTile(
+                          theme,
+                          label: _sd1Label,
+                          value: '${metrics.sd1.toStringAsFixed(1)} ms',
+                          sub: 'Vagal tone',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 120,
+                        child: _buildMetricTile(
+                          theme,
+                          label: _sd2Label,
+                          value: '${metrics.sd2.toStringAsFixed(1)} ms',
+                          sub: 'Sympathetic tone',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 120,
+                        child: _buildMetricTile(
+                          theme,
+                          label: _sdRatioLabel,
+                          value: metrics.sdRatio.toStringAsFixed(2),
+                          sub: 'Target 0.35 - 0.75',
+                          highlightColor: statusColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(
+                    child: _buildMetricTile(
+                      theme,
+                      label: _sd1Label,
+                      value: '${metrics.sd1.toStringAsFixed(1)} ms',
+                      sub: 'Vagal tone',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildMetricTile(
+                      theme,
+                      label: _sd2Label,
+                      value: '${metrics.sd2.toStringAsFixed(1)} ms',
+                      sub: 'Sympathetic tone',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildMetricTile(
+                      theme,
+                      label: _sdRatioLabel,
+                      value: metrics.sdRatio.toStringAsFixed(2),
+                      sub: 'Target 0.35 - 0.75',
+                      highlightColor: statusColor,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: 10),

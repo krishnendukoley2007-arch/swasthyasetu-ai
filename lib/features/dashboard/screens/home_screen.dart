@@ -14,6 +14,15 @@ import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/environment/state/environment_providers.dart';
 import 'package:swasthyasetu_ai/features/screening/widgets/screening_mode_dialog.dart';
 
+// Localization guard: top-level constants
+const _kHeatGuardianTitle = 'Heat Guardian';
+const _kHeatGuardianSub = 'Moran PSI & Climate Stress';
+const _kOvernightGuardianTitle = 'Overnight Guardian';
+const _kOvernightGuardianSub = 'Continuous Sleep ECG & SpO2';
+const _kGuardianSectionTitle = 'Continuous & Climate Guardians';
+const _kPsiBadge = 'PSI 3.2';
+const _kOvernightBadge = 'Dual Graphs Live';
+
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -159,7 +168,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           ),
                           _buildAnimatedWidget(
                             controller: _statsController,
-                            delay: const Duration(milliseconds: 400),
+                            delay: const Duration(milliseconds: 350),
+                            child: _buildGuardianModesSection(),
+                          ),
+                          _buildAnimatedWidget(
+                            controller: _statsController,
+                            delay: const Duration(milliseconds: 500),
                             child: _buildLastScreeningSection(),
                           ),
                           _buildAnimatedWidget(
@@ -687,6 +701,163 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
+  Widget _buildGuardianModesSection() {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const AppSectionHeader(title: _kGuardianSectionTitle),
+          const AppSpacing.vsm(),
+          Row(
+            children: [
+              // Heat Guardian Card
+              Expanded(
+                child: AppElevatedCard(
+                  padding: const EdgeInsets.all(AppTheme.spacingMd),
+                  onTap: () => context.push('/screening/heat-guardian'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF8C00), Color(0xFFFF5722)],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.wb_sunny_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.deepOrange.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _kPsiBadge,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: Colors.deepOrange,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const AppSpacing.vmd(),
+                      Text(
+                        _kHeatGuardianTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const AppSpacing.vxs(),
+                      Text(
+                        _kHeatGuardianSub,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const AppSpacing.hmd(),
+              // Overnight Guardian Card
+              Expanded(
+                child: AppElevatedCard(
+                  padding: const EdgeInsets.all(AppTheme.spacingMd),
+                  onTap: () => context.push('/screening/overnight-guardian'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.nightlight_round,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.indigo.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _kOvernightBadge,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: Colors.indigo,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const AppSpacing.vmd(),
+                      Text(
+                        _kOvernightGuardianTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const AppSpacing.vxs(),
+                      Text(
+                        _kOvernightGuardianSub,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLastScreeningSection() {
     final theme = Theme.of(context);
     final recent = ref.watch(recentScreeningsProvider).valueOrNull;
@@ -954,6 +1125,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         icon: Icons.health_and_safety_outlined,
         color: theme.colorScheme.tertiary,
         route: '/advisories',
+        usePush: true,
+      ),
+      _ActionData(
+        label: _kHeatGuardianTitle,
+        icon: Icons.wb_sunny_rounded,
+        color: Colors.deepOrange,
+        route: '/screening/heat-guardian',
+        usePush: true,
+      ),
+      _ActionData(
+        label: _kOvernightGuardianTitle,
+        icon: Icons.nightlight_round,
+        color: Colors.indigo,
+        route: '/screening/overnight-guardian',
         usePush: true,
       ),
       _ActionData(

@@ -59,6 +59,7 @@ dependencies:
   # Clinical export & ABHA QR code
   qr_flutter: ^4.1.0
   pdf: ^3.13.0
+  firebase_ai: ^2.3.0
 
 dev_dependencies:
   flutter_test:

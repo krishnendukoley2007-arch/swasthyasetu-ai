@@ -97,6 +97,10 @@ class BleProtocol {
     final confidence = bytes[15];
     final uptimeMs = data.getUint32(16, Endian.little);
 
+    final spo2Stabilized = flags & 0x10 != 0;
+    final ppgLowSignal = flags & 0x20 != 0;
+    final sysState = bytes[15];
+
     final plausible =
         heartRate >= minHeartRate &&
         heartRate <= maxHeartRate &&
@@ -129,6 +133,9 @@ class BleProtocol {
       fallDetected: flags & 0x02 != 0,
       leadOff: flags & 0x04 != 0,
       fingerOff: flags & 0x08 != 0,
+      spo2Stabilized: spo2Stabilized,
+      ppgLowSignal: ppgLowSignal,
+      sysState: sysState,
       plausible: plausible,
       deviceUptimeMs: uptimeMs,
     );
@@ -207,11 +214,17 @@ class BleProtocol {
         : '${match.group(1)}.${match.group(2)}.$patch';
   }
 
-  /// Specific mode control commands for the new mutually exclusive architecture.
-  static List<int> get setModeIdleCommand => const [0x00];
-  static List<int> get setModeSpO2Command => const [0x01];
-  static List<int> get setModeEcgCommand => const [0x02];
-  static List<int> get setModeTempCommand => const [0x03];
+  /// Specific mode control commands for the mutually exclusive architecture.
+  static List<int> get setModeIdleCommand => const [0x00, 0x00, 0x00];
+  static List<int> get setModeSpO2Command => const [0x01, 0x1E, 0x00]; // 30s
+  static List<int> get setModeEcgCommand => const [0x02, 0x1E, 0x00]; // 30s
+  static List<int> get setModeTempCommand => const [0x03, 0x05, 0x00]; // 5s
+
+  static List<int> buildModeCommand(int mode, {int durationSec = 30}) => [
+    mode & 0xFF,
+    durationSec & 0xFF,
+    (durationSec >> 8) & 0xFF,
+  ];
 }
 
 /// One decoded live-vitals frame: the reading, plus the sensor-state bits that
@@ -231,6 +244,14 @@ class TelemetryFrame {
   /// this is set.
   final bool fingerOff;
 
+  /// Firmware flags: SpO2 settled (locked) and weak optical perfusion warning.
+  final bool spo2Stabilized;
+  final bool ppgLowSignal;
+
+  /// Active hardware mode on the ESP32 (byte 15):
+  /// 0 = Idle, 1 = SpO2, 2 = ECG, 3 = Temp
+  final int sysState;
+
   /// Every value is inside the range a human body can produce. False means the
   /// frame decoded cleanly but describes something that is not a person —
   /// treat as a sensor fault, not as a vital sign.
@@ -243,12 +264,33 @@ class TelemetryFrame {
     required this.fallDetected,
     required this.leadOff,
     required this.fingerOff,
+    this.spo2Stabilized = false,
+    this.ppgLowSignal = false,
+    this.sysState = 0,
     required this.plausible,
     required this.deviceUptimeMs,
   });
 
   /// Whether this frame is fit to display as a vital sign.
   bool get isUsable => plausible && !fingerOff;
+
+  /// Mode-specific plausibility check:
+  /// Validates the currently active sensor against physiological limits.
+  bool get isModePlausible {
+    if (sysState == 2) {
+      return !leadOff &&
+          sample.heartRateBpm >= BleProtocol.minHeartRate &&
+          sample.heartRateBpm <= BleProtocol.maxHeartRate;
+    } else if (sysState == 1) {
+      return !fingerOff &&
+          sample.spo2Percent >= BleProtocol.minSpo2 &&
+          sample.spo2Percent <= BleProtocol.maxSpo2;
+    } else if (sysState == 3) {
+      return sample.temperatureC >= BleProtocol.minTemperatureC &&
+          sample.temperatureC <= BleProtocol.maxTemperatureC;
+    }
+    return plausible;
+  }
 }
 
 class EcgFrame {

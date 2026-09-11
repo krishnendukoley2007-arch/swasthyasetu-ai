@@ -143,7 +143,7 @@ volatile PageState currentPage = PAGE_HOME;
 enum SystemState { SYS_IDLE = 0, MEASURE_SPO2, MEASURE_ECG, MEASURE_TEMP };
 volatile SystemState sysState = SYS_IDLE;
 unsigned long measurementStartTime = 0;
-unsigned int measurementDuration = 0;
+unsigned long measurementDuration = 0; // 0 = Continuous/Infinite streaming
 
 TwoWire I2C_MAX(1);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -452,24 +452,39 @@ class MyControlCallbacks : public BLECharacteristicCallbacks {
     // callback fires from the BLE stack's own task for the lifetime
     // of the device, and String's heap alloc/free on every write is
     // a slow, avoidable source of heap fragmentation on a long-running
-    // field unit. The control payload is always a single command byte.
+    // field unit.
+    // Protocol specification:
+    //   data[0] = Command (0x01=SpO2, 0x02=ECG, 0x03=Temp, 0x00=Idle/Stop)
+    //   data[1..2] (optional uint16 LE) = Duration in seconds:
+    //              0 = Continuous / Infinite Streaming
+    //              30 = 30 seconds (default)
+    //              120 = 2 minutes
+    //              300 = 5 minutes
     uint8_t *data = pCharacteristic->getData();
     size_t len = pCharacteristic->getLength();
     if (len == 0 || data == nullptr)
       return;
     uint8_t cmd = data[0];
+    uint32_t targetDurationMs = 30000; // default for 1-byte legacy commands
+    if (len >= 3) {
+      uint16_t durSec = (uint16_t)data[1] | ((uint16_t)data[2] << 8);
+      targetDurationMs = (uint32_t)durSec * 1000UL; // 0 = Infinite/Continuous!
+    } else if (len == 2) {
+      targetDurationMs = (uint32_t)data[1] * 1000UL;
+    }
+
     if (cmd == 0x01) {
       currentPage = PAGE_SPO2;
       powerSensors(MEASURE_SPO2);
-      measurementDuration = 30000;
+      measurementDuration = (len >= 2) ? targetDurationMs : 30000;
     } else if (cmd == 0x02) {
       currentPage = PAGE_ECG;
       powerSensors(MEASURE_ECG);
-      measurementDuration = 30000;
+      measurementDuration = (len >= 2) ? targetDurationMs : 30000;
     } else if (cmd == 0x03) {
       currentPage = PAGE_TEMP;
       powerSensors(MEASURE_TEMP);
-      measurementDuration = 5000;
+      measurementDuration = (len >= 2) ? targetDurationMs : 5000;
     } else if (cmd == 0x00) {
       currentPage = PAGE_HOME;
       powerSensors(SYS_IDLE);
@@ -952,12 +967,20 @@ void core0TaskFunction(void *pvParameters) {
 // ---------------------------------------------------------
 // DRAWING ROUTINES (5 PAGES)
 // ---------------------------------------------------------
-void drawProgressBar(int y, unsigned long elapsed, unsigned int total) {
+void drawProgressBar(int y, unsigned long elapsed, unsigned long total) {
   display.drawRect(14, y, 100, 6, SSD1306_WHITE);
-  int fill = (elapsed * 100) / total;
-  if (fill > 100)
-    fill = 100;
-  display.fillRect(14, y, fill, 6, SSD1306_WHITE);
+  if (total == 0) {
+    // Continuous / Infinite mode: dynamic scanning radar marquee
+    int scanPos = (int)((elapsed / 25) % 88);
+    display.fillRect(16 + scanPos, y + 1, 10, 4, SSD1306_WHITE);
+    return;
+  }
+  int fill = (int)((elapsed * 96) / total);
+  if (fill > 96)
+    fill = 96;
+  if (fill < 0)
+    fill = 0;
+  display.fillRect(16, y + 1, fill, 4, SSD1306_WHITE);
 }
 
 void drawPageHome(unsigned long ms) {
@@ -1074,7 +1097,18 @@ void drawPageSpO2(unsigned long ms) {
         display.drawBitmap(100, 14, bmp_heart_16, 16, 16, SSD1306_WHITE);
     }
 
-    drawProgressBar(46, ms - measurementStartTime, measurementDuration);
+    unsigned long elapsed = ms - measurementStartTime;
+    if (measurementDuration == 0) {
+      display.setCursor(0, 48);
+      display.setTextSize(1);
+      unsigned int sec = (unsigned int)(elapsed / 1000);
+      char tbuf[24];
+      snprintf(tbuf, sizeof(tbuf), "LIVE %02u:%02u [CONT]", sec / 60, sec % 60);
+      display.print(tbuf);
+      drawProgressBar(58, elapsed, 0);
+    } else {
+      drawProgressBar(46, elapsed, measurementDuration);
+    }
   } else if (justCompleted(PAGE_SPO2, ms)) {
     drawCompleteCelebration(ms);
   } else {
@@ -1125,7 +1159,17 @@ void drawPageECG(unsigned long ms) {
       display.print(current_hr);
       display.print(" BPM");
     }
-    drawProgressBar(58, ms - measurementStartTime, measurementDuration);
+    unsigned long elapsed = ms - measurementStartTime;
+    if (measurementDuration == 0) {
+      display.setCursor(68, 2);
+      unsigned int sec = (unsigned int)(elapsed / 1000);
+      char tbuf[16];
+      snprintf(tbuf, sizeof(tbuf), "%02u:%02u [C]", sec / 60, sec % 60);
+      display.print(tbuf);
+      drawProgressBar(58, elapsed, 0);
+    } else {
+      drawProgressBar(58, elapsed, measurementDuration);
+    }
   } else if (justCompleted(PAGE_ECG, ms)) {
     display.setTextSize(1);
     display.setCursor(0, 0);
@@ -1238,16 +1282,30 @@ void core1TaskFunction(void *pvParameters) {
     if (digitalRead(TOUCH_PIN_1) == HIGH) {
       if (touch1PressStart == 0)
         touch1PressStart = current_time;
-      else if (current_time - touch1PressStart > 1000 && sysState == SYS_IDLE) {
-        if (currentPage == PAGE_SPO2) {
-          powerSensors(MEASURE_SPO2);
-          measurementDuration = 30000;
-        } else if (currentPage == PAGE_ECG) {
-          powerSensors(MEASURE_ECG);
-          measurementDuration = 30000;
-        } else if (currentPage == PAGE_TEMP) {
-          powerSensors(MEASURE_TEMP);
-          measurementDuration = 5000;
+      else if (current_time - touch1PressStart > 1000) {
+        if (sysState == SYS_IDLE) {
+          if (currentPage == PAGE_SPO2) {
+            powerSensors(MEASURE_SPO2);
+            measurementDuration = 30000;
+          } else if (currentPage == PAGE_ECG) {
+            powerSensors(MEASURE_ECG);
+            measurementDuration = 30000;
+          } else if (currentPage == PAGE_TEMP) {
+            powerSensors(MEASURE_TEMP);
+            measurementDuration = 5000;
+          }
+        } else {
+          // Manual stop: user holds touch button during active/continuous measurement
+          if (sysState == MEASURE_SPO2) {
+            if (nSpo2Hist >= 3)
+              current_spo2 = (uint16_t)medianOfI32(spo2Hist, nSpo2Hist);
+            if (nHrHist >= 3)
+              current_hr = (uint16_t)medianOfI32(hrHist, nHrHist);
+          }
+          measurementCompleteAnimTime = current_time;
+          measurementCompletePage = currentPage;
+          powerSensors(SYS_IDLE);
+          animBurstUntil = current_time + ANIM_COMPLETE_MS + 50;
         }
         touch1PressStart = 0;
       }
@@ -1270,14 +1328,15 @@ void core1TaskFunction(void *pvParameters) {
       // race — strictly worse for a device with no bus-arbitration
       // mutex around Wire.
       if (sysState == MEASURE_TEMP && mlxFound &&
-          elapsed <= measurementDuration) {
+          (measurementDuration == 0 || elapsed <= measurementDuration)) {
         if (tempSampleCount < 5 && current_time - tempLastSampleTime >= 100) {
           tempSamples[tempSampleCount++] = mlx.readObjectTempC();
           tempLastSampleTime = current_time;
         }
       }
 
-      if (elapsed > measurementDuration) {
+      // Only auto-finalize if measurementDuration is non-zero (0 = Continuous/Infinite)
+      if (measurementDuration > 0 && elapsed > measurementDuration) {
         // Finalize specific readings
         if (sysState == MEASURE_TEMP && mlxFound) {
           // Grab any remaining samples immediately rather than

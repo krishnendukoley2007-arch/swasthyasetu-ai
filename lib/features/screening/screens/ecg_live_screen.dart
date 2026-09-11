@@ -166,7 +166,7 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
       // The service's broadcast stream, not a fresh connection: the link is
       // owned app-wide and survives this screen coming and going.
       _frames = ref.read(bleServiceProvider).ecg.listen(_onFrame);
-    } else {
+    } else if (ref.read(settingsProvider).demoMode) {
       _generator = Timer.periodic(_generatorTick, (_) => _onGenerated());
     }
   }
@@ -191,6 +191,15 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
 
   void _onFrame(EcgFrame frame) {
     if (!mounted || _source != _EcgSource.board) return;
+    if (ref.read(bleLinkProvider).leadOff) {
+      if (_window.isNotEmpty) {
+        setState(() {
+          _window = const [];
+          _metrics = _EcgMetrics.none;
+        });
+      }
+      return;
+    }
     setState(() => _append(frame.samples));
   }
 

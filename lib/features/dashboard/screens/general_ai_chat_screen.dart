@@ -57,13 +57,25 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
     final isPatient = account.role == UserRole.patient;
     if (isPatient) {
       buf.writeln('Asker: patient, ${account.displayName}.');
-      if (account.age != null) buf.write('Age ${account.age}');
+      if (account.age != null) buf.write('Age ${account.age} yrs');
       if (account.sex.isNotEmpty) buf.write(', sex ${account.sex}');
+      if (account.heightCm != null) {
+        buf.write(', height ${account.heightCm!.toStringAsFixed(0)} cm');
+      }
+      if (account.weightKg != null) {
+        buf.write(', weight ${account.weightKg!.toStringAsFixed(1)} kg');
+      }
       final bmi = account.bmi;
-      if (bmi != null) buf.write(', BMI ${bmi.toStringAsFixed(1)}');
+      if (bmi != null) {
+        final band = account.bmiBand != null ? ' (${account.bmiBand})' : '';
+        buf.write(', BMI ${bmi.toStringAsFixed(1)}$band');
+      }
       if (buf.length > 30 && !buf.toString().endsWith('\n')) buf.writeln('.');
       if (account.conditions.isNotEmpty) {
         buf.writeln('Known conditions: ${account.conditions.join(', ')}.');
+      }
+      if (account.problems != null && account.problems!.trim().isNotEmpty) {
+        buf.writeln('Reported complaints: "${account.problems!.trim()}".');
       }
     }
 

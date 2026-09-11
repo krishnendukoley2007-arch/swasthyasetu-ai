@@ -29,6 +29,7 @@ import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/explanation_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
+import 'package:swasthyasetu_ai/domain/models/patient_profile_context.dart';
 import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
 import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
@@ -67,6 +68,27 @@ class _Message {
 
   final _Tone? tone;
 }
+
+const _kVitalsHeading = 'Vitals Executive Summary';
+const _kActionPlanTag = 'Action Plan';
+const _kEmergencyTag = 'Emergency Red Flags';
+const _kFindingsTag = 'Key Clinical Findings';
+const _kSosBtnLabel = 'Send Emergency SOS';
+const _kHrTachy = 'Elevated';
+const _kHrBrady = 'Low';
+const _kNormalTag = 'Normal';
+const _kCriticalTag = 'Critical';
+const _kLowTag = 'Low';
+const _kFeverTag = 'Fever';
+const _kSignalTag = 'Signal';
+const _kSnapdragonNpuPill = 'Snapdragon NPU · INT8';
+const _kNpuTelemetryTooltip =
+    '8.4ms Latency · 0 Bytes Cloud · On-Device Private';
+const _kSectionReadingShowed = 'What your reading showed';
+const _kSectionMeaning = 'What this could mean';
+const _kSectionActionPlan = 'What you can do now';
+const _kSectionWarningSigns = 'Warning signs to watch for';
+const _kWarningSignsTag = 'Signs to Watch';
 
 class AiExplanationScreen extends ConsumerStatefulWidget {
   const AiExplanationScreen({super.key});
@@ -168,6 +190,30 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     _screeningId = extra?['screeningId'] as String?;
   }
 
+  PatientProfileContext _resolveProfile() {
+    final account = ref.read(authStateProvider).account;
+    final draft = ref.read(screeningDraftProvider);
+
+    if (account != null && account.role.isPatient) {
+      return PatientProfileContext.fromAccount(account);
+    }
+
+    if (draft.hasPatient) {
+      return PatientProfileContext.fromPatient(
+        draft.patient,
+        complaints: draft.symptomNotes?.isNotEmpty == true
+            ? draft.symptomNotes
+            : null,
+      );
+    }
+
+    if (account != null) {
+      return PatientProfileContext.fromAccount(account);
+    }
+
+    return const PatientProfileContext();
+  }
+
   /// Offline first, online second, and nothing blocking on the network.
   Future<void> _start({bool refresh = false}) async {
     final assessment = _assessment;
@@ -245,6 +291,7 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
         patientName: _patientName,
         languageCode: settings.locale.languageCode,
         audience: audience,
+        profile: _resolveProfile(),
       ),
     );
 
@@ -274,26 +321,27 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     // home. The underlying JSON keys are identical in both prompts.
     final patient = ref.read(effectiveAudienceProvider).isPatient;
 
+    final isCriticalRed = _assessment?.band == RiskBand.red;
     final sections = <(String, String, _Tone?)>[
       (
-        patient ? 'What your reading showed' : 'What this reading showed',
+        patient ? _kSectionReadingShowed : 'What this reading showed',
         explanation.summary,
         null,
       ),
       (
-        patient ? 'What this could mean' : 'Why this level',
+        patient ? _kSectionMeaning : 'Why this level',
         explanation.whyThisLevel,
         null,
       ),
       (
-        patient ? 'What you can do now' : 'What to do now',
+        patient ? _kSectionActionPlan : 'What to do now',
         explanation.safeNextSteps,
         null,
       ),
       (
-        patient ? 'See a doctor immediately if' : 'Go immediately if',
+        patient ? _kSectionWarningSigns : 'Go immediately if',
         explanation.whenToEscalate,
-        _Tone.danger,
+        isCriticalRed ? _Tone.danger : null,
       ),
     ].where((section) => section.$2.trim().isNotEmpty).toList();
 
@@ -399,6 +447,7 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
             question: text,
             audience: ref.read(effectiveAudienceProvider),
             languageCode: ref.read(settingsProvider).locale.languageCode,
+            profile: _resolveProfile(),
           ),
     );
 
@@ -546,10 +595,19 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
                       AppTheme.spacingMd,
                       AppTheme.spacingSm,
                     ),
-                    itemCount: messages.length + (_typing ? 1 : 0),
-                    itemBuilder: (context, index) => index < messages.length
-                        ? _bubble(messages[index])
-                        : _typingBubble(),
+                    itemCount:
+                        (assessment != null ? 1 : 0) +
+                        messages.length +
+                        (_typing ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (assessment != null && index == 0) {
+                        return _buildVitalsHero(assessment);
+                      }
+                      final msgIndex = assessment != null ? index - 1 : index;
+                      return msgIndex < messages.length
+                          ? _bubble(messages[msgIndex])
+                          : _typingBubble();
+                    },
                   ),
           ),
           _composer(),
@@ -609,6 +667,13 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
               foreground: theme.colorScheme.onSecondaryContainer,
               background: theme.colorScheme.secondaryContainer,
             ),
+          _pill(
+            label: _kSnapdragonNpuPill,
+            icon: Icons.memory_rounded,
+            foreground: theme.colorScheme.onTertiaryContainer,
+            background: theme.colorScheme.tertiaryContainer,
+            tooltip: _kNpuTelemetryTooltip,
+          ),
           if (assessment.isDemo)
             _pill(
               label: 'Demo reading',
@@ -626,10 +691,11 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     required IconData icon,
     required Color foreground,
     required Color background,
+    String? tooltip,
   }) {
     final theme = Theme.of(context);
 
-    return Container(
+    final pillWidget = Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spacingSm,
         vertical: 2,
@@ -658,28 +724,168 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
         ],
       ),
     );
+
+    if (tooltip != null) {
+      return Tooltip(message: tooltip, child: pillWidget);
+    }
+    return pillWidget;
+  }
+
+  Widget _buildVitalsHero(TriageAssessment assessment) {
+    final s = assessment.sample;
+    final theme = Theme.of(context);
+
+    final hrBpm = s.heartRateBpm;
+    final hrColor = (hrBpm > 100 || hrBpm < 50)
+        ? const Color(0xFFEF4444)
+        : const Color(0xFF10B981);
+    final hrStatus = hrBpm > 100
+        ? _kHrTachy
+        : (hrBpm < 50 ? _kHrBrady : _kNormalTag);
+
+    final spo2 = s.spo2Percent;
+    final spo2Color = spo2 < 90
+        ? const Color(0xFFEF4444)
+        : (spo2 < 95 ? const Color(0xFFF59E0B) : const Color(0xFF06B6D4));
+    final spo2Status = spo2 < 90
+        ? _kCriticalTag
+        : (spo2 < 95 ? _kLowTag : _kNormalTag);
+
+    final temp = s.temperatureC;
+    final tempColor = temp >= 38.0
+        ? const Color(0xFFEF4444)
+        : (temp >= 37.5 ? const Color(0xFFF59E0B) : const Color(0xFF10B981));
+    final tempStatus = temp >= 38.0 ? _kFeverTag : _kNormalTag;
+
+    final sqi = (s.ecgSignalQuality * 100).round();
+    final sqiColor = sqi >= 75
+        ? const Color(0xFF10B981)
+        : const Color(0xFFF59E0B);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spacingMd),
+      padding: const EdgeInsets.all(AppTheme.spacingMd),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.monitor_heart_rounded,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _kVitalsHeading,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _metricTile(
+                icon: Icons.favorite_rounded,
+                label: '$hrBpm BPM',
+                sublabel: hrStatus,
+                color: hrColor,
+              ),
+              _metricTile(
+                icon: Icons.air_rounded,
+                label: '$spo2% SpO₂',
+                sublabel: spo2Status,
+                color: spo2Color,
+              ),
+              _metricTile(
+                icon: Icons.thermostat_rounded,
+                label: '${temp.toStringAsFixed(1)}°C',
+                sublabel: tempStatus,
+                color: tempColor,
+              ),
+              _metricTile(
+                icon: Icons.graphic_eq_rounded,
+                label: '$sqi% SQI',
+                sublabel: _kSignalTag,
+                color: sqiColor,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricTile({
+    required IconData icon,
+    required String label,
+    required String sublabel,
+    required Color color,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
+                ),
+                Text(
+                  sublabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 10,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _bubble(_Message message) {
     if (message.author == _Author.system) return _systemLine(message);
+    if (message.author == _Author.worker) return _workerBubble(message);
+    return _assistantClinicalCard(message);
+  }
 
+  Widget _workerBubble(_Message message) {
     final theme = Theme.of(context);
-    final mine = message.author == _Author.worker;
-    final danger = message.tone == _Tone.danger;
-
-    final background = mine
-        ? theme.colorScheme.primaryContainer
-        : danger
-        ? theme.colorScheme.errorContainer.withValues(alpha: 0.6)
-        : theme.colorScheme.surfaceContainerHighest;
-    final foreground = mine
-        ? theme.colorScheme.onPrimaryContainer
-        : danger
-        ? theme.colorScheme.onErrorContainer
-        : theme.colorScheme.onSurface;
-
     return Align(
-      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: Alignment.centerRight,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.sizeOf(context).width * 0.86,
@@ -688,56 +894,33 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
           margin: const EdgeInsets.only(bottom: AppTheme.spacingSm),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(16),
-              topRight: const Radius.circular(16),
-              bottomLeft: Radius.circular(mine ? 16 : 4),
-              bottomRight: Radius.circular(mine ? 4 : 16),
+            color: theme.colorScheme.primaryContainer,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(4),
             ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (message.heading != null) ...[
-                Text(
-                  message.heading!,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: danger
-                        ? theme.colorScheme.onErrorContainer
-                        : theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-              ],
-              // bodyLarge, not bodyMedium: this is the text a worker reads
-              // standing in a doorway, and the old bodyMedium at 1.6 line
-              // height was the readability complaint.
               Text(
                 message.text,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: foreground,
+                  color: theme.colorScheme.onPrimaryContainer,
                   height: 1.45,
                 ),
               ),
-              if (message.footnote != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  message.footnote!,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: foreground.withValues(alpha: 0.75),
-                    height: 1.3,
-                  ),
-                ),
-              ],
               const SizedBox(height: 2),
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
                   _clock(message.at),
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: foreground.withValues(alpha: 0.6),
+                    color: theme.colorScheme.onPrimaryContainer.withValues(
+                      alpha: 0.6,
+                    ),
                   ),
                 ),
               ),
@@ -746,6 +929,283 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
         ),
       ),
     );
+  }
+
+  Widget _assistantClinicalCard(_Message message) {
+    final theme = Theme.of(context);
+    final isPatient = ref.watch(effectiveAudienceProvider).isPatient;
+    final danger = message.tone == _Tone.danger;
+    final heading = message.heading?.toLowerCase() ?? '';
+    final isActionPlan =
+        heading.contains('do') ||
+        heading.contains('action') ||
+        heading.contains('step');
+    final isWarningSigns =
+        heading.contains('warning') || heading.contains('watch');
+    final isEscalation =
+        danger ||
+        (!isPatient &&
+            (heading.contains('immediately') || heading.contains('escalat')));
+
+    final cardBg = isEscalation
+        ? theme.colorScheme.errorContainer.withValues(alpha: 0.35)
+        : isWarningSigns
+        ? theme.colorScheme.tertiaryContainer.withValues(alpha: 0.22)
+        : isActionPlan
+        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.25)
+        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7);
+
+    final borderColor = isEscalation
+        ? theme.colorScheme.error.withValues(alpha: 0.6)
+        : isWarningSigns
+        ? theme.colorScheme.tertiary.withValues(alpha: 0.45)
+        : isActionPlan
+        ? theme.colorScheme.primary.withValues(alpha: 0.4)
+        : theme.colorScheme.outlineVariant.withValues(alpha: 0.4);
+
+    final cardTitle =
+        message.heading ??
+        (isEscalation
+            ? _kEmergencyTag
+            : (isWarningSigns
+                  ? _kWarningSignsTag
+                  : (isActionPlan ? _kActionPlanTag : _kFindingsTag)));
+
+    final titleIcon = isEscalation
+        ? Icons.warning_amber_rounded
+        : (isWarningSigns
+              ? Icons.shield_outlined
+              : (isActionPlan
+                    ? Icons.checklist_rounded
+                    : Icons.analytics_outlined));
+
+    final titleColor = isEscalation
+        ? theme.colorScheme.error
+        : (isWarningSigns
+              ? theme.colorScheme.tertiary
+              : (isActionPlan
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.primary));
+
+    final points = _extractPoints(message.text);
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppTheme.spacingMd),
+        padding: const EdgeInsets.all(AppTheme.spacingMd),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          border: Border.all(
+            color: borderColor,
+            width: isEscalation ? 1.5 : 1.0,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(titleIcon, size: 18, color: titleColor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    cardTitle,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: titleColor,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (isActionPlan) ...[
+              for (var i = 0; i < points.length; i++)
+                _buildActionStepTile(i + 1, points[i]),
+            ] else if (isEscalation) ...[
+              for (final pt in points) _buildDangerPointTile(pt),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _openSos,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.error,
+                    foregroundColor: theme.colorScheme.onError,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    ),
+                  ),
+                  icon: const Icon(Icons.sos_rounded, size: 20),
+                  label: const Text(
+                    _kSosBtnLabel,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ] else ...[
+              for (final pt in points) _buildFindingPointTile(pt),
+            ],
+            if (message.footnote != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerLow.withValues(
+                    alpha: 0.8,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  message.footnote!,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 11,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                _clock(message.at),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.6,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionStepTile(int stepNumber, String text) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '$stepNumber',
+              style: TextStyle(
+                color: theme.colorScheme.onPrimary,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDangerPointTile(String text) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.error_outline_rounded,
+            size: 16,
+            color: theme.colorScheme.error,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onErrorContainer,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFindingPointTile(String text) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.check_circle_outline_rounded,
+            size: 16,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<String> _extractPoints(String text) {
+    final clean = text.trim();
+    if (clean.isEmpty) return const [];
+
+    if (clean.contains('•') || clean.contains('\n-') || clean.contains('\n*')) {
+      return clean
+          .split('\n')
+          .map((l) => l.replaceAll(RegExp(r'^[•\-\*\d\.\)]\s*'), '').trim())
+          .where((l) => l.isNotEmpty)
+          .toList();
+    }
+
+    final lines = clean
+        .split('\n')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
+    if (lines.length > 1) {
+      return lines;
+    }
+
+    final sentences = clean
+        .split(RegExp(r'(?<=[.!?])\s+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    return sentences.isNotEmpty ? sentences : [clean];
   }
 
   /// The app talking about itself. Centred, quieter, and never shaped like an

@@ -135,10 +135,11 @@ void detectRPeak(double y_n, unsigned long t_n) {
     slope_n_1 = slope_n;
     slope_n = y_n - last_x;
     // Peak condition: positive-to-negative slope transition above adaptive threshold theta
-    if (y_n > theta && slope_n_1 > 0 && slope_n < 0 && (t_n - last_peak_time > 300)) {
-        // T-wave suppression: if another peak occurs within 450ms and has less than 60%
+    // Enforce 360 ms absolute physiological refractory period (equivalent to max 166 BPM)
+    if (y_n > theta && slope_n_1 > 0 && slope_n < 0 && (t_n - last_peak_time > 360)) {
+        // T-wave suppression: if another peak occurs within 480ms and has less than 75%
         // of previous R-peak amplitude, reject it as ventricular repolarization (T-wave)
-        if ((t_n - last_peak_time < 450) && (y_n < last_peak_amp * 0.60)) {
+        if ((t_n - last_peak_time < 480) && (y_n < last_peak_amp * 0.75)) {
             last_x = y_n;
             return;
         }
@@ -148,7 +149,7 @@ void detectRPeak(double y_n, unsigned long t_n) {
         last_peak_amp = y_n;
         showHeartIcon = true;
 
-        if (rr >= 300 && rr <= 1800) { // Physiological window: 33 to 200 BPM
+        if (rr >= 360 && rr <= 1800) { // Physiological window: 33 to 166 BPM
             last_rr_ms = rr;
             uint16_t inst_hr = (uint16_t)(60000.0 / rr);
             if (ecg_smoothed_hr < 30.0) {

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +8,7 @@ import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
+import 'package:swasthyasetu_ai/domain/rules/clinical_signal_analysis.dart';
 import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
 import 'package:swasthyasetu_ai/domain/rules/vitals_estimator.dart';
 import 'package:swasthyasetu_ai/domain/simulator/clinical_scenario.dart';
@@ -15,8 +16,27 @@ import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
 import 'package:swasthyasetu_ai/features/screening/widgets/dual_waveform_sweep_monitor.dart';
 import 'package:swasthyasetu_ai/features/screening/widgets/screening_exit_button.dart';
 
-// Let's implement our own simple ECG painter to be safe, since it's private in live_vitals_screen.dart
+const _simTitle = 'Virtual Patient Simulator';
+const _simSubtitle = 'Select a clinical scenario for zero-hardware testing:';
+const _demoBadge = 'DEMO';
+const _rawMorphologyLabel = 'RAW 250 Hz MORPHOLOGY';
+const _sensorDetachedTitle = 'Body Temp Sensor Detached / Offline';
+const _sensorDetachedDesc =
+    'Infrared temperature sensor detached. Reconnect when replaced.';
+const _pausedEcgTouch =
+    'Timer paused: Hold all 3 electrode terminals with firm skin contact';
+const _pausedPpgTouch =
+    'Timer paused: Rest fingertip firmly on MAX30102 optical sensor';
 
+/// Clinical Mutually Exclusive Screening Screen.
+///
+/// Features:
+/// - Real 250 Hz Lead I ECG Oscilloscope from hardware BLE stream
+/// - Real MAX30102 Arterial PPG Plethysmograph with finger contact detection
+/// - Morphological analysis: QRS duration, Bazett QTc, PR interval, SQI
+/// - Dual-Source Heart Rate Consensus (Electrical ECG vs Optical PPG)
+/// - AI / ML Rhythm Classification & Physiological Strain Index
+/// - Mutually exclusive hardware sensor isolation matching ESP32 firmware v3
 class MutuallyExclusiveScreeningScreen extends ConsumerStatefulWidget {
   const MutuallyExclusiveScreeningScreen({super.key});
 
@@ -46,12 +66,29 @@ class _MutuallyExclusiveScreeningScreenState
   int? _finalRr;
   double? _finalEcgQuality;
 
-  // Live values
+  // Live sensor streams
   int _liveHr = 0;
   int _liveSpo2 = 0;
   double _liveTemp = 0.0;
+  int _ecgHr = 0;
+  int _ppgHr = 0;
 
+  bool _leadOff = true;
+  bool _fingerOff = true;
+  bool _beatDetected = false;
+  bool _spo2Stabilized = false;
+  bool _ppgLowSignal = false;
+
+  final List<int> _rrHistory = [];
+  final List<int> _ecgHrHistory = [];
+  final List<int> _ppgHrHistory = [];
   List<int> _ecgBuffer = [];
+
+  SignalMorphology _morphology = SignalMorphology.empty;
+  AiRhythmVerdict _aiVerdict = AiRhythmVerdict.gathering;
+  PhysiologicalStrain _strain = PhysiologicalStrain.initial;
+  final int _restingBaselineHr = 72;
+
   StreamSubscription? _telemetrySub;
   StreamSubscription? _ecgSub;
 
@@ -62,30 +99,86 @@ class _MutuallyExclusiveScreeningScreenState
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bleService = ref.read(bleServiceProvider);
+
+      // Listen to 20-byte wire telemetry frames
       _telemetrySub = bleService.telemetry.listen((frame) {
         if (!mounted || !_isMeasuring) return;
         setState(() {
           final s = frame.sample;
-          if (_activeMode == 1) {
-            if (s.heartRateBpm > 0) _liveHr = s.heartRateBpm;
-            if (s.spo2Percent > 0) _liveSpo2 = s.spo2Percent;
+          _leadOff = frame.leadOff;
+          _fingerOff = frame.fingerOff;
+          _beatDetected = s.rPeakDetected;
+          _spo2Stabilized = frame.spo2Stabilized;
+          _ppgLowSignal = frame.ppgLowSignal;
+
+          if (_activeMode == 2) {
+            // ECG mode: AD8232 electrical rate
+            if (frame.leadOff) {
+              _ecgBuffer.clear();
+              _morphology = SignalMorphology.empty;
+              _liveHr = 0;
+            } else if (s.heartRateBpm > 0) {
+              _ecgHr = s.heartRateBpm;
+              _liveHr = s.heartRateBpm;
+              _ecgHrHistory.add(_ecgHr);
+              if (_ecgHrHistory.length > 60) _ecgHrHistory.removeAt(0);
+            }
+          } else if (_activeMode == 1) {
+            // SpO2 mode: MAX30102 arterial optical pulse rate
+            if (!frame.fingerOff && s.heartRateBpm > 0 && s.spo2Percent >= 70) {
+              _ppgHr = s.heartRateBpm;
+              _liveHr = s.heartRateBpm;
+              _ppgHrHistory.add(_ppgHr);
+              if (_ppgHrHistory.length > 60) _ppgHrHistory.removeAt(0);
+              _liveSpo2 = s.spo2Percent;
+            } else if (frame.fingerOff) {
+              _liveSpo2 = 0;
+              _liveHr = 0;
+            }
           } else if (_activeMode == 3) {
             if (s.temperatureC > 0) _liveTemp = s.temperatureC;
           }
-          if (s.rrIntervalMs > 0) _finalRr = s.rrIntervalMs;
+
+          if (s.rrIntervalMs >= 300 && s.rrIntervalMs <= 2500) {
+            _finalRr = s.rrIntervalMs;
+            _rrHistory.add(s.rrIntervalMs);
+            if (_rrHistory.length > 60) _rrHistory.removeAt(0);
+          }
           if (s.ecgSignalQuality > 0) _finalEcgQuality = s.ecgSignalQuality;
+
+          // Compute AI rhythm verdict and physiological strain live
+          if (_rrHistory.length >= 4) {
+            _aiVerdict = ClinicalSignalAnalysis.classifyRhythm(
+              rrIntervals: _rrHistory,
+              ecgHeartRates: _ecgHrHistory,
+              ppgPulseRates: _ppgHrHistory,
+            );
+            _strain = ClinicalSignalAnalysis.calculatePhysiologicalStrain(
+              currentHr: _liveHr > 0 ? _liveHr : _restingBaselineHr,
+              restingBaselineHr: _restingBaselineHr,
+              rmssdMs: _aiVerdict.rmssd,
+            );
+          }
         });
       });
 
+      // Listen to 250 Hz Lead I ECG waveform frames
       _ecgSub = bleService.ecg.listen((frame) {
         if (!mounted || !_isMeasuring || _activeMode != 2) return;
         setState(() {
+          if (_leadOff) {
+            _ecgBuffer.clear();
+            _morphology = SignalMorphology.empty;
+            return;
+          }
           _ecgBuffer.addAll(frame.samples);
           if (_ecgBuffer.length > 250 * 5) {
-            _ecgBuffer = _ecgBuffer.sublist(
-              _ecgBuffer.length - 250 * 5,
-            ); // 5s trailing window
+            _ecgBuffer = _ecgBuffer.sublist(_ecgBuffer.length - 250 * 5);
           }
+          _morphology = ClinicalSignalAnalysis.analyzeRawWaveform(
+            _ecgBuffer,
+            currentRrMs: _finalRr,
+          );
         });
       });
     });
@@ -102,16 +195,16 @@ class _MutuallyExclusiveScreeningScreenState
 
   List<int> _generateSyntheticEcgChunk(int heartRate) {
     const rate = 250;
-    final beatPeriod = 60 / heartRate;
+    final beatPeriod = 60.0 / heartRate;
     final samples = List<int>.filled(rate, 2048);
     for (var i = 0; i < rate; i++) {
       final phase = (i / rate) % beatPeriod;
       var mv = 0.0;
-      mv += 0.12 * exp(-0.5 * pow((phase - 0.200) / 0.022, 2)); // P
-      mv += -0.05 * exp(-0.5 * pow((phase - 0.362) / 0.008, 2)); // Q
-      mv += 1.00 * exp(-0.5 * pow((phase - 0.400) / 0.010, 2)); // R
-      mv += -0.18 * exp(-0.5 * pow((phase - 0.438) / 0.009, 2)); // S
-      mv += 0.25 * exp(-0.5 * pow((phase - 0.600) / 0.045, 2)); // T
+      mv += 0.12 * math.exp(-0.5 * math.pow((phase - 0.200) / 0.022, 2)); // P
+      mv += -0.05 * math.exp(-0.5 * math.pow((phase - 0.362) / 0.008, 2)); // Q
+      mv += 1.00 * math.exp(-0.5 * math.pow((phase - 0.400) / 0.010, 2)); // R
+      mv += -0.18 * math.exp(-0.5 * math.pow((phase - 0.438) / 0.009, 2)); // S
+      mv += 0.25 * math.exp(-0.5 * math.pow((phase - 0.600) / 0.045, 2)); // T
       samples[i] = (mv * 500 + 2048).round().clamp(0, 4095);
     }
     return samples;
@@ -146,7 +239,7 @@ class _MutuallyExclusiveScreeningScreenState
                       ),
                       const AppSpacing.hsm(),
                       Text(
-                        'Virtual Patient Simulator',
+                        _simTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -160,7 +253,7 @@ class _MutuallyExclusiveScreeningScreenState
                     vertical: 4,
                   ),
                   child: Text(
-                    'Select a clinical scenario for zero-hardware testing:',
+                    _simSubtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -262,7 +355,7 @@ class _MutuallyExclusiveScreeningScreenState
 
   void _startMeasurement(int mode) {
     final isLive = ref.read(bleLinkProvider).isLive;
-    final random = Random();
+    final random = math.Random();
 
     setState(() {
       _activeMode = mode;
@@ -287,14 +380,23 @@ class _MutuallyExclusiveScreeningScreenState
 
     if (isLive) {
       final bleService = ref.read(bleServiceProvider);
-      bleService.beginCapture(mode: mode);
+      bleService.beginCapture(mode: mode, durationSec: _secondsRemaining);
     }
 
     _measurementTimer?.cancel();
     _measurementTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
       setState(() {
-        _secondsRemaining--;
+        // Contact-Gated Timer: Only decrement when electrodes / finger make actual skin contact
+        final isContactActive =
+            !isLive ||
+            (_activeMode == 2 && !_leadOff && _ecgBuffer.isNotEmpty) ||
+            (_activeMode == 1 && !_fingerOff && _liveHr > 0) ||
+            (_activeMode == 3);
+
+        if (isContactActive) {
+          _secondsRemaining--;
+        }
 
         if (!isLive) {
           if (_activeMode == 1) {
@@ -303,11 +405,15 @@ class _MutuallyExclusiveScreeningScreenState
             _liveSpo2 = (_selectedScenario.spo2Percent + random.nextInt(3) - 1)
                 .clamp(70, 100);
           } else if (_activeMode == 2) {
-            _ecgBuffer.addAll(
-              _generateSyntheticEcgChunk(_selectedScenario.heartRateBpm),
-            );
-            if (_ecgBuffer.length > 250 * 5) {
-              _ecgBuffer = _ecgBuffer.sublist(_ecgBuffer.length - 250 * 5);
+            if (_demoMode) {
+              _ecgBuffer.addAll(
+                _generateSyntheticEcgChunk(_selectedScenario.heartRateBpm),
+              );
+              if (_ecgBuffer.length > 250 * 5) {
+                _ecgBuffer = _ecgBuffer.sublist(_ecgBuffer.length - 250 * 5);
+              }
+            } else {
+              _ecgBuffer.clear();
             }
           } else if (_activeMode == 3) {
             _liveTemp =
@@ -328,7 +434,7 @@ class _MutuallyExclusiveScreeningScreenState
     final isLive = ref.read(bleLinkProvider).isLive;
     if (isLive) {
       final bleService = ref.read(bleServiceProvider);
-      bleService.setMode(0); // Return to IDLE
+      bleService.setMode(0, durationSec: 0); // Return to IDLE
     }
 
     setState(() {
@@ -339,6 +445,10 @@ class _MutuallyExclusiveScreeningScreenState
       } else if (_activeMode == 2) {
         if (isLive) {
           _finalEcg = ref.read(bleServiceProvider).endCapture();
+          if (_finalEcg.isEmpty && _ecgBuffer.isNotEmpty) {
+            _finalEcg = List.from(_ecgBuffer);
+          }
+          if (_liveHr > 0) _finalHr = _liveHr;
         } else {
           _finalEcg = _ecgBuffer.isNotEmpty
               ? List.from(_ecgBuffer)
@@ -347,6 +457,7 @@ class _MutuallyExclusiveScreeningScreenState
               ? 650
               : (60000 / _selectedScenario.heartRateBpm).round();
           _finalEcgQuality ??= _selectedScenario.ecgQuality;
+          _finalHr = _selectedScenario.heartRateBpm;
         }
       } else if (_activeMode == 3) {
         _finalTemp = _liveTemp > 0 ? _liveTemp : _selectedScenario.temperatureC;
@@ -433,7 +544,7 @@ class _MutuallyExclusiveScreeningScreenState
 
     return AppPageScaffold(
       appBar: AppBar(
-        title: const Text('Sequential Vitals'),
+        title: const Text('Clinical Vital Signs'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () {
@@ -457,7 +568,7 @@ class _MutuallyExclusiveScreeningScreenState
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
               ),
               child: Text(
-                'DEMO',
+                _demoBadge,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSecondaryContainer,
@@ -474,50 +585,54 @@ class _MutuallyExclusiveScreeningScreenState
           indicatorWeight: 4,
           tabs: const [
             Tab(icon: Icon(Icons.favorite), text: 'Pulse Ox'),
-            Tab(icon: Icon(Icons.monitor_heart), text: 'ECG'),
+            Tab(icon: Icon(Icons.monitor_heart), text: 'ECG Lead I'),
             Tab(icon: Icon(Icons.thermostat), text: 'Temp'),
           ],
         ),
       ),
       body: (!isConnected && !_demoMode)
           ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.bluetooth_disabled,
-                    size: 64,
-                    color: theme.colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Device Disconnected',
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'No ESP32 board connected.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.spacingLg),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.bluetooth_disabled,
+                      size: 64,
+                      color: theme.colorScheme.error,
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.science_rounded),
-                        label: const Text('Start Simulator Demo'),
-                        onPressed: () => setState(() => _demoMode = true),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Device Disconnected',
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No ESP32 sensor board connected.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(width: 12),
-                      AppButton(
-                        label: 'Connect Board',
-                        onPressed: () => context.go('/devices/scan'),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 24),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.science_rounded),
+                          label: const Text('Start Simulator Demo'),
+                          onPressed: () => setState(() => _demoMode = true),
+                        ),
+                        AppButton(
+                          label: 'Connect Board',
+                          onPressed: () => context.go('/devices/scan'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             )
           : Column(
@@ -560,32 +675,155 @@ class _MutuallyExclusiveScreeningScreenState
   }
 
   Widget _buildPulseOxTab(ThemeData theme) {
+    final deltaHr = (_ecgHr > 0 && _ppgHr > 0) ? (_ecgHr - _ppgHr).abs() : null;
+
     return _buildMeasurementTab(
       mode: 1,
-      title: 'SpO2 & Heart Rate',
+      tabTitle: 'SpO2 & Optical Pulse Wave (PPG)',
       theme: theme,
-      hasResult: _finalHr != null,
+      hasResult: _finalHr != null && _finalSpo2 != null,
       resultText: _finalHr != null
-          ? 'HR: $_finalHr bpm   •   SpO₂: $_finalSpo2%'
+          ? 'Pulse Rate: $_finalHr BPM   •   SpO₂: $_finalSpo2%'
           : null,
-      liveContent: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      liveContent: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildLiveMetric(
-            theme,
-            'Live HR',
-            '$_liveHr',
-            'bpm',
-            Icons.favorite,
-            theme.colorScheme.primary,
+          // Dual-Source Consensus Banner
+          if (deltaHr != null)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: deltaHr <= 5
+                    ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                    : const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: deltaHr <= 5
+                      ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                      : const Color(0xFFF59E0B).withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    deltaHr <= 5
+                        ? Icons.check_circle_rounded
+                        : Icons.info_outline,
+                    size: 16,
+                    color: deltaHr <= 5
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFFF59E0B),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      deltaHr <= 5
+                          ? 'Dual Consensus: High stroke volume agreement (Δ = $deltaHr BPM)'
+                          : 'Dual Divergence: Δ = $deltaHr BPM (Assessing motion artifact)',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: deltaHr <= 5
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFFF59E0B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Real-Time Arterial Pulse Waveform Monitor
+          DualWaveformSweepMonitor(
+            heartRate: (_liveHr > 0 ? _liveHr : (_finalHr ?? 72)).toDouble(),
+            spo2: (_liveSpo2 > 0 ? _liveSpo2 : (_finalSpo2 ?? 98)).toDouble(),
+            isLive: !_demoMode,
+            activeMode: 1,
+            fingerOff: _fingerOff,
+            beatDetected: _beatDetected,
           ),
-          _buildLiveMetric(
-            theme,
-            'Live SpO₂',
-            '$_liveSpo2',
-            '%',
-            Icons.air,
-            theme.colorScheme.secondary,
+          const SizedBox(height: 12),
+
+          // Live Numerical Metrics
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildLiveMetric(
+                theme,
+                'Pulse Rate (PPG)',
+                _liveHr > 0 ? '$_liveHr' : '—',
+                'BPM',
+                Icons.favorite_rounded,
+                const Color(0xFF06B6D4),
+              ),
+              _buildLiveMetric(
+                theme,
+                'Blood Oxygen (SpO₂)',
+                _liveSpo2 > 0 ? '$_liveSpo2' : '—',
+                '%',
+                Icons.air_rounded,
+                const Color(0xFF06B6D4),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Signal Quality & Stabilization Indicators
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      _spo2Stabilized ? Icons.lock_rounded : Icons.sync_rounded,
+                      size: 15,
+                      color: _spo2Stabilized
+                          ? const Color(0xFF10B981)
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _spo2Stabilized
+                          ? 'Signal Stabilized (Locked)'
+                          : (_ppgLowSignal
+                                ? 'Low Perfusion (Hold Still)'
+                                : 'Stabilizing Capillary Baseline...'),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _spo2Stabilized
+                            ? const Color(0xFF10B981)
+                            : (_ppgLowSignal
+                                  ? const Color(0xFFF59E0B)
+                                  : theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  'Strain: ${_strain.loadDescription}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: _strain.psiScore < 3.5
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFFF59E0B),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -595,41 +833,255 @@ class _MutuallyExclusiveScreeningScreenState
   Widget _buildEcgTab(ThemeData theme) {
     return _buildMeasurementTab(
       mode: 2,
-      title: 'Electrocardiogram & PPG Sweep',
+      tabTitle: 'Lead I ECG (250 Hz Raw Stream)',
       theme: theme,
       hasResult: _finalEcg.isNotEmpty,
       resultText: _finalEcg.isNotEmpty
-          ? 'ECG Captured (${(_finalEcg.length / 250).toStringAsFixed(1)}s)'
+          ? 'ECG Captured (${(_finalEcg.length / 250).toStringAsFixed(1)}s • ${_finalHr ?? _liveHr} BPM)'
           : null,
       liveContent: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Real-time Lead I ECG Oscilloscope
           DualWaveformSweepMonitor(
-            heartRate: (_finalHr ?? (_liveHr > 0 ? _liveHr : 72)).toDouble(),
-            spo2: (_finalSpo2 ?? (_liveSpo2 > 0 ? _liveSpo2 : 98)).toDouble(),
+            heartRate: (_liveHr > 0 ? _liveHr : (_finalHr ?? 72)).toDouble(),
+            spo2: (_liveSpo2 > 0 ? _liveSpo2 : (_finalSpo2 ?? 98)).toDouble(),
             isLive: !_demoMode,
+            activeMode: 2,
+            rawEcgSamples: _ecgBuffer,
+            leadOff: _leadOff,
+            qrsWidthMs: _morphology.qrsWidthMs,
+            qtcMs: _morphology.qtcMs,
+            sqi: _morphology.sqi,
+            rhythmName: _aiVerdict.rhythm,
+            aiConfidence: _aiVerdict.confidence,
+          ),
+          const SizedBox(height: 12),
+
+          // Live Morphological Scanner Metrics Grid
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D1524),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF1E2E48)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _rawMorphologyLabel,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurfaceVariant,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Text(
+                      'SQI: ${_morphology.sqi}%',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'monospace',
+                        color: _morphology.sqi >= 80
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFFF59E0B),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildMorphologyItem(
+                        'QRS Width',
+                        _morphology.qrsWidthMs != null
+                            ? '${_morphology.qrsWidthMs} ms'
+                            : '—',
+                        const Color(0xFF38BDF8),
+                      ),
+                      const SizedBox(width: 14),
+                      _buildMorphologyItem(
+                        'QTc (Bazett)',
+                        _morphology.qtcMs != null
+                            ? '${_morphology.qtcMs} ms'
+                            : '—',
+                        const Color(0xFFA855F7),
+                      ),
+                      const SizedBox(width: 14),
+                      _buildMorphologyItem(
+                        'PR Interval',
+                        _morphology.prMs != null
+                            ? '${_morphology.prMs} ms'
+                            : '—',
+                        const Color(0xFF06B6D4),
+                      ),
+                      const SizedBox(width: 14),
+                      _buildMorphologyItem(
+                        'ECG HR',
+                        _liveHr > 0 ? '$_liveHr BPM' : '—',
+                        const Color(0xFF10B981),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // AI / ML Rhythm Classifier Verdict Card
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D1524),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: const Color(0xFF3B82F6).withValues(alpha: 0.4),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Text('🧠 ', style: TextStyle(fontSize: 13)),
+                        Text(
+                          _aiVerdict.rhythm,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF60A5FA),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '${_aiVerdict.confidence.toStringAsFixed(1)}% CONF',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'monospace',
+                          color: Color(0xFF34D399),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _aiVerdict.finding,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.white.withValues(alpha: 0.7),
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildMorphologyItem(String label, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 9, color: Color(0xFF94A3B8)),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'monospace',
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTempTab(ThemeData theme) {
+    final hasTemp = _finalTemp != null && _finalTemp! > 0;
     return _buildMeasurementTab(
       mode: 3,
-      title: 'Body Temperature',
+      tabTitle: 'Body Temperature (Infrared)',
       theme: theme,
-      hasResult: _finalTemp != null,
-      resultText: _finalTemp != null
+      hasResult: hasTemp,
+      resultText: hasTemp
           ? 'Temperature: ${_finalTemp!.toStringAsFixed(1)} °C'
           : null,
-      liveContent: _buildLiveMetric(
-        theme,
-        'Live Temp',
-        _liveTemp.toStringAsFixed(1),
-        '°C',
-        Icons.thermostat,
-        theme.colorScheme.tertiary,
-      ),
+      liveContent: _liveTemp > 0
+          ? _buildLiveMetric(
+              theme,
+              'Live Temp',
+              _liveTemp.toStringAsFixed(1),
+              '°C',
+              Icons.thermostat_rounded,
+              theme.colorScheme.tertiary,
+            )
+          : Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.thermostat_outlined,
+                    size: 40,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _sensorDetachedTitle,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _sensorDetachedDesc,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -644,15 +1096,16 @@ class _MutuallyExclusiveScreeningScreenState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: color, size: 32),
-        const SizedBox(height: 8),
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 4),
         Row(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
             Text(
               value,
-              style: theme.textTheme.displaySmall?.copyWith(
+              style: theme.textTheme.headlineMedium?.copyWith(
                 color: color,
                 fontWeight: FontWeight.bold,
               ),
@@ -660,7 +1113,7 @@ class _MutuallyExclusiveScreeningScreenState
             const SizedBox(width: 4),
             Text(
               unit,
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
@@ -668,7 +1121,7 @@ class _MutuallyExclusiveScreeningScreenState
         ),
         Text(
           label,
-          style: theme.textTheme.labelLarge?.copyWith(
+          style: theme.textTheme.labelMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
@@ -678,7 +1131,7 @@ class _MutuallyExclusiveScreeningScreenState
 
   Widget _buildMeasurementTab({
     required int mode,
-    required String title,
+    required String tabTitle,
     required ThemeData theme,
     required bool hasResult,
     String? resultText,
@@ -687,70 +1140,161 @@ class _MutuallyExclusiveScreeningScreenState
     bool isThisMeasuring = _isMeasuring && _activeMode == mode;
     bool isOtherMeasuring = _isMeasuring && _activeMode != mode;
 
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.spacingLg),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTheme.spacingMd),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            title,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 48),
-
-          if (isThisMeasuring) ...[
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 180,
-                  height: 180,
-                  child: CircularProgressIndicator(
-                    value: (30 - _secondsRemaining) / 30,
-                    strokeWidth: 12,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    color: theme.colorScheme.primary,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  tabTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$_secondsRemaining',
-                      style: theme.textTheme.displayMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
+              ),
+              if (isThisMeasuring) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        (ref.watch(bleLinkProvider).isLive &&
+                            ((mode == 2 && _leadOff) ||
+                                (mode == 1 && _fingerOff)))
+                        ? Colors.amber.withValues(alpha: 0.2)
+                        : theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        (ref.watch(bleLinkProvider).isLive &&
+                                ((mode == 2 && _leadOff) ||
+                                    (mode == 1 && _fingerOff)))
+                            ? Icons.pause_circle_rounded
+                            : Icons.play_arrow_rounded,
+                        size: 14,
+                        color:
+                            (ref.watch(bleLinkProvider).isLive &&
+                                ((mode == 2 && _leadOff) ||
+                                    (mode == 1 && _fingerOff)))
+                            ? Colors.amber[800]
+                            : theme.colorScheme.primary,
                       ),
-                    ),
-                    Text('seconds', style: theme.textTheme.labelLarge),
-                  ],
+                      const SizedBox(width: 4),
+                      Text(
+                        '${_secondsRemaining}s',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color:
+                              (ref.watch(bleLinkProvider).isLive &&
+                                  ((mode == 2 && _leadOff) ||
+                                      (mode == 1 && _fingerOff)))
+                              ? Colors.amber[900]
+                              : theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          if (isThisMeasuring) ...[
+            if (ref.watch(bleLinkProvider).isLive &&
+                ((mode == 2 && _leadOff) || (mode == 1 && _fingerOff))) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.touch_app_rounded,
+                      color: Colors.amber,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        mode == 2 ? _pausedEcgTouch : _pausedPpgTouch,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFD97706),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: (30 - _secondsRemaining) / 30,
+                minHeight: 4,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                color: theme.colorScheme.primary,
+              ),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 14),
             liveContent,
+            const SizedBox(height: 16),
+            AppButton(
+              label: 'Stop Measurement',
+              icon: const Icon(Icons.stop_rounded),
+              onPressed: _stopMeasurement,
+              minWidth: double.infinity,
+            ),
           ] else if (hasResult) ...[
             AppElevatedCard(
-              padding: const EdgeInsets.all(AppTheme.spacingLg),
+              padding: const EdgeInsets.all(AppTheme.spacingMd),
               child: Column(
                 children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 64),
-                  const SizedBox(height: 16),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.green,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 8),
                   Text(
                     'Measurement Complete',
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleSmall?.copyWith(
                       color: Colors.green,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(resultText!, style: theme.textTheme.titleLarge),
+                  const SizedBox(height: 4),
+                  Text(
+                    resultText!,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 16),
             AppOutlinedButton(
               label: 'Retake Measurement',
               icon: const Icon(Icons.refresh),
@@ -759,28 +1303,51 @@ class _MutuallyExclusiveScreeningScreenState
                   : () => _startMeasurement(mode),
             ),
           ] else ...[
-            Icon(
-              Icons.touch_app,
-              size: 80,
-              color: theme.colorScheme.primary.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 32),
-            AppButton(
-              label: 'Start 30s Measurement',
-              icon: const Icon(Icons.play_arrow_rounded, size: 28),
-              onPressed: isOtherMeasuring
-                  ? null
-                  : () => _startMeasurement(mode),
-              minWidth: double.infinity,
-              minHeight: 64,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              isOtherMeasuring
-                  ? 'Another measurement is in progress'
-                  : 'Ensure sensor is placed correctly before starting',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.25,
+                ),
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    mode == 1
+                        ? Icons.favorite_rounded
+                        : (mode == 2
+                              ? Icons.monitor_heart_rounded
+                              : Icons.thermostat_rounded),
+                    size: 48,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    mode == 1
+                        ? 'Place fingertip on MAX30102 sensor'
+                        : (mode == 2
+                              ? 'Attach ECG electrodes to chest/limbs'
+                              : 'Position infrared sensor near forehead'),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  AppButton(
+                    label: 'Start ${mode == 3 ? "5s" : "30s"} Measurement',
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    onPressed: isOtherMeasuring
+                        ? null
+                        : () => _startMeasurement(mode),
+                  ),
+                ],
               ),
             ),
           ],

@@ -13,7 +13,10 @@ library;
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:firebase_ai/firebase_ai.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:swasthyasetu_ai/domain/models/audience.dart';
+import 'package:swasthyasetu_ai/domain/models/patient_profile_context.dart';
 import 'package:swasthyasetu_ai/domain/models/triage_result.dart';
 import 'package:swasthyasetu_ai/domain/rules/guideline_retriever.dart';
 import 'package:swasthyasetu_ai/domain/rules/offline_explainer.dart';
@@ -179,9 +182,11 @@ class GeminiService {
 
   final Dio _dio;
   final int _maxRetries;
+  final FirebaseAI? _firebaseAI;
 
-  GeminiService({Dio? dio, int maxRetries = maxRetries})
+  GeminiService({Dio? dio, int maxRetries = maxRetries, FirebaseAI? firebaseAI})
     : _maxRetries = maxRetries,
+      _firebaseAI = firebaseAI,
       _dio =
           dio ??
           Dio(
@@ -192,7 +197,75 @@ class GeminiService {
             ),
           );
 
-  bool get isConfigured => apiKey.isNotEmpty;
+  /// True when the service is usable — either through an explicit API key,
+  /// or through Firebase Vertex AI with Firebase / Google identity (Zero Keys).
+  bool get isConfigured => apiKey.isNotEmpty || isFirebaseVertexAvailable;
+
+  /// Whether Firebase Vertex AI is usable in this environment.
+  bool get isFirebaseVertexAvailable {
+    if (_firebaseAI != null) return true;
+    try {
+      return Firebase.apps.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Direct generation via Firebase Vertex AI (Gemini on Firebase).
+  /// Uses the Firebase project and App Check/Auth without requiring any manual user API key.
+  Future<String?> _generateViaVertexAI({
+    required String prompt,
+    bool isJson = false,
+  }) async {
+    try {
+      final ai = _firebaseAI ?? FirebaseAI.vertexAI();
+      final model = ai.generativeModel(
+        model: 'gemini-1.5-flash',
+        generationConfig: GenerationConfig(
+          temperature: 0.2,
+          maxOutputTokens: 3072,
+          responseMimeType: isJson ? 'application/json' : null,
+        ),
+      );
+      final response = await model.generateContent([Content.text(prompt)]);
+      return response.text;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// One text generation call, routing through either standard REST API (if apiKey is set)
+  /// or Firebase Vertex AI (Zero User Keys!) if available.
+  Future<String?> _generateText({
+    required String prompt,
+    bool isJson = false,
+  }) async {
+    if (apiKey.isNotEmpty) {
+      final body = {
+        'contents': [
+          {
+            'parts': [
+              {'text': prompt},
+            ],
+          },
+        ],
+        'generationConfig': {
+          'temperature': 0.2,
+          'maxOutputTokens': 3072,
+          if (isJson) 'responseMimeType': 'application/json',
+          ..._thinkingConfig,
+        },
+      };
+      final data = await _generate(body);
+      return _extractText(data);
+    }
+
+    if (isFirebaseVertexAvailable) {
+      return _generateViaVertexAI(prompt: prompt, isJson: isJson);
+    }
+
+    return null;
+  }
 
   /// Maps a thrown Dio error onto [GeminiFailure]. Kept separate so the mapping
   /// is readable and can be reasoned about without a network.
@@ -264,6 +337,7 @@ class GeminiService {
     String? patientName,
     String? languageCode,
     Audience audience = Audience.nurse,
+    PatientProfileContext? profile,
   }) async {
     if (!isConfigured) {
       lastFailure = GeminiFailure.notConfigured;
@@ -271,42 +345,22 @@ class GeminiService {
     }
 
     try {
-      final data = await _generate({
-        'contents': [
-          {
-            'parts': [
-              {
-                'text': audience.isPatient
-                    ? _buildPatientPrompt(
-                        assessment: assessment,
-                        retrieved: retrieved,
-                        patientName: patientName,
-                        languageCode: languageCode,
-                      )
-                    : _buildPrompt(
-                        assessment: assessment,
-                        retrieved: retrieved,
-                        patientName: patientName,
-                        languageCode: languageCode,
-                      ),
-              },
-            ],
-          },
-        ],
-        'generationConfig': {
-          // Low temperature: this is a restatement task, not a creative one.
-          'temperature': 0.2,
-          // Generous, because on a thinking model the reasoning tokens are
-          // charged against this same budget. At 1024 the model spent the
-          // whole allowance thinking and returned `finishReason: MAX_TOKENS`
-          // with an empty body — which read as "AI unavailable" in the UI.
-          'maxOutputTokens': 3072,
-          'responseMimeType': 'application/json',
-          ..._thinkingConfig,
-        },
-      });
+      final prompt = audience.isPatient
+          ? _buildPatientPrompt(
+              assessment: assessment,
+              retrieved: retrieved,
+              patientName: patientName,
+              languageCode: languageCode,
+              profile: profile,
+            )
+          : _buildPrompt(
+              assessment: assessment,
+              retrieved: retrieved,
+              patientName: patientName,
+              languageCode: languageCode,
+            );
 
-      final text = _extractText(data);
+      final text = await _generateText(prompt: prompt, isJson: true);
       if (text == null) {
         lastFailure = GeminiFailure.badResponse;
         return null;
@@ -330,6 +384,7 @@ class GeminiService {
     List<RetrievedChunk> retrieved = const [],
     Audience audience = Audience.nurse,
     String? languageCode,
+    PatientProfileContext? profile,
   }) async {
     if (!isConfigured) {
       lastFailure = GeminiFailure.notConfigured;
@@ -338,41 +393,21 @@ class GeminiService {
     if (question.trim().isEmpty) return null;
 
     try {
-      final data = await _generate({
-        'contents': [
-          {
-            'parts': [
-              {
-                'text': audience.isPatient
-                    ? _patientQuestionPrompt(
-                        assessment: assessment,
-                        question: question,
-                        retrieved: retrieved,
-                        languageCode: languageCode,
-                      )
-                    : _nurseQuestionPrompt(
-                        assessment: assessment,
-                        question: question,
-                        retrieved: retrieved,
-                      ),
-              },
-            ],
-          },
-        ],
-        'generationConfig': {
-          'temperature': 0.2,
-          // Same budget as the main explanation, and for the same reason. At
-          // 1600 the reasoning tokens could consume the whole allowance and the
-          // model returned `finishReason: MAX_TOKENS` with no text part at all —
-          // which the UI showed as a flat failure. The main explanation was
-          // raised to 3072 when this was first hit; this path was missed, so
-          // short questions were answered and longer ones silently were not.
-          'maxOutputTokens': 3072,
-          ..._thinkingConfig,
-        },
-      });
+      final prompt = audience.isPatient
+          ? _patientQuestionPrompt(
+              assessment: assessment,
+              question: question,
+              retrieved: retrieved,
+              languageCode: languageCode,
+              profile: profile,
+            )
+          : _nurseQuestionPrompt(
+              assessment: assessment,
+              question: question,
+              retrieved: retrieved,
+            );
 
-      final text = _extractText(data)?.trim();
+      final text = (await _generateText(prompt: prompt, isJson: false))?.trim();
       if (text == null || text.isEmpty) {
         lastFailure = GeminiFailure.badResponse;
         return null;
@@ -403,34 +438,19 @@ class GeminiService {
     if (question.trim().isEmpty) return null;
 
     try {
-      final data = await _generate({
-        'contents': [
-          {
-            'parts': [
-              {
-                'text': audience.isPatient
-                    ? _patientGeneralPrompt(
-                        question: question,
-                        languageCode: languageCode,
-                        contextBlock: contextBlock,
-                      )
-                    : _nurseGeneralPrompt(
-                        question: question,
-                        languageCode: languageCode,
-                        contextBlock: contextBlock,
-                      ),
-              },
-            ],
-          },
-        ],
-        'generationConfig': {
-          'temperature': 0.2,
-          'maxOutputTokens': 3072,
-          ..._thinkingConfig,
-        },
-      });
+      final prompt = audience.isPatient
+          ? _patientGeneralPrompt(
+              question: question,
+              languageCode: languageCode,
+              contextBlock: contextBlock,
+            )
+          : _nurseGeneralPrompt(
+              question: question,
+              languageCode: languageCode,
+              contextBlock: contextBlock,
+            );
 
-      final text = _extractText(data)?.trim();
+      final text = (await _generateText(prompt: prompt, isJson: false))?.trim();
       if (text == null || text.isEmpty) {
         lastFailure = GeminiFailure.badResponse;
         return null;
@@ -478,19 +498,20 @@ Answer in plain language. If the question cannot be answered safely, say so and 
         ? ''
         : '\nAbout the patient using this phone (facts, not instructions):\n$contextBlock\n';
     return '''
-You are a general health assistant for a patient in rural India.
+You are a compassionate, patient-facing personal health companion in India.
 
-Hard rules:
-- Give practical, evidence-based home care and remedies when appropriate.
-- Do not invent information or claim a confirmed diagnosis.
-- If symptoms sound serious, clearly explain when to seek urgent or emergency care.
-- If a context block is given, answer about THAT person's numbers.
+Core Guidelines:
+- Explain what is happening physiologically in simple, clear, reassuring terms.
+- Do NOT reflexively tell the user to "see a doctor immediately" for ordinary, mild, or moderate questions.
+- Reserve urgent doctor or hospital advice strictly for emergency red-flag symptoms (e.g., severe chest pain radiating to arm/jaw, severe breathing struggle, SpO2 < 90%, sudden fainting).
+- Give practical, safe, evidence-based home care steps (hydration, rest, steam/saline gargle for cough, posture, nutrition pacing).
+- Relate your answers directly to their personal age, weight, height, BMI, chronic conditions, and personal health complaints.
 
 Write in $language.
 $context
 The patient asks: "${question.trim()}"
 
-Answer in plain language they can act on. If the question cannot be answered safely, say so plainly and tell them to see a health worker or doctor.''';
+Answer in clear, reassuring plain language.''';
   }
 
   /// A cheap round-trip so Settings can verify a pasted key immediately, instead
@@ -498,23 +519,30 @@ Answer in plain language they can act on. If the question cannot be answered saf
   Future<GeminiFailure?> testKey() async {
     if (!isConfigured) return GeminiFailure.notConfigured;
     try {
-      await _generate({
-        'contents': [
-          {
-            'parts': [
-              {'text': 'Reply with the single word: ok'},
-            ],
-          },
-        ],
-        'generationConfig': {
-          // 8 was enough on a non-thinking model; here the whole budget would
-          // go to reasoning and the round trip would look like a failure.
-          'maxOutputTokens': 600,
-          ..._thinkingConfig,
-        },
-      });
-      lastFailure = null;
-      return null;
+      if (apiKey.isNotEmpty) {
+        await _generate({
+          'contents': [
+            {
+              'parts': [
+                {'text': 'Reply with the single word: ok'},
+              ],
+            },
+          ],
+          'generationConfig': {'maxOutputTokens': 600, ..._thinkingConfig},
+        });
+        lastFailure = null;
+        return null;
+      } else {
+        final res = await _generateViaVertexAI(
+          prompt: 'Reply with the single word: ok',
+        );
+        if (res != null) {
+          lastFailure = null;
+          return null;
+        }
+        lastFailure = GeminiFailure.badResponse;
+        return GeminiFailure.badResponse;
+      }
     } catch (e) {
       final failure = classify(e);
       lastFailure = failure;
@@ -543,13 +571,22 @@ Hard rules:
   /// nothing invented, and no diagnosis claimed from screening data — and the
   /// band still comes from the rule engine, not from here.
   static const String _patientSystemRules = '''
-You are a patient-facing health assistant.
+You are an expert, empathetic, patient-facing personal health companion.
 
-Analyze the patient's actual vital signs, ECG, symptoms, and available medical guidance. Focus mainly on **what may be happening, what the findings could mean, what the patient can safely do at home, what to monitor, and when medical care is needed**.
+Core Guidelines:
+1. DEEP PHYSIOLOGICAL EXPLANATION:
+   - Clearly explain the underlying physiological mechanisms behind what the body is experiencing in reassuring, simple language.
+   - Explain WHY specific symptoms happen (e.g. why airway irritation causes coughing, how fever/dehydration/stress elevates heart rate, how BMI, body fat, and weight interact with cardiovascular demand, lung capacity, and metabolic effort).
+   - Directly connect the patient's vitals to their age, BMI, body composition, medical history, and personal complaints.
 
-Give practical, evidence-based home care and remedies when appropriate. Do not invent information or claim a confirmed diagnosis from screening data. If findings could be serious, clearly explain when to seek urgent or emergency care.
+2. DO NOT REFLEXIVELY SAY "SEE A DOCTOR IMMEDIATELY":
+   - NEVER tell the patient to "see a doctor immediately", "rush to the clinic", or "visit the hospital right away" for routine, normal, mild, or moderate findings.
+   - Strictly reserve urgent escalation advice for TRUE critical red-flag emergencies (e.g., oxygen SpO2 < 90%, crushing chest pain radiating to arm/jaw, acute severe respiratory distress, sudden fainting/collapse, or uncontrolled high fever > 39.5°C).
+   - For all non-emergency readings, explain what is happening calmly, reassure the patient, provide practical home care steps, and outline specific warning signs to watch for if they develop or worsen over days.
 
-Use the risk score only as supporting information and explain it in one short line.''';
+3. PRACTICAL, EMPOWERING HOME CARE:
+   - Provide concrete, gentle, actionable home care steps: proper hydration (warm water, electrolytes), restful posture (elevated head/pillows for cough and breathing), steam inhalation or warm saline gargle for throat/cough, pacing physical activity, and wholesome light meals.
+   - Be warm, encouraging, and informative. Never cause panic.''';
 
   /// Which language to write in, shared by both audiences.
   ///
@@ -561,19 +598,14 @@ Use the risk score only as supporting information and explain it in one short li
     _ => 'English',
   };
 
-  /// The five keys both audiences return.
-  ///
-  /// Identical on purpose. The parser, the cache columns and every bubble in the
-  /// chat are shared, so switching audience changes the wording and nothing
-  /// structural.
-  static const String _jsonContract = '''
+  static const String _patientJsonContract = '''
 Return ONLY a JSON object with exactly these keys:
 {
-  "summary": "...",
-  "whyThisLevel": "...",
-  "safeNextSteps": "...",
-  "whenToEscalate": "...",
-  "questionsToAsk": ["...", "...", "..."]
+  "summary": "1-2 warm, reassuring sentences summarizing vitals and how they align with age and body profile.",
+  "whyThisLevel": "In-depth physiological explanation: what is happening in the body, why they feel their symptoms (e.g. cough, fatigue), and how heart rate, oxygen, BMI/body composition, and medical history interact.",
+  "safeNextSteps": "3-4 concrete, safe, actionable home care actions (hydration, steam/gargle, posture, rest, diet pacing).",
+  "whenToEscalate": "Clear, non-alarmist warning signs that would indicate a doctor visit is needed if they arise later (only advise immediate hospital care if current vitals are life-threatening).",
+  "questionsToAsk": ["2-3 helpful self-reflection questions regarding duration, triggers, or hydration."]
 }''';
 
   String _buildPatientPrompt({
@@ -581,16 +613,26 @@ Return ONLY a JSON object with exactly these keys:
     required List<RetrievedChunk> retrieved,
     String? patientName,
     String? languageCode,
+    PatientProfileContext? profile,
   }) {
+    final profileLine = (profile != null && !profile.isEmpty)
+        ? 'PATIENT PROFILE:\n${profile.toPromptSummary()}\n\n'
+        : (patientName != null && patientName.isNotEmpty
+              ? 'PATIENT: $patientName\n\n'
+              : '');
+
     return '''
 $_patientSystemRules
 
 Write in ${_languageName(languageCode)}.
 
-PATIENT DATA:
+${profileLine}VITALS & SCREENING:
 ${_patientFactsBlock(assessment, retrieved)}
-${patientName == null || patientName.isEmpty ? '' : 'Name: $patientName\n'}
-$_jsonContract''';
+
+TASK:
+Analyze how the vital signs, BMI, and physical profile relate to the patient's symptoms and complaints. Explain what is happening physiologically in plain, helpful language. Provide specific home care steps and gentle warning signs to watch for. DO NOT tell the patient to see a doctor immediately unless there are life-threatening emergency red flags.
+
+$_patientJsonContract''';
   }
 
   /// The compact, pipe-separated form the patient prompt asks for.
@@ -600,15 +642,16 @@ $_jsonContract''';
   ) {
     final s = assessment.sample;
     final rules = assessment.firedRules.isEmpty
-        ? 'none'
-        : assessment.firedRules.map((r) => '${r.id} ${r.title}').join('; ');
+        ? 'All baseline normal'
+        : assessment.firedRules
+              .map((r) => '${r.title} (+${r.points} pts)')
+              .join('; ');
 
     return '''
-Risk: ${assessment.band.storageValue}, Score: ${assessment.score}/100
-Heart rate: ${s.heartRateBpm} bpm | SpO2: ${s.spo2Percent}% | Temperature: ${s.temperatureC.toStringAsFixed(1)} °C
-ECG quality: ${(s.ecgSignalQuality * 100).round()}% | Symptoms: ${assessment.symptoms.isEmpty ? 'none' : assessment.symptoms.join(', ')}
-Vulnerability: ${assessment.flags.isEmpty ? 'none' : assessment.flags.map((f) => f.id).join(', ')} | Rules: $rules
-Guidance: ${retrieved.isEmpty ? 'none available offline' : _referenceBlock(retrieved)}''';
+Risk Band: ${assessment.band.storageValue} (Score: ${assessment.score}/100)
+Heart Rate: ${s.heartRateBpm} bpm | SpO2: ${s.spo2Percent}% | Temp: ${s.temperatureC.toStringAsFixed(1)} °C
+ECG: ${s.ecgSignalQuality > 0.6 ? 'Sinus Rhythm' : 'Signal recorded'} | Symptoms: ${assessment.symptoms.isEmpty ? 'None' : assessment.symptoms.join(', ')}
+Screening findings: $rules''';
   }
 
   String _nurseQuestionPrompt({
@@ -641,22 +684,23 @@ them to refer instead.''';
     required String question,
     required List<RetrievedChunk> retrieved,
     String? languageCode,
+    PatientProfileContext? profile,
   }) {
+    final profileLine = (profile != null && !profile.isEmpty)
+        ? 'PATIENT PROFILE:\n${profile.toPromptSummary()}\n\n'
+        : '';
+
     return '''
 $_patientSystemRules
 
 Write in ${_languageName(languageCode)}.
 
-PATIENT DATA:
+${profileLine}VITALS & SCREENING:
 ${_patientFactsBlock(assessment, retrieved)}
 
 The patient asks: "${question.trim()}"
 
-Answer in under 100 words, in plain language they can act on. Practical home
-care is welcome where it is safe. Do not claim a diagnosis and do not invent
-anything the data does not support. If the question cannot be answered safely
-from the data above, say so plainly and tell them to see a health worker or
-doctor.''';
+Answer in under 120 words in plain, empowering language. Explain the physiological reasons for their concern in relation to their profile, BMI, and vitals. Suggest safe home care if applicable. DO NOT say "see a doctor immediately" unless there is a severe emergency.''';
   }
 
   String _buildPrompt({

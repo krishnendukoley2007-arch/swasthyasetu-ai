@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 
@@ -152,18 +153,23 @@ class ClarkeErrorGridWidget extends StatelessWidget {
           const SizedBox(height: 14),
 
           // Clarke Grid Plot Canvas
-          Center(
-            child: SizedBox(
-              width: 260,
-              height: 260,
-              child: CustomPaint(
-                painter: _ClarkeGridPainter(
-                  refGlucose: ref,
-                  estGlucose: estimatedGlucose,
-                  pointColor: color,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final size = math.min(constraints.maxWidth, 260.0);
+              return Center(
+                child: SizedBox(
+                  width: size,
+                  height: size,
+                  child: CustomPaint(
+                    painter: _ClarkeGridPainter(
+                      refGlucose: ref,
+                      estGlucose: estimatedGlucose,
+                      pointColor: color,
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
 
           const SizedBox(height: 12),
