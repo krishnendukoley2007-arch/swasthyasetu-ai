@@ -255,13 +255,14 @@ The following diagrams illustrate the end-to-end data processing, triage logic, 
 ### 1. Hardware-to-Mobile Telemetry & Signal Chain
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#ffffff', 'primaryTextColor': '#000000', 'primaryBorderColor': '#000000', 'lineColor': '#000000', 'textColor': '#000000', 'mainBkg': '#ffffff', 'nodeBorder': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#000000', 'edgeLabelBackground': '#ffffff' }}}%%
 flowchart LR
-    subgraph SENSORS["🔬 SSAI-SENSE-01 Hardware Node"]
-        ECG["AD8232 ECG<br/>250 Hz Lead I"]
-        PPG["MAX30102 PPG<br/>Red & IR Optical"]
-        TMP["MLX90614<br/>Medical IR Temp"]
-        IMU["MPU6050<br/>6-Axis Motion / Fall"]
-        ESP["ESP32 Dual-Core<br/>Pan-Tompkins DSP + Notch Filter"]
+    subgraph SENSORS["<b>🔬 SSAI-SENSE-01 Hardware Node</b>"]
+        ECG["<b>AD8232 ECG</b><br/>250 Hz Lead I"]
+        PPG["<b>MAX30102 PPG</b><br/>Red & IR Optical"]
+        TMP["<b>MLX90614</b><br/>Medical IR Temp"]
+        IMU["<b>MPU6050</b><br/>6-Axis Motion / Fall"]
+        ESP["<b>ESP32 Dual-Core</b><br/>Pan-Tompkins DSP"]
         ECG --> ESP
         PPG --> ESP
         TMP --> ESP
@@ -270,24 +271,39 @@ flowchart LR
 
     ESP -->|"GATT BLE Notify<br/>20-Byte Static Frame"| APP
 
-    subgraph APP["📱 SwasthyaSetu Mobile App"]
-        PROTO["BLE Protocol Parser<br/>Lead-Off / Skin Gating"]
-        ENGINE["Deterministic Risk Engine<br/>Fixed Clinical Thresholds"]
-        DB[("Drift SQLite DB<br/>Pure English Schema")]
-        TIER1["Tier 1: Offline AI<br/>Bundled Medical Corpus"]
+    subgraph APP["<b>📱 SwasthyaSetu Mobile App</b>"]
+        PROTO["<b>BLE Protocol Parser</b><br/>Lead-Off / Skin Gating"]
+        ENGINE["<b>Deterministic Risk Engine</b><br/>Fixed Clinical Thresholds"]
+        DB[("<b>Drift SQLite DB</b><br/>Pure English Schema")]
+        TIER1["<b>Tier 1: Offline AI</b><br/>Bundled Medical Corpus"]
         PROTO --> ENGINE
         ENGINE --> DB
         ENGINE --> TIER1
     end
 
-    APP --> OUT1["🟢 Routine / 🟡 Soon / 🔴 Urgent"]
-    APP --> OUT2["🆘 SMS & WhatsApp Distress"]
-    APP --> OUT3["🗺️ Vector Offline MBTiles Map"]
-    APP -.->|"Consented & Online"| CLOUD["🧠 Google Gemini Vertex AI"]
+    APP --> OUT1["<b>🟢 Routine / 🟡 Soon / 🔴 Urgent</b>"]
+    APP --> OUT2["<b>🆘 SMS & WhatsApp Distress</b>"]
+    APP --> OUT3["<b>🗺️ Vector Offline MBTiles Map</b>"]
+    APP -.->|"Consented & Online"| CLOUD["<b>🧠 Google Gemini Vertex AI</b>"]
 
-    style SENSORS fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style APP fill:#dbeafe,stroke:#2563eb,stroke-width:2px
-    style CLOUD fill:#f3f4f6,stroke:#9ca3af,stroke-dasharray: 5 5
+    style SENSORS fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style APP fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style CLOUD fill:#ffffff,stroke:#000000,stroke-width:2px,stroke-dasharray: 5 5,color:#000000
+
+    style ECG fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style PPG fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style TMP fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style IMU fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style ESP fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+
+    style PROTO fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style ENGINE fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style DB fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style TIER1 fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+
+    style OUT1 fill:#c8e6c9,stroke:#1b5e20,stroke-width:2.5px,color:#000000
+    style OUT2 fill:#ffcdd2,stroke:#b71c1c,stroke-width:2.5px,color:#000000
+    style OUT3 fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
 ```
 
 ---
@@ -297,15 +313,16 @@ flowchart LR
 The following unified flowchart maps the complete clinical lifecycle — integrating **deterministic triage**, **overnight sleep dipping**, **climate heat strain calculation**, and **offline disaster mesh relay** into one seamless flow:
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#ffffff', 'primaryTextColor': '#000000', 'primaryBorderColor': '#000000', 'lineColor': '#000000', 'textColor': '#000000', 'mainBkg': '#ffffff', 'nodeBorder': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#000000', 'edgeLabelBackground': '#ffffff' }}}%%
 flowchart TD
     %% INGESTION & DATA VALIDATION
-    subgraph INGEST["🩺 Live Telemetry & Patient Context"]
-        IN_DATA["Raw BLE 20-Byte Frame + Profile Context<br/>(Age, BMI, Conditions, Complaints)"]
-        IN_CHECK{"Any sensor<br/>value missing?"}
-        IN_DASH["Render missing metric as '—'<br/>(Never 0, never guessed)"]
+    subgraph INGEST["<b>🩺 Live Telemetry & Patient Context</b>"]
+        IN_DATA["<b>Raw BLE 20-Byte Frame + Profile Context</b><br/>(Age, BMI, Conditions, Complaints)"]
+        IN_CHECK{"<b>Any sensor<br/>value missing?</b>"}
+        IN_DASH["<b>Render missing metric as '—'</b><br/>(Never 0, never guessed)"]
         IN_DATA --> IN_CHECK
         IN_CHECK -->|"Yes"| IN_DASH
-        IN_CHECK -->|"No"| ROUTER{"Select Active<br/>Monitoring Mode"}
+        IN_CHECK -->|"No"| ROUTER{"<b>Select Active<br/>Monitoring Mode</b>"}
         IN_DASH --> ROUTER
     end
 
@@ -315,25 +332,25 @@ flowchart TD
     ROUTER -->|"Extreme Heat / Work"| HEAT_SUB
 
     %% 1. DETERMINISTIC TRIAGE ENGINE
-    subgraph TRIAGE_SUB["⚡ Deterministic Triage Rule Engine"]
-        CRIT_CHECK{"Critical Red Threshold?<br/>• SpO2 < 90%<br/>• HR < 40 or > 130 BPM<br/>• Temp > 39.5°C or < 35°C<br/>• Severe Fall Detected"}
-        AMB_CHECK{"Warning Amber Threshold?<br/>• SpO2 90–94%<br/>• HR 40–50 or 100–130 BPM<br/>• Mild Fever 38.0–39.4°C"}
+    subgraph TRIAGE_SUB["<b>⚡ Deterministic Triage Rule Engine</b>"]
+        CRIT_CHECK{"<b>Critical Red Threshold?</b><br/>• SpO2 < 90%<br/>• HR < 40 or > 130 BPM<br/>• Temp > 39.5°C or < 35°C<br/>• Severe Fall Detected"}
+        AMB_CHECK{"<b>Warning Amber Threshold?</b><br/>• SpO2 90–94%<br/>• HR 40–50 or 100–130 BPM<br/>• Mild Fever 38.0–39.4°C"}
         
-        CRIT_CHECK -->|"YES"| BAND_RED["🔴 URGENT (Red Band)<br/>Score 70–100"]
+        CRIT_CHECK -->|"YES"| BAND_RED["<b>🔴 URGENT (Red Band)</b><br/>Score 70–100 • High Risk"]
         CRIT_CHECK -->|"NO"| AMB_CHECK
-        AMB_CHECK -->|"YES"| BAND_YELLOW["🟡 SOON (Yellow Band)<br/>Score 30–69"]
-        AMB_CHECK -->|"NO"| BAND_GREEN["🟢 ROUTINE (Green Band)<br/>Score 0–29"]
+        AMB_CHECK -->|"YES"| BAND_YELLOW["<b>🟡 SOON (Yellow Band)</b><br/>Score 30–69 • Moderate Risk"]
+        AMB_CHECK -->|"NO"| BAND_GREEN["<b>🟢 ROUTINE (Green Band)</b><br/>Score 0–29 • Normal Baseline"]
     end
 
     %% 2. OVERNIGHT GUARDIAN ENGINE
-    subgraph SLEEP_SUB["🌙 Continuous Overnight Guardian"]
-        SLEEP_STREAM["Passive 8-Hour Telemetry<br/>(Adhesive Lead I + Silicone Sleeve)"]
-        DIP_WINDOW{"Time between<br/>01:00 – 04:30 AM?"}
-        DIP_CALC["Nocturnal Dipping Analyzer<br/>(Compare night vs daytime baseline)"]
-        DIP_NORM["✅ Normal Dipper Pattern<br/>(10%–20% restorative dip)"]
-        DIP_ALERT["⚠️ Non-Dipper Pattern<br/>(Nocturnal hypertension marker)"]
-        SPO2_CHECK{"SpO2 Sustained<br/>Below 90%?"}
-        ODI_ALERT["⚠️ Oxygen Desaturation Event<br/>(Flag Obstructive Sleep Apnea)"]
+    subgraph SLEEP_SUB["<b>🌙 Continuous Overnight Guardian</b>"]
+        SLEEP_STREAM["<b>Passive 8-Hour Telemetry</b><br/>(Adhesive Lead I + Silicone Sleeve)"]
+        DIP_WINDOW{"<b>Time between<br/>01:00 – 04:30 AM?</b>"}
+        DIP_CALC["<b>Nocturnal Dipping Analyzer</b><br/>(Compare night vs daytime baseline)"]
+        DIP_NORM["<b>✅ Normal Dipper Pattern</b><br/>(10%–20% restorative dip)"]
+        DIP_ALERT["<b>⚠️ Non-Dipper Pattern</b><br/>(Nocturnal hypertension marker)"]
+        SPO2_CHECK{"<b>SpO2 Sustained<br/>Below 90%?</b>"}
+        ODI_ALERT["<b>⚠️ Oxygen Desaturation Event</b><br/>(Flag Obstructive Sleep Apnea)"]
 
         SLEEP_STREAM --> DIP_WINDOW
         DIP_WINDOW -->|"YES"| DIP_CALC
@@ -344,13 +361,13 @@ flowchart TD
     end
 
     %% 3. HEAT GUARDIAN ENGINE
-    subgraph HEAT_SUB["☀️ Climate Disaster Heat Guardian"]
-        HEAT_INPUT["Biometrics (T_core, HR, HRV)<br/>+ Ambient Wet-Bulb Weather"]
-        PSI_CALC["Moran Physiological Strain Index (PSI)<br/>PSI = 5×ΔT_core + 5×ΔHR"]
-        PSI_DECIDE{"Calculated PSI Level<br/>(0–10 Scale)"}
-        PSI_SAFE["🟢 Low Strain (PSI 0–2.9)<br/>Continue safe field activity"]
-        PSI_WARN["🟡 Moderate Strain (PSI 3.0–6.4)<br/>💧 Hydration Alert: 250ml / 15-20 min"]
-        PSI_DANGER["🔴 Severe Strain (PSI 6.5–10)<br/>🛑 Mandatory Shaded Rest Protocol"]
+    subgraph HEAT_SUB["<b>☀️ Climate Disaster Heat Guardian</b>"]
+        HEAT_INPUT["<b>Biometrics (T_core, HR, HRV)</b><br/>+ Ambient Wet-Bulb Weather"]
+        PSI_CALC["<b>Moran Physiological Strain Index (PSI)</b><br/>PSI = 5×ΔT_core + 5×ΔHR"]
+        PSI_DECIDE{"<b>Calculated PSI Level</b><br/>(0–10 Scale)"}
+        PSI_SAFE["<b>🟢 Low Strain (PSI 0–2.9)</b><br/>Safe to continue field activity"]
+        PSI_WARN["<b>🟡 Moderate Strain (PSI 3.0–6.4)</b><br/>💧 Hydration Alert: 250ml / 15-20 min"]
+        PSI_DANGER["<b>🔴 Severe Strain (PSI 6.5–10)</b><br/>🛑 Mandatory Shaded Rest Protocol"]
 
         HEAT_INPUT --> PSI_CALC
         PSI_CALC --> PSI_DECIDE
@@ -360,7 +377,7 @@ flowchart TD
     end
 
     %% REASSURING EXPLANATION (NON-CRITICAL)
-    BAND_GREEN --> EXPLAIN["🧠 Grounded Two-Tier AI Explanation<br/>(Personalized to Age, BMI, Complaints — Non-Alarmist)"]
+    BAND_GREEN --> EXPLAIN["<b>🧠 Grounded Two-Tier AI Explanation</b><br/>(Personalized to Age, BMI, Complaints — Non-Alarmist)"]
     BAND_YELLOW --> EXPLAIN
     DIP_NORM --> EXPLAIN
     DIP_ALERT --> EXPLAIN
@@ -373,12 +390,12 @@ flowchart TD
     PSI_DANGER --> ESCALATE_SUB
 
     %% 4. DISASTER RELAY & SOS
-    subgraph ESCALATE_SUB["🆘 Emergency Dispatch & Resilient BLE Mesh Relay"]
-        GRID_DETECT{"Cellular Grid<br/>Available?"}
-        SMS_DISPATCH["📱 Instant SMS & WhatsApp Dispatch<br/>(GPS Coordinates + Triage Summary)"]
-        BLE_MESH["📡 Grid Down / Flood Mode:<br/>Broadcast Encrypted 16-Byte BLE Beacon"]
-        P2P_RELAY["👥 Nearby SwasthyaSetu Community Nodes<br/>Store-and-Forward Mesh Hopping"]
-        RELIEF_UPLINK["🏥 Uplink to Emergency Base & Relief Teams<br/>(National Emergency 112)"]
+    subgraph ESCALATE_SUB["<b>🆘 Emergency Dispatch & Resilient BLE Mesh Relay</b>"]
+        GRID_DETECT{"<b>Cellular Grid<br/>Available?</b>"}
+        SMS_DISPATCH["<b>📱 Instant SMS & WhatsApp Dispatch</b><br/>(GPS Coordinates + Triage Summary)"]
+        BLE_MESH["<b>📡 Grid Down / Flood Mode:</b><br/>Broadcast Encrypted 16-Byte BLE Beacon"]
+        P2P_RELAY["<b>👥 Nearby SwasthyaSetu Community Nodes</b><br/>Store-and-Forward Mesh Hopping"]
+        RELIEF_UPLINK["<b>🏥 Uplink to Emergency Base & Relief Teams</b><br/>(National Emergency 112)"]
 
         GRID_DETECT -->|"YES"| SMS_DISPATCH
         GRID_DETECT -->|"NO"| BLE_MESH
@@ -386,20 +403,46 @@ flowchart TD
         P2P_RELAY --> RELIEF_UPLINK
     end
 
-    style INGEST fill:#f8fafc,stroke:#64748b,stroke-width:2px
-    style TRIAGE_SUB fill:#f1f5f9,stroke:#475569,stroke-width:2px
-    style SLEEP_SUB fill:#e0e7ff,stroke:#4338ca,stroke-width:2px
-    style HEAT_SUB fill:#ffedd5,stroke:#ea580c,stroke-width:2px
-    style ESCALATE_SUB fill:#fef2f2,stroke:#991b1b,stroke-width:2px
-    style BAND_RED fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style BAND_YELLOW fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style BAND_GREEN fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-    style PSI_DANGER fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style PSI_WARN fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style PSI_SAFE fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-    style DIP_NORM fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-    style DIP_ALERT fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style ODI_ALERT fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    %% HIGH-CONTRAST JET BLACK STYLING ACROSS ALL NODES & SUBGRAPHS
+    style INGEST fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style TRIAGE_SUB fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style SLEEP_SUB fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style HEAT_SUB fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style ESCALATE_SUB fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+
+    style IN_DATA fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style IN_CHECK fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style IN_DASH fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style ROUTER fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+
+    style CRIT_CHECK fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style AMB_CHECK fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style BAND_RED fill:#ffcdd2,stroke:#b71c1c,stroke-width:2.5px,color:#000000
+    style BAND_YELLOW fill:#fff59d,stroke:#f57f17,stroke-width:2.5px,color:#000000
+    style BAND_GREEN fill:#c8e6c9,stroke:#1b5e20,stroke-width:2.5px,color:#000000
+
+    style SLEEP_STREAM fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style DIP_WINDOW fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style DIP_CALC fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style DIP_NORM fill:#c8e6c9,stroke:#1b5e20,stroke-width:2.5px,color:#000000
+    style DIP_ALERT fill:#ffcdd2,stroke:#b71c1c,stroke-width:2.5px,color:#000000
+    style SPO2_CHECK fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style ODI_ALERT fill:#ffcdd2,stroke:#b71c1c,stroke-width:2.5px,color:#000000
+
+    style HEAT_INPUT fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style PSI_CALC fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style PSI_DECIDE fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style PSI_SAFE fill:#c8e6c9,stroke:#1b5e20,stroke-width:2.5px,color:#000000
+    style PSI_WARN fill:#fff59d,stroke:#f57f17,stroke-width:2.5px,color:#000000
+    style PSI_DANGER fill:#ffcdd2,stroke:#b71c1c,stroke-width:2.5px,color:#000000
+
+    style EXPLAIN fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+
+    style GRID_DETECT fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style SMS_DISPATCH fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style BLE_MESH fill:#fff59d,stroke:#f57f17,stroke-width:2.5px,color:#000000
+    style P2P_RELAY fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style RELIEF_UPLINK fill:#c8e6c9,stroke:#1b5e20,stroke-width:2.5px,color:#000000
 ```
 
 ---
