@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/services/ble_service.dart';
+import 'package:swasthyasetu_ai/core/services/pdf_clinical_report_service.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
@@ -19,6 +20,7 @@ import 'package:swasthyasetu_ai/domain/rules/trend_engine.dart';
 import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/environment/state/environment_providers.dart';
 import 'package:swasthyasetu_ai/features/environment/widgets/environment_card.dart';
+import 'package:swasthyasetu_ai/features/patient_home/widgets/disaster_hazard_banner.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
 
 /// The patient's own home: connect the ESP32, run a self-check, understand
@@ -32,11 +34,14 @@ import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
 // Localization guard: top-level constants
 const _kHeatGuardianTitle = 'Heat Guardian';
 const _kHeatGuardianSubtitle = 'Moran PSI, heat stress & hydration timer';
+const _kAirGuardianTitle = 'Air Guardian';
+const _kAirGuardianSubtitle = 'NAQI smog, SpO₂ & breathing coach';
 const _kOvernightGuardianTitle = 'Overnight Guardian';
 const _kOvernightGuardianSubtitle = 'Sleep HR dipping & apnea screening';
 const _kDisasterMeshBadge = 'Disaster BLE Mesh: Offline Relay Ready';
 const _kContinuousClimateTitle = 'Continuous & Climate Guardians';
 const _kPsiSafeBadge = 'PSI 3.2 · Normal';
+const _kAqiLiveBadge = 'NAQI Sentinel';
 const _kDualGraphsBadge = 'Dual Graphs Live';
 const _kLiveSentinelBadge = 'AI Sentinel Active';
 
@@ -87,6 +92,11 @@ class PatientHomeScreen extends ConsumerWidget {
           if (patient == null || account == null) {
             return _buildProfileError(context, ref);
           }
+          final latestScreening = ref
+              .watch(patientScreeningsProvider(patient.id))
+              .valueOrNull
+              ?.firstOrNull;
+
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(myPatientProvider);
@@ -97,10 +107,17 @@ class PatientHomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(AppTheme.spacingMd),
               children: [
                 _buildGreeting(context, account),
+                const AppSpacing.vmd(),
+                DisasterHazardBanner(
+                  heartRateBpm: latestScreening?.heartRate,
+                  temperatureC: latestScreening?.temperature,
+                ),
                 const AppSpacing.vlg(),
                 // The single primary state of the whole app: is this patient
                 // okay TODAY. Everything else on this page is secondary.
                 _buildTodayCard(context, ref, patient),
+                const AppSpacing.vlg(),
+                _buildCommunityCard(context),
                 const AppSpacing.vlg(),
                 const EnvironmentCard(),
                 const AppSpacing.vlg(),
@@ -325,12 +342,124 @@ class PatientHomeScreen extends ConsumerWidget {
               ),
             )
           else
-            AppButton(
-              label: l10n.todayViewResult,
-              icon: const Icon(Icons.chevron_right_rounded),
-              minHeight: 56,
-              onPressed: () => context.push('/history/${today!.id}'),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: l10n.todayViewResult,
+                    icon: const Icon(Icons.chevron_right_rounded),
+                    minHeight: 56,
+                    onPressed: () => context.push('/history/${today!.id}'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  icon: const Icon(Icons.picture_as_pdf_rounded),
+                  tooltip: 'Download PDF Report',
+                  style: IconButton.styleFrom(minimumSize: const Size(56, 56)),
+                  onPressed: () async {
+                    await PdfClinicalReportService.exportAndShareReport(
+                      patient: patient,
+                      screening: today!,
+                    );
+                  },
+                ),
+              ],
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommunityCard(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppCard(
+      padding: const EdgeInsets.all(AppTheme.spacingLg),
+      onTap: () => context.push('/community-hotspot'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF06B6D4).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.public_rounded,
+                  color: Color(0xFF06B6D4),
+                  size: 24,
+                ),
+              ),
+              const AppSpacing.hmd(),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Community Early-Warning Network',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      'Regional Heat, Hazard & Health Hotspots',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+          const AppSpacing.vmd(),
+          Text(
+            'Explore anonymized community health clusters, environmental heat waves, and localized air quality alerts in your district.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          const AppSpacing.vmd(),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                    width: 0.8,
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.shield_outlined,
+                      size: 13,
+                      color: Color(0xFF10B981),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Zero Personal Data Leaves Device',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF10B981),
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -586,16 +715,6 @@ class PatientHomeScreen extends ConsumerWidget {
                             digits: 1,
                           ),
                         ),
-                        if (latest.hasGlucoseEstimate)
-                          Expanded(
-                            child: _vital(
-                              context,
-                              context.l10n.vitalGlucose,
-                              latest.estimatedGlucose,
-                              'mg/dL',
-                              Icons.water_drop_outlined,
-                            ),
-                          ),
                       ],
                     ),
                     const AppSpacing.vlg(),
@@ -653,38 +772,55 @@ class PatientHomeScreen extends ConsumerWidget {
   }) {
     final theme = Theme.of(context);
     final shown = value <= 0 ? null : value.toStringAsFixed(digits);
-    return Column(
-      children: [
-        Icon(icon, color: theme.colorScheme.primary, size: 20),
-        const AppSpacing.vxs(),
-        RichText(
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.onSurface,
-            ),
-            children: [
-              TextSpan(text: shown ?? '—'),
-              if (shown != null)
-                TextSpan(
-                  text: ' $unit',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+    final isHeart = icon == Icons.favorite_rounded;
+    final iconColor = isHeart
+        ? (theme.brightness == Brightness.dark
+              ? AppTheme.cardiacCoralDark
+              : AppTheme.cardiacCoral)
+        : theme.colorScheme.primary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.35,
+        ),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: iconColor, size: 20),
+          const AppSpacing.vxs(),
+          RichText(
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: theme.colorScheme.onSurface,
+              ),
+              children: [
+                TextSpan(text: shown ?? '—'),
+                if (shown != null)
+                  TextSpan(
+                    text: ' $unit',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-        ),
-        Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -770,23 +906,30 @@ class PatientHomeScreen extends ConsumerWidget {
     List<Screening> screenings,
     Screening latest,
   ) async {
-    final account = ref.read(authStateProvider).account;
-    if (account == null) return;
-    final env = ref.read(environmentProvider).valueOrNull;
-    final text = HealthReport.build(
-      account: account,
-      patient: patient,
-      latest: latest,
-      trendNotes: TrendEngine.notes(screenings),
-      environment: env?.reading,
-    );
-    await SharePlus.instance.share(
-      ShareParams(
-        text: text,
-        subject:
-            'Health summary — ${patient.name}', // share-sheet only, not UI copy
-      ),
-    );
+    try {
+      await PdfClinicalReportService.exportAndShareReport(
+        patient: patient,
+        screening: latest,
+      );
+    } catch (_) {
+      final account = ref.read(authStateProvider).account;
+      if (account == null) return;
+      final env = ref.read(environmentProvider).valueOrNull;
+      final text = HealthReport.build(
+        account: account,
+        patient: patient,
+        latest: latest,
+        trendNotes: TrendEngine.notes(screenings),
+        environment: env?.reading,
+      );
+      await SharePlus.instance.share(
+        ShareParams(
+          text: text,
+          subject:
+              'Health summary — ${patient.name}', // share-sheet only, not UI copy
+        ),
+      );
+    }
   }
 
   // ───────────────────────────── Profile ─────────────────────────────
@@ -948,162 +1091,250 @@ class PatientHomeScreen extends ConsumerWidget {
           ),
         ),
         const AppSpacing.vmd(),
-        Row(
-          children: [
-            // Card 1: Heat Guardian
-            Expanded(
-              child: AppCard(
-                padding: const EdgeInsets.all(AppTheme.spacingMd),
-                onTap: () => context.push('/screening/heat-guardian'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF8C00), Color(0xFFFF5722)],
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.deepOrange.withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              // Card 1: Heat Guardian
+              SizedBox(
+                width: 175,
+                child: AppCard(
+                  padding: const EdgeInsets.all(AppTheme.spacingMd),
+                  onTap: () => context.push('/screening/heat-guardian'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF8C00), Color(0xFFFF5722)],
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.wb_sunny_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.deepOrange.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _kPsiSafeBadge,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: Colors.deepOrange,
-                              fontSize: 9,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.deepOrange.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.wb_sunny_rounded,
+                              color: Colors.white,
+                              size: 20,
                             ),
                           ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.deepOrange.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _kPsiSafeBadge,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: Colors.deepOrange,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const AppSpacing.vmd(),
+                      Text(
+                        _kHeatGuardianTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                      ],
-                    ),
-                    const AppSpacing.vmd(),
-                    Text(
-                      _kHeatGuardianTitle,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
                       ),
-                    ),
-                    const AppSpacing.vxs(),
-                    Text(
-                      _kHeatGuardianSubtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 11,
+                      const AppSpacing.vxs(),
+                      Text(
+                        _kHeatGuardianSubtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const AppSpacing.hmd(),
-            // Card 2: Overnight Guardian
-            Expanded(
-              child: AppCard(
-                padding: const EdgeInsets.all(AppTheme.spacingMd),
-                onTap: () => context.push('/screening/overnight-guardian'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.indigo.withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+              const SizedBox(width: 12),
+
+              // Card 2: Air Pollution Guardian
+              SizedBox(
+                width: 175,
+                child: AppCard(
+                  padding: const EdgeInsets.all(AppTheme.spacingMd),
+                  onTap: () =>
+                      context.push('/screening/air-pollution-guardian'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF00897B), Color(0xFF004D40)],
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.nightlight_round,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.indigo.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _kDualGraphsBadge,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: Colors.indigo,
-                              fontSize: 9,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.teal.withValues(alpha: 0.3),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.air_rounded,
+                              color: Colors.white,
+                              size: 20,
                             ),
                           ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.teal.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _kAqiLiveBadge,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: Colors.teal,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const AppSpacing.vmd(),
+                      Text(
+                        _kAirGuardianTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                      ],
-                    ),
-                    const AppSpacing.vmd(),
-                    Text(
-                      _kOvernightGuardianTitle,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
                       ),
-                    ),
-                    const AppSpacing.vxs(),
-                    Text(
-                      _kOvernightGuardianSubtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 11,
+                      const AppSpacing.vxs(),
+                      Text(
+                        _kAirGuardianSubtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+
+              // Card 3: Overnight Guardian
+              SizedBox(
+                width: 175,
+                child: AppCard(
+                  padding: const EdgeInsets.all(AppTheme.spacingMd),
+                  onTap: () => context.push('/screening/overnight-guardian'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.indigo.withValues(alpha: 0.3),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.nightlight_round,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.indigo.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _kDualGraphsBadge,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: Colors.indigo,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const AppSpacing.vmd(),
+                      Text(
+                        _kOvernightGuardianTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const AppSpacing.vxs(),
+                      Text(
+                        _kOvernightGuardianSubtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

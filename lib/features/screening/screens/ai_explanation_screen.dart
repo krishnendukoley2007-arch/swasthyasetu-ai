@@ -30,6 +30,7 @@ import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/explanation_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
 import 'package:swasthyasetu_ai/domain/models/patient_profile_context.dart';
+import 'package:swasthyasetu_ai/domain/rules/offline_explainer.dart';
 import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
 import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
@@ -81,9 +82,9 @@ const _kCriticalTag = 'Critical';
 const _kLowTag = 'Low';
 const _kFeverTag = 'Fever';
 const _kSignalTag = 'Signal';
-const _kSnapdragonNpuPill = 'Snapdragon NPU · INT8';
-const _kNpuTelemetryTooltip =
-    '8.4ms Latency · 0 Bytes Cloud · On-Device Private';
+const _kOnDevicePrivacyPill = 'On-Device Private';
+const _kOnDevicePrivacyTooltip =
+    '100% on-device guideline evaluation · Zero cloud vitals';
 const _kSectionReadingShowed = 'What your reading showed';
 const _kSectionMeaning = 'What this could mean';
 const _kSectionActionPlan = 'What you can do now';
@@ -419,16 +420,19 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     _scrollToEnd();
 
     if (!ref.read(settingsProvider).aiConsent) {
+      final offlineAnswer = OfflineExplainer.answerClinicalQuestion(
+        assessment: assessment,
+        question: text,
+      );
       setState(() {
         _sending = false;
-        _blockedQuestion = text;
         _chat.add(
           _Message(
-            author: _Author.system,
-            text:
-                'Online AI is switched off, so nothing left this phone. The '
-                'explanation above did not need it.',
+            author: _Author.assistant,
+            text: offlineAnswer,
             at: DateTime.now(),
+            footnote:
+                'Answered offline from on-device guidelines (Online AI switched off)',
           ),
         );
       });
@@ -456,19 +460,16 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
       _typing = false;
       _sending = false;
       final trimmed = answer?.trim() ?? '';
+      final isOnline = ref.read(geminiServiceProvider).isConfigured;
       _chat.add(
         trimmed.isNotEmpty
-            // Null is the designed offline answer, not a crash: a free-text
-            // clinical question is never answered from a template. But *why* it
-            // failed decides what the worker should do next, so read it off the
-            // service instead of always blaming the connection — a rejected key
-            // looked identical to no signal, and sent people hunting for bars
-            // they already had.
             ? _Message(
                 author: _Author.assistant,
                 text: trimmed,
                 at: DateTime.now(),
-                footnote: 'Answered online by ${GeminiService.model}',
+                footnote: isOnline
+                    ? 'Answered online by ${GeminiService.model}'
+                    : 'Answered offline from on-device guidelines',
               )
             : _Message(
                 author: _Author.system,
@@ -667,13 +668,14 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
               foreground: theme.colorScheme.onSecondaryContainer,
               background: theme.colorScheme.secondaryContainer,
             ),
-          _pill(
-            label: _kSnapdragonNpuPill,
-            icon: Icons.memory_rounded,
-            foreground: theme.colorScheme.onTertiaryContainer,
-            background: theme.colorScheme.tertiaryContainer,
-            tooltip: _kNpuTelemetryTooltip,
-          ),
+          if (source == ExplanationSource.offline)
+            _pill(
+              label: _kOnDevicePrivacyPill,
+              icon: Icons.shield_outlined,
+              foreground: theme.colorScheme.onTertiaryContainer,
+              background: theme.colorScheme.tertiaryContainer,
+              tooltip: _kOnDevicePrivacyTooltip,
+            ),
           if (assessment.isDemo)
             _pill(
               label: 'Demo reading',
@@ -738,7 +740,9 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
     final hrBpm = s.heartRateBpm;
     final hrColor = (hrBpm > 100 || hrBpm < 50)
         ? const Color(0xFFEF4444)
-        : const Color(0xFF10B981);
+        : (theme.brightness == Brightness.dark
+              ? AppTheme.cardiacCoralDark
+              : AppTheme.cardiacCoral);
     final hrStatus = hrBpm > 100
         ? _kHrTachy
         : (hrBpm < 50 ? _kHrBrady : _kNormalTag);
@@ -766,11 +770,9 @@ class _AiExplanationScreenState extends ConsumerState<AiExplanationScreen> {
       margin: const EdgeInsets.only(bottom: AppTheme.spacingMd),
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        boxShadow: AppTheme.shadowLevel1,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

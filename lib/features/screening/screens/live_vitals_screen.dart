@@ -506,24 +506,18 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
             : (_currentSample.temperatureC > 0
                   ? _currentSample.temperatureC
                   : 0.0);
-        // No PTT without a real heart rate: 60000/0 is not a number, and a
-        // fabricated PTT would feed fabricated BP and glucose estimates.
+        // No PTT without a real heart rate: 60000/0 is not a number.
         final ptt = s.pttMs > 0
             ? s.pttMs
             : (hr > 0 ? 200 + (60000 / hr * 0.25).round() : 0);
 
+        final settings = ref.read(settingsProvider);
         final bpEst = VitalsEstimator.estimateBP(
           pttMs: ptt,
           heartRate: hr,
           age: 35,
-        );
-
-        final glucoseEst = VitalsEstimator.estimateGlucose(
-          pttMs: ptt,
-          heartRate: hr,
-          spo2: spo2,
-          tempC: temp,
-          age: 35,
+          calibratedSystolic: settings.bpCalibrationSystolic,
+          calibratedDiastolic: settings.bpCalibrationDiastolic,
         );
 
         _currentSample = s.copyWith(
@@ -533,9 +527,9 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
           pttMs: ptt,
           estimatedSystolic: bpEst.systolic,
           estimatedDiastolic: bpEst.diastolic,
-          estimatedGlucose: glucoseEst.glucoseMgDl,
-          bpConfidence: 'EXPERIMENTAL',
-          glucoseConfidence: 'EXPERIMENTAL',
+          estimatedGlucose: 0,
+          bpConfidence: bpEst.confidence,
+          glucoseConfidence: 'UNMEASURED',
         );
 
         if (hr > 0) _hrTrail.add(hr);
@@ -1515,8 +1509,13 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
                       theme.colorScheme.error.withValues(alpha: 0.7),
                     ]
                   : [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.primary.withValues(alpha: 0.7),
+                      theme.brightness == Brightness.dark
+                          ? AppTheme.cardiacCoralDark
+                          : AppTheme.cardiacCoral,
+                      (theme.brightness == Brightness.dark
+                              ? AppTheme.cardiacCoralDark
+                              : AppTheme.cardiacCoral)
+                          .withValues(alpha: 0.75),
                     ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -1527,7 +1526,9 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
                 color:
                     (isCritical
                             ? theme.colorScheme.error
-                            : theme.colorScheme.primary)
+                            : (theme.brightness == Brightness.dark
+                                  ? AppTheme.cardiacCoralDark
+                                  : AppTheme.cardiacCoral))
                         .withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
@@ -1581,7 +1582,9 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
         value: ready && hr > 0 ? hr.toString() : '--',
         unit: 'BPM',
         icon: Icons.favorite_rounded,
-        color: theme.colorScheme.primary,
+        color: theme.brightness == Brightness.dark
+            ? AppTheme.cardiacCoralDark
+            : AppTheme.cardiacCoral,
         alert: ready && hr > 0 && (hr > 100 || hr < 50),
         alertColor: theme.colorScheme.error,
         trend: _getHRTrend(),

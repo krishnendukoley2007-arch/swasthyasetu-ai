@@ -314,7 +314,8 @@ class BleService {
   bool get isCapturing => _capturing;
 
   /// Start accumulating waveform samples. Called when a screening begins.
-  void beginCapture({int mode = 1, int durationSec = 30}) {
+  /// Defaults to Continuous Dual Mode (mode: 4, durationSec: 0 = infinite).
+  void beginCapture({int mode = 4, int durationSec = 0}) {
     _capturedEcg.clear();
     _lastEcgSequence = null;
     _capturing = true;

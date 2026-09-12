@@ -678,3 +678,59 @@ class _AppExpandableTextState extends State<AppExpandableText>
     );
   }
 }
+
+/// Giant numeral + unit label pair for vital sign hero readouts.
+///
+/// Matches the reference design's editorial typography: a massive number in
+/// bold weight with tight letter-spacing and tabular figures, paired with a
+/// smaller unit label below or beside it. Accepts an optional [valueColor] for
+/// the cardiac-coral accent; defaults to the theme's onSurface.
+class VitalReadout extends StatelessWidget {
+  final String value;
+  final String unit;
+  final Color? valueColor;
+  final double valueFontSize;
+  final double unitFontSize;
+  final CrossAxisAlignment alignment;
+
+  const VitalReadout({
+    super.key,
+    required this.value,
+    required this.unit,
+    this.valueColor,
+    this.valueFontSize = 56,
+    this.unitFontSize = 16,
+    this.alignment = CrossAxisAlignment.start,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: alignment,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: valueFontSize,
+            fontWeight: FontWeight.w800,
+            color: valueColor ?? theme.colorScheme.onSurface,
+            letterSpacing: -2.0,
+            height: 1.0,
+            fontFeatures: const [ui.FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacingXxs),
+        Text(
+          unit,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            letterSpacing: 1.0,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+}

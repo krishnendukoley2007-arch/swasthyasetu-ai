@@ -212,11 +212,26 @@ _ViewPlan? _planView(MbTilesReader reader, List<MapMarker> markers, Size size) {
       if (m.longitude < minLon) minLon = m.longitude;
       if (m.longitude > maxLon) maxLon = m.longitude;
     }
-    const pad = 0.02; // ~2 km, so markers are not glued to the frame edge.
+    const pad = 0.05; // ~5 km padding around cluster bounds
     minLat -= pad;
     maxLat += pad;
     minLon -= pad;
     maxLon += pad;
+
+    // Maintain minimum geographic span (~2.5 deg = ~280 km) so low-zoom packs
+    // provide clear regional terrain context rather than magnifying a tiny fragment
+    // into blurry pixel blocks.
+    const minGeoSpan = 2.5;
+    final centerLat = (minLat + maxLat) / 2;
+    final centerLon = (minLon + maxLon) / 2;
+    if ((maxLat - minLat) < minGeoSpan) {
+      minLat = centerLat - minGeoSpan / 2;
+      maxLat = centerLat + minGeoSpan / 2;
+    }
+    if ((maxLon - minLon) < minGeoSpan) {
+      minLon = centerLon - minGeoSpan / 2;
+      maxLon = centerLon + minGeoSpan / 2;
+    }
   }
 
   const tileSize = 256.0;
@@ -235,12 +250,10 @@ _ViewPlan? _planView(MbTilesReader reader, List<MapMarker> markers, Size size) {
     }
 
     // Scale so the whole box fits, then centre it.
+    // Clamp raster magnification to 1.8x to maintain crisp terrain rendering.
     final scale = spanX <= 0 || spanY <= 0
         ? 1.0
-        : (size.width / (spanX * tileSize)).clamp(
-            0.0,
-            size.height / (spanY * tileSize),
-          );
+        : (size.width / (spanX * tileSize)).clamp(0.4, 1.8);
     final drawn = scale <= 0 ? 1.0 : scale;
     final scaledTile = tileSize * drawn;
 

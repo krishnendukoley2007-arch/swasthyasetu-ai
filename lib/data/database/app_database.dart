@@ -88,6 +88,11 @@ class Screenings extends Table {
   IntColumn get retryCount => integer().withDefault(const Constant(0))();
   BoolColumn get isDemo => boolean().withDefault(const Constant(false))();
 
+  // Advisory Edge AI rhythm anomaly fields (Mandate 2.5)
+  BoolColumn get aiAnomalyFlag =>
+      boolean().withDefault(const Constant(false))();
+  RealColumn get aiAnomalyScore => real().withDefault(const Constant(0.0))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -319,7 +324,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -337,6 +342,11 @@ class AppDatabase extends _$AppDatabase {
       // v4 adds phoneNumber to AuthAccounts for Phone OTP sign-in.
       if (from < 4) {
         await m.addColumn(authAccounts, authAccounts.phoneNumber);
+      }
+      // v5 adds aiAnomalyFlag and aiAnomalyScore to Screenings (Mandate 2.5).
+      if (from < 5) {
+        await m.addColumn(screenings, screenings.aiAnomalyFlag);
+        await m.addColumn(screenings, screenings.aiAnomalyScore);
       }
     },
     beforeOpen: (details) async {

@@ -45,6 +45,10 @@ All modifications, features, and bug fixes must adhere to these four core design
 *   **Mandate:** The application is a screening/triage tool, not a diagnostic one.
 *   **Practice:** Every vital screen, result screen, and health report must clearly display the required medical disclaimers. Its risk levels are based on deterministic thresholds, not clinical judgment.
 
+### 2.5 AI Flags Are Advisory, Never Authoritative
+*   **Mandate:** Any learned/statistical model output (an "AI flag") may be *displayed* alongside a screening result, but must **never** alter the deterministic triage band computed by `risk_engine.dart`.
+*   **Practice:** AI flags are stored in a separate field (`aiAnomalyFlag`, `aiAnomalyScore`) from `riskBand`. `risk_engine.dart` must have zero import dependency on the AI module. A test must assert that feeding the same vitals with different AI flag values produces an identical `riskBand`.
+
 ---
 
 ## 🧪 3. Quality Assurance & Test Invariants

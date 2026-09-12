@@ -2,46 +2,44 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:swasthyasetu_ai/core/providers/providers.dart';
+import 'package:swasthyasetu_ai/core/services/ble_protocol.dart';
+import 'package:swasthyasetu_ai/core/services/ble_service.dart';
+import 'package:swasthyasetu_ai/core/services/overnight_report_exporter.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
+import 'package:swasthyasetu_ai/domain/rules/overnight_analysis_engine.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/dual_waveform_sweep_monitor.dart';
 
-// Localization guard: top-level constants
+// Localization constants
 const _kTitle = 'Overnight Guardian';
-const _kStatusOptimal = 'Healthy Nocturnal Recovery';
-const _kHrDipTitle = 'Nocturnal HR Dip';
-const _kOdiTitle = 'Sleep SpO2 Stability (ODI)';
-const _kEdrTitle = 'EDR Respiration Rate';
-const _kDatasheetButton = 'Clinical Sensor Datasheet';
-const _kStartSession = 'Start Overnight Monitoring';
-const _kStopSession = 'Stop Monitoring Session';
+const _kRecoveryHeader = 'Nocturnal Vagal Recovery';
+const _kBiomarkersHeader = 'Evaluated Nocturnal Biomarkers';
+const _kDatasheetButton = 'Sensor Feasibility Datasheet';
+const _kStartSession = 'Start Overnight Screening';
+const _kStopSession = 'Stop & Run Clinical Analysis';
+const _kDownloadPdf = 'Download Clinical Report (PDF)';
+const _kExportCsv = 'Export Raw Data (CSV)';
 const _kDisclaimer =
     'Screening & physiological trend advisor only. Does not replace clinical polysomnography (PSG) or diagnose sleep apnea. Consult a pulmonologist or cardiologist for chronic sleep disturbances.';
 const _kDatasheetModalTitle =
     'Overnight Monitoring: Clinical Feasibility Datasheet';
 const _kCloseLabel = 'Close Datasheet';
 const _kDatasheetTooltip = 'Hardware Datasheet';
-const _kRecoveryHeader = 'Nocturnal Vagal Recovery';
-const _kBiomarkersHeader = 'Key Nocturnal Biomarkers';
-const _kDutyCycleLabel = 'Duty Cycle';
-const _kDutyCycleValue = '30s / 5m';
 const _kProfileTitle = 'Continuous Nocturnal HR & SpO2 Trends';
 const _kProfileDesc =
-    'Drag your finger on the graph to inspect heart rate dipping and oxygenation at any hour.';
-const _kEcgLiveTitle = 'Live Continuous ECG Tracing (Lead I)';
-const _kEcgLiveSubtitle =
-    '250 Hz Continuous Sweep · Adhesive Lead / Chest Strap Mode';
-const _kLiveBadge = 'LIVE MONITORING';
+    'Drag across the timeline to inspect heart rate dipping, oxygenation, and detected anomalies.';
+
+const _kLiveBadge = 'SCREENING ACTIVE';
 const _kIdleBadge = 'STANDBY';
-const _kTime11Pm = '11:00 PM';
-const _kTime3Am = '03:00 AM';
-const _kTime7Am = '07:00 AM';
-const _kFeasibilityTitle = 'Continuous Nocturnal Feasibility Verified';
-const _kFeasibilityBody =
-    'Uses adhesive Ag/AgCl leads or chest strap for ECG. Finger PPG runs in 30-second duty cycles to conserve battery. Respiration is computed via EDR.';
 const _kHrLegend = 'Heart Rate (BPM)';
 const _kSpo2Legend = 'SpO2 Saturation (%)';
 const _kHypoxiaAlertLabel = '90% Hypoxia Threshold';
+const _kModeDual = 'Dual (ECG + PPG)';
+const _kModePpg = 'Pulse Oximeter (PPG)';
+const _kModeEcg = 'Lead I ECG (250Hz)';
 
 class OvernightGuardianScreen extends ConsumerStatefulWidget {
   const OvernightGuardianScreen({super.key});
@@ -52,119 +50,306 @@ class OvernightGuardianScreen extends ConsumerStatefulWidget {
 }
 
 class _OvernightGuardianScreenState
-    extends ConsumerState<OvernightGuardianScreen>
-    with SingleTickerProviderStateMixin {
-  bool _isMonitoring = true; // Active by default for immediate visualization
-  late AnimationController _ecgSweepController;
+    extends ConsumerState<OvernightGuardianScreen> {
+  // Session State
+  bool _isScreening = false;
+  DateTime? _sessionStartTime;
+  DateTime? _lastRecordedPointTime;
+  Duration _sessionElapsed = Duration.zero;
+  Timer? _elapsedTimer;
+  final List<OvernightDataPoint> _sessionPoints = [];
+  OvernightSessionReport? _sessionReport;
 
-  // Real-time simulated overnight vitals
-  int _currentHr = 62;
-  double _currentSpo2 = 98.2;
-  final int _nocturnalDipPercent = 15; // Healthy is 10-20% dip
-  final double _lowestSpo2 = 94.5;
-  final int _respiratoryRate = 14;
-  final double _odiScore = 1.8; // Events per hour (< 5 is normal)
+  // Real-time sensor telemetry
+  int? _liveHr;
+  double? _liveSpo2;
+  bool _leadOff = false;
+  bool _fingerOff = false;
+  bool _isExporting = false;
+
+  // Hospital-grade live waveform channel mode
+  // 0 = Split Dual Channel (ECG + PPG), 1 = Pulse Oximeter (PPG Pleth), 2 = Lead I ECG
+  int _activeWaveformMode = 0;
+  List<int>? _latestRawEcgSamples;
+
+  // Stream Subscriptions
+  StreamSubscription<TelemetryFrame>? _telemetrySub;
+  StreamSubscription<EcgFrame>? _ecgSub;
+  Timer? _demoFeedTimer;
 
   // Interactive scrubber state for Trend Graph
   double? _scrubNormalizedX;
-  Timer? _vitalsTickTimer;
-
-  // Real-time sweep buffer
-  final List<double> _ecgWaveBuffer = List.filled(280, 0.0);
-  int _sweepHead = 0;
 
   @override
   void initState() {
     super.initState();
-    _ecgSweepController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3200),
-    )..repeat();
+    _connectHardwareStreams();
+  }
 
-    // Pre-populate buffer with textbook clinical baseline so graph is immediately active
-    final period = 60.0 / _currentHr;
-    for (int i = 0; i < _ecgWaveBuffer.length; i++) {
-      final sampleT = (i / _ecgWaveBuffer.length) * 3.2;
-      final phase = (sampleT % period) / period;
-      _ecgWaveBuffer[i] = _calculateClinicalEcg(phase);
-    }
-    // Erase initial gap ahead of 0
-    for (int i = 1; i <= 14; i++) {
-      _ecgWaveBuffer[i] = 0.0;
-    }
+  void _connectHardwareStreams() {
+    final bleService = ref.read(bleServiceProvider);
 
-    _ecgSweepController.addListener(_onSweepTick);
+    // Listen for live telemetry
+    _telemetrySub = bleService.telemetry.listen((frame) {
+      if (!mounted) return;
+      final leadOff = frame.leadOff;
+      final fingerOff = frame.fingerOff;
 
-    // Subtle vitals fluctuation to make monitor feel organic and alive
-    _vitalsTickTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (!mounted || !_isMonitoring) return;
       setState(() {
-        final rnd = math.Random();
-        _currentHr = 60 + rnd.nextInt(5);
-        _currentSpo2 = 97.5 + (rnd.nextDouble() * 1.5);
+        _leadOff = leadOff;
+        _fingerOff = fingerOff;
+
+        // Vitals can arrive from optical SpO2 sensor or AD8232 ECG
+        final rawHr = frame.sample.heartRateBpm;
+        final rawSpo2 = frame.sample.spo2Percent.toDouble();
+
+        // Heart rate is valid from either optical sensor or ECG
+        if (rawHr > 0 && (!leadOff || !fingerOff)) {
+          _liveHr = rawHr;
+        } else if (fingerOff && leadOff) {
+          _liveHr = null;
+        }
+
+        // SpO2 is valid from optical pulse oximeter
+        if (rawSpo2 > 0 && !fingerOff) {
+          _liveSpo2 = rawSpo2;
+        } else if (fingerOff) {
+          _liveSpo2 = null;
+        }
+      });
+
+      // Record point if screening is actively in progress (throttled to 2 Hz)
+      if (_isScreening) {
+        final now = DateTime.now();
+        if (_lastRecordedPointTime == null ||
+            now.difference(_lastRecordedPointTime!).inMilliseconds >= 500) {
+          _lastRecordedPointTime = now;
+          final hrVal = (!fingerOff && frame.sample.heartRateBpm > 0)
+              ? frame.sample.heartRateBpm
+              : (!leadOff && frame.sample.heartRateBpm > 0
+                    ? frame.sample.heartRateBpm
+                    : 0);
+          final spo2Val = (!fingerOff && frame.sample.spo2Percent > 0)
+              ? frame.sample.spo2Percent.toDouble()
+              : 0.0;
+          final point = OvernightDataPoint(
+            timestamp: now,
+            heartRate: hrVal,
+            spo2: spo2Val,
+            temperature: frame.sample.temperatureC,
+            rrIntervalMs: frame.sample.rrIntervalMs,
+            ecgQuality: frame.sample.ecgSignalQuality,
+            leadOff: leadOff,
+            fingerOff: fingerOff,
+            isDemo: false,
+          );
+          _sessionPoints.add(point);
+        }
+      }
+    });
+
+    // Listen for live 250 Hz ECG chunks
+    _ecgSub = bleService.ecg.listen((frame) {
+      if (!mounted) return;
+      setState(() {
+        _latestRawEcgSamples = frame.samples;
       });
     });
   }
 
-  void _onSweepTick() {
-    if (!_isMonitoring) return;
-    final t = _ecgSweepController.value;
-    final targetIdx = (t * (_ecgWaveBuffer.length - 1)).floor();
-    if (targetIdx == _sweepHead) return;
+  void _toggleScreening(bool isLiveBoard) {
+    if (_isScreening) {
+      // STOP SCREENING AND RUN ANALYSIS
+      _elapsedTimer?.cancel();
+      _demoFeedTimer?.cancel();
+      ref.read(bleServiceProvider).endCapture();
+      ref
+          .read(bleServiceProvider)
+          .setMode(0, durationSec: 0); // Put hardware in standby
 
-    final period = 60.0 / _currentHr;
-    final len = _ecgWaveBuffer.length;
+      // Analyze recorded session
+      final report = OvernightAnalysisEngine.analyze(
+        _sessionPoints,
+        baselineDaytimeHr: 72,
+      );
 
-    // Fill all intervening samples between _sweepHead and targetIdx so frame skips never drop samples
-    int cur = (_sweepHead + 1) % len;
-    while (cur != (targetIdx + 1) % len) {
-      final sampleT = (cur / len) * 3.2;
-      final phase = (sampleT % period) / period;
-      _ecgWaveBuffer[cur] = _calculateClinicalEcg(phase);
-      cur = (cur + 1) % len;
+      setState(() {
+        _isScreening = false;
+        _sessionReport = report;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Overnight screening complete: ${report.events.length} clinical issues detected across ${report.totalDuration.inMinutes} minutes.',
+          ),
+          backgroundColor: ClinicalPalette.teal,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } else {
+      // START SCREENING
+      setState(() {
+        _isScreening = true;
+        _sessionStartTime = DateTime.now();
+        _sessionElapsed = Duration.zero;
+        _sessionPoints.clear();
+        _sessionReport = null;
+      });
+
+      // Continuous Dual Mode (mode 4: ECG + SpO2, duration 0 = infinite continuous streaming)
+      ref.read(bleServiceProvider).beginCapture(mode: 4, durationSec: 0);
+
+      _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted || !_isScreening) return;
+        setState(() {
+          _sessionElapsed = DateTime.now().difference(_sessionStartTime!);
+        });
+      });
+
+      // If no live hardware is paired, feed simulated demo points with isDemo: true
+      if (!isLiveBoard) {
+        _startDemoFeed();
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isLiveBoard
+                ? 'Overnight Guardian activated: streaming live from SSAI-SENSE hardware.'
+                : 'Demo overnight screening started. Simulated data flagged with isDemo: true.',
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
-    _sweepHead = targetIdx;
-
-    // Erase 14 samples strictly ahead of the sweeping beam
-    for (int i = 1; i <= 14; i++) {
-      final clearIdx = (_sweepHead + i) % len;
-      _ecgWaveBuffer[clearIdx] = 0.0;
-    }
-    setState(() {});
   }
 
-  /// Calculates textbook clinical Lead I ECG waveform with realistic P-Q-R-S-T
-  double _calculateClinicalEcg(double phase) {
-    if (phase >= 0.10 && phase <= 0.22) {
-      final x = (phase - 0.16) / 0.05;
-      return 0.15 * math.exp(-x * x * 3.0); // P-wave
-    } else if (phase >= 0.36 && phase <= 0.385) {
-      final x = (phase - 0.375) / 0.012;
-      return -0.15 * math.exp(-x * x * 4.0); // Q-dip
-    } else if (phase >= 0.385 && phase <= 0.415) {
-      final x = (phase - 0.40) / 0.010;
-      return 1.18 * math.exp(-x * x * 3.8); // R-peak (+1.18 mV)
-    } else if (phase >= 0.415 && phase <= 0.455) {
-      final x = (phase - 0.43) / 0.014;
-      return -0.32 * math.exp(-x * x * 4.0); // S-dip (-0.32 mV)
-    } else if (phase >= 0.54 && phase <= 0.74) {
-      final x = (phase - 0.64) / 0.08;
-      return 0.28 * math.exp(-x * x * 2.2); // T-wave (+0.28 mV)
+  void _startDemoFeed() {
+    _demoFeedTimer?.cancel();
+    int secondCounter = 0;
+    _demoFeedTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || !_isScreening) {
+        timer.cancel();
+        return;
+      }
+      secondCounter++;
+      final rnd = math.Random();
+
+      // Simulate a gradual nocturnal dip (starts at 74, dips to 60)
+      final phase = (secondCounter % 120) / 120.0;
+      final dip = 14.0 * math.sin(phase * math.pi);
+      final simHr = (74.0 - dip + rnd.nextInt(3)).round();
+
+      // Transient desaturation at second 45-55
+      final isDesat = (secondCounter % 60) >= 42 && (secondCounter % 60) <= 52;
+      final simSpo2 = isDesat
+          ? (88.5 + rnd.nextDouble())
+          : (98.0 + (rnd.nextDouble() * 1.2));
+
+      setState(() {
+        _leadOff = false;
+        _fingerOff = false;
+        _liveHr = simHr;
+        _liveSpo2 = double.parse(simSpo2.toStringAsFixed(1));
+        _latestRawEcgSamples = _generateSyntheticEcgChunk(simHr);
+      });
+
+      _sessionPoints.add(
+        OvernightDataPoint(
+          timestamp: DateTime.now(),
+          heartRate: simHr,
+          spo2: simSpo2,
+          temperature: 36.5,
+          rrIntervalMs: (60000 / simHr).round(),
+          ecgQuality: 0.95,
+          leadOff: false,
+          fingerOff: false,
+          isDemo: true,
+        ),
+      );
+    });
+  }
+
+  List<int> _generateSyntheticEcgChunk(int heartRate) {
+    const rate = 250;
+    final beatPeriod = 60.0 / heartRate;
+    final samples = List<int>.filled(rate, 2048);
+    for (var i = 0; i < rate; i++) {
+      final phase = (i / rate) % beatPeriod;
+      var mv = 0.0;
+      mv += 0.12 * math.exp(-0.5 * math.pow((phase - 0.200) / 0.022, 2)); // P
+      mv += -0.05 * math.exp(-0.5 * math.pow((phase - 0.362) / 0.008, 2)); // Q
+      mv += 1.00 * math.exp(-0.5 * math.pow((phase - 0.400) / 0.010, 2)); // R
+      mv += -0.18 * math.exp(-0.5 * math.pow((phase - 0.438) / 0.009, 2)); // S
+      mv += 0.25 * math.exp(-0.5 * math.pow((phase - 0.600) / 0.045, 2)); // T
+      samples[i] = (mv * 500 + 2048).round().clamp(0, 4095);
     }
-    return 0.0; // Isoelectric baseline
+    return samples;
+  }
+
+  Future<void> _exportPdfReport() async {
+    if (_sessionReport == null) return;
+    setState(() => _isExporting = true);
+    try {
+      await OvernightReportExporter.exportAndSharePdf(
+        _sessionReport!,
+        patientName: 'Ayushman Beneficiary',
+        facilityName: 'Primary Health Centre (PHC) Sub-Centre',
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Report generated and ready to share')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to generate PDF: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  Future<void> _exportCsvData() async {
+    if (_sessionReport == null) return;
+    setState(() => _isExporting = true);
+    try {
+      await OvernightReportExporter.exportAndShareCsv(_sessionReport!);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Raw CSV data exported and ready to share'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to export CSV: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
   }
 
   @override
   void dispose() {
-    _ecgSweepController.removeListener(_onSweepTick);
-    _ecgSweepController.dispose();
-    _vitalsTickTimer?.cancel();
+    _telemetrySub?.cancel();
+    _ecgSub?.cancel();
+    _elapsedTimer?.cancel();
+    _demoFeedTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final link = ref.watch(bleLinkProvider);
+    final isLiveBoard = link.isLive;
 
     return AppPageScaffold(
       appBar: AppBar(
@@ -173,7 +358,7 @@ class _OvernightGuardianScreenState
         actions: [
           IconButton(
             tooltip: _kDatasheetTooltip,
-            icon: const Icon(Icons.analytics_outlined),
+            icon: const Icon(Icons.menu_book_outlined),
             onPressed: () => _showDatasheetModal(context),
           ),
         ],
@@ -183,31 +368,42 @@ class _OvernightGuardianScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Hero Status HUD with Live Pulsing Beacon
+            // ─── HARDWARE / DEMO PROVENANCE BANNER ───
+            _buildHardwareStatusBanner(theme, link, isLiveBoard),
+            const AppSpacing.vmd(),
+
+            // ─── HERO STATUS CARD ───
             _buildHeroStatusCard(theme),
             const AppSpacing.vmd(),
 
-            // ─── GRAPH 1: CONTINUOUS LIVE ECG WAVEFORM SWEEP ───
-            _buildContinuousEcgCard(theme),
+            // ─── DUAL SENSOR CONTACT GATING HUD ───
+            _buildSensorContactGatingHud(theme),
             const AppSpacing.vmd(),
 
-            // ─── GRAPH 2: CONTINUOUS 8-HOUR DUAL HR & SPO2 TRENDS ───
+            // ─── GRAPH 1: REAL-TIME DUAL-WAVEFORM MONITOR (ECG + PLETH PPG) ───
+            _buildLiveWaveformMonitor(theme, isLiveBoard),
+            const AppSpacing.vmd(),
+
+            // ─── GRAPH 2: CONTINUOUS DUAL HR & SPO2 TRENDS WITH ANOMALY SCANNER ───
             _buildContinuousTrendCard(theme),
             const AppSpacing.vmd(),
 
-            // Nocturnal Biomarkers Summary Grid
+            // ─── FLAGGED CLINICAL ISSUES & ANOMALIES CARD ───
+            if (_sessionReport != null &&
+                _sessionReport!.events.isNotEmpty) ...[
+              _buildFlaggedIssuesCard(theme),
+              const AppSpacing.vmd(),
+            ],
+
+            // ─── NOCTURNAL BIOMARKERS SUMMARY GRID ───
             _buildMetricsGrid(theme),
             const AppSpacing.vmd(),
 
-            // Feasibility Banner
-            _buildFeasibilityBanner(theme),
-            const AppSpacing.vmd(),
-
-            // Action Buttons
-            _buildActionControls(theme),
+            // ─── ACTION CONTROLS (START SCREENING / STOP & EXPORT) ───
+            _buildActionControls(theme, isLiveBoard),
             const AppSpacing.vlg(),
 
-            // Medical Disclaimer
+            // ─── MEDICAL DISCLAIMER ───
             _buildDisclaimerCard(theme),
             const AppSpacing.vlg(),
           ],
@@ -216,10 +412,93 @@ class _OvernightGuardianScreenState
     );
   }
 
+  Widget _buildHardwareStatusBanner(
+    ThemeData theme,
+    BleLinkState link,
+    bool isLiveBoard,
+  ) {
+    if (isLiveBoard) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: ClinicalPalette.teal.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          border: Border.all(
+            color: ClinicalPalette.teal.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.bluetooth_connected_rounded,
+              color: ClinicalPalette.teal,
+              size: 20,
+            ),
+            const AppSpacing.hsm(),
+            Expanded(
+              child: Text(
+                'Hardware Linked: ${link.deviceName ?? "SSAI-SENSE"} · Live Telemetry & 250 Hz ECG',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: ClinicalPalette.teal,
+                ),
+              ),
+            ),
+            if (link.batteryPercent != null)
+              Text(
+                '${link.batteryPercent}% 🔋',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: ClinicalPalette.teal,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: ClinicalPalette.amber.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: ClinicalPalette.amber.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            color: ClinicalPalette.amber,
+            size: 20,
+          ),
+          const AppSpacing.hsm(),
+          Expanded(
+            child: Text(
+              'DEMO MODE: Hardware Not Connected. Live screening simulates 250Hz signals flagged with isDemo: true.',
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: ClinicalPalette.amber,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeroStatusCard(ThemeData theme) {
-    final color = _nocturnalDipPercent >= 10
-        ? ClinicalPalette.teal
-        : ClinicalPalette.amber;
+    final report = _sessionReport;
+    final dip = report?.nocturnalDipPercent ?? 0.0;
+    final isGood = dip >= 10.0;
+    final color = report == null
+        ? theme.colorScheme.primary
+        : (isGood ? ClinicalPalette.teal : ClinicalPalette.amber);
+
+    final statusText = report == null
+        ? (_isScreening
+              ? 'Screening In Progress...'
+              : 'Standby — Ready to Monitor')
+        : report.sleepRecoveryVerdict;
 
     return AppCard(
       color: color.withValues(alpha: 0.1),
@@ -250,7 +529,7 @@ class _OvernightGuardianScreenState
                       ),
                     ),
                     Text(
-                      _kStatusOptimal,
+                      statusText,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: color,
@@ -265,12 +544,12 @@ class _OvernightGuardianScreenState
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: _isMonitoring
+                  color: _isScreening
                       ? ClinicalPalette.teal.withValues(alpha: 0.15)
                       : theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _isMonitoring
+                    color: _isScreening
                         ? ClinicalPalette.teal
                         : theme.colorScheme.outlineVariant,
                   ),
@@ -282,7 +561,7 @@ class _OvernightGuardianScreenState
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: _isMonitoring
+                        color: _isScreening
                             ? ClinicalPalette.teal
                             : theme.colorScheme.onSurfaceVariant,
                         shape: BoxShape.circle,
@@ -290,10 +569,10 @@ class _OvernightGuardianScreenState
                     ),
                     const AppSpacing.hxs(),
                     Text(
-                      _isMonitoring ? _kLiveBadge : _kIdleBadge,
+                      _isScreening ? _kLiveBadge : _kIdleBadge,
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: _isMonitoring
+                        color: _isScreening
                             ? ClinicalPalette.teal
                             : theme.colorScheme.onSurfaceVariant,
                         fontSize: 10,
@@ -305,298 +584,406 @@ class _OvernightGuardianScreenState
             ],
           ),
           const AppSpacing.vsm(),
-          Text(
-            'Healthy nocturnal heart rate dip of $_nocturnalDipPercent% indicates restorative parasympathetic recovery and low cardiovascular risk.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ─── GRAPH 1: Hospital-grade Continuous Live ECG Waveform Sweep ───
-  Widget _buildContinuousEcgCard(ThemeData theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF070C14), // Deep clinical navy-black
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(
-          color: _isMonitoring
-              ? ClinicalPalette.teal.withValues(alpha: 0.8)
-              : const Color(0xFF334155),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Top ECG Channel Telemetry Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: const BoxDecoration(
-                    color: ClinicalPalette.teal,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const AppSpacing.hsm(),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _kEcgLiveTitle,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          fontSize: 13,
-                        ),
-                      ),
-                      Text(
-                        _kEcgLiveSubtitle,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: const Color(0xFF94A3B8),
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Live Heartbeat Pulse Meter
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: ClinicalPalette.teal.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: ClinicalPalette.teal.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.favorite_rounded,
-                        color: ClinicalPalette.teal,
-                        size: 14,
-                      ),
-                      const AppSpacing.hxs(),
-                      Text(
-                        '$_currentHr BPM · ${_currentSpo2.toStringAsFixed(1)}%',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: ClinicalPalette.teal,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 250 Hz Continuous ECG Sweep Canvas
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(AppTheme.radiusLg),
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final w = constraints.maxWidth;
-                return SizedBox(
-                  height: 145,
-                  width: w,
-                  child: CustomPaint(
-                    size: Size(w, 145),
-                    painter: _ContinuousEcgPainter(
-                      waveBuffer: _ecgWaveBuffer,
-                      sweepHead: _sweepHead,
-                      isLive: _isMonitoring,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ─── GRAPH 2: Continuous 8-Hour Dual HR & SpO2 Trends ───
-  Widget _buildContinuousTrendCard(ThemeData theme) {
-    // Current scrubbed values
-    final scrubX = _scrubNormalizedX ?? 0.52; // Default around 3 AM nadir
-    final hourIndex = (scrubX * 47).round().clamp(0, 47);
-    final scrubHour = 23 + (hourIndex * 10 / 60);
-    final displayHour = (scrubHour % 24).floor();
-    final displayMinute = ((hourIndex * 10) % 60);
-    final timeFormatted =
-        '${displayHour > 12 ? displayHour - 12 : (displayHour == 0 ? 12 : displayHour)}:${displayMinute.toString().padLeft(2, '0')} ${displayHour >= 12 && displayHour < 24 ? 'PM' : 'AM'}';
-
-    // Interpolated vitals along the 8-hour curve
-    final scrubHr = (72 - (15 * math.sin(scrubX * math.pi))).round();
-    final scrubSpo2 = (98.5 - (1.2 * math.pow(math.sin(scrubX * math.pi), 2)))
-        .toStringAsFixed(1);
-
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacingMd),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+          if (_isScreening)
             Row(
               children: [
                 const Icon(
-                  Icons.auto_graph_rounded,
-                  color: ClinicalPalette.cyan,
-                  size: 24,
+                  Icons.timer_outlined,
+                  size: 16,
+                  color: ClinicalPalette.teal,
                 ),
-                const AppSpacing.hsm(),
+                const AppSpacing.hxs(),
                 Expanded(
                   child: Text(
-                    _kProfileTitle,
-                    style: theme.textTheme.titleSmall?.copyWith(
+                    'Elapsed: ${_formatDuration(_sessionElapsed)} · Captured: ${_sessionPoints.length} points',
+                    style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w700,
+                      color: ClinicalPalette.teal,
                     ),
                   ),
                 ),
               ],
-            ),
-            const AppSpacing.vxs(),
+            )
+          else if (report != null)
             Text(
-              _kProfileDesc,
+              report.triageRecommendation,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 11,
+                height: 1.35,
+              ),
+            )
+          else
+            Text(
+              'Attach the sensor strap or touch electrodes, then tap "Start Overnight Screening" below to evaluate nocturnal autonomic recovery and sleep apnea risk.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const AppSpacing.vsm(),
+        ],
+      ),
+    );
+  }
 
-            // Graph Legends Row
-            Wrap(
-              spacing: 12,
-              runSpacing: 4,
+  /// ─── Multi-Sensor Touch / Contact Detection HUD ───
+  Widget _buildSensorContactGatingHud(ThemeData theme) {
+    final ecgContactOk = !_leadOff;
+    final spo2ContactOk = !_fingerOff;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ClinicalPalette.hairline(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.touch_app_rounded, size: 16),
+              const AppSpacing.hxs(),
+              Expanded(
+                child: Text(
+                  'Sensor Skin Contact Gating',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const AppSpacing.vxs(),
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: ecgContactOk
+                      ? ClinicalPalette.teal
+                      : ClinicalPalette.amber,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const AppSpacing.hxs(),
+              Expanded(
+                child: Text(
+                  ecgContactOk
+                      ? 'ECG Electrodes: TOUCHING'
+                      : 'ECG Leads: OFF CONTACT',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: ecgContactOk
+                        ? ClinicalPalette.teal
+                        : ClinicalPalette.amber,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const AppSpacing.vxs(),
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: spo2ContactOk
+                      ? ClinicalPalette.cyan
+                      : ClinicalPalette.amber,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const AppSpacing.hxs(),
+              Expanded(
+                child: Text(
+                  spo2ContactOk
+                      ? 'Optical PPG: TOUCHING'
+                      : 'SpO2 Sensor: OFF CONTACT',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: spo2ContactOk
+                        ? ClinicalPalette.cyan
+                        : ClinicalPalette.amber,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ─── GRAPH 1: Hospital-grade Dual-Waveform Monitor (ECG + Plethysmograph PPG) ───
+  Widget _buildLiveWaveformMonitor(ThemeData theme, bool isLiveBoard) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Waveform Channel Selector Tabs
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              _buildChannelPill(
+                channelName: _kModeDual,
+                mode: 0,
+                icon: Icons.splitscreen_rounded,
+                theme: theme,
+              ),
+              const AppSpacing.hxs(),
+              _buildChannelPill(
+                channelName: _kModePpg,
+                mode: 1,
+                icon: Icons.air_rounded,
+                theme: theme,
+              ),
+              const AppSpacing.hxs(),
+              _buildChannelPill(
+                channelName: _kModeEcg,
+                mode: 2,
+                icon: Icons.monitor_heart_outlined,
+                theme: theme,
+              ),
+            ],
+          ),
+        ),
+
+        // Live Medical Dual Waveform Monitor
+        DualWaveformSweepMonitor(
+          heartRate: (_liveHr ?? 0).toDouble(),
+          spo2: (_liveSpo2 ?? 0).toDouble(),
+          isLive: isLiveBoard && _isScreening,
+          activeMode: _activeWaveformMode,
+          leadOff: _leadOff,
+          fingerOff: _fingerOff,
+          rawEcgSamples: _latestRawEcgSamples,
+          beatDetected: _liveHr != null && _liveHr! > 0,
+          showControls: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChannelPill({
+    required String channelName,
+    required int mode,
+    required IconData icon,
+    required ThemeData theme,
+  }) {
+    final isSelected = _activeWaveformMode == mode;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _activeWaveformMode = mode;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? ClinicalPalette.teal.withValues(alpha: 0.18)
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected
+                  ? ClinicalPalette.teal
+                  : ClinicalPalette.hairline(context),
+              width: isSelected ? 1.5 : 1.0,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 13,
+                color: isSelected
+                    ? ClinicalPalette.teal
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  channelName,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected
+                        ? ClinicalPalette.teal
+                        : theme.colorScheme.onSurfaceVariant,
+                    fontSize: 10,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// ─── GRAPH 2: Continuous Real Dual HR & SpO2 Trends With Anomaly Markers ───
+  Widget _buildContinuousTrendCard(ThemeData theme) {
+    final points = _sessionReport?.timeSeries ?? _sessionPoints;
+    final events = _sessionReport?.events ?? const [];
+
+    final hasData = points.isNotEmpty;
+
+    // Interactive scrub calculation
+    final scrubX = _scrubNormalizedX ?? 0.5;
+    final scrubIdx = hasData
+        ? (scrubX * (points.length - 1)).round().clamp(0, points.length - 1)
+        : 0;
+
+    final scrubPoint = hasData ? points[scrubIdx] : null;
+    final timeFormatted = scrubPoint != null
+        ? DateFormat('hh:mm a').format(scrubPoint.timestamp)
+        : '—';
+
+    final scrubHr = scrubPoint != null && scrubPoint.heartRate > 0
+        ? '${scrubPoint.heartRate} bpm'
+        : '—';
+    final scrubSpo2 = scrubPoint != null && scrubPoint.spo2 > 0
+        ? '${scrubPoint.spo2.toStringAsFixed(1)}%'
+        : '—';
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxW = constraints.maxWidth - (AppTheme.spacingMd * 2);
+          return Padding(
+            padding: const EdgeInsets.all(AppTheme.spacingMd),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 9,
-                      height: 9,
-                      decoration: const BoxDecoration(
-                        color: ClinicalPalette.teal,
-                        shape: BoxShape.circle,
-                      ),
+                    const Icon(
+                      Icons.auto_graph_rounded,
+                      color: ClinicalPalette.cyan,
+                      size: 24,
                     ),
-                    const AppSpacing.hxs(),
-                    Text(
-                      _kHrLegend,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: ClinicalPalette.teal,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 9,
-                      height: 9,
-                      decoration: const BoxDecoration(
-                        color: ClinicalPalette.cyan,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const AppSpacing.hxs(),
-                    Text(
-                      _kSpo2Legend,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: ClinicalPalette.cyan,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 14,
-                      height: 2,
-                      color: ClinicalPalette.amber,
-                    ),
-                    const AppSpacing.hxs(),
-                    Text(
-                      _kHypoxiaAlertLabel,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: ClinicalPalette.amber,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const AppSpacing.vsm(),
-
-            // Scrubbed Readout Chip
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: ClinicalPalette.hairline(context)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time_rounded, size: 14),
-                      const AppSpacing.hxs(),
-                      Text(
-                        timeFormatted,
-                        style: theme.textTheme.labelMedium?.copyWith(
+                    const AppSpacing.hsm(),
+                    Expanded(
+                      child: Text(
+                        _kProfileTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+                const AppSpacing.vxs(),
+                Text(
+                  _kProfileDesc,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 11,
                   ),
-                  Row(
+                ),
+                const AppSpacing.vsm(),
+
+                // Graph Legends Row
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  children: [
+                    _buildLegendItem(
+                      ClinicalPalette.teal,
+                      _kHrLegend,
+                      maxW,
+                      theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: ClinicalPalette.teal,
+                        fontSize: 10,
+                      ),
+                    ),
+                    _buildLegendItem(
+                      ClinicalPalette.cyan,
+                      _kSpo2Legend,
+                      maxW,
+                      theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: ClinicalPalette.cyan,
+                        fontSize: 10,
+                      ),
+                    ),
+                    _buildLegendItem(
+                      ClinicalPalette.amber,
+                      _kHypoxiaAlertLabel,
+                      maxW,
+                      theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: ClinicalPalette.amber,
+                        fontSize: 10,
+                      ),
+                      isLine: true,
+                    ),
+                    if (events.isNotEmpty)
+                      _buildLegendItem(
+                        ClinicalPalette.coral,
+                        'Issues (${events.length})',
+                        maxW,
+                        theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: ClinicalPalette.coral,
+                          fontSize: 10,
+                        ),
+                      ),
+                  ],
+                ),
+                const AppSpacing.vsm(),
+
+                // Scrubbed Readout Chip
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: ClinicalPalette.hairline(context),
+                    ),
+                  ),
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
                     children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.access_time_rounded, size: 14),
+                          const AppSpacing.hxs(),
+                          Text(
+                            timeFormatted,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
                       Text(
-                        'HR: $scrubHr bpm',
+                        'HR: $scrubHr',
                         style: theme.textTheme.labelMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: ClinicalPalette.teal,
                         ),
                       ),
-                      const AppSpacing.hmd(),
                       Text(
-                        'SpO2: $scrubSpo2%',
+                        'SpO2: $scrubSpo2',
                         style: theme.textTheme.labelMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: ClinicalPalette.cyan,
@@ -604,98 +991,303 @@ class _OvernightGuardianScreenState
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            const AppSpacing.vsm(),
+                ),
+                const AppSpacing.vsm(),
 
-            // Interactive Trend Graph Canvas with LayoutBuilder for exact finite width
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final graphWidth = constraints.maxWidth;
-                return GestureDetector(
-                  onHorizontalDragUpdate: (details) {
-                    setState(() {
-                      _scrubNormalizedX =
-                          (details.localPosition.dx / graphWidth).clamp(
-                            0.0,
-                            1.0,
-                          );
-                    });
-                  },
-                  onTapDown: (details) {
-                    setState(() {
-                      _scrubNormalizedX =
-                          (details.localPosition.dx / graphWidth).clamp(
-                            0.0,
-                            1.0,
-                          );
-                    });
-                  },
-                  child: Container(
-                    height: 175,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(
-                        0xFF070C14,
-                      ), // Clinical midnight container
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: ClinicalPalette.teal.withValues(alpha: 0.35),
-                        width: 1.2,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: CustomPaint(
-                        size: Size(graphWidth, 175),
-                        painter: _DualTrendGraphPainter(
-                          scrubNormalizedX: scrubX,
-                          theme: theme,
+                // Interactive Trend Graph Canvas
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final graphWidth = constraints.maxWidth;
+                    if (!hasData) {
+                      return Container(
+                        constraints: const BoxConstraints(minHeight: 140),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF070C14),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF334155),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.show_chart_rounded,
+                                  color: Color(0xFF64748B),
+                                  size: 28,
+                                ),
+                                const AppSpacing.vxs(),
+                                Text(
+                                  'No Overnight Recording Captured Yet',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const AppSpacing.vxs(),
+                                Text(
+                                  'Tap "Start Overnight Screening" below to begin recording real sensor trends.',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: const Color(0xFF94A3B8),
+                                    fontSize: 11,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return GestureDetector(
+                      onHorizontalDragUpdate: (details) {
+                        setState(() {
+                          _scrubNormalizedX =
+                              (details.localPosition.dx / graphWidth).clamp(
+                                0.0,
+                                1.0,
+                              );
+                        });
+                      },
+                      onTapDown: (details) {
+                        setState(() {
+                          _scrubNormalizedX =
+                              (details.localPosition.dx / graphWidth).clamp(
+                                0.0,
+                                1.0,
+                              );
+                        });
+                      },
+                      child: Container(
+                        height: 175,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF070C14),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: ClinicalPalette.teal.withValues(alpha: 0.35),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: CustomPaint(
+                            size: Size(graphWidth, 175),
+                            painter: _RealDualTrendGraphPainter(
+                              points: points,
+                              events: events,
+                              scrubNormalizedX: scrubX,
+                              theme: theme,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            const AppSpacing.vxs(),
+                    );
+                  },
+                ),
+                const AppSpacing.vxs(),
 
-            // Timeline Hours Axis
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _kTime11Pm,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 10,
+                // Timeline Hours Axis
+                if (hasData)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        DateFormat('hh:mm a').format(points.first.timestamp),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 10,
+                        ),
+                      ),
+                      Text(
+                        'Mid-session Nadir',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: ClinicalPalette.teal,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                        ),
+                      ),
+                      Text(
+                        DateFormat('hh:mm a').format(points.last.timestamp),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                Text(
-                  _kTime3Am,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: ClinicalPalette.teal,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 10,
-                  ),
-                ),
-                Text(
-                  _kTime7Am,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 10,
-                  ),
-                ),
               ],
             ),
-          ],
-        ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(
+    Color color,
+    String text,
+    double maxW,
+    TextStyle? style, {
+    bool isLine = false,
+  }) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxW),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: isLine ? 12 : 8,
+            height: isLine ? 2 : 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: isLine ? BoxShape.rectangle : BoxShape.circle,
+            ),
+          ),
+          const AppSpacing.hxs(),
+          Flexible(child: Text(text, style: style)),
+        ],
+      ),
+    );
+  }
+
+  /// ─── FLAGGED CLINICAL ISSUES CARD ───
+  Widget _buildFlaggedIssuesCard(ThemeData theme) {
+    final events = _sessionReport!.events;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: ClinicalPalette.amber,
+                size: 22,
+              ),
+              const AppSpacing.hsm(),
+              Expanded(
+                child: Text(
+                  'Detected Clinical Issues (${events.length})',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const AppSpacing.vxs(),
+          Text(
+            'Physiological anomalies flagged during full-night automated scanning:',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 11,
+            ),
+          ),
+          const AppSpacing.vsm(),
+          ...events.take(6).map((e) {
+            final timeStr = DateFormat('hh:mm:ss a').format(e.timestamp);
+            final color = e.severity == 'critical'
+                ? ClinicalPalette.coral
+                : (e.severity == 'warning'
+                      ? ClinicalPalette.amber
+                      : ClinicalPalette.teal);
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    e.severity == 'critical'
+                        ? Icons.error_outline_rounded
+                        : Icons.info_outline_rounded,
+                    color: color,
+                    size: 18,
+                  ),
+                  const AppSpacing.hsm(),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                e.title,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: color,
+                                ),
+                              ),
+                            ),
+                            const AppSpacing.hxs(),
+                            Text(
+                              timeStr,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const AppSpacing.vxs(),
+                        Text(
+                          e.description,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
 
   Widget _buildMetricsGrid(ThemeData theme) {
+    final report = _sessionReport;
+
+    final dipValue = report != null
+        ? '${report.nocturnalDipPercent.toStringAsFixed(1)}% Dip'
+        : '—';
+    final dipSub = report != null
+        ? report.nocturnalDipCategory
+        : 'Target: 10-20% (Normal Dipper)';
+
+    final odiValue = report != null
+        ? '${report.lowestSpo2.toStringAsFixed(1)}% min'
+        : '—';
+    final odiSub = report != null
+        ? 'ODI: ${report.odiScore.toStringAsFixed(1)}/h (${report.odiSeverity})'
+        : 'Target: <5.0 events/h';
+
+    final hrvValue = report != null ? 'SDNN: ${report.sdnn} ms' : '—';
+    final hrvSub = report != null
+        ? 'RMSSD: ${report.rmssd} ms · Respiration: ${report.respiratoryRate}/min'
+        : 'Autonomic Vagal Modulation';
+
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -713,9 +1305,9 @@ class _OvernightGuardianScreenState
                 child: _buildMetricTile(
                   theme,
                   icon: Icons.trending_down_rounded,
-                  label: _kHrDipTitle,
-                  value: '$_nocturnalDipPercent% Dip',
-                  subtext: 'Target: 10-20% (Normal Dipper)',
+                  label: 'Nocturnal HR Dip',
+                  value: dipValue,
+                  subtext: dipSub,
                   color: ClinicalPalette.teal,
                 ),
               ),
@@ -724,9 +1316,9 @@ class _OvernightGuardianScreenState
                 child: _buildMetricTile(
                   theme,
                   icon: Icons.air_rounded,
-                  label: _kOdiTitle,
-                  value: '${_lowestSpo2.toStringAsFixed(1)}% min',
-                  subtext: 'ODI: $_odiScore events/h (<5 Normal)',
+                  label: 'Sleep SpO2 & Apnea (ODI)',
+                  value: odiValue,
+                  subtext: odiSub,
                   color: ClinicalPalette.cyan,
                 ),
               ),
@@ -738,10 +1330,10 @@ class _OvernightGuardianScreenState
               Expanded(
                 child: _buildMetricTile(
                   theme,
-                  icon: Icons.waves_rounded,
-                  label: _kEdrTitle,
-                  value: '$_respiratoryRate br/min',
-                  subtext: 'ECG/PPG Amplitude Modulated',
+                  icon: Icons.favorite_border_rounded,
+                  label: 'Autonomic HRV & EDR',
+                  value: hrvValue,
+                  subtext: hrvSub,
                   color: theme.colorScheme.primary,
                 ),
               ),
@@ -749,10 +1341,18 @@ class _OvernightGuardianScreenState
               Expanded(
                 child: _buildMetricTile(
                   theme,
-                  icon: Icons.battery_charging_full_rounded,
-                  label: _kDutyCycleLabel,
-                  value: _kDutyCycleValue,
-                  subtext: '92% Battery Savings Over 8h',
+                  icon: Icons.timer_outlined,
+                  label: 'Monitored Duration',
+                  value: report != null
+                      ? (report.totalDuration.inMinutes > 0
+                            ? '${report.totalDuration.inMinutes} min'
+                            : '${report.totalDuration.inSeconds} sec')
+                      : (_isScreening ? _formatDuration(_sessionElapsed) : '—'),
+                  subtext: report != null
+                      ? (report.validContactDuration.inMinutes > 0
+                            ? 'Valid Contact: ${report.validContactDuration.inMinutes} min'
+                            : 'Valid Contact: ${report.validContactDuration.inSeconds} sec')
+                      : 'Duty-cycled BLE streaming',
                   color: ClinicalPalette.teal,
                 ),
               ),
@@ -818,89 +1418,57 @@ class _OvernightGuardianScreenState
     );
   }
 
-  Widget _buildFeasibilityBanner(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacingMd),
-      decoration: BoxDecoration(
-        color: ClinicalPalette.cyan.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ClinicalPalette.cyan.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.lightbulb_outline_rounded,
-            color: ClinicalPalette.cyan,
-            size: 22,
-          ),
-          const AppSpacing.hsm(),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _kFeasibilityTitle,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: ClinicalPalette.cyan,
-                  ),
-                ),
-                const AppSpacing.vxs(),
-                Text(
-                  _kFeasibilityBody,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionControls(ThemeData theme) {
+  Widget _buildActionControls(ThemeData theme, bool isLiveBoard) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Primary Start/Stop Screening Button
         AppButton(
-          label: _isMonitoring ? _kStopSession : _kStartSession,
+          label: _isScreening ? _kStopSession : _kStartSession,
           icon: Icon(
-            _isMonitoring ? Icons.stop_circle_outlined : Icons.bedtime_outlined,
+            _isScreening
+                ? Icons.stop_circle_outlined
+                : Icons.play_circle_fill_rounded,
             size: 22,
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: _isMonitoring
+            backgroundColor: _isScreening
                 ? ClinicalPalette.amber
                 : theme.colorScheme.primary,
             foregroundColor: Colors.white,
           ),
-          onPressed: () {
-            setState(() {
-              _isMonitoring = !_isMonitoring;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  _isMonitoring
-                      ? 'Overnight Guardian activated: ECG & PPG streaming in Duty-Cycle mode.'
-                      : 'Overnight Guardian session saved.',
-                ),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          },
+          onPressed: () => _toggleScreening(isLiveBoard),
           minHeight: 52,
         ),
+
+        // Download and Export Buttons (Surfaced when a report has been generated)
+        if (_sessionReport != null) ...[
+          const AppSpacing.vmd(),
+          AppButton(
+            label: _isExporting ? 'Generating Report...' : _kDownloadPdf,
+            icon: const Icon(Icons.picture_as_pdf_outlined, size: 20),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ClinicalPalette.teal,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: _isExporting ? null : _exportPdfReport,
+            minHeight: 48,
+          ),
+          const AppSpacing.vsm(),
+          AppOutlinedButton(
+            label: _isExporting ? 'Exporting...' : _kExportCsv,
+            icon: const Icon(Icons.file_download_outlined, size: 20),
+            onPressed: _isExporting ? null : _exportCsvData,
+            minHeight: 46,
+          ),
+        ],
+
         const AppSpacing.vmd(),
         AppOutlinedButton(
           label: _kDatasheetButton,
           icon: const Icon(Icons.menu_book_outlined, size: 20),
           onPressed: () => _showDatasheetModal(context),
-          minHeight: 48,
+          minHeight: 46,
         ),
       ],
     );
@@ -1089,139 +1657,36 @@ class _OvernightGuardianScreenState
       ),
     );
   }
+
+  String _formatDuration(Duration d) {
+    final h = d.inHours.toString().padLeft(2, '0');
+    final m = (d.inMinutes % 60).toString().padLeft(2, '0');
+    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
+    return '$h:$m:$s';
+  }
 }
 
-/// ─── REAL-TIME CLINICAL ECG WAVEFORM SWEEP PAINTER ───
-class _ContinuousEcgPainter extends CustomPainter {
-  final List<double> waveBuffer;
-  final int sweepHead;
-  final bool isLive;
+/// ─── REAL DUAL HR & SPO2 TREND GRAPH PAINTER ───
+class _RealDualTrendGraphPainter extends CustomPainter {
+  final List<OvernightDataPoint> points;
+  final List<OvernightIssueEvent> events;
+  final double scrubNormalizedX;
+  final ThemeData theme;
 
-  _ContinuousEcgPainter({
-    required this.waveBuffer,
-    required this.sweepHead,
-    required this.isLive,
+  _RealDualTrendGraphPainter({
+    required this.points,
+    required this.events,
+    required this.scrubNormalizedX,
+    required this.theme,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Draw 5mm and 1mm Medical Grid Background
-    final faintGrid = Paint()
-      ..color = const Color(0xFF1E293B).withValues(alpha: 0.4)
-      ..strokeWidth = 0.5;
-    final majorGrid = Paint()
-      ..color = const Color(0xFF334155).withValues(alpha: 0.55)
-      ..strokeWidth = 0.8;
+    if (size.width <= 0 || size.height <= 0 || points.isEmpty) return;
+    final totalPoints = points.length;
+    final dx = totalPoints > 1 ? size.width / (totalPoints - 1) : size.width;
 
-    const gridSize = 16.0;
-    for (double x = 0; x < size.width; x += gridSize) {
-      final isMajor = (x / gridSize).round() % 5 == 0;
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        isMajor ? majorGrid : faintGrid,
-      );
-    }
-    for (double y = 0; y < size.height; y += gridSize) {
-      final isMajor = (y / gridSize).round() % 5 == 0;
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        isMajor ? majorGrid : faintGrid,
-      );
-    }
-
-    if (waveBuffer.isEmpty) return;
-
-    final midY = size.height * 0.58;
-    final scaleY = size.height * 0.38;
-    final dx = size.width / (waveBuffer.length - 1);
-
-    // 2. ECG Phosphorescent Waveform Path
-    final ecgPaint = Paint()
-      ..color = isLive ? const Color(0xFF10B981) : const Color(0xFF64748B)
-      ..strokeWidth = 2.2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = Path();
-    bool first = true;
-
-    for (int i = 0; i < waveBuffer.length; i++) {
-      final x = i * dx;
-      final y = midY - (waveBuffer[i] * scaleY);
-
-      // Skip the eraser gap ahead of the sweeping beam
-      final gapAhead = (i - sweepHead + waveBuffer.length) % waveBuffer.length;
-      if (gapAhead >= 1 && gapAhead <= 14) {
-        first = true;
-        continue;
-      }
-
-      if (first) {
-        path.moveTo(x, y);
-        first = false;
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-
-    // Glow shadow for high-end monitor effect
-    if (isLive) {
-      final glowPaint = Paint()
-        ..color = const Color(0xFF10B981).withValues(alpha: 0.35)
-        ..strokeWidth = 5.0
-        ..style = PaintingStyle.stroke
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5);
-      canvas.drawPath(path, glowPaint);
-    }
-
-    canvas.drawPath(path, ecgPaint);
-
-    // 3. Sweeping Beam Head Bar
-    if (isLive) {
-      final headX = sweepHead * dx;
-      final beamPaint = Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.transparent,
-            Color(0xFF34D399),
-            Color(0xFF10B981),
-            Colors.transparent,
-          ],
-        ).createShader(Rect.fromLTWH(headX - 1, 0, 3, size.height))
-        ..strokeWidth = 2.5;
-
-      canvas.drawLine(Offset(headX, 0), Offset(headX, size.height), beamPaint);
-
-      // Glowing dot at the exact current signal point
-      final headY = midY - (waveBuffer[sweepHead] * scaleY);
-      final dotPaint = Paint()..color = const Color(0xFF6EE7B7);
-      canvas.drawCircle(Offset(headX, headY), 3.5, dotPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ContinuousEcgPainter oldDelegate) => true;
-}
-
-/// ─── DUAL HR & SPO2 TREND GRAPH PAINTER ───
-class _DualTrendGraphPainter extends CustomPainter {
-  final double scrubNormalizedX;
-  final ThemeData theme;
-
-  _DualTrendGraphPainter({required this.scrubNormalizedX, required this.theme});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (size.width <= 0 || size.height <= 0) return;
-    const totalPoints = 48; // Samples across 8 hours
-    final dx = size.width / (totalPoints - 1);
-
-    // 1. Shaded Nocturnal Dip Window (Deep sleep from 01:00 AM to 04:30 AM, ~25% to 68% of time)
+    // 1. Shaded Deep sleep Nadir Window
     final nadirRect = Rect.fromLTRB(
       size.width * 0.25,
       0,
@@ -1245,26 +1710,6 @@ class _DualTrendGraphPainter extends CustomPainter {
       refLinePaint,
     );
 
-    // Subtle horizontal scale lines
-    final faintLinePaint = Paint()
-      ..color = const Color(0xFF1E293B).withValues(alpha: 0.5)
-      ..strokeWidth = 0.6;
-    canvas.drawLine(
-      Offset(0, size.height * 0.14),
-      Offset(size.width, size.height * 0.14),
-      faintLinePaint,
-    );
-    canvas.drawLine(
-      Offset(0, size.height * 0.32),
-      Offset(size.width, size.height * 0.32),
-      faintLinePaint,
-    );
-    canvas.drawLine(
-      Offset(0, size.height * 0.74),
-      Offset(size.width, size.height * 0.74),
-      faintLinePaint,
-    );
-
     // Dashed threshold line for 90% SpO2 (Hypoxia threshold)
     final dashedPaint = Paint()
       ..color = ClinicalPalette.amber.withValues(alpha: 0.8)
@@ -1280,22 +1725,19 @@ class _DualTrendGraphPainter extends CustomPainter {
       );
     }
 
-    // 3. Build Heart Rate Path (Dipping Curve)
+    // 3. Plot Real Heart Rate Path
     final hrPath = Path();
     final hrGradientPath = Path();
     final hrPoints = <Offset>[];
 
     for (int i = 0; i < totalPoints; i++) {
-      final nx = i / (totalPoints - 1);
       final x = i * dx;
-      // Dipping curve: HR starts at 72, dips to 57 at 03:00 AM (nx ~ 0.5), rises back to 68
-      final dip = 15.0 * math.sin(nx * math.pi);
-      final noise = 1.2 * math.sin(i * 0.85);
-      final hr = 72.0 - dip + noise; // 55 to 74 BPM
+      final hr = points[i].heartRate > 0 ? points[i].heartRate : 65;
 
-      // Map 50 BPM -> size.height * 0.48, 85 BPM -> size.height * 0.08
+      // Map 40 BPM -> size.height * 0.48, 120 BPM -> size.height * 0.08
       final y =
-          size.height * 0.48 - ((hr - 50.0) / 35.0) * (size.height * 0.40);
+          size.height * 0.48 -
+          ((hr - 40.0) / 80.0).clamp(0.0, 1.0) * (size.height * 0.40);
       hrPoints.add(Offset(x, y));
 
       if (i == 0) {
@@ -1311,7 +1753,6 @@ class _DualTrendGraphPainter extends CustomPainter {
     hrGradientPath.lineTo(size.width, size.height * 0.52);
     hrGradientPath.close();
 
-    // Shaded Nocturnal Dip Gradient Fill
     final hrGradientPaint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
@@ -1324,37 +1765,26 @@ class _DualTrendGraphPainter extends CustomPainter {
 
     canvas.drawPath(hrGradientPath, hrGradientPaint);
 
-    // Glow for HR trace
-    final hrGlowPaint = Paint()
-      ..color = ClinicalPalette.teal.withValues(alpha: 0.35)
-      ..strokeWidth = 5.0
-      ..style = PaintingStyle.stroke
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-    canvas.drawPath(hrPath, hrGlowPaint);
-
     final hrStrokePaint = Paint()
       ..color = ClinicalPalette.teal
-      ..strokeWidth = 2.6
+      ..strokeWidth = 2.4
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     canvas.drawPath(hrPath, hrStrokePaint);
 
-    // 4. Build SpO2 Saturation Path
+    // 4. Plot Real SpO2 Saturation Path
     final spo2Path = Path();
     final spo2Points = <Offset>[];
 
     for (int i = 0; i < totalPoints; i++) {
-      final nx = i / (totalPoints - 1);
       final x = i * dx;
-      // Steady 97.5% - 99.0% with slight dip at deep sleep
-      final dip = 1.2 * math.pow(math.sin(nx * math.pi), 2);
-      final noise = 0.35 * math.sin(i * 1.3);
-      final spo2 = 98.6 - dip + noise;
+      final spo2 = points[i].spo2 > 0 ? points[i].spo2 : 98.0;
 
-      // Map 88% -> size.height * 0.95, 100% -> size.height * 0.58
+      // Map 80% -> size.height * 0.96, 100% -> size.height * 0.58
       final y =
-          size.height * 0.95 - ((spo2 - 88.0) / 12.0) * (size.height * 0.37);
+          size.height * 0.96 -
+          ((spo2 - 80.0) / 20.0).clamp(0.0, 1.0) * (size.height * 0.38);
       spo2Points.add(Offset(x, y));
 
       if (i == 0) {
@@ -1364,23 +1794,52 @@ class _DualTrendGraphPainter extends CustomPainter {
       }
     }
 
-    // Glow for SpO2 trace
-    final spo2GlowPaint = Paint()
-      ..color = ClinicalPalette.cyan.withValues(alpha: 0.35)
-      ..strokeWidth = 4.5
-      ..style = PaintingStyle.stroke
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5);
-    canvas.drawPath(spo2Path, spo2GlowPaint);
-
     final spo2StrokePaint = Paint()
       ..color = ClinicalPalette.cyan
-      ..strokeWidth = 2.4
+      ..strokeWidth = 2.2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     canvas.drawPath(spo2Path, spo2StrokePaint);
 
-    // 5. Interactive Vertical Scrubber Line & Crosshairs
+    // 5. Draw Detected Event Markers along the timeline
+    if (events.isNotEmpty && totalPoints > 1) {
+      final sessionStart = points.first.timestamp;
+      final sessionDurationMs = points.last.timestamp
+          .difference(sessionStart)
+          .inMilliseconds;
+
+      for (final event in events) {
+        final eventOffsetMs = event.timestamp
+            .difference(sessionStart)
+            .inMilliseconds;
+        final eventNormX = sessionDurationMs > 0
+            ? (eventOffsetMs / sessionDurationMs).clamp(0.0, 1.0)
+            : 0.5;
+        final eventX = eventNormX * size.width;
+
+        final isCrit = event.severity == 'critical';
+        final markerColor = isCrit
+            ? ClinicalPalette.coral
+            : ClinicalPalette.amber;
+
+        // Vertical indicator line
+        final markerLinePaint = Paint()
+          ..color = markerColor.withValues(alpha: 0.6)
+          ..strokeWidth = 1.2;
+        canvas.drawLine(
+          Offset(eventX, 4),
+          Offset(eventX, size.height - 4),
+          markerLinePaint,
+        );
+
+        // Marker dot
+        final dotPaint = Paint()..color = markerColor;
+        canvas.drawCircle(Offset(eventX, 8), 4.0, dotPaint);
+      }
+    }
+
+    // 6. Interactive Vertical Scrubber Line & Crosshairs
     final scrubX = scrubNormalizedX * size.width;
     final scrubberPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.85)
@@ -1392,7 +1851,6 @@ class _DualTrendGraphPainter extends CustomPainter {
       scrubberPaint,
     );
 
-    // Find closest points for HR and SpO2 at scrub position
     final scrubIdx = (scrubNormalizedX * (totalPoints - 1)).round().clamp(
       0,
       totalPoints - 1,
@@ -1400,22 +1858,19 @@ class _DualTrendGraphPainter extends CustomPainter {
     final targetHrPoint = hrPoints[scrubIdx];
     final targetSpo2Point = spo2Points[scrubIdx];
 
-    // Glowing anchor dot for HR
-    final hrDotGlow = Paint()
-      ..color = ClinicalPalette.teal.withValues(alpha: 0.5)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.5);
-    canvas.drawCircle(targetHrPoint, 7.0, hrDotGlow);
-    canvas.drawCircle(targetHrPoint, 4.0, Paint()..color = Colors.white);
-
-    // Glowing anchor dot for SpO2
-    final spo2DotGlow = Paint()
-      ..color = ClinicalPalette.cyan.withValues(alpha: 0.5)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.5);
-    canvas.drawCircle(targetSpo2Point, 7.0, spo2DotGlow);
-    canvas.drawCircle(targetSpo2Point, 4.0, Paint()..color = Colors.white);
+    // Anchors
+    canvas.drawCircle(
+      targetHrPoint,
+      4.0,
+      Paint()..color = ClinicalPalette.teal,
+    );
+    canvas.drawCircle(
+      targetSpo2Point,
+      4.0,
+      Paint()..color = ClinicalPalette.cyan,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _DualTrendGraphPainter oldDelegate) =>
-      oldDelegate.scrubNormalizedX != scrubNormalizedX;
+  bool shouldRepaint(covariant _RealDualTrendGraphPainter oldDelegate) => true;
 }

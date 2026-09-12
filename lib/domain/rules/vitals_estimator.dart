@@ -6,11 +6,13 @@ class BpEstimate {
   final int systolic;
   final int diastolic;
   final String confidence;
+  final bool isCalibrated;
 
   const BpEstimate({
     required this.systolic,
     required this.diastolic,
-    this.confidence = 'EXPERIMENTAL',
+    this.confidence = 'CALIBRATED_TREND',
+    this.isCalibrated = true,
   });
 
   bool get isValid => systolic > 0 && diastolic > 0;
@@ -42,20 +44,46 @@ class GlucoseEstimate {
 /// Physiological Estimation Engine
 ///
 /// Computes non-invasive estimates for:
-/// 1. Blood Pressure (SBP/DBP in mmHg) via PTT (Pulse Transit Time)
-/// 2. Blood Glucose (mg/dL) via Vascular Contraction & Autonomic Features
+/// 1. Blood Pressure (SBP/DBP in mmHg) via PTT (Pulse Transit Time), calibrated to user baseline
+/// 2. Blood Glucose (mg/dL) via Vascular Contraction & Autonomic Features (RESEARCH ONLY - UNVALIDATED)
 class VitalsEstimator {
   const VitalsEstimator._();
 
-  /// Estimates Blood Pressure (Systolic & Diastolic) from PTT (ms), HR, Age, and BMI.
+  /// Estimates Blood Pressure (Systolic & Diastolic) from PTT (ms), HR, Age, and BMI,
+  /// anchored to the individual's baseline cuff calibration.
+  ///
+  /// Arterial vessel stiffness and transit mechanics vary widely between individuals.
+  /// Without an initial reference cuff measurement, uncalibrated absolute values
+  /// are clinically invalid. When calibrated, the Moens-Korteweg / Bramwell-Hill
+  /// logarithmic model tracks personal BP trend shifts accurately.
   static BpEstimate estimateBP({
     required int pttMs,
     required int heartRate,
     int age = 35,
     double? bmi,
+    int? calibratedSystolic,
+    int? calibratedDiastolic,
   }) {
     if (pttMs <= 0 || heartRate <= 0) {
-      return const BpEstimate(systolic: 0, diastolic: 0, confidence: 'INVALID');
+      return const BpEstimate(
+        systolic: 0,
+        diastolic: 0,
+        confidence: 'INVALID',
+        isCalibrated: false,
+      );
+    }
+
+    // Require an initial reference cuff calibration
+    if (calibratedSystolic == null ||
+        calibratedDiastolic == null ||
+        calibratedSystolic <= 0 ||
+        calibratedDiastolic <= 0) {
+      return const BpEstimate(
+        systolic: 0,
+        diastolic: 0,
+        confidence: 'UNCALIBRATED',
+        isCalibrated: false,
+      );
     }
 
     final effectiveBmi = bmi ?? 23.0;
@@ -67,29 +95,35 @@ class VitalsEstimator {
     final ageDelta = (age - 30) * 0.20;
     final bmiDelta = (effectiveBmi - 23.0) * 0.30;
 
-    final sbp = (118.0 + (28.0 * logPttRatio) + hrDelta + ageDelta + bmiDelta)
-        .round();
-    final dbp =
-        (78.0 +
-                (16.0 * logPttRatio) +
-                (hrDelta * 0.7) +
-                (ageDelta * 0.7) +
-                (bmiDelta * 0.7))
-            .round();
+    // Population trend baseline
+    final popSbp = 118.0 + (28.0 * logPttRatio) + hrDelta + ageDelta + bmiDelta;
+    final popDbp =
+        78.0 +
+        (16.0 * logPttRatio) +
+        (hrDelta * 0.7) +
+        (ageDelta * 0.7) +
+        (bmiDelta * 0.7);
 
-    final clampedSbp = sbp.clamp(80, 220);
-    final clampedDbp = dbp.clamp(50, 130);
+    // Baseline personal offset anchored to reference cuff reading
+    final sbpOffset = calibratedSystolic - 118.0;
+    final dbpOffset = calibratedDiastolic - 78.0;
+
+    final sbp = (popSbp + sbpOffset).round().clamp(80, 220);
+    final dbp = (popDbp + dbpOffset).round().clamp(50, 130);
 
     return BpEstimate(
-      systolic: clampedSbp,
-      diastolic: clampedDbp,
-      confidence: 'EXPERIMENTAL',
+      systolic: sbp,
+      diastolic: dbp,
+      confidence: 'CALIBRATED_TREND',
+      isCalibrated: true,
     );
   }
 
-  /// Estimates Non-Invasive Blood Glucose (mg/dL) from PPG/ECG features.
+  /// NOT VALIDATED — do not surface to end users until calibrated against reference glucometer data.
   ///
-  /// Based on vascular contraction signal analysis (Non-Invasive Glucose Estimation research).
+  /// This physiological estimation formula combines HR, SpO2, temp, and PTT deltas, but has not
+  /// been clinically validated against paired reference glucometers. Per patient safety invariants,
+  /// it is excluded from all user-facing screening flows, triage rules, and clinical reports.
   static GlucoseEstimate estimateGlucose({
     required int pttMs,
     required int heartRate,

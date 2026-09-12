@@ -87,13 +87,20 @@ class ScreeningStepIndicator extends StatelessWidget {
       borderRadius: BorderRadius.circular(999),
       onTap: () => _showStepsOverview(context),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(999),
+          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
           border: Border.all(
-            color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            color: theme.colorScheme.primary.withValues(alpha: 0.25),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

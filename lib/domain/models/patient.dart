@@ -210,6 +210,10 @@ class Screening {
   final String? aiSummary;
   final String? aiExplanation;
 
+  /// Advisory rhythm pattern anomaly flag (Mandate 2.5: Never alters riskLevel/riskScore)
+  final bool aiAnomalyFlag;
+  final double aiAnomalyScore;
+
   /// Only ever non-null when the worker consented to location tagging.
   final double? latitude;
   final double? longitude;
@@ -246,6 +250,8 @@ class Screening {
     this.escalationLevel = 'NONE',
     this.aiSummary,
     this.aiExplanation,
+    this.aiAnomalyFlag = false,
+    this.aiAnomalyScore = 0.0,
     this.latitude,
     this.longitude,
     this.syncStatus = 'PENDING',
@@ -302,6 +308,8 @@ class Screening {
     escalationLevel: json['escalationLevel'] as String? ?? 'NONE',
     aiSummary: json['aiSummary'] as String?,
     aiExplanation: json['aiExplanation'] as String?,
+    aiAnomalyFlag: json['aiAnomalyFlag'] as bool? ?? false,
+    aiAnomalyScore: (json['aiAnomalyScore'] as num?)?.toDouble() ?? 0.0,
     latitude: (json['latitude'] as num?)?.toDouble(),
     longitude: (json['longitude'] as num?)?.toDouble(),
     syncStatus: json['syncStatus'] as String? ?? 'PENDING',
@@ -337,6 +345,8 @@ class Screening {
     'escalationLevel': escalationLevel,
     'aiSummary': aiSummary,
     'aiExplanation': aiExplanation,
+    'aiAnomalyFlag': aiAnomalyFlag,
+    'aiAnomalyScore': aiAnomalyScore,
     'latitude': latitude,
     'longitude': longitude,
     'syncStatus': syncStatus,
@@ -372,6 +382,8 @@ class Screening {
     String? escalationLevel,
     String? aiSummary,
     String? aiExplanation,
+    bool? aiAnomalyFlag,
+    double? aiAnomalyScore,
     double? latitude,
     double? longitude,
     String? syncStatus,
@@ -405,6 +417,8 @@ class Screening {
     escalationLevel: escalationLevel ?? this.escalationLevel,
     aiSummary: aiSummary ?? this.aiSummary,
     aiExplanation: aiExplanation ?? this.aiExplanation,
+    aiAnomalyFlag: aiAnomalyFlag ?? this.aiAnomalyFlag,
+    aiAnomalyScore: aiAnomalyScore ?? this.aiAnomalyScore,
     latitude: latitude ?? this.latitude,
     longitude: longitude ?? this.longitude,
     syncStatus: syncStatus ?? this.syncStatus,

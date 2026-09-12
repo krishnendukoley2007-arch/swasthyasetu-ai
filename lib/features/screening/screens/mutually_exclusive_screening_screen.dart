@@ -478,12 +478,12 @@ class _MutuallyExclusiveScreeningScreenState
         (_liveTemp > 0 ? _liveTemp : _selectedScenario.temperatureC);
 
     final ptt = 200 + (60000 / hr * 0.25).round();
-    final bpEst = VitalsEstimator.estimateBP(pttMs: ptt, heartRate: hr);
-    final glucoseEst = VitalsEstimator.estimateGlucose(
+    final settings = ref.read(settingsProvider);
+    final bpEst = VitalsEstimator.estimateBP(
       pttMs: ptt,
       heartRate: hr,
-      spo2: spo2,
-      tempC: temp,
+      calibratedSystolic: settings.bpCalibrationSystolic,
+      calibratedDiastolic: settings.bpCalibrationDiastolic,
     );
 
     final sample = HealthSample(
@@ -499,11 +499,9 @@ class _MutuallyExclusiveScreeningScreenState
       estimatedDiastolic: isLive
           ? bpEst.diastolic
           : _selectedScenario.diastolicBp,
-      estimatedGlucose: isLive
-          ? glucoseEst.glucoseMgDl
-          : _selectedScenario.estimatedGlucose,
-      bpConfidence: 'EXPERIMENTAL',
-      glucoseConfidence: 'EXPERIMENTAL',
+      estimatedGlucose: isLive ? 0 : _selectedScenario.estimatedGlucose,
+      bpConfidence: isLive ? bpEst.confidence : 'SIMULATED',
+      glucoseConfidence: isLive ? 'UNMEASURED' : 'SIMULATED',
       batteryPercent: ref.read(bleServiceProvider).state.batteryPercent ?? 100,
       isDemo: !isLive,
     );

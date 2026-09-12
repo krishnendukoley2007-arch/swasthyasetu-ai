@@ -12,6 +12,7 @@ import 'package:swasthyasetu_ai/core/services/seed_service.dart';
 import 'package:swasthyasetu_ai/core/services/sos_service.dart';
 import 'package:swasthyasetu_ai/core/services/storage_manager.dart';
 import 'package:swasthyasetu_ai/core/services/sync_service.dart';
+import 'package:swasthyasetu_ai/core/services/community_sync_service.dart';
 import 'package:swasthyasetu_ai/core/services/waveform_store.dart';
 import 'package:swasthyasetu_ai/data/database/app_database.dart';
 import 'package:swasthyasetu_ai/data/repositories/auth_repository.dart';
@@ -56,6 +57,10 @@ final storageManagerProvider = Provider<StorageManager>(
 
 final locationServiceProvider = Provider<LocationService>(
   (ref) => LocationService(),
+);
+
+final communitySyncServiceProvider = Provider<CommunitySyncService>(
+  (ref) => CommunitySyncService(),
 );
 
 // ───────────────────────────── Repositories ─────────────────────────────
@@ -203,6 +208,11 @@ class SettingsController extends StateNotifier<AppSettingsSnapshot> {
     await _repo.setBool(SettingKeys.syncConsent, granted);
   }
 
+  Future<void> setCommunitySyncConsent(bool granted) async {
+    state = state.copyWith(communitySyncConsent: granted);
+    await _repo.setCommunitySyncConsent(granted);
+  }
+
   Future<void> setFallDetection(bool on) async {
     state = state.copyWith(fallDetection: on);
     await _repo.setBool(SettingKeys.fallDetection, on);
@@ -252,6 +262,16 @@ class SettingsController extends StateNotifier<AppSettingsSnapshot> {
   Future<void> markSynced(DateTime at) async {
     state = state.copyWith(lastSyncAt: at);
     await _repo.markSynced(at);
+  }
+
+  Future<void> saveBpCalibration(int systolic, int diastolic) async {
+    final now = DateTime.now();
+    state = state.copyWith(
+      bpCalibrationSystolic: systolic,
+      bpCalibrationDiastolic: diastolic,
+      bpCalibrationAt: now,
+    );
+    await _repo.saveBpCalibration(systolic, diastolic);
   }
 }
 

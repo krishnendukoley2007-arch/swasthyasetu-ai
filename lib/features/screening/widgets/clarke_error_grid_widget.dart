@@ -11,6 +11,9 @@ import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 /// - Zone C: Overcorrection errors (would prompt unwarranted treatment)
 /// - Zone D: Dangerous failure to detect hypo/hyperglycemia
 /// - Zone E: Erroneous treatment (reversing hypo/hyperglycemia)
+const _kResearchNotice =
+    'RESEARCH TOOL · Requires paired reference glucometer values. Not for clinical treatment.';
+
 class ClarkeErrorGridWidget extends StatelessWidget {
   final double estimatedGlucose;
   final double? referenceGlucose;
@@ -86,21 +89,43 @@ class ClarkeErrorGridWidget extends StatelessWidget {
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        boxShadow: AppTheme.shadowLevel1,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Research / Analytical calibration disclaimer banner
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            margin: const EdgeInsets.only(bottom: 10),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.science_outlined,
+                  size: 14,
+                  color: Colors.amber,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _kResearchNotice,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.amber.shade900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           // Header
           Row(
             children: [

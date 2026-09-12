@@ -15,6 +15,9 @@ class PatientProfileContext {
   final String? bmiBand;
   final List<String> conditions;
   final String? problems;
+  final int? bpCalibratedSystolic;
+  final int? bpCalibratedDiastolic;
+  final DateTime? bpCalibratedAt;
 
   const PatientProfileContext({
     this.age,
@@ -25,7 +28,16 @@ class PatientProfileContext {
     this.bmiBand,
     this.conditions = const [],
     this.problems,
+    this.bpCalibratedSystolic,
+    this.bpCalibratedDiastolic,
+    this.bpCalibratedAt,
   });
+
+  bool get isBpCalibrated =>
+      bpCalibratedSystolic != null &&
+      bpCalibratedDiastolic != null &&
+      bpCalibratedSystolic! > 0 &&
+      bpCalibratedDiastolic! > 0;
 
   factory PatientProfileContext.fromAccount(UserAccount? account) {
     if (account == null) return const PatientProfileContext();

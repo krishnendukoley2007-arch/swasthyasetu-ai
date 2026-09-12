@@ -23,6 +23,11 @@ abstract final class SettingKeys {
   /// to weather alerts must not silently turn screening geotags on too.
   static const envLocationConsent = 'consent.envWeather';
 
+  /// Whether anonymized aggregate indicators (truncated geohash, hour-bucket,
+  /// risk band, category) may be contributed to the community early-warning map.
+  /// Strictly opt-in, default false.
+  static const communitySyncConsent = 'consent.communitySync';
+
   static const fallDetection = 'sos.fallDetection';
   static const autoSuggestSos = 'sos.autoSuggestOnHighRisk';
   static const sosCountdownSeconds = 'sos.countdownSeconds';
@@ -63,6 +68,11 @@ abstract final class SettingKeys {
   /// a heat-wave warning from this morning is still true tonight, even with
   /// the network gone.
   static const envLastReading = 'env.lastReading';
+
+  /// Reference cuff blood pressure calibration for PTT-based trend estimation.
+  static const bpCalibrationSystolic = 'bp.calibrationSystolic';
+  static const bpCalibrationDiastolic = 'bp.calibrationDiastolic';
+  static const bpCalibrationAt = 'bp.calibrationAt';
 }
 
 /// The full settings snapshot. Read once into memory at startup — these are all
@@ -81,6 +91,10 @@ class AppSettingsSnapshot {
   final bool locationConsent;
   final bool aiConsent;
   final bool syncConsent;
+
+  /// Whether anonymized aggregate indicators may be contributed to the
+  /// community early-warning map. Strictly opt-in, defaults to false.
+  final bool communitySyncConsent;
 
   /// Local weather / AQI lookups. See [SettingKeys.envLocationConsent].
   final bool envLocationConsent;
@@ -103,6 +117,17 @@ class AppSettingsSnapshot {
   /// keeps the wording it had.
   final Audience audience;
 
+  /// Reference cuff calibration for PTT blood pressure estimation
+  final int? bpCalibrationSystolic;
+  final int? bpCalibrationDiastolic;
+  final DateTime? bpCalibrationAt;
+
+  bool get isBpCalibrated =>
+      bpCalibrationSystolic != null &&
+      bpCalibrationDiastolic != null &&
+      bpCalibrationSystolic! > 0 &&
+      bpCalibrationDiastolic! > 0;
+
   const AppSettingsSnapshot({
     this.locale = const Locale('en'),
     this.themeMode = ThemeMode.system,
@@ -114,6 +139,7 @@ class AppSettingsSnapshot {
     this.locationConsent = false,
     this.aiConsent = false,
     this.syncConsent = true,
+    this.communitySyncConsent = false,
     this.envLocationConsent = false,
     this.fallDetection = false,
     this.autoSuggestSos = true,
@@ -124,6 +150,9 @@ class AppSettingsSnapshot {
     this.lastSyncAt,
     this.geminiApiKey = '',
     this.audience = Audience.nurse,
+    this.bpCalibrationSystolic,
+    this.bpCalibrationDiastolic,
+    this.bpCalibrationAt,
   });
 
   factory AppSettingsSnapshot.fromMap(Map<String, String> m) {
@@ -144,6 +173,7 @@ class AppSettingsSnapshot {
       locationConsent: flag(SettingKeys.locationConsent, false),
       aiConsent: flag(SettingKeys.aiConsent, false),
       syncConsent: flag(SettingKeys.syncConsent, true),
+      communitySyncConsent: flag(SettingKeys.communitySyncConsent, false),
       envLocationConsent: flag(SettingKeys.envLocationConsent, false),
       fallDetection: flag(SettingKeys.fallDetection, false),
       autoSuggestSos: flag(SettingKeys.autoSuggestSos, true),
@@ -157,6 +187,13 @@ class AppSettingsSnapshot {
       lastSyncAt: DateTime.tryParse(m[SettingKeys.lastSyncAt] ?? ''),
       geminiApiKey: m[SettingKeys.geminiApiKey] ?? '',
       audience: Audience.fromStorage(m[SettingKeys.audience]),
+      bpCalibrationSystolic: int.tryParse(
+        m[SettingKeys.bpCalibrationSystolic] ?? '',
+      ),
+      bpCalibrationDiastolic: int.tryParse(
+        m[SettingKeys.bpCalibrationDiastolic] ?? '',
+      ),
+      bpCalibrationAt: DateTime.tryParse(m[SettingKeys.bpCalibrationAt] ?? ''),
     );
   }
 
@@ -185,6 +222,7 @@ class AppSettingsSnapshot {
     bool? locationConsent,
     bool? aiConsent,
     bool? syncConsent,
+    bool? communitySyncConsent,
     bool? envLocationConsent,
     bool? fallDetection,
     bool? autoSuggestSos,
@@ -195,6 +233,9 @@ class AppSettingsSnapshot {
     DateTime? lastSyncAt,
     String? geminiApiKey,
     Audience? audience,
+    int? bpCalibrationSystolic,
+    int? bpCalibrationDiastolic,
+    DateTime? bpCalibrationAt,
   }) => AppSettingsSnapshot(
     locale: locale ?? this.locale,
     themeMode: themeMode ?? this.themeMode,
@@ -206,6 +247,7 @@ class AppSettingsSnapshot {
     locationConsent: locationConsent ?? this.locationConsent,
     aiConsent: aiConsent ?? this.aiConsent,
     syncConsent: syncConsent ?? this.syncConsent,
+    communitySyncConsent: communitySyncConsent ?? this.communitySyncConsent,
     envLocationConsent: envLocationConsent ?? this.envLocationConsent,
     fallDetection: fallDetection ?? this.fallDetection,
     autoSuggestSos: autoSuggestSos ?? this.autoSuggestSos,
@@ -216,6 +258,10 @@ class AppSettingsSnapshot {
     lastSyncAt: lastSyncAt ?? this.lastSyncAt,
     geminiApiKey: geminiApiKey ?? this.geminiApiKey,
     audience: audience ?? this.audience,
+    bpCalibrationSystolic: bpCalibrationSystolic ?? this.bpCalibrationSystolic,
+    bpCalibrationDiastolic:
+        bpCalibrationDiastolic ?? this.bpCalibrationDiastolic,
+    bpCalibrationAt: bpCalibrationAt ?? this.bpCalibrationAt,
   );
 }
 
@@ -271,6 +317,9 @@ class SettingsRepository {
   Future<void> setAiConsent(bool granted) =>
       setBool(SettingKeys.aiConsent, granted);
 
+  Future<void> setCommunitySyncConsent(bool granted) =>
+      setBool(SettingKeys.communitySyncConsent, granted);
+
   Future<void> setGeminiApiKey(String key) =>
       setString(SettingKeys.geminiApiKey, key.trim());
 
@@ -279,4 +328,13 @@ class SettingsRepository {
 
   Future<void> markSynced(DateTime at) =>
       setString(SettingKeys.lastSyncAt, at.toIso8601String());
+
+  Future<void> saveBpCalibration(int systolic, int diastolic) async {
+    await setInt(SettingKeys.bpCalibrationSystolic, systolic);
+    await setInt(SettingKeys.bpCalibrationDiastolic, diastolic);
+    await setString(
+      SettingKeys.bpCalibrationAt,
+      DateTime.now().toIso8601String(),
+    );
+  }
 }

@@ -41,7 +41,7 @@ class TrendsScreen extends ConsumerWidget {
                 title: 'Heart rate',
                 unit: 'bpm',
                 fractionDigits: 0,
-                color: ClinicalPalette.coral,
+                color: ClinicalPalette.cardiacCoral,
                 trend: TrendEngine.heartRate(screenings),
               ),
               const AppSpacing.vlg(),

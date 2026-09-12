@@ -86,6 +86,12 @@ class _FakeSettingsController extends StateNotifier<AppSettingsSnapshot>
   }
 
   @override
+  Future<void> setCommunitySyncConsent(bool granted) async {
+    calls.add('setCommunitySyncConsent:$granted');
+    state = state.copyWith(communitySyncConsent: granted);
+  }
+
+  @override
   Future<void> setFallDetection(bool on) async {
     calls.add('setFallDetection:$on');
     state = state.copyWith(fallDetection: on);
@@ -133,6 +139,16 @@ class _FakeSettingsController extends StateNotifier<AppSettingsSnapshot>
   Future<void> markSynced(DateTime at) async {
     calls.add('markSynced');
     state = state.copyWith(lastSyncAt: at);
+  }
+
+  @override
+  Future<void> saveBpCalibration(int systolic, int diastolic) async {
+    calls.add('saveBpCalibration:$systolic/$diastolic');
+    state = state.copyWith(
+      bpCalibrationSystolic: systolic,
+      bpCalibrationDiastolic: diastolic,
+      bpCalibrationAt: DateTime.now(),
+    );
   }
 
   @override

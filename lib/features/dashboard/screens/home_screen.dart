@@ -12,6 +12,7 @@ import 'package:swasthyasetu_ai/domain/models/environment.dart';
 import 'package:swasthyasetu_ai/domain/models/screening.dart';
 import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/environment/state/environment_providers.dart';
+import 'package:swasthyasetu_ai/features/patient_home/widgets/disaster_hazard_banner.dart';
 import 'package:swasthyasetu_ai/features/screening/widgets/screening_mode_dialog.dart';
 
 // Localization guard: top-level constants
@@ -161,6 +162,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             delay: const Duration(milliseconds: 0),
                             child: _buildHeroSection(isConnected),
                           ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacingMd,
+                              vertical: AppTheme.spacingSm,
+                            ),
+                            child: DisasterHazardBanner(),
+                          ),
                           _buildAnimatedWidget(
                             controller: _statsController,
                             delay: const Duration(milliseconds: 200),
@@ -238,14 +246,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               top: -100 + 50 * _backgroundFloatAnimation.value,
               right: -50 + 30 * _backgroundFloatAnimation.value,
               child: Container(
-                width: 300,
-                height: 300,
+                width: 340,
+                height: 340,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.primaryGreen.withValues(alpha: 0.03),
-                      AppTheme.primaryGreen.withValues(alpha: 0.0),
+                      ClinicalPalette.cardiacCoral.withValues(alpha: 0.04),
+                      ClinicalPalette.cardiacCoral.withValues(alpha: 0.0),
                     ],
                   ),
                 ),
@@ -255,13 +263,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               bottom: -80 + 40 * _backgroundFloatAnimation.value,
               left: -60 + 25 * _backgroundFloatAnimation.value,
               child: Container(
-                width: 250,
-                height: 250,
+                width: 280,
+                height: 280,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.secondaryTeal.withValues(alpha: 0.02),
+                      AppTheme.secondaryTeal.withValues(alpha: 0.04),
                       AppTheme.secondaryTeal.withValues(alpha: 0.0),
                     ],
                   ),

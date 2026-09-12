@@ -3,39 +3,33 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:swasthyasetu_ai/domain/rules/vitals_estimator.dart';
 
-enum QnnExecutionBackend {
-  snapdragonNpu, // Qualcomm Hexagon NPU (QNN Execution Provider)
-  adrenoGpu, // Qualcomm Adreno GPU
-  cpuFallback, // ARM CPU fallback
+/// Execution backends for on-device vitals estimation.
+enum VitalsInferenceBackend {
+  snapdragonCpu, // Qualcomm Snapdragon device (CPU-based estimation)
+  adrenoGpu, // Qualcomm Adreno GPU delegate (optional)
+  genericCpu, // Standard ARM/x86 CPU (Physiological Physics Engine)
 }
+
+/// Backwards compatibility alias
+typedef QnnExecutionBackend = VitalsInferenceBackend;
 
 @immutable
-class QnnHardwareTelemetry {
-  final String npuEngine;
-  final String quantization;
+class InferenceHardwareTelemetry {
+  final String devicePlatform;
   final double latencyMs;
-  final int privacyBytesTransmitted;
-  final double energyJoulesPerInference;
   final bool isOnDevice;
+  final String privacyGuarantee;
 
-  const QnnHardwareTelemetry({
-    required this.npuEngine,
-    required this.quantization,
+  const InferenceHardwareTelemetry({
+    required this.devicePlatform,
     required this.latencyMs,
-    required this.privacyBytesTransmitted,
-    required this.energyJoulesPerInference,
-    required this.isOnDevice,
+    this.isOnDevice = true,
+    this.privacyGuarantee = '100% On-Device — Zero Cloud Vitals',
   });
-
-  static const defaultTelemetry = QnnHardwareTelemetry(
-    npuEngine: 'Qualcomm Hexagon NPU (QNN Runtime)',
-    quantization: 'INT8 Precision Quantized',
-    latencyMs: 8.4,
-    privacyBytesTransmitted: 0,
-    energyJoulesPerInference: 0.00042, // 0.42 mJ
-    isOnDevice: true,
-  );
 }
+
+/// Backwards compatibility alias
+typedef QnnHardwareTelemetry = InferenceHardwareTelemetry;
 
 @immutable
 class QnnInferenceResult {
@@ -45,7 +39,7 @@ class QnnInferenceResult {
   final String backendLabel;
   final double inferenceLatencyMs;
   final bool isNpuAccelerated;
-  final QnnHardwareTelemetry telemetry;
+  final InferenceHardwareTelemetry telemetry;
 
   const QnnInferenceResult({
     required this.systolicBp,
@@ -54,49 +48,42 @@ class QnnInferenceResult {
     required this.backendLabel,
     required this.inferenceLatencyMs,
     required this.isNpuAccelerated,
-    this.telemetry = QnnHardwareTelemetry.defaultTelemetry,
+    required this.telemetry,
   });
 }
 
-/// Qualcomm QNN (Qualcomm Neural Network) Hardware Acceleration Service
+/// On-Device Vitals Estimation & Inference Service.
 ///
-/// Interfaces with Qualcomm Snapdragon Hexagon NPU & Adreno GPU via QNN SDK Execution Provider.
-/// Executes hardware-accelerated Deep Learning inference for Blood Pressure & Blood Glucose.
-class QnnVitalsService {
+/// Executes physiological and learned models on the local device CPU.
+/// Honestly reports platform capabilities without claiming unverified hardware NPU delegates.
+class VitalsInferenceService {
   bool _isQnnLoaded = false;
-  QnnExecutionBackend _backend = QnnExecutionBackend.cpuFallback;
+  VitalsInferenceBackend _backend = VitalsInferenceBackend.genericCpu;
   String? _loadedModelPath;
 
-  QnnVitalsService() {
-    _initializeQnnBackend();
+  VitalsInferenceService() {
+    _initializeBackend();
   }
 
   bool get isQnnLoaded => _isQnnLoaded;
-  QnnExecutionBackend get backend => _backend;
+  VitalsInferenceBackend get backend => _backend;
   String? get loadedModelPath => _loadedModelPath;
-  bool get isNpuAccelerated => _backend == QnnExecutionBackend.snapdragonNpu;
+
+  /// NPU acceleration is strictly false unless an actual delegate model is loaded and running.
+  bool get isNpuAccelerated => false;
 
   String get backendName => switch (_backend) {
-    QnnExecutionBackend.snapdragonNpu => 'Qualcomm QNN (Snapdragon NPU)',
-    QnnExecutionBackend.adrenoGpu => 'Qualcomm Adreno GPU',
-    QnnExecutionBackend.cpuFallback =>
-      'CPU Fallback (Physiological Physics Engine)',
+    VitalsInferenceBackend.snapdragonCpu =>
+      'Qualcomm Snapdragon device (CPU-based estimation)',
+    VitalsInferenceBackend.adrenoGpu => 'Qualcomm Adreno GPU',
+    VitalsInferenceBackend.genericCpu =>
+      'Standard CPU (Physiological Physics Engine)',
   };
 
-  QnnHardwareTelemetry get telemetry => const QnnHardwareTelemetry(
-    npuEngine: 'Qualcomm Hexagon NPU (QNN Runtime)',
-    quantization: 'INT8 Precision Quantized',
-    latencyMs: 8.4,
-    privacyBytesTransmitted: 0,
-    energyJoulesPerInference: 0.00042,
-    isOnDevice: true,
-  );
-
-  /// Initializes the Qualcomm QNN runtime engine and checks hardware NPU availability.
-  Future<void> _initializeQnnBackend() async {
+  /// Initializes hardware detection honestly from /proc/cpuinfo.
+  Future<void> _initializeBackend() async {
     try {
       if (Platform.isAndroid) {
-        // Detect Qualcomm Snapdragon hardware platform honestly
         bool isSnapdragon = false;
         try {
           final cpuinfo = File('/proc/cpuinfo');
@@ -112,29 +99,32 @@ class QnnVitalsService {
         }
 
         if (isSnapdragon) {
-          _backend = QnnExecutionBackend.snapdragonNpu;
-          _isQnnLoaded = true;
-          debugPrint('[QNN] Qualcomm Snapdragon NPU Detected & Selected.');
-        } else {
-          _backend = QnnExecutionBackend.cpuFallback;
+          _backend = VitalsInferenceBackend.snapdragonCpu;
           _isQnnLoaded = false;
           debugPrint(
-            '[QNN] Standard CPU Architecture: Using Physiological Physics Engine.',
+            '[VitalsInference] Qualcomm Snapdragon device detected. Running CPU-based physiological engine.',
+          );
+        } else {
+          _backend = VitalsInferenceBackend.genericCpu;
+          _isQnnLoaded = false;
+          debugPrint(
+            '[VitalsInference] Standard CPU Architecture: Using Physiological Physics Engine.',
           );
         }
       } else {
-        _backend = QnnExecutionBackend.cpuFallback;
+        _backend = VitalsInferenceBackend.genericCpu;
         _isQnnLoaded = false;
       }
     } catch (e) {
-      debugPrint('[QNN] Initialization error: $e. Falling back to CPU.');
-      _backend = QnnExecutionBackend.cpuFallback;
+      debugPrint(
+        '[VitalsInference] Platform detection notice: $e. Using CPU engine.',
+      );
+      _backend = VitalsInferenceBackend.genericCpu;
       _isQnnLoaded = false;
     }
   }
 
-  /// Runs hardware-accelerated inference using Qualcomm QNN model if loaded,
-  /// or seamlessly falls back to VitalsEstimator physiological model.
+  /// Runs on-device vitals estimation and measures genuine runtime execution latency.
   Future<QnnInferenceResult> predictVitals({
     required int pttMs,
     required int heartRate,
@@ -142,17 +132,20 @@ class QnnVitalsService {
     required double tempC,
     int age = 35,
     double? bmi,
+    int? calibratedSystolic,
+    int? calibratedDiastolic,
     List<int> ppgWaveform = const [],
     List<int> ecgWaveform = const [],
   }) async {
     final stopwatch = Stopwatch()..start();
 
-    // Default / Seamless Fallback to VitalsEstimator physiological model
     final bpEst = VitalsEstimator.estimateBP(
       pttMs: pttMs,
       heartRate: heartRate,
       age: age,
       bmi: bmi,
+      calibratedSystolic: calibratedSystolic,
+      calibratedDiastolic: calibratedDiastolic,
     );
 
     final glucoseEst = VitalsEstimator.estimateGlucose(
@@ -165,26 +158,43 @@ class QnnVitalsService {
     );
 
     stopwatch.stop();
+    final measuredLatencyMs = stopwatch.elapsedMicroseconds / 1000.0;
+
+    final telemetry = InferenceHardwareTelemetry(
+      devicePlatform: backendName,
+      latencyMs: measuredLatencyMs,
+      isOnDevice: true,
+      privacyGuarantee: '100% On-Device — Zero Cloud Vitals',
+    );
 
     return QnnInferenceResult(
       systolicBp: bpEst.systolic,
       diastolicBp: bpEst.diastolic,
       glucoseMgDl: glucoseEst.glucoseMgDl,
       backendLabel: backendName,
-      inferenceLatencyMs: stopwatch.elapsedMicroseconds / 1000.0,
+      inferenceLatencyMs: measuredLatencyMs,
       isNpuAccelerated: isNpuAccelerated,
+      telemetry: telemetry,
     );
   }
 
-  /// Registers a custom pre-compiled Qualcomm QNN model file (.onnx / .tflite / .bin)
+  /// Registers a custom pre-compiled model file (.onnx / .tflite / .bin) if loaded.
   void loadQnnModel(String path) {
     _loadedModelPath = path;
     _isQnnLoaded = File(path).existsSync();
-    debugPrint('[QNN] Loaded QNN Model from $path: $_isQnnLoaded');
+    debugPrint(
+      '[VitalsInference] Checked model at $path: exists=$_isQnnLoaded',
+    );
   }
 }
 
-/// Riverpod provider for Qualcomm QNN Vitals Service
-final qnnVitalsServiceProvider = Provider<QnnVitalsService>((ref) {
-  return QnnVitalsService();
+/// Backwards compatibility alias
+typedef QnnVitalsService = VitalsInferenceService;
+
+/// Riverpod provider for Vitals Inference Service
+final vitalsInferenceServiceProvider = Provider<VitalsInferenceService>((ref) {
+  return VitalsInferenceService();
 });
+
+/// Backwards compatibility provider
+final qnnVitalsServiceProvider = vitalsInferenceServiceProvider;

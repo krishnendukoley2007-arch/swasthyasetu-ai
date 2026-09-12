@@ -219,6 +219,11 @@ class BleProtocol {
   static List<int> get setModeSpO2Command => const [0x01, 0x1E, 0x00]; // 30s
   static List<int> get setModeEcgCommand => const [0x02, 0x1E, 0x00]; // 30s
   static List<int> get setModeTempCommand => const [0x03, 0x05, 0x00]; // 5s
+  static List<int> get setModeDualCommand => const [
+    0x04,
+    0x00,
+    0x00,
+  ]; // Continuous Dual (ECG + SpO2 Guardian)
 
   static List<int> buildModeCommand(int mode, {int durationSec = 30}) => [
     mode & 0xFF,
@@ -288,6 +293,17 @@ class TelemetryFrame {
     } else if (sysState == 3) {
       return sample.temperatureC >= BleProtocol.minTemperatureC &&
           sample.temperatureC <= BleProtocol.maxTemperatureC;
+    } else if (sysState == 4) {
+      // Dual mode: both ECG and SpO2 active simultaneously
+      final hrOk =
+          !leadOff &&
+          sample.heartRateBpm >= BleProtocol.minHeartRate &&
+          sample.heartRateBpm <= BleProtocol.maxHeartRate;
+      final spo2Ok =
+          !fingerOff &&
+          sample.spo2Percent >= BleProtocol.minSpo2 &&
+          sample.spo2Percent <= BleProtocol.maxSpo2;
+      return hrOk || spo2Ok;
     }
     return plausible;
   }

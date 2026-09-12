@@ -93,6 +93,19 @@ class _GaugePainter extends CustomPainter {
       );
       final litTo = math.min(b.to, v);
       if (litTo > b.from) {
+        // Subtle ambient luminous glow behind the active arc
+        canvas.drawArc(
+          r,
+          ang(b.from),
+          _sweep * ((litTo - b.from) / 100),
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 13
+            ..strokeCap = StrokeCap.round
+            ..color = b.color.withValues(alpha: 0.22)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        );
         canvas.drawArc(
           r,
           ang(b.from),
@@ -113,13 +126,21 @@ class _GaugePainter extends CustomPainter {
       c.dx + math.cos(a) * r.width / 2,
       c.dy + math.sin(a) * r.width / 2,
     );
+    // Indicator halo glow
+    canvas.drawCircle(
+      p,
+      9,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.4)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
     canvas.drawCircle(
       p,
       6,
       Paint()
         ..color = Colors.white
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
+        ..strokeWidth = 2.5,
     );
   }
 

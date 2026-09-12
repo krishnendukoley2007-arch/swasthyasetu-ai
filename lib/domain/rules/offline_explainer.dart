@@ -264,6 +264,129 @@ class OfflineExplainer {
     Vulnerability.immunocompromised => 'weakened immunity',
   };
 
+  /// Answers clinical follow-up questions deterministically from on-device
+  /// screening rules and guideline citations when online Gemini AI is unavailable.
+  static String answerClinicalQuestion({
+    required TriageAssessment assessment,
+    required String question,
+    List<RetrievedChunk> retrieved = const [],
+  }) {
+    final q = question.toLowerCase();
+    final s = assessment.sample;
+    final buf = StringBuffer();
+
+    if (q.contains('heart') ||
+        q.contains('pulse') ||
+        q.contains('bpm') ||
+        q.contains('ecg') ||
+        q.contains('rate') ||
+        q.contains('rhythm') ||
+        q.contains('tachy') ||
+        q.contains('brady') ||
+        q.contains('palpitat')) {
+      buf.writeln('Heart Rate & Cardiac Rhythm Analysis:');
+      buf.writeln(
+        '• Measured Heart Rate: ${s.heartRateBpm} BPM (Normal adult resting range: 60–100 BPM).',
+      );
+      if (s.heartRateBpm > 100) {
+        buf.writeln(
+          '• Tachycardia Note: Heart rate is elevated above 100 BPM. Common causes include fever, dehydration, anxiety, physical exertion, or cardiac rhythm irregularities.',
+        );
+      } else if (s.heartRateBpm < 50 && s.heartRateBpm > 0) {
+        buf.writeln(
+          '• Bradycardia Note: Heart rate is below 50 BPM. Common in well-conditioned athletes, but if accompanied by dizziness, syncope, or fatigue, clinical review is recommended.',
+        );
+      } else {
+        buf.writeln(
+          '• Rhythm is within standard physiological resting parameters.',
+        );
+      }
+      if (s.rrIntervalMs > 0) {
+        buf.writeln(
+          '• R-R Interval: ${s.rrIntervalMs} ms (indicates consistent autonomic sinus cadence).',
+        );
+      }
+      buf.writeln(
+        '• Recommendation: If experiencing chest discomfort, lightheadedness, or shortness of breath, consult a medical professional immediately.',
+      );
+    } else if (q.contains('oxygen') ||
+        q.contains('spo2') ||
+        q.contains('breath') ||
+        q.contains('hypox') ||
+        q.contains('lung') ||
+        q.contains('air') ||
+        q.contains('apnea')) {
+      buf.writeln('Blood Oxygen (SpO2) Assessment:');
+      buf.writeln(
+        '• Current SpO2 Saturation: ${s.spo2Percent}% (Optimal clinical baseline: 95–100%).',
+      );
+      if (s.spo2Percent < 90 && s.spo2Percent > 0) {
+        buf.writeln(
+          '• CRITICAL HYPOXIA: Oxygen saturation below 90% is a medical red flag requiring prompt clinical intervention and supplemental oxygen evaluation.',
+        );
+      } else if (s.spo2Percent < 95 && s.spo2Percent > 0) {
+        buf.writeln(
+          '• Mild Desaturation: Value is between 90–94%. Check sensor seating, warm fingers, sit upright, and re-screen in 5 minutes.',
+        );
+      } else {
+        buf.writeln(
+          '• Oxygenation is well-maintained and within the healthy therapeutic window.',
+        );
+      }
+    } else if (q.contains('temp') ||
+        q.contains('fever') ||
+        q.contains('heat') ||
+        q.contains('hot') ||
+        q.contains('cold') ||
+        q.contains('chill')) {
+      buf.writeln('Body Temperature Evaluation:');
+      buf.writeln(
+        '• Measured Temperature: ${s.temperatureC.toStringAsFixed(1)}°C / ${(s.temperatureC * 9 / 5 + 32).toStringAsFixed(1)}°F.',
+      );
+      if (s.temperatureC >= 38.0) {
+        buf.writeln(
+          '• Pyrexia (Fever) Detected: Ensure adequate hydration with ORS or clean fluids, rest in a cool shaded area, and consider paracetamol per local primary health guidelines.',
+        );
+      } else if (s.temperatureC < 35.5 && s.temperatureC > 0) {
+        buf.writeln(
+          '• Hypothermia Warning: Temperature is subnormal. Keep patient warm with dry blankets.',
+        );
+      } else {
+        buf.writeln('• Body temperature is normothermic.');
+      }
+    } else if (q.contains('do') ||
+        q.contains('next') ||
+        q.contains('action') ||
+        q.contains('step') ||
+        q.contains('plan') ||
+        q.contains('treatment')) {
+      buf.writeln('Recommended Action Plan:');
+      buf.writeln(_nextSteps(assessment, retrieved));
+    } else if (q.contains('hospital') ||
+        q.contains('emergency') ||
+        q.contains('danger') ||
+        q.contains('doctor') ||
+        q.contains('urgent') ||
+        q.contains('risk')) {
+      buf.writeln('Urgent Warning Signs & Escalation Criteria:');
+      buf.writeln(_whenToEscalate(assessment.band, assessment));
+    } else {
+      buf.writeln('Clinical Screening Context:');
+      buf.writeln(_whyThisLevel(assessment));
+      if (retrieved.isNotEmpty) {
+        buf.writeln('\nRelevant Guidance from Reference Corpus:');
+        for (final r in retrieved.take(2)) {
+          buf.writeln('• ${r.chunk.body.trim()} (${r.chunk.citation})');
+        }
+      }
+    }
+
+    buf.writeln(
+      '\nNote: On-device screening guidance based on deterministic ICMR/WHO triage protocols. Not an autonomous clinical diagnosis.',
+    );
+    return buf.toString().trim();
+  }
+
   /// A neutral fallback for the open chat when the online model is unavailable.
   ///
   /// The triage flow above gives assessment-bound guidance; the chat instead
@@ -272,16 +395,60 @@ class OfflineExplainer {
   /// know (the latest screening, if any), and steers back to a clinician. This
   /// is never the primary path — the [GeminiService] only calls it when
   /// [GeminiService.generalChat] returns `null`.
-  static String chatFallback({Screening? latest, bool grounded = false}) {
+  static String chatFallback({
+    Screening? latest,
+    bool grounded = false,
+    String? question,
+  }) {
     final buf = StringBuffer();
+    final q = question?.toLowerCase() ?? '';
+
+    if (q.contains('heart') || q.contains('pulse') || q.contains('ecg')) {
+      buf.writeln('Cardiac & Pulse Guidance:');
+      if (latest != null) {
+        buf.writeln('• Latest Recorded Heart Rate: ${latest.heartRate} BPM.');
+      }
+      buf.writeln('• Normal resting heart rate range is 60–100 BPM.');
+      buf.writeln(
+        '• Heart rate above 100 at rest is tachycardia; below 50 is bradycardia.',
+      );
+      buf.writeln(
+        '• For persistent palpitations, chest tightness, or irregular beats, consult a physician promptly.\n',
+      );
+    } else if (q.contains('oxygen') ||
+        q.contains('spo2') ||
+        q.contains('breath')) {
+      buf.writeln('Oxygen Saturation (SpO2) Guidance:');
+      if (latest != null) {
+        buf.writeln(
+          '• Latest Recorded SpO2: ${latest.spo2}% (Normal baseline: ≥95%).',
+        );
+      }
+      buf.writeln(
+        '• SpO2 below 94% indicates hypoxemia; below 90% is a medical emergency requiring oxygen support.\n',
+      );
+    } else if (q.contains('fever') ||
+        q.contains('temp') ||
+        q.contains('heat')) {
+      buf.writeln('Body Temperature & Fever Guidance:');
+      if (latest != null) {
+        buf.writeln(
+          '• Latest Recorded Temperature: ${latest.temperature.toStringAsFixed(1)}°C.',
+        );
+      }
+      buf.writeln(
+        '• Temperatures ≥38.0°C (100.4°F) represent fever. Maintain hydration, rest, and cooling measures.\n',
+      );
+    }
+
     if (latest == null) {
       buf.write(
-        'The online AI could not answer that right now, and this phone does not '
+        'Online AI is currently unreachable, and this phone does not '
         'have a screening on file to draw on.\n\n',
       );
     } else {
       buf.write(
-        'The online AI could not answer that right now. What this phone does '
+        'Online AI is currently unreachable. What this phone does '
         'have on file is the latest screening: HR ${latest.heartRate} bpm, '
         'SpO2 ${latest.spo2}%, temp ${latest.temperature.toStringAsFixed(1)}°C, '
         'risk band ${latest.riskLevel} (score ${latest.riskScore}/100)'
@@ -289,13 +456,10 @@ class OfflineExplainer {
       );
     }
     buf.write(
-      'General guidance:\n'
-      '- For danger signs (trouble breathing, blue lips, chest pain, '
-      'confusion, a fit, or unable to keep fluids down) refer now, whatever '
-      'any tool says.\n'
-      '- Re-screen when symptoms change.\n'
-      '- For medicine doses and unfamiliar symptoms, defer to a clinician; '
-      'the on-device rules cover screening bands, not treatment.',
+      'General clinical advice:\n'
+      '- For red-flag signs (chest pain, severe breathlessness, bluish lips, confusion, convulsions) seek immediate hospital care.\n'
+      '- Re-screen whenever physical symptoms change.\n'
+      '- For medication dosages or diagnostic confirmation, consult a qualified clinician.',
     );
     return buf.toString();
   }

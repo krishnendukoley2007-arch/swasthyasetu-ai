@@ -35,32 +35,17 @@ class AppCard extends StatelessWidget {
     final cardElevation =
         elevation ?? theme.cardTheme.elevation ?? AppTheme.elevationLevel1;
     final cardBorderRadius =
-        borderRadius ?? BorderRadius.circular(AppTheme.radiusLg);
+        borderRadius ?? BorderRadius.circular(AppTheme.radiusXl);
+    // Premium aesthetic: shadow-only card separation by default. Selected cards
+    // get a primary border for interactive feedback; explicit borders override.
     final cardBorder =
         border ??
-        BorderSide(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.outlineVariant,
-          width: isSelected ? 2 : 1,
-        );
+        (isSelected
+            ? BorderSide(color: theme.colorScheme.primary, width: 2)
+            : BorderSide.none);
 
     final effectiveShadows =
-        shadows ??
-        (cardElevation > 0
-            ? [
-                BoxShadow(
-                  color: theme.shadowColor.withValues(alpha: 0.08),
-                  blurRadius: cardElevation * 2,
-                  offset: Offset(0, cardElevation),
-                ),
-                BoxShadow(
-                  color: theme.shadowColor.withValues(alpha: 0.04),
-                  blurRadius: cardElevation,
-                  offset: Offset(0, cardElevation * 0.5),
-                ),
-              ]
-            : null);
+        shadows ?? (cardElevation > 0 ? AppTheme.shadowLevel1 : null);
 
     final content = Padding(
       padding: padding ?? const EdgeInsets.all(AppTheme.spacingMd),

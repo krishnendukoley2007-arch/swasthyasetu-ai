@@ -31,10 +31,10 @@ class TopQuickAccessBar extends ConsumerWidget implements PreferredSizeWidget {
         vertical: 6,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        color: theme.colorScheme.surface.withValues(alpha: 0.85),
         border: Border(
           bottom: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
             width: 0.8,
           ),
         ),

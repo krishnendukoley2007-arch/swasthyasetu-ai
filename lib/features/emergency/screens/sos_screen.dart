@@ -11,6 +11,7 @@ import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
+import 'package:swasthyasetu_ai/features/emergency/widgets/disaster_playbook_modal.dart';
 import 'package:swasthyasetu_ai/l10n/generated/app_localizations.dart';
 
 /// The emergency screen: arm, count down, send.
@@ -161,6 +162,12 @@ class _SosScreenState extends ConsumerState<SosScreen> {
             Navigator.of(context).maybePop();
           },
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu_book_rounded),
+            onPressed: () => DisasterPlaybookModal.show(context),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: AppTheme.spacingXl),

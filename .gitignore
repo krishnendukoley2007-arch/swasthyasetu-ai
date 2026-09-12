@@ -69,6 +69,8 @@ x86/
 *.dylib
 releases/
 ai_context_bundle/
+Important Files/
+Important Files.zip
 
 # Python & Backend Caches
 backend/venv/

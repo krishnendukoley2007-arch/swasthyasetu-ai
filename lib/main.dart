@@ -122,23 +122,38 @@ class _SplashScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 88,
-                height: 88,
+                width: 96,
+                height: 96,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primaryContainer,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.health_and_safety_rounded,
-                  size: 48,
-                  color: theme.colorScheme.primary,
+                  size: 52,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: AppTheme.spacingLg),
               Text(
                 l10n.appName,
                 style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -151,9 +166,20 @@ class _SplashScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppTheme.spacingXl),
-              const SizedBox(
-                width: 120,
-                child: LinearProgressIndicator(minHeight: 4),
+              SizedBox(
+                width: 140,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                  child: LinearProgressIndicator(
+                    minHeight: 5,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.brightness == Brightness.dark
+                          ? AppTheme.cardiacCoralDark
+                          : AppTheme.cardiacCoral,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

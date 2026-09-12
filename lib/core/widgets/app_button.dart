@@ -27,7 +27,7 @@ Widget _buttonContent({
   );
 }
 
-class AppButton extends StatelessWidget {
+class AppButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final Widget? icon;
@@ -52,13 +52,21 @@ class AppButton extends StatelessWidget {
   });
 
   @override
+  State<AppButton> createState() => _AppButtonState();
+}
+
+class _AppButtonState extends State<AppButton> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final buttonStyle =
-        style ??
+        widget.style ??
         ElevatedButton.styleFrom(
           minimumSize: Size(
-            minWidth ?? (isExpanded ? double.infinity : 140),
-            minHeight,
+            widget.minWidth ?? (widget.isExpanded ? double.infinity : 140),
+            widget.minHeight,
           ),
           padding: const EdgeInsets.symmetric(
             horizontal: AppTheme.spacingXl,
@@ -73,36 +81,58 @@ class AppButton extends StatelessWidget {
             letterSpacing: 0.1,
           ),
           elevation: 2,
+          shadowColor: theme.colorScheme.primary.withValues(alpha: 0.28),
         );
 
-    return SizedBox(
-      width: isExpanded ? double.infinity : null,
-      child: ElevatedButton(
-        style: buttonStyle,
-        onPressed: isLoading || onPressed == null ? null : onPressed,
-        child: isLoading
-            ? SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    buttonStyle.foregroundColor?.resolve({}) ?? Colors.white,
+    return Listener(
+      onPointerDown: (_) {
+        if (widget.onPressed != null && !widget.isLoading) {
+          setState(() => _isPressed = true);
+        }
+      },
+      onPointerUp: (_) {
+        if (_isPressed) setState(() => _isPressed = false);
+      },
+      onPointerCancel: (_) {
+        if (_isPressed) setState(() => _isPressed = false);
+      },
+      child: AnimatedScale(
+        scale: _isPressed ? 0.975 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutCubic,
+        child: SizedBox(
+          width: widget.isExpanded ? double.infinity : null,
+          child: ElevatedButton(
+            style: buttonStyle,
+            onPressed: widget.isLoading || widget.onPressed == null
+                ? null
+                : widget.onPressed,
+            child: widget.isLoading
+                ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        buttonStyle.foregroundColor?.resolve({}) ??
+                            Colors.white,
+                      ),
+                    ),
+                  )
+                : _buttonContent(
+                    label: widget.label,
+                    icon: widget.icon,
+                    trailingIcon: widget.trailingIcon,
+                    isExpanded: widget.isExpanded,
                   ),
-                ),
-              )
-            : _buttonContent(
-                label: label,
-                icon: icon,
-                trailingIcon: trailingIcon,
-                isExpanded: isExpanded,
-              ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class AppOutlinedButton extends StatelessWidget {
+class AppOutlinedButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final Widget? icon;
@@ -131,25 +161,36 @@ class AppOutlinedButton extends StatelessWidget {
   });
 
   @override
+  State<AppOutlinedButton> createState() => _AppOutlinedButtonState();
+}
+
+class _AppOutlinedButtonState extends State<AppOutlinedButton> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveBorderColor = borderColor ?? theme.colorScheme.primary;
+    final effectiveBorderColor =
+        widget.borderColor ?? theme.colorScheme.primary;
     final effectiveForegroundColor =
-        foregroundColor ?? theme.colorScheme.primary;
+        widget.foregroundColor ?? theme.colorScheme.primary;
 
     final buttonStyle =
-        style ??
+        widget.style ??
         OutlinedButton.styleFrom(
           foregroundColor: effectiveForegroundColor,
           minimumSize: Size(
-            minWidth ?? (isExpanded ? double.infinity : 140),
-            minHeight,
+            widget.minWidth ?? (widget.isExpanded ? double.infinity : 140),
+            widget.minHeight,
           ),
           padding: const EdgeInsets.symmetric(
             horizontal: AppTheme.spacingXl,
             vertical: AppTheme.spacingMd,
           ),
-          side: BorderSide(color: effectiveBorderColor, width: 1.5),
+          side: BorderSide(
+            color: effectiveBorderColor.withValues(alpha: 0.85),
+            width: 1.5,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           ),
@@ -160,28 +201,48 @@ class AppOutlinedButton extends StatelessWidget {
           ),
         );
 
-    return SizedBox(
-      width: isExpanded ? double.infinity : null,
-      child: OutlinedButton(
-        style: buttonStyle,
-        onPressed: isLoading || onPressed == null ? null : onPressed,
-        child: isLoading
-            ? SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    effectiveForegroundColor,
+    return Listener(
+      onPointerDown: (_) {
+        if (widget.onPressed != null && !widget.isLoading) {
+          setState(() => _isPressed = true);
+        }
+      },
+      onPointerUp: (_) {
+        if (_isPressed) setState(() => _isPressed = false);
+      },
+      onPointerCancel: (_) {
+        if (_isPressed) setState(() => _isPressed = false);
+      },
+      child: AnimatedScale(
+        scale: _isPressed ? 0.975 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutCubic,
+        child: SizedBox(
+          width: widget.isExpanded ? double.infinity : null,
+          child: OutlinedButton(
+            style: buttonStyle,
+            onPressed: widget.isLoading || widget.onPressed == null
+                ? null
+                : widget.onPressed,
+            child: widget.isLoading
+                ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        effectiveForegroundColor,
+                      ),
+                    ),
+                  )
+                : _buttonContent(
+                    label: widget.label,
+                    icon: widget.icon,
+                    trailingIcon: widget.trailingIcon,
+                    isExpanded: widget.isExpanded,
                   ),
-                ),
-              )
-            : _buttonContent(
-                label: label,
-                icon: icon,
-                trailingIcon: trailingIcon,
-                isExpanded: isExpanded,
-              ),
+          ),
+        ),
       ),
     );
   }

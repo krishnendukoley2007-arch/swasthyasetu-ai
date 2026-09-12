@@ -76,9 +76,6 @@ class DoctorReferralDialog extends StatelessWidget {
     buffer.writeln('• Heart Rate: ${vitals['heart_rate'] ?? '—'} BPM');
     buffer.writeln('• SpO2: ${vitals['spo2'] ?? '—'}%');
     buffer.writeln('• Temperature: ${vitals['temperature'] ?? '—'} °C');
-    if (vitals['glucose'] != null) {
-      buffer.writeln('• Blood Glucose: ${vitals['glucose']} mg/dL');
-    }
     if (vitals['systolic'] != null && vitals['diastolic'] != null) {
       buffer.writeln(
         '• Est. Blood Pressure: ${vitals['systolic']}/${vitals['diastolic']} mmHg',
@@ -339,13 +336,6 @@ class DoctorReferralDialog extends StatelessWidget {
                           '${vitals['temperature'] ?? '—'}°C',
                           Icons.thermostat_rounded,
                         ),
-                        if (vitals['glucose'] != null)
-                          _vitalChip(
-                            theme,
-                            'Glucose',
-                            '${vitals['glucose']} mg/dL',
-                            Icons.water_drop_rounded,
-                          ),
                         if (vitals['systolic'] != null &&
                             vitals['diastolic'] != null)
                           _vitalChip(
@@ -504,7 +494,7 @@ class DoctorReferralDialog extends StatelessWidget {
       heartRate: (v['heart_rate'] as num?)?.toInt() ?? 75,
       spo2: (v['spo2'] as num?)?.toInt() ?? 98,
       temperature: (v['temperature'] as num?)?.toDouble() ?? 37.0,
-      estimatedGlucose: (v['glucose'] as num?)?.toInt() ?? 0,
+      estimatedGlucose: 0,
       estimatedSystolic: (v['systolic'] as num?)?.toInt() ?? 0,
       estimatedDiastolic: (v['diastolic'] as num?)?.toInt() ?? 0,
       riskScore: triageResult.score,

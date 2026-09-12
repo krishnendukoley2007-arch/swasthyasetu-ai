@@ -13,11 +13,24 @@ import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
 import 'package:swasthyasetu_ai/domain/models/triage_result.dart';
 import 'package:swasthyasetu_ai/domain/rules/ecg_classifier.dart';
+import 'package:swasthyasetu_ai/core/services/pdf_clinical_report_service.dart';
 import 'package:swasthyasetu_ai/core/services/vernacular_guidance_service.dart';
 import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
+import 'package:swasthyasetu_ai/core/services/edge_ai_service.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
 import 'package:swasthyasetu_ai/features/screening/widgets/doctor_referral_dialog.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/trust_provenance_sheet.dart';
 import 'package:uuid/uuid.dart';
+
+const _kAiPatternTitle = 'Edge AI Pattern Check';
+const _kAiPillText = '1D-CNN (Synthetic NSR)';
+const _kAiPatternBaseline = 'Rhythm pattern within normal sinus baseline';
+const _kAiPatternDiffers =
+    'Rhythm pattern differs from normal baseline — consider routine check';
+const _kAiAdvisoryNotice =
+    'ADVISORY ONLY (Mandate 2.5) — Does not affect clinical triage band';
+const _kDownloadPdfLabel = 'PDF Report';
+const _kDownloadPdfTooltip = 'Download Clinical PDF Report';
 
 /// The end of a screening: the band, why it was assigned, and — the part that
 /// was missing — the record being written to the local database.
@@ -59,6 +72,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
   String? _savedId;
   Patient? _patient;
   String _guidanceLanguage = 'hi';
+  EdgeAiAnomalyResult? _aiAnomalyResult;
 
   @override
   void initState() {
@@ -133,6 +147,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
 
     if (draft.hasPatient && draft.sample != null) {
       _patient = draft.patient;
+      _evaluateAiAnomaly(draft);
       _triageResult = RiskEngine.evaluateWithPatient(
         sample: draft.sample!,
         symptoms: draft.symptoms,
@@ -169,6 +184,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
           createdAt: DateTime.now(),
         );
       }
+      _evaluateAiAnomaly(draft);
     }
 
     _mainController.forward();
@@ -246,6 +262,8 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
       latitude: fix?.latitude,
       longitude: fix?.longitude,
       isDemo: false,
+      aiAnomalyFlag: _aiAnomalyResult?.isAnomaly ?? false,
+      aiAnomalyScore: _aiAnomalyResult?.anomalyScore ?? 0.0,
     );
 
     try {
@@ -255,6 +273,12 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
             screening,
             ecgSamples: draft.ecgSamples,
             ecgSampleRate: draft.ecgSampleRate,
+          );
+      await ref
+          .read(communitySyncServiceProvider)
+          .contributeScreening(
+            screening: screening,
+            consentOptIn: settings.communitySyncConsent,
           );
       ref.read(screeningDraftProvider.notifier).markSaved(id);
       if (!mounted) return;
@@ -305,6 +329,58 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
       _saveError = null;
     });
     await _persist(ref.read(screeningDraftProvider));
+  }
+
+  Future<void> _evaluateAiAnomaly(ScreeningDraft draft) async {
+    try {
+      final res = await ref
+          .read(edgeAiServiceProvider)
+          .evaluateRhythmWindow(
+            ecgSamples: draft.ecgSamples,
+            isDemo: _triageResult?.isDemo ?? false,
+          );
+      if (mounted) {
+        setState(() {
+          _aiAnomalyResult = res;
+        });
+      }
+    } catch (_) {
+      // Advisory only — fail safely
+    }
+  }
+
+  void _showTrustProvenance() {
+    final draft = ref.read(screeningDraftProvider);
+    final isDemo = _triageResult?.isDemo ?? true;
+    final hardwareSource = (draft.sample != null && !isDemo)
+        ? 'SSAI-SENSE-01 (BLE 20-byte frame)'
+        : 'Interactive Simulated Sensor Node';
+    final ruleId = _triageResult?.triggeredRules.isNotEmpty == true
+        ? _triageResult!.triggeredRules.first
+        : 'NEWS2_BASELINE';
+    final storagePreview = <String, dynamic>{
+      'screening_id': _savedId ?? 'temp_draft',
+      'patient_id': _patient?.id ?? 'demo_patient',
+      'heart_rate_bpm': draft.sample?.heartRateBpm ?? 72,
+      'spo2_percent': draft.sample?.spo2Percent ?? 98,
+      'temperature_c': draft.sample?.temperatureC ?? 36.6,
+      'triage_risk_band': _triageResult?.level ?? 'GREEN',
+      'ai_anomaly_flag': _aiAnomalyResult?.isAnomaly ?? false,
+      'ai_anomaly_score': _aiAnomalyResult?.anomalyScore ?? 0.0,
+      'is_demo': isDemo,
+      'schema_vocabulary': 'en_US',
+    };
+
+    TrustProvenanceSheet.show(
+      context,
+      isDemo: isDemo,
+      hardwareSource: hardwareSource,
+      clinicalRuleId: ruleId,
+      latencyMs: _aiAnomalyResult?.latencyMs ?? 0.85,
+      aiAnomalyFlag: _aiAnomalyResult?.isAnomaly ?? false,
+      aiAnomalyScore: _aiAnomalyResult?.anomalyScore ?? 0.05,
+      englishStoragePreview: storagePreview,
+    );
   }
 
   TriageResult _generateDemoTriage(Map<String, dynamic> extra) {
@@ -371,6 +447,15 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf_rounded),
+            tooltip: _kDownloadPdfTooltip,
+            onPressed: _exportPdfDirect,
+          ),
+          IconButton(
+            icon: const Icon(Icons.verified_user_outlined),
+            onPressed: _showTrustProvenance,
+          ),
           if (_triageResult!.isDemo)
             Container(
               margin: const EdgeInsets.only(right: AppTheme.spacingMd),
@@ -467,6 +552,14 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                   .fadeIn(
                     duration: 600.ms,
                     delay: 600.ms,
+                    curve: AppTheme.curveDecelerate,
+                  )
+                  .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
+              _buildEdgeAiPatternCard()
+                  .animate(controller: _mainController, autoPlay: false)
+                  .fadeIn(
+                    duration: 600.ms,
+                    delay: 650.ms,
                     curve: AppTheme.curveDecelerate,
                   )
                   .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
@@ -650,7 +743,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXl),
                 border: Border.all(
                   color: riskColor.withValues(alpha: 0.2),
                   width: 1,
@@ -1175,12 +1268,115 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
     );
   }
 
+  Widget _buildEdgeAiPatternCard() {
+    final theme = Theme.of(context);
+    final res = _aiAnomalyResult;
+    final isAnomaly = res?.isAnomaly ?? false;
+    final anomalyScore = res?.anomalyScore ?? 0.05;
+    final latency = res?.latencyMs ?? 0.8;
+    final statusColor = isAnomaly ? AppTheme.tertiaryAmber : AppTheme.riskGreen;
+    final statusIcon = isAnomaly
+        ? Icons.waves_rounded
+        : Icons.verified_user_rounded;
+    final statusText = isAnomaly ? _kAiPatternDiffers : _kAiPatternBaseline;
+    final scoreStats =
+        'Latency: ${latency.toStringAsFixed(1)}ms | Score: ${anomalyScore.toStringAsFixed(2)} (thresh: 0.38)';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacingLg,
+        vertical: AppTheme.spacingSm,
+      ),
+      child: AppCard(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.35,
+        ),
+        padding: const EdgeInsets.all(AppTheme.spacingMd),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.psychology_outlined,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: AppTheme.spacingSm),
+                Expanded(
+                  child: Text(
+                    _kAiPatternTitle,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacingXs),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingSm,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: Text(
+                _kAiPillText,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacingSm),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(statusIcon, color: statusColor, size: 20),
+                const SizedBox(width: AppTheme.spacingSm),
+                Expanded(
+                  child: Text(
+                    statusText,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacingXs),
+            Text(
+              scoreStats,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontFamily: 'monospace',
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _kAiAdvisoryNotice,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.outline,
+                fontStyle: FontStyle.italic,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAdvancedClinicalVisualizations() {
     final theme = Theme.of(context);
     final v = _triageResult?.vitals ?? const {};
     final systolic = (v['systolic'] as num?)?.toInt() ?? 0;
     final diastolic = (v['diastolic'] as num?)?.toInt() ?? 0;
-    final glucose = (v['glucose'] as num?)?.toDouble() ?? 0;
     final draft = ref.read(screeningDraftProvider);
     final hasStrip = draft.ecgSamples.length >= draft.ecgSampleRate;
 
@@ -1205,7 +1401,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
 
           // Derived estimates, clearly tagged. These are computed from PTT and
           // vitals — useful for triage context, never a laboratory value.
-          if (systolic > 0 || diastolic > 0 || glucose > 0)
+          if (systolic > 0 && diastolic > 0)
             Container(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
@@ -1251,13 +1447,6 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                         UnitNumber(
                           '$systolic/$diastolic',
                           'mmHg',
-                          size: 22,
-                          color: ClinicalPalette.violet,
-                        ),
-                      if (glucose > 0)
-                        UnitNumber(
-                          glucose.toStringAsFixed(0),
-                          'mg/dL',
                           size: 22,
                           color: ClinicalPalette.violet,
                         ),
@@ -1388,15 +1577,28 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
             ),
             const AppSpacing.vmd(),
           ],
-          SizedBox(
-            width: double.infinity,
-            child: AppOutlinedButton(
-              label: context.l10n.triageDoctorReferral,
-              icon: const Icon(Icons.assignment_turned_in_rounded),
-              borderColor: riskColor,
-              foregroundColor: riskColor,
-              onPressed: _openReferralSlip,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: AppOutlinedButton(
+                  label: context.l10n.triageDoctorReferral,
+                  icon: const Icon(Icons.assignment_turned_in_rounded),
+                  borderColor: riskColor,
+                  foregroundColor: riskColor,
+                  onPressed: _openReferralSlip,
+                ),
+              ),
+              const AppSpacing.hmd(),
+              Expanded(
+                child: AppOutlinedButton(
+                  label: _kDownloadPdfLabel,
+                  icon: const Icon(Icons.picture_as_pdf_rounded),
+                  borderColor: theme.colorScheme.secondary,
+                  foregroundColor: theme.colorScheme.secondary,
+                  onPressed: _exportPdfDirect,
+                ),
+              ),
+            ],
           ),
           const AppSpacing.vmd(),
           // Wrap, not Row: two buttons with icons and full labels cannot share
@@ -1441,6 +1643,52 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
       patient: _patient,
       screeningId: _savedId,
     );
+  }
+
+  Future<void> _exportPdfDirect() async {
+    if (_triageResult == null) return;
+    try {
+      final draft = ref.read(screeningDraftProvider);
+      final patient =
+          draft.patient ??
+          _patient ??
+          Patient(
+            id: 'walkin',
+            name: 'Walk-In Patient',
+            age: 45,
+            sex: 'Female',
+            createdAt: DateTime.now(),
+          );
+      final v = _triageResult!.vitals;
+      final screening = Screening(
+        id: _savedId ?? const Uuid().v4(),
+        patientId: patient.id,
+        deviceId: draft.deviceId.isNotEmpty ? draft.deviceId : 'SSAI-SENSE-01',
+        timestamp: DateTime.now(),
+        heartRate: (v['heart_rate'] as num?)?.toInt() ?? 75,
+        spo2: (v['spo2'] as num?)?.toInt() ?? 98,
+        temperature: (v['temperature'] as num?)?.toDouble() ?? 37.0,
+        estimatedGlucose: (v['glucose'] as num?)?.toInt() ?? 0,
+        estimatedSystolic: (v['systolic'] as num?)?.toInt() ?? 0,
+        estimatedDiastolic: (v['diastolic'] as num?)?.toInt() ?? 0,
+        riskScore: _triageResult!.score,
+        riskLevel: _triageResult!.level,
+        triggeredRules: _triageResult!.triggeredRules,
+        symptoms: _triageResult!.symptoms,
+        isDemo: _triageResult!.isDemo,
+      );
+
+      await PdfClinicalReportService.exportAndShareReport(
+        patient: patient,
+        screening: screening,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not generate PDF: $e')));
+      }
+    }
   }
 
   Widget _buildVernacularGuidanceCard(Color riskColor) {

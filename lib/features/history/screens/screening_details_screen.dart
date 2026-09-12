@@ -9,8 +9,19 @@ import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/utils/ecg_rr.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
-import 'package:swasthyasetu_ai/features/screening/widgets/poincare_plot_widget.dart';
+import 'package:swasthyasetu_ai/core/services/pdf_clinical_report_service.dart';
 import 'package:swasthyasetu_ai/domain/models/screening.dart';
+import 'package:swasthyasetu_ai/domain/models/user_account.dart';
+import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/poincare_plot_widget.dart';
+
+const _kScreeningTitle = 'Screening';
+const _kBackTooltip = 'Back';
+const _kDownloadPdfLabel = 'Download PDF Report';
+const _kDownloadPdfTooltip = 'Download Clinical PDF Report';
+const _kShareTooltip = 'Share';
+const _kPatientNotFoundMsg = 'Patient record not found for PDF export';
+const _kBackToHistoryLabel = 'Back to history';
 
 /// Resolves the stored screening, then hands a non-null record to the view.
 ///
@@ -32,11 +43,20 @@ class ScreeningDetailsScreen extends ConsumerWidget {
       ),
       error: (_, __) => AppPageScaffold(
         appBar: AppBar(
-          title: const Text('Screening'),
+          title: const Text(_kScreeningTitle),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
-            tooltip: 'Back',
-            onPressed: () => context.go('/history'),
+            tooltip: _kBackTooltip,
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                final isPatient =
+                    ref.read(authStateProvider).account?.role ==
+                    UserRole.patient;
+                context.go(isPatient ? '/my-health' : '/history');
+              }
+            },
           ),
         ),
         body: const AppEmptyState(
@@ -49,11 +69,20 @@ class ScreeningDetailsScreen extends ConsumerWidget {
         if (screening == null) {
           return AppPageScaffold(
             appBar: AppBar(
-              title: const Text('Screening'),
+              title: const Text(_kScreeningTitle),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
-                tooltip: 'Back',
-                onPressed: () => context.go('/history'),
+                tooltip: _kBackTooltip,
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    final isPatient =
+                        ref.read(authStateProvider).account?.role ==
+                        UserRole.patient;
+                    context.go(isPatient ? '/my-health' : '/history');
+                  }
+                },
               ),
             ),
             body: AppEmptyState(
@@ -61,9 +90,18 @@ class ScreeningDetailsScreen extends ConsumerWidget {
               title: 'Screening not found',
               subtitle: 'This record may have been deleted from this device.',
               action: AppOutlinedButton(
-                label: 'Back to history',
+                label: _kBackToHistoryLabel,
                 isExpanded: false,
-                onPressed: () => context.go('/history'),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    final isPatient =
+                        ref.read(authStateProvider).account?.role ==
+                        UserRole.patient;
+                    context.go(isPatient ? '/my-health' : '/history');
+                  }
+                },
               ),
             ),
           );
@@ -81,17 +119,18 @@ class ScreeningDetailsScreen extends ConsumerWidget {
   }
 }
 
-class _ScreeningDetailsView extends StatefulWidget {
+class _ScreeningDetailsView extends ConsumerStatefulWidget {
   final Screening screening;
   final String? patientName;
 
   const _ScreeningDetailsView({required this.screening, this.patientName});
 
   @override
-  State<_ScreeningDetailsView> createState() => _ScreeningDetailsViewState();
+  ConsumerState<_ScreeningDetailsView> createState() =>
+      _ScreeningDetailsViewState();
 }
 
-class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
+class _ScreeningDetailsViewState extends ConsumerState<_ScreeningDetailsView> {
   Screening get _screening => widget.screening;
 
   @override
@@ -101,14 +140,29 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
 
     return AppPageScaffold(
       appBar: AppBar(
-        title: Text(widget.patientName ?? 'Screening'),
+        title: Text(widget.patientName ?? _kScreeningTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/history'),
+          tooltip: _kBackTooltip,
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              final isPatient =
+                  ref.read(authStateProvider).account?.role == UserRole.patient;
+              context.go(isPatient ? '/my-health' : '/history');
+            }
+          },
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.picture_as_pdf_rounded),
+            tooltip: _kDownloadPdfTooltip,
+            onPressed: _shareScreening,
+          ),
+          IconButton(
             icon: const Icon(Icons.share_outlined),
+            tooltip: _kShareTooltip,
             onPressed: _shareScreening,
           ),
         ],
@@ -445,7 +499,7 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
               ),
             ],
           ),
-          if (_screening.pttMs > 0 || _screening.hasGlucoseEstimate) ...[
+          if (_screening.hasBpEstimate || _screening.pttMs > 0) ...[
             const AppSpacing.vlg(),
             AppCard(
               color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.2),
@@ -467,7 +521,7 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
                       const AppSpacing.hsm(),
                       Expanded(
                         child: Text(
-                          'Experimental BP & Glucose Estimates',
+                          'Calibrated BP Trend Estimate',
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.tertiary,
@@ -494,12 +548,6 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
                           theme.colorScheme.secondary,
                         ),
                       ],
-                      if (_screening.hasGlucoseEstimate)
-                        _buildBPDetail(
-                          'Est. Glucose',
-                          '${_screening.estimatedGlucose} mg/dL',
-                          theme.colorScheme.tertiary,
-                        ),
                       if (_screening.pttMs > 0)
                         _buildBPDetail(
                           'PTT',
@@ -822,8 +870,8 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
         const AppSpacing.hmd(),
         Expanded(
           child: AppButton(
-            label: 'Share Report',
-            icon: const Icon(Icons.share_rounded),
+            label: _kDownloadPdfLabel,
+            icon: const Icon(Icons.picture_as_pdf_rounded),
             onPressed: _shareScreening,
           ),
         ),
@@ -831,10 +879,28 @@ class _ScreeningDetailsViewState extends State<_ScreeningDetailsView> {
     );
   }
 
-  void _shareScreening() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share functionality coming soon')),
-    );
+  Future<void> _shareScreening() async {
+    try {
+      final patient = await ref.read(
+        patientProvider(_screening.patientId).future,
+      );
+      if (patient != null && mounted) {
+        await PdfClinicalReportService.exportAndShareReport(
+          patient: patient,
+          screening: _screening,
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text(_kPatientNotFoundMsg)));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not generate PDF: $e')));
+      }
+    }
   }
 
   String _formatDate(DateTime dt) {

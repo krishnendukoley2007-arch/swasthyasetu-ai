@@ -11,48 +11,72 @@ import 'dart:math';
 List<int> rrIntervalsFromEcg(List<int> samples, int sampleRate) {
   if (samples.length < sampleRate * 2) return const [];
 
-  var lo = samples.first, hi = samples.first;
-  for (final v in samples) {
-    if (v < lo) lo = v;
-    if (v > hi) hi = v;
+  // 1. Five-point derivative to eliminate baseline drift & emphasize QRS steep slope:
+  //    d[i] = (2*x[i] + x[i-1] - x[i-3] - 2*x[i-4]) / 8
+  final diff = List<double>.filled(samples.length, 0.0);
+  for (var i = 4; i < samples.length; i++) {
+    diff[i] =
+        (2.0 * samples[i] +
+            samples[i - 1] -
+            samples[i - 3] -
+            2.0 * samples[i - 4]) /
+        8.0;
   }
-  final p2p = hi - lo;
-  if (p2p == 0) return const [];
 
-  // Flat-line guard, scale-free: noise alone has a peak-to-peak/MAD ratio of
-  // about 9.6; a real QRS stands well above that.
-  final mad = _mad(samples);
-  if (p2p < 12 * mad) return const [];
+  // 2. Square signal to eliminate negative components and accentuate peaks:
+  final sq = List<double>.generate(samples.length, (i) => diff[i] * diff[i]);
 
-  final refractory = sampleRate ~/ 5; // 200 ms between R peaks
-  final threshold = lo + (p2p * 0.6).round();
+  // 3. Moving-window integration (~120 ms window):
+  final win = (sampleRate * 0.12).round().clamp(4, 50);
+  final integrated = List<double>.filled(samples.length, 0.0);
+  double sum = 0.0;
+  for (var i = 0; i < samples.length; i++) {
+    sum += sq[i];
+    if (i >= win) sum -= sq[i - win];
+    integrated[i] = sum / win;
+  }
+
+  // 4. Determine adaptive threshold from signal energy:
+  var maxVal = 0.0;
+  for (final v in integrated) {
+    if (v > maxVal) maxVal = v;
+  }
+  if (maxVal <= 0.0001) return const [];
+
+  final threshold = maxVal * 0.28; // 28% of peak integrated amplitude
+  final refractory = (sampleRate * 0.32)
+      .round(); // 320 ms refractory period (max 187 BPM)
 
   final peaks = <int>[];
-  var i = 0;
-  while (i < samples.length) {
-    if (samples[i] < threshold) {
+  var i = win;
+  while (i < samples.length - win) {
+    if (integrated[i] > threshold) {
+      // Find local peak within refractory window
+      var peakIdx = i;
+      var peakVal = integrated[i];
+      final searchEnd = min(samples.length - win, i + refractory);
+      for (var j = i + 1; j < searchEnd; j++) {
+        if (integrated[j] > peakVal) {
+          peakVal = integrated[j];
+          peakIdx = j;
+        }
+      }
+      peaks.add(peakIdx);
+      i = peakIdx + refractory;
+    } else {
       i++;
-      continue;
     }
-    var peak = i;
-    while (i < samples.length && samples[i] >= threshold) {
-      if (samples[i] > samples[peak]) peak = i;
-      i++;
-    }
-    peaks.add(peak);
-    i = peak + refractory;
   }
 
   if (peaks.length < 2) return const [];
-  return [
-    for (var k = 1; k < peaks.length; k++)
-      ((peaks[k] - peaks[k - 1]) * 1000 / sampleRate).round(),
-  ];
-}
 
-double _mad(List<int> samples) {
-  final sorted = List<int>.of(samples)..sort();
-  final centre = sorted[sorted.length ~/ 2];
-  final deviations = samples.map((v) => (v - centre).abs()).toList()..sort();
-  return max(1, deviations[deviations.length ~/ 2]).toDouble();
+  // 5. Enforce physiological bounds: 330 ms (181 BPM) to 1800 ms (33 BPM)
+  final intervals = <int>[];
+  for (var k = 1; k < peaks.length; k++) {
+    final ms = ((peaks[k] - peaks[k - 1]) * 1000 / sampleRate).round();
+    if (ms >= 330 && ms <= 1800) {
+      intervals.add(ms);
+    }
+  }
+  return intervals;
 }

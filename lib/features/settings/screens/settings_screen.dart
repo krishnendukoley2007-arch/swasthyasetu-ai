@@ -16,6 +16,12 @@ import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/core/utils/l10n_extensions.dart';
 import 'package:swasthyasetu_ai/l10n/generated/app_localizations.dart';
 
+const _kCommunitySyncTitle = 'Community early-warning map';
+const _kCommunitySyncSubtitle =
+    'Off by default. Contributes strictly anonymized regional '
+    'risk indicators (geohash, hour-bucket, risk band, category). '
+    'Zero patient data, zero exact GPS, and zero raw vitals ever leave device.';
+
 /// The one screen where the app's behaviour is actually configured.
 ///
 /// Every control here is bound to [settingsProvider] and lands in SQLite, so a
@@ -165,6 +171,15 @@ class SettingsScreen extends ConsumerWidget {
               value: settings.aiConsent,
               onChanged: (v) =>
                   ref.read(settingsProvider.notifier).setAiConsent(v),
+            ),
+            _Toggle(
+              icon: Icons.public_rounded,
+              title: _kCommunitySyncTitle,
+              subtitle: _kCommunitySyncSubtitle,
+              value: settings.communitySyncConsent,
+              onChanged: (v) => ref
+                  .read(settingsProvider.notifier)
+                  .setCommunitySyncConsent(v),
             ),
             const _GeminiKeyTile(),
           ]),

@@ -77,12 +77,6 @@ class HealthReport {
         '${latest.estimatedSystolic}/${latest.estimatedDiastolic} mmHg',
       );
     }
-    if (latest.hasGlucoseEstimate) {
-      b.writeln(
-        'Blood Glucose estimate (EXPERIMENTAL, PPG/ECG vascular contraction analysis): '
-        '${latest.estimatedGlucose} mg/dL',
-      );
-    }
     if (latest.symptoms.isNotEmpty) {
       b.writeln('Symptoms: ${latest.symptoms.join(', ')}');
     }

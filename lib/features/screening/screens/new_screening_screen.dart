@@ -207,8 +207,8 @@ class _NewScreeningScreenState extends ConsumerState<NewScreeningScreen>
             color: theme.colorScheme.surface,
             border: Border(
               bottom: BorderSide(
-                color: theme.colorScheme.outlineVariant,
-                width: 1,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+                width: 0.8,
               ),
             ),
           ),

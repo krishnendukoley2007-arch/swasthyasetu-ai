@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/services/environment_service.dart';
 import 'package:swasthyasetu_ai/domain/models/disaster_advisory.dart';
+import 'package:swasthyasetu_ai/domain/models/disaster_hazard.dart';
 import 'package:swasthyasetu_ai/domain/models/environment.dart';
+import 'package:swasthyasetu_ai/domain/rules/disaster_hazard_engine.dart';
 import 'package:swasthyasetu_ai/domain/rules/environmental_rules.dart';
 import 'package:swasthyasetu_ai/domain/rules/trend_engine.dart';
 import 'package:swasthyasetu_ai/domain/rules/vulnerability.dart';
@@ -112,4 +114,39 @@ final environmentAdvisoriesProvider =
 /// The offline disaster guides bundled with the app.
 final disasterAdvisoriesProvider = FutureProvider<List<DisasterAdvisory>>(
   (ref) => loadDisasterAdvisories(),
+);
+
+/// Manual hazard override for frontline workers / relief camps operating in total cellular blackout.
+final disasterHazardOverrideProvider = StateProvider<DisasterHazardOverride>(
+  (ref) => DisasterHazardOverride.autoDetect,
+);
+
+/// Real-time barometric pressure change over 3 hours (hPa) from on-board SSAI-SENSE BME280 sensor.
+final barometricDeltaHpaProvider = StateProvider<double?>((ref) => null);
+
+/// The active disaster hazard assessment computed by [DisasterHazardEngine].
+/// Re-evaluates deterministically whenever weather readings, user vulnerability,
+/// local sensor barometric delta, or relief camp overrides change.
+final disasterHazardProvider = Provider<DisasterHazardAssessment>((ref) {
+  final envState = ref.watch(environmentProvider).valueOrNull;
+  final override = ref.watch(disasterHazardOverrideProvider);
+  final barometricDelta = ref.watch(barometricDeltaHpaProvider);
+
+  final account = ref.watch(authStateProvider).account;
+  final isPatient = account != null && account.role.isPatient;
+  final flags = isPatient
+      ? Vulnerability.parse(account.vulnerabilityFlags)
+      : const <Vulnerability>{};
+
+  return DisasterHazardEngine.assess(
+    reading: envState?.reading,
+    vulnerabilities: flags,
+    barometricDeltaHpa: barometricDelta,
+    override: override,
+  );
+});
+
+/// State holder for the active 4-question flood syndromic surveillance check.
+final floodSyndromicSurveyProvider = StateProvider<FloodSyndromicSurvey>(
+  (ref) => const FloodSyndromicSurvey(),
 );

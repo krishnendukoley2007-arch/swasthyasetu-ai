@@ -24,6 +24,7 @@ import 'package:swasthyasetu_ai/features/screening/screens/symptoms_screen.dart'
 import 'package:swasthyasetu_ai/features/screening/screens/triage_result_screen.dart';
 import 'package:swasthyasetu_ai/features/settings/screens/settings_screen.dart';
 import 'package:swasthyasetu_ai/features/sync/screens/pending_sync_screen.dart';
+import 'package:swasthyasetu_ai/features/dashboard/community_hotspot_screen.dart';
 
 import 'support/harness.dart';
 
@@ -102,6 +103,7 @@ final List<_ScreenCase> _cases = [
   _ScreenCase('device diagnostics', () => const DeviceDiagnosticsScreen()),
   _ScreenCase('pending sync', () => const PendingSyncScreen()),
   _ScreenCase('settings', () => const SettingsScreen()),
+  _ScreenCase('community hotspot', () => const CommunityHotspotScreen()),
 ];
 
 void main() {

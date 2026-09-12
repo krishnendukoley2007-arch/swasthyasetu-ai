@@ -29,8 +29,11 @@ class PoincarePlotWidget extends StatelessWidget {
 
   /// Generates synthetic RR intervals if actual raw tachogram isn't passed
   List<int> _getEffectiveRR() {
-    if (rrIntervalsMs != null && rrIntervalsMs!.length >= 10) {
-      return rrIntervalsMs!;
+    if (rrIntervalsMs != null) {
+      final valid = rrIntervalsMs!.where((r) => r >= 330 && r <= 1800).toList();
+      if (valid.length >= 5) {
+        return valid;
+      }
     }
     // Synthesize 60 beats based on heartRateBpm and arrhythmia state
     final meanRR = (60000.0 / heartRateBpm.clamp(40.0, 180.0)).round();
@@ -70,17 +73,8 @@ class PoincarePlotWidget extends StatelessWidget {
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        boxShadow: AppTheme.shadowLevel1,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,23 +316,24 @@ class PoincarePlotWidget extends StatelessWidget {
   }
 
   static _PoincareMetrics _calculatePoincareMetrics(List<int> rrs) {
-    if (rrs.length < 2) {
+    final validRrs = rrs.where((r) => r >= 330 && r <= 1800).toList();
+    if (validRrs.length < 2) {
       return _PoincareMetrics(meanRR: 800, sd1: 25, sd2: 60, sdRatio: 0.42);
     }
 
-    final double mean = rrs.reduce((a, b) => a + b) / rrs.length;
+    final double mean = validRrs.reduce((a, b) => a + b) / validRrs.length;
 
     // Variance of RR
     double sumVar = 0.0;
-    for (final r in rrs) {
+    for (final r in validRrs) {
       sumVar += math.pow(r - mean, 2);
     }
-    final varRR = sumVar / (rrs.length - 1);
+    final varRR = sumVar / (validRrs.length - 1);
 
     // Differences: RR_{n+1} - RR_n
     final diffs = <double>[];
-    for (int i = 0; i < rrs.length - 1; i++) {
-      diffs.add((rrs[i + 1] - rrs[i]).toDouble());
+    for (int i = 0; i < validRrs.length - 1; i++) {
+      diffs.add((validRrs[i + 1] - validRrs[i]).toDouble());
     }
 
     double diffMean = diffs.reduce((a, b) => a + b) / diffs.length;
@@ -390,9 +385,12 @@ class _PoincarePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Minimum & maximum RR window [400 ms, 1400 ms]
-    const minRR = 400.0;
-    const maxRR = 1400.0;
+    // Filter valid physiological intervals to dynamically calculate bounds
+    final validPoints = rrList.where((r) => r >= 330 && r <= 1800).toList();
+    final minVal = validPoints.isNotEmpty ? validPoints.reduce(math.min) : 600;
+    final maxVal = validPoints.isNotEmpty ? validPoints.reduce(math.max) : 1000;
+    final minRR = math.max(300.0, (minVal - 150).toDouble());
+    final maxRR = math.min(1800.0, (maxVal + 150).toDouble());
 
     // Dark canvas background
     final bgPaint = Paint()..color = const Color(0xFF0F171A);
@@ -405,12 +403,13 @@ class _PoincarePainter extends CustomPainter {
     double toX(double rr) => ((rr - minRR) / (maxRR - minRR)) * w;
     double toY(double rr) => h - (((rr - minRR) / (maxRR - minRR)) * h);
 
-    // 1. Grid Lines (every 200 ms: 600, 800, 1000, 1200)
+    // 1. Grid Lines (every 200 ms within bounds)
     final gridPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.08)
       ..strokeWidth = 0.8;
 
-    for (double g = 600; g <= 1200; g += 200) {
+    final startG = ((minRR / 200).ceil() * 200).toDouble();
+    for (double g = startG; g < maxRR; g += 200) {
       canvas.drawLine(Offset(toX(g), 0), Offset(toX(g), h), gridPaint);
       canvas.drawLine(Offset(0, toY(g)), Offset(w, toY(g)), gridPaint);
     }
@@ -426,8 +425,8 @@ class _PoincarePainter extends CustomPainter {
     );
 
     // 3. Draw Confidence Ellipse (centered at (meanRR, meanRR))
-    final cx = toX(metrics.meanRR);
-    final cy = toY(metrics.meanRR);
+    final cx = toX(metrics.meanRR.clamp(minRR, maxRR));
+    final cy = toY(metrics.meanRR.clamp(minRR, maxRR));
 
     canvas.save();
     canvas.translate(cx, cy);
@@ -457,13 +456,18 @@ class _PoincarePainter extends CustomPainter {
     canvas.restore();
 
     // 4. Plot RR Scatter Points (RR_n, RR_{n+1})
+    // Only plot points that lie within physiological bounds — do NOT clamp non-physiological
+    // outliers to the axes or bottom-left corner!
     final dotPaint = Paint()
       ..color = accentColor.withValues(alpha: 0.85)
       ..style = PaintingStyle.fill;
 
     for (int i = 0; i < rrList.length - 1; i++) {
-      final x = toX(rrList[i].toDouble().clamp(minRR, maxRR));
-      final y = toY(rrList[i + 1].toDouble().clamp(minRR, maxRR));
+      final r1 = rrList[i].toDouble();
+      final r2 = rrList[i + 1].toDouble();
+      if (r1 < 330 || r1 > 1800 || r2 < 330 || r2 > 1800) continue;
+      final x = toX(r1.clamp(minRR, maxRR));
+      final y = toY(r2.clamp(minRR, maxRR));
       canvas.drawCircle(Offset(x, y), 3.0, dotPaint);
     }
 

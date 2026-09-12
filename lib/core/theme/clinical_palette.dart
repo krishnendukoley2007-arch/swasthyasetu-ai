@@ -32,6 +32,39 @@ class ClinicalPalette {
   /// Derived or experimental values (glucose / BP estimates).
   static const Color violet = Color(0xFF7C3AED);
 
+  // ── Cardiac accent ──
+  // The burnt-orange from the reference cardiac UI: live heart rate, ECG strip
+  // traces, recording dials, and vital-sign hero numerals. Deliberately not the
+  // same hue as [coral] (which is a rose-red status indicator for urgent/fault).
+  // This is a warm orange that reads as "heartbeat" and pairs naturally with the
+  // brand greens.
+
+  /// Cardiac accent — heartbeat orange for light surfaces.
+  static const Color cardiacCoral = Color(0xFFE8531E);
+
+  /// A brighter variant for dark mode where the base would look muddy.
+  static const Color cardiacCoralBright = Color(0xFFFF6B3D);
+
+  /// Light-mode container tint for cardiac-coral badges and cards.
+  static const Color cardiacCoralContainer = Color(0xFFFFF0EB);
+
+  /// Dark-mode container tint for cardiac-coral badges and cards.
+  static const Color cardiacCoralContainerDark = Color(0xFF3D1A0A);
+
+  /// Returns the cardiac coral appropriate for the current brightness.
+  static Color cardiacAccent(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? cardiacCoralBright
+        : cardiacCoral;
+  }
+
+  /// Returns the cardiac coral container for the current brightness.
+  static Color cardiacContainer(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? cardiacCoralContainerDark
+        : cardiacCoralContainer;
+  }
+
   /// The one ink source for this brightness.
   static Color _ink(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark

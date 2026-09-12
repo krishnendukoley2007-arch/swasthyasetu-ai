@@ -52,9 +52,13 @@ class AbhaQrCard extends StatelessWidget {
         'heartRate': {'value': screening.heartRate, 'unit': 'beats/minute'},
         'spo2': {'value': screening.spo2, 'unit': '%'},
         'temperature': {'value': screening.temperature, 'unit': 'Celsius'},
-        'systolicBp': {'value': screening.estimatedSystolic, 'unit': 'mmHg'},
-        'diastolicBp': {'value': screening.estimatedDiastolic, 'unit': 'mmHg'},
-        'bloodGlucose': {'value': screening.estimatedGlucose, 'unit': 'mg/dL'},
+        if (screening.estimatedSystolic > 0)
+          'systolicBp': {'value': screening.estimatedSystolic, 'unit': 'mmHg'},
+        if (screening.estimatedDiastolic > 0)
+          'diastolicBp': {
+            'value': screening.estimatedDiastolic,
+            'unit': 'mmHg',
+          },
       },
       'triage': {
         'riskLevel': screening.riskLevel,

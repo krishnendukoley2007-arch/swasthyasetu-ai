@@ -50,6 +50,7 @@ import 'package:swasthyasetu_ai/features/screening/screens/triage_result_screen.
 import 'package:swasthyasetu_ai/features/screening/screens/ai_explanation_screen.dart';
 import 'package:swasthyasetu_ai/features/screening/screens/heat_guardian_screen.dart';
 import 'package:swasthyasetu_ai/features/screening/screens/overnight_guardian_screen.dart';
+import 'package:swasthyasetu_ai/features/screening/screens/air_pollution_guardian_screen.dart';
 import 'package:swasthyasetu_ai/features/history/screens/screening_history_screen.dart';
 import 'package:swasthyasetu_ai/features/history/screens/screening_details_screen.dart';
 import 'package:swasthyasetu_ai/features/sync/screens/pending_sync_screen.dart';
@@ -57,6 +58,7 @@ import 'package:swasthyasetu_ai/features/settings/screens/settings_screen.dart';
 import 'package:swasthyasetu_ai/features/settings/screens/storage_settings_screen.dart';
 import 'package:swasthyasetu_ai/features/debug/screens/ui_showcase_screen.dart';
 import 'package:swasthyasetu_ai/features/dashboard/screens/general_ai_chat_screen.dart';
+import 'package:swasthyasetu_ai/features/dashboard/community_hotspot_screen.dart';
 
 /// The tab bar used by both role shells: a hairline-topped bar with a teal
 /// sliding pill behind the active tab. Tabs tick the haptic engine on change
@@ -396,12 +398,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/history',
                 builder: (context, state) => const ScreeningHistoryScreen(),
               ),
-              GoRoute(
-                path: '/history/:id',
-                builder: (context, state) => ScreeningDetailsScreen(
-                  screeningId: state.pathParameters['id']!,
-                ),
-              ),
             ],
           ),
           // Community
@@ -526,12 +522,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const HeatGuardianScreen(),
       ),
       GoRoute(
+        path: '/screening/air-pollution-guardian',
+        builder: (context, state) => const AirPollutionGuardianScreen(),
+      ),
+      GoRoute(
         path: '/screening/overnight-guardian',
         builder: (context, state) => const OvernightGuardianScreen(),
       ),
       GoRoute(
         path: '/general-chat',
         builder: (context, state) => const GeneralAiChatScreen(),
+      ),
+      GoRoute(
+        path: '/community',
+        builder: (context, state) => const CommunityHotspotScreen(),
+      ),
+      GoRoute(
+        path: '/community/overview',
+        builder: (context, state) => const CommunityDashboardScreen(),
       ),
       GoRoute(
         path: '/sync',
@@ -560,6 +568,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/debug/ui-showcase',
         builder: (context, state) => const UIShowcaseScreen(),
+      ),
+      GoRoute(
+        path: '/history/:id',
+        builder: (context, state) =>
+            ScreeningDetailsScreen(screeningId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/community-hotspot',
+        builder: (context, state) => const CommunityHotspotScreen(),
       ),
     ],
     errorBuilder: (context, state) =>
@@ -639,8 +656,12 @@ String? _guard(AuthState auth, GoRouterState state) {
         if (qid == null || qid != account.patientId) return '/my-health';
         return null;
       default:
+        // Allow patient to view their specific screening details:
+        if (loc.startsWith('/history/')) {
+          return null;
+        }
         // Block any detail routes under workforce namespaces.
-        if (loc.startsWith('/patients/') || loc.startsWith('/history/')) {
+        if (loc.startsWith('/patients/')) {
           return '/my-health';
         }
         return null;

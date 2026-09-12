@@ -147,14 +147,33 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
     _scrollToEnd();
 
     if (!ref.read(settingsProvider).aiConsent) {
+      final account = ref.read(authStateProvider).account;
+      Screening? latest;
+      if (account != null) {
+        final list = account.role == UserRole.patient
+            ? (account.patientId == null
+                  ? const <Screening>[]
+                  : ref
+                            .read(patientScreeningsProvider(account.patientId!))
+                            .valueOrNull ??
+                        const <Screening>[])
+            : ref.read(recentScreeningsProvider).valueOrNull ??
+                  const <Screening>[];
+        if (list.isNotEmpty) latest = list.first;
+      }
       setState(() {
         _sending = false;
-        _blockedQuestion = text;
         _chat.add(
           _Message(
-            author: _Author.system,
-            text: 'Online AI is switched off, so nothing left this phone.',
+            author: _Author.assistant,
+            text: OfflineExplainer.chatFallback(
+              latest: latest,
+              grounded: false,
+              question: text,
+            ),
             at: DateTime.now(),
+            footnote:
+                'Answered offline from on-device guidelines (Online AI switched off)',
           ),
         );
       });
@@ -218,6 +237,7 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
             text: OfflineExplainer.chatFallback(
               latest: latest,
               grounded: _grounded,
+              question: text,
             ),
             at: DateTime.now(),
             footnote: 'Offline fallback · no online answer came back',
@@ -289,7 +309,7 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
 
     final background = mine
         ? theme.colorScheme.primaryContainer
-        : theme.colorScheme.surfaceContainerHighest;
+        : theme.colorScheme.surface;
     final foreground = mine
         ? theme.colorScheme.onPrimaryContainer
         : theme.colorScheme.onSurface;
@@ -302,15 +322,16 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
         ),
         child: Container(
           margin: const EdgeInsets.only(bottom: AppTheme.spacingSm),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(16),
-              topRight: const Radius.circular(16),
-              bottomLeft: Radius.circular(mine ? 16 : 4),
-              bottomRight: Radius.circular(mine ? 4 : 16),
+              topLeft: const Radius.circular(20),
+              topRight: const Radius.circular(20),
+              bottomLeft: Radius.circular(mine ? 20 : 4),
+              bottomRight: Radius.circular(mine ? 4 : 20),
             ),
+            boxShadow: mine ? null : AppTheme.shadowLevel1,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,13 +397,14 @@ class _GeneralAiChatScreenState extends ConsumerState<GeneralAiChatScreen> {
         margin: const EdgeInsets.only(bottom: AppTheme.spacingSm),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
+          color: theme.colorScheme.surface,
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
             bottomLeft: Radius.circular(4),
-            bottomRight: Radius.circular(16),
+            bottomRight: Radius.circular(20),
           ),
+          boxShadow: AppTheme.shadowLevel1,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

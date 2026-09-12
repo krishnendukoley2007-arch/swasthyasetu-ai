@@ -96,6 +96,8 @@ extension ScreeningRowMapper on ScreeningRow {
     syncStatus: syncStatus,
     retryCount: retryCount,
     isDemo: isDemo,
+    aiAnomalyFlag: aiAnomalyFlag,
+    aiAnomalyScore: aiAnomalyScore,
   );
 }
 
@@ -131,6 +133,8 @@ extension ScreeningModelMapper on Screening {
     syncStatus: Value(syncStatus),
     retryCount: Value(retryCount),
     isDemo: Value(isDemo),
+    aiAnomalyFlag: Value(aiAnomalyFlag),
+    aiAnomalyScore: Value(aiAnomalyScore),
   );
 }
 

@@ -1118,6 +1118,33 @@ class $ScreeningsTable extends Screenings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _aiAnomalyFlagMeta = const VerificationMeta(
+    'aiAnomalyFlag',
+  );
+  @override
+  late final GeneratedColumn<bool> aiAnomalyFlag = GeneratedColumn<bool>(
+    'ai_anomaly_flag',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("ai_anomaly_flag" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _aiAnomalyScoreMeta = const VerificationMeta(
+    'aiAnomalyScore',
+  );
+  @override
+  late final GeneratedColumn<double> aiAnomalyScore = GeneratedColumn<double>(
+    'ai_anomaly_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1150,6 +1177,8 @@ class $ScreeningsTable extends Screenings
     syncStatus,
     retryCount,
     isDemo,
+    aiAnomalyFlag,
+    aiAnomalyScore,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1398,6 +1427,24 @@ class $ScreeningsTable extends Screenings
         isDemo.isAcceptableOrUnknown(data['is_demo']!, _isDemoMeta),
       );
     }
+    if (data.containsKey('ai_anomaly_flag')) {
+      context.handle(
+        _aiAnomalyFlagMeta,
+        aiAnomalyFlag.isAcceptableOrUnknown(
+          data['ai_anomaly_flag']!,
+          _aiAnomalyFlagMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ai_anomaly_score')) {
+      context.handle(
+        _aiAnomalyScoreMeta,
+        aiAnomalyScore.isAcceptableOrUnknown(
+          data['ai_anomaly_score']!,
+          _aiAnomalyScoreMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1527,6 +1574,14 @@ class $ScreeningsTable extends Screenings
         DriftSqlType.bool,
         data['${effectivePrefix}is_demo'],
       )!,
+      aiAnomalyFlag: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ai_anomaly_flag'],
+      )!,
+      aiAnomalyScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}ai_anomaly_score'],
+      )!,
     );
   }
 
@@ -1567,6 +1622,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
   final String syncStatus;
   final int retryCount;
   final bool isDemo;
+  final bool aiAnomalyFlag;
+  final double aiAnomalyScore;
   const ScreeningRow({
     required this.id,
     required this.patientId,
@@ -1598,6 +1655,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
     required this.syncStatus,
     required this.retryCount,
     required this.isDemo,
+    required this.aiAnomalyFlag,
+    required this.aiAnomalyScore,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1642,6 +1701,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
     map['sync_status'] = Variable<String>(syncStatus);
     map['retry_count'] = Variable<int>(retryCount);
     map['is_demo'] = Variable<bool>(isDemo);
+    map['ai_anomaly_flag'] = Variable<bool>(aiAnomalyFlag);
+    map['ai_anomaly_score'] = Variable<double>(aiAnomalyScore);
     return map;
   }
 
@@ -1687,6 +1748,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
       syncStatus: Value(syncStatus),
       retryCount: Value(retryCount),
       isDemo: Value(isDemo),
+      aiAnomalyFlag: Value(aiAnomalyFlag),
+      aiAnomalyScore: Value(aiAnomalyScore),
     );
   }
 
@@ -1726,6 +1789,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
       isDemo: serializer.fromJson<bool>(json['isDemo']),
+      aiAnomalyFlag: serializer.fromJson<bool>(json['aiAnomalyFlag']),
+      aiAnomalyScore: serializer.fromJson<double>(json['aiAnomalyScore']),
     );
   }
   @override
@@ -1762,6 +1827,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
       'syncStatus': serializer.toJson<String>(syncStatus),
       'retryCount': serializer.toJson<int>(retryCount),
       'isDemo': serializer.toJson<bool>(isDemo),
+      'aiAnomalyFlag': serializer.toJson<bool>(aiAnomalyFlag),
+      'aiAnomalyScore': serializer.toJson<double>(aiAnomalyScore),
     };
   }
 
@@ -1796,6 +1863,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
     String? syncStatus,
     int? retryCount,
     bool? isDemo,
+    bool? aiAnomalyFlag,
+    double? aiAnomalyScore,
   }) => ScreeningRow(
     id: id ?? this.id,
     patientId: patientId ?? this.patientId,
@@ -1831,6 +1900,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
     syncStatus: syncStatus ?? this.syncStatus,
     retryCount: retryCount ?? this.retryCount,
     isDemo: isDemo ?? this.isDemo,
+    aiAnomalyFlag: aiAnomalyFlag ?? this.aiAnomalyFlag,
+    aiAnomalyScore: aiAnomalyScore ?? this.aiAnomalyScore,
   );
   ScreeningRow copyWithCompanion(ScreeningsCompanion data) {
     return ScreeningRow(
@@ -1896,6 +1967,12 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
           ? data.retryCount.value
           : this.retryCount,
       isDemo: data.isDemo.present ? data.isDemo.value : this.isDemo,
+      aiAnomalyFlag: data.aiAnomalyFlag.present
+          ? data.aiAnomalyFlag.value
+          : this.aiAnomalyFlag,
+      aiAnomalyScore: data.aiAnomalyScore.present
+          ? data.aiAnomalyScore.value
+          : this.aiAnomalyScore,
     );
   }
 
@@ -1931,7 +2008,9 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
           ..write('longitude: $longitude, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('retryCount: $retryCount, ')
-          ..write('isDemo: $isDemo')
+          ..write('isDemo: $isDemo, ')
+          ..write('aiAnomalyFlag: $aiAnomalyFlag, ')
+          ..write('aiAnomalyScore: $aiAnomalyScore')
           ..write(')'))
         .toString();
   }
@@ -1968,6 +2047,8 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
     syncStatus,
     retryCount,
     isDemo,
+    aiAnomalyFlag,
+    aiAnomalyScore,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -2002,7 +2083,9 @@ class ScreeningRow extends DataClass implements Insertable<ScreeningRow> {
           other.longitude == this.longitude &&
           other.syncStatus == this.syncStatus &&
           other.retryCount == this.retryCount &&
-          other.isDemo == this.isDemo);
+          other.isDemo == this.isDemo &&
+          other.aiAnomalyFlag == this.aiAnomalyFlag &&
+          other.aiAnomalyScore == this.aiAnomalyScore);
 }
 
 class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
@@ -2036,6 +2119,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
   final Value<String> syncStatus;
   final Value<int> retryCount;
   final Value<bool> isDemo;
+  final Value<bool> aiAnomalyFlag;
+  final Value<double> aiAnomalyScore;
   final Value<int> rowid;
   const ScreeningsCompanion({
     this.id = const Value.absent(),
@@ -2068,6 +2153,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
     this.syncStatus = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.isDemo = const Value.absent(),
+    this.aiAnomalyFlag = const Value.absent(),
+    this.aiAnomalyScore = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ScreeningsCompanion.insert({
@@ -2101,6 +2188,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
     this.syncStatus = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.isDemo = const Value.absent(),
+    this.aiAnomalyFlag = const Value.absent(),
+    this.aiAnomalyScore = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        patientId = Value(patientId),
@@ -2141,6 +2230,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
     Expression<String>? syncStatus,
     Expression<int>? retryCount,
     Expression<bool>? isDemo,
+    Expression<bool>? aiAnomalyFlag,
+    Expression<double>? aiAnomalyScore,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2174,6 +2265,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
       if (syncStatus != null) 'sync_status': syncStatus,
       if (retryCount != null) 'retry_count': retryCount,
       if (isDemo != null) 'is_demo': isDemo,
+      if (aiAnomalyFlag != null) 'ai_anomaly_flag': aiAnomalyFlag,
+      if (aiAnomalyScore != null) 'ai_anomaly_score': aiAnomalyScore,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2209,6 +2302,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
     Value<String>? syncStatus,
     Value<int>? retryCount,
     Value<bool>? isDemo,
+    Value<bool>? aiAnomalyFlag,
+    Value<double>? aiAnomalyScore,
     Value<int>? rowid,
   }) {
     return ScreeningsCompanion(
@@ -2242,6 +2337,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
       syncStatus: syncStatus ?? this.syncStatus,
       retryCount: retryCount ?? this.retryCount,
       isDemo: isDemo ?? this.isDemo,
+      aiAnomalyFlag: aiAnomalyFlag ?? this.aiAnomalyFlag,
+      aiAnomalyScore: aiAnomalyScore ?? this.aiAnomalyScore,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2339,6 +2436,12 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
     if (isDemo.present) {
       map['is_demo'] = Variable<bool>(isDemo.value);
     }
+    if (aiAnomalyFlag.present) {
+      map['ai_anomaly_flag'] = Variable<bool>(aiAnomalyFlag.value);
+    }
+    if (aiAnomalyScore.present) {
+      map['ai_anomaly_score'] = Variable<double>(aiAnomalyScore.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2378,6 +2481,8 @@ class ScreeningsCompanion extends UpdateCompanion<ScreeningRow> {
           ..write('syncStatus: $syncStatus, ')
           ..write('retryCount: $retryCount, ')
           ..write('isDemo: $isDemo, ')
+          ..write('aiAnomalyFlag: $aiAnomalyFlag, ')
+          ..write('aiAnomalyScore: $aiAnomalyScore, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8129,6 +8234,8 @@ typedef $$ScreeningsTableCreateCompanionBuilder =
       Value<String> syncStatus,
       Value<int> retryCount,
       Value<bool> isDemo,
+      Value<bool> aiAnomalyFlag,
+      Value<double> aiAnomalyScore,
       Value<int> rowid,
     });
 typedef $$ScreeningsTableUpdateCompanionBuilder =
@@ -8163,6 +8270,8 @@ typedef $$ScreeningsTableUpdateCompanionBuilder =
       Value<String> syncStatus,
       Value<int> retryCount,
       Value<bool> isDemo,
+      Value<bool> aiAnomalyFlag,
+      Value<double> aiAnomalyScore,
       Value<int> rowid,
     });
 
@@ -8344,6 +8453,16 @@ class $$ScreeningsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get aiAnomalyFlag => $composableBuilder(
+    column: $table.aiAnomalyFlag,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get aiAnomalyScore => $composableBuilder(
+    column: $table.aiAnomalyScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$PatientsTableFilterComposer get patientId {
     final $$PatientsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -8522,6 +8641,16 @@ class $$ScreeningsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get aiAnomalyFlag => $composableBuilder(
+    column: $table.aiAnomalyFlag,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get aiAnomalyScore => $composableBuilder(
+    column: $table.aiAnomalyScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$PatientsTableOrderingComposer get patientId {
     final $$PatientsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -8674,6 +8803,16 @@ class $$ScreeningsTableAnnotationComposer
   GeneratedColumn<bool> get isDemo =>
       $composableBuilder(column: $table.isDemo, builder: (column) => column);
 
+  GeneratedColumn<bool> get aiAnomalyFlag => $composableBuilder(
+    column: $table.aiAnomalyFlag,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get aiAnomalyScore => $composableBuilder(
+    column: $table.aiAnomalyScore,
+    builder: (column) => column,
+  );
+
   $$PatientsTableAnnotationComposer get patientId {
     final $$PatientsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -8756,6 +8895,8 @@ class $$ScreeningsTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
                 Value<bool> isDemo = const Value.absent(),
+                Value<bool> aiAnomalyFlag = const Value.absent(),
+                Value<double> aiAnomalyScore = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ScreeningsCompanion(
                 id: id,
@@ -8788,6 +8929,8 @@ class $$ScreeningsTableTableManager
                 syncStatus: syncStatus,
                 retryCount: retryCount,
                 isDemo: isDemo,
+                aiAnomalyFlag: aiAnomalyFlag,
+                aiAnomalyScore: aiAnomalyScore,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -8822,6 +8965,8 @@ class $$ScreeningsTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
                 Value<bool> isDemo = const Value.absent(),
+                Value<bool> aiAnomalyFlag = const Value.absent(),
+                Value<double> aiAnomalyScore = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ScreeningsCompanion.insert(
                 id: id,
@@ -8854,6 +8999,8 @@ class $$ScreeningsTableTableManager
                 syncStatus: syncStatus,
                 retryCount: retryCount,
                 isDemo: isDemo,
+                aiAnomalyFlag: aiAnomalyFlag,
+                aiAnomalyScore: aiAnomalyScore,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

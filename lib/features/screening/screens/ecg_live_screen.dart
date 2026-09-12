@@ -9,6 +9,7 @@ import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/services/ble_protocol.dart';
 import 'package:swasthyasetu_ai/core/services/ble_service.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
+import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/utils/risk_presentation.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/rules/ecg_classifier.dart';
@@ -559,15 +560,12 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
           _buildLeadControl(onBoard),
         ],
       ),
-      body: Column(
-        children: [
-          _buildHeaderInfo(link, onBoard),
-          Expanded(
-            // Scrolls rather than compressing: the panels under the strip grow
-            // with the system font size, and a fixed column had nowhere to put
-            // them — the trace was squeezed towards zero height and the controls
-            // ran off the bottom of the screen.
-            child: SingleChildScrollView(
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildHeaderInfo(link, onBoard),
+            Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -614,8 +612,8 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -702,25 +700,36 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        // Theme colours rather than the light-mode constants this used: the
-        // header was a white band with dark text on it in dark mode.
-        color: scheme.surface,
-        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
-      ),
+      decoration: BoxDecoration(color: scheme.surface),
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color: AppTheme.infoBlue.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [
+                  ClinicalPalette.cardiacAccent(context),
+                  ClinicalPalette.cardiacAccent(context).withValues(alpha: 0.7),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: ClinicalPalette.cardiacAccent(
+                    context,
+                  ).withValues(alpha: 0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: const Icon(
               Icons.monitor_heart,
-              color: AppTheme.infoBlue,
-              size: 24,
+              color: Colors.white,
+              size: 26,
             ),
           ),
           const SizedBox(width: 16),
@@ -914,7 +923,7 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
                 Icon(
                   Icons.favorite_outline,
                   size: 18,
-                  color: scheme.onSurfaceVariant,
+                  color: ClinicalPalette.cardiacAccent(context),
                 ),
                 const SizedBox(width: AppTheme.spacingSm),
                 Expanded(
@@ -1199,15 +1208,19 @@ class _EcgStripPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // 1. Clinical dark background for oscilloscope paper
+    final bgPaint = Paint()..color = const Color(0xFF060B13);
+    canvas.drawRect(Offset.zero & size, bgPaint);
+
     final pxPerSample = capacity > 1 ? size.width / (capacity - 1) : size.width;
-    final majorX = (sampleRate * 0.2) * pxPerSample; // 200 ms
-    final minorX = majorX / 5; // 40 ms
+    final majorX = (sampleRate * 0.2) * pxPerSample; // 200 ms (5mm)
+    final minorX = majorX / 5; // 40 ms (1mm)
 
     final gridPaint = Paint()
-      ..color = color.withValues(alpha: 0.04)
+      ..color = const Color(0xFF10B981).withValues(alpha: 0.06)
       ..strokeWidth = 0.5;
     final majorPaint = Paint()
-      ..color = color.withValues(alpha: 0.08)
+      ..color = const Color(0xFF10B981).withValues(alpha: 0.18)
       ..strokeWidth = 0.8;
 
     // Guarded: a degenerate width would otherwise spin here forever.
@@ -1222,9 +1235,7 @@ class _EcgStripPainter extends CustomPainter {
       }
     }
 
-    // Horizontal rules are decoration only. The trace is auto-scaled to the
-    // window, so no line here stands for a fixed voltage — which is why the
-    // caption under the strip does not claim one.
+    // Horizontal rules (0.1 mV / 0.5 mV standard)
     final rowHeight = size.height / 10;
     for (var i = 0; i <= 10; i++) {
       final y = i * rowHeight;
@@ -1235,10 +1246,37 @@ class _EcgStripPainter extends CustomPainter {
       );
     }
 
+    // 2. Standard 1.0 mV Calibration Pulse (Clinical standard)
+    final calPaint = Paint()
+      ..color = const Color(0xFF10B981).withValues(alpha: 0.55)
+      ..strokeWidth = 1.3
+      ..style = PaintingStyle.stroke;
+    final calPath = Path()
+      ..moveTo(8, 36)
+      ..lineTo(16, 36)
+      ..lineTo(16, 16)
+      ..lineTo(28, 16)
+      ..lineTo(28, 36)
+      ..lineTo(36, 36);
+    canvas.drawPath(calPath, calPaint);
+
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: '1.0 mV CAL · 25 mm/s',
+        style: TextStyle(
+          color: Color(0xFF10B981),
+          fontSize: 8,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'monospace',
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    textPainter.paint(canvas, const Offset(8, 39));
+
     if (waveform.length < 2) return;
 
-    // Scaled to what is on screen. A fixed divisor is only correct for one
-    // signal source; measuring the window is correct for both.
+    // Scaled to what is on screen with physiological headroom
     var lo = waveform.first;
     var hi = waveform.first;
     for (final v in waveform) {
@@ -1246,12 +1284,11 @@ class _EcgStripPainter extends CustomPainter {
       if (v > hi) hi = v;
     }
     final span = hi == lo ? 1.0 : (hi - lo).toDouble();
-    const inset = 0.08;
+    const inset = 0.10;
     final usable = size.height * (1 - 2 * inset);
     final bottom = size.height * (1 - inset);
 
-    // Newest sample at the right edge, so a partly-filled window grows leftwards
-    // out of the blank rather than stretching to fit.
+    // Newest sample at the right edge
     final offset = capacity - waveform.length;
 
     final path = Path();
@@ -1265,21 +1302,26 @@ class _EcgStripPainter extends CustomPainter {
       }
     }
 
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color
-        ..strokeWidth = 1.2
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round,
-    );
+    // 3. Phosphor Glow & Crisp Emerald Clinical Trace
+    final glowPaint = Paint()
+      ..color = const Color(0xFF10B981).withValues(alpha: 0.35)
+      ..strokeWidth = 3.8
+      ..style = PaintingStyle.stroke;
+    final tracePaint = Paint()
+      ..color = const Color(0xFF10B981)
+      ..strokeWidth = 1.8
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    // Beat markers: a tick above every detected R-peak, so the numbers shown
-    // under the strip are visibly anchored to complexes on it.
+    canvas.drawPath(path, glowPaint);
+    canvas.drawPath(path, tracePaint);
+
+    // Beat markers: a tick above every detected R-peak
     final tickPaint = Paint()
-      ..color = color.withValues(alpha: 0.75)
-      ..strokeWidth = 1.0;
-    final tickTop = size.height * inset * 0.5;
+      ..color = const Color(0xFF34D399)
+      ..strokeWidth = 1.2;
+    final tickTop = size.height * inset * 0.4;
     for (final peak in peakIndices) {
       final x = (offset + peak) * pxPerSample;
       if (x < 0 || x > size.width) continue;

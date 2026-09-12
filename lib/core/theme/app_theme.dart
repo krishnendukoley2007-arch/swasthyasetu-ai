@@ -17,15 +17,19 @@ class AppTheme {
   static const Color primaryGreenContainer = Color(0xFFBBF3D0);
   static const Color onPrimaryGreenContainer = Color(0xFF00210E);
   static const Color accentAmber = Color(0xFFFF8F00);
-  static const Color backgroundLight = Color(0xFFF1F8F3);
-  static const Color textSecondary = Color(0xFF5E6A5E);
-  static const Color dividerColor = Color(0xFFE0E8E3);
+  // Premium warm ivory — slightly warmer than the old green-tinted #F1F8F3,
+  // so the entire scaffold reads as a luxury canvas rather than a clinic wall.
+  static const Color backgroundLight = Color(0xFFF6F7F9);
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color dividerColor = Color(0xFFE5E8EC);
   static const Color errorRed = Color(0xFFBA1A1A);
   static const Color errorContainer = Color(0xFFFFDAD6);
   static const Color onErrorContainer = Color(0xFF410002);
   static const Color successGreen = Color(0xFF006D32);
   static const Color warningAmber = Color(0xFF8C5000);
   static const Color infoBlue = Color(0xFF006874);
+  static const Color cardiacCoral = Color(0xFFE8531E);
+  static const Color cardiacCoralDark = Color(0xFFFF6B3D);
 
   // ── Triage band colours ──
   // Deliberately not the same as the brand greens. A health worker reads these
@@ -49,37 +53,46 @@ class AppTheme {
   static const Color tertiaryAmberContainer = Color(0xFFFFDCB3);
   static const Color onTertiaryAmberContainer = Color(0xFF2E1800);
 
-  static const Color surfaceVariantLight = Color(0xFFDCE8E2);
-  static const Color onSurfaceVariantLight = Color(0xFF3F4A43);
-  static const Color outlineLight = Color(0xFF707A74);
-  static const Color outlineVariantLight = Color(0xFFC0CAC4);
+  // ── Light surface tones ──
+  // A 3-tier surface stack: surface < surfaceElevated < surfaceVariant, so
+  // cards visually float above the scaffold and nested cards read as inset.
+  static const Color surfaceVariantLight = Color(0xFFEEF1F5);
+  static const Color onSurfaceVariantLight = Color(0xFF5F6368);
+  static const Color outlineLight = Color(0xFF80868B);
+  static const Color outlineVariantLight = Color(0xFFE1E5EA);
 
-  static const Color surfaceLight = Color(0xFFFAFDFA);
-  static const Color onSurfaceLight = Color(0xFF1A1D1A);
+  static const Color surfaceLight = Color(0xFFFFFFFF);
+  static const Color onSurfaceLight = Color(0xFF0F1419);
 
-  static const Color surfaceDark = Color(0xFF1A1D1A);
-  static const Color onSurfaceDark = Color(0xFFE4E8E4);
-  static const Color backgroundDark = Color(0xFF151815);
-  static const Color surfaceVariantDark = Color(0xFF3F4A43);
-  static const Color onSurfaceVariantDark = Color(0xFFC0CAC4);
-  static const Color outlineDark = Color(0xFF8A948E);
-  static const Color outlineVariantDark = Color(0xFF3F4A43);
+  // ── Dark surface tones ──
+  // True dark — deeper than the old washed-out #151815 so OLED screens
+  // benefit and the depth layering between surface tiers is visible.
+  static const Color surfaceDark = Color(0xFF141416);
+  static const Color onSurfaceDark = Color(0xFFF0F2F5);
+  static const Color backgroundDark = Color(0xFF0D0D0F);
+  static const Color surfaceVariantDark = Color(0xFF252529);
+  static const Color onSurfaceVariantDark = Color(0xFF9CA3AF);
+  static const Color outlineDark = Color(0xFF6B7280);
+  static const Color outlineVariantDark = Color(0xFF2E2E33);
 
   static const Color inverseSurfaceLight = Color(0xFF2E312F);
   static const Color inverseOnSurfaceLight = Color(0xFFF0F3F0);
   static const Color inversePrimaryLight = Color(0xFFA0D6B3);
 
-  static const Color inverseSurfaceDark = Color(0xFFE4E8E4);
+  static const Color inverseSurfaceDark = Color(0xFFF0F2F5);
   static const Color inverseOnSurfaceDark = Color(0xFF2E312F);
   static const Color inversePrimaryDark = Color(0xFF006D32);
 
   static const Color shadowColor = Color(0xFF000000);
   static const Color scrimColor = Color(0xFF000000);
 
-  static const Color glassLight = Color(0x80FFFFFF);
-  static const Color glassDark = Color(0x801A1D1A);
-  static const Color glassBorderLight = Color(0x33FFFFFF);
-  static const Color glassBorderDark = Color(0x33FFFFFF);
+  // ── Glassmorphism ──
+  // Higher opacity + dedicated blur sigma so frosted cards read as solid
+  // enough for a vital readout while still revealing the layer beneath.
+  static const Color glassLight = Color(0xBFFFFFFF);
+  static const Color glassDark = Color(0xBF141416);
+  static const Color glassBorderLight = Color(0x26FFFFFF);
+  static const Color glassBorderDark = Color(0x26FFFFFF);
 
   static const double spacingXxs = 2.0;
 
@@ -102,7 +115,7 @@ class AppTheme {
   static const double radiusXxs = 2.0;
   static const double radiusXs = 4.0;
   static const double radiusSm = 8.0;
-  static const double radiusMd = 12.0;
+  static const double radiusMd = 14.0;
   static const double radiusLg = 16.0;
   static const double radiusXl = 24.0;
   static const double radiusXxl = 32.0;
@@ -129,29 +142,39 @@ class AppTheme {
   static const Curve curveBounce = Curves.elasticOut;
   static const Curve curveSpring = Curves.bounceOut;
 
+  // ── Shadows ──
+  // Multi-layer ambient shadows: a tight penumbra for edge definition plus a
+  // wide diffuse wash for depth. This produces the "floating card" look from
+  // the reference without any visible border.
+
   static const List<BoxShadow> shadowLevel1 = [
-    BoxShadow(color: Color(0x14000000), blurRadius: 4, offset: Offset(0, 1)),
-    BoxShadow(color: Color(0x0A000000), blurRadius: 2, offset: Offset(0, 1)),
+    BoxShadow(color: Color(0x0D000000), blurRadius: 3, offset: Offset(0, 1)),
+    BoxShadow(color: Color(0x08000000), blurRadius: 8, offset: Offset(0, 2)),
+    BoxShadow(color: Color(0x05000000), blurRadius: 14, offset: Offset(0, 4)),
   ];
 
   static const List<BoxShadow> shadowLevel2 = [
-    BoxShadow(color: Color(0x1A000000), blurRadius: 8, offset: Offset(0, 4)),
-    BoxShadow(color: Color(0x0D000000), blurRadius: 4, offset: Offset(0, 2)),
+    BoxShadow(color: Color(0x10000000), blurRadius: 6, offset: Offset(0, 2)),
+    BoxShadow(color: Color(0x0A000000), blurRadius: 16, offset: Offset(0, 6)),
+    BoxShadow(color: Color(0x06000000), blurRadius: 24, offset: Offset(0, 10)),
   ];
 
   static const List<BoxShadow> shadowLevel3 = [
-    BoxShadow(color: Color(0x1F000000), blurRadius: 16, offset: Offset(0, 8)),
-    BoxShadow(color: Color(0x10000000), blurRadius: 8, offset: Offset(0, 4)),
+    BoxShadow(color: Color(0x14000000), blurRadius: 10, offset: Offset(0, 4)),
+    BoxShadow(color: Color(0x0D000000), blurRadius: 24, offset: Offset(0, 10)),
+    BoxShadow(color: Color(0x08000000), blurRadius: 36, offset: Offset(0, 16)),
   ];
 
   static const List<BoxShadow> shadowLevel4 = [
-    BoxShadow(color: Color(0x26000000), blurRadius: 32, offset: Offset(0, 16)),
-    BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 8)),
+    BoxShadow(color: Color(0x1A000000), blurRadius: 16, offset: Offset(0, 8)),
+    BoxShadow(color: Color(0x10000000), blurRadius: 32, offset: Offset(0, 16)),
+    BoxShadow(color: Color(0x0A000000), blurRadius: 48, offset: Offset(0, 24)),
   ];
 
   static const List<BoxShadow> shadowLevel5 = [
-    BoxShadow(color: Color(0x33000000), blurRadius: 48, offset: Offset(0, 24)),
-    BoxShadow(color: Color(0x1A000000), blurRadius: 24, offset: Offset(0, 12)),
+    BoxShadow(color: Color(0x20000000), blurRadius: 24, offset: Offset(0, 12)),
+    BoxShadow(color: Color(0x14000000), blurRadius: 48, offset: Offset(0, 24)),
+    BoxShadow(color: Color(0x0D000000), blurRadius: 64, offset: Offset(0, 32)),
   ];
 
   static const List<BoxShadow> shadowColoredPrimary = [
@@ -167,6 +190,12 @@ class AppTheme {
   static const List<BoxShadow> shadowGlowPrimary = [
     BoxShadow(color: Color(0x66006D32), blurRadius: 24, offset: Offset(0, 0)),
     BoxShadow(color: Color(0x33006D32), blurRadius: 12, offset: Offset(0, 0)),
+  ];
+
+  /// Cardiac-coral glow for heart rate indicators, ECG recording dials.
+  static const List<BoxShadow> shadowGlowCardiac = [
+    BoxShadow(color: Color(0x66E8531E), blurRadius: 24, offset: Offset(0, 0)),
+    BoxShadow(color: Color(0x33E8531E), blurRadius: 12, offset: Offset(0, 0)),
   ];
 
   static ThemeData get lightTheme {
@@ -220,22 +249,19 @@ class AppTheme {
       ),
 
       appBarTheme: const AppBarTheme(
-        backgroundColor: surfaceLight,
+        backgroundColor: Colors.transparent,
         foregroundColor: onSurfaceLight,
         surfaceTintColor: Colors.transparent,
         elevation: elevationLevel0,
-        scrolledUnderElevation: elevationLevel1,
+        scrolledUnderElevation: elevationLevel0,
         centerTitle: true,
         titleTextStyle: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w700,
           color: onSurfaceLight,
-          letterSpacing: -0.3,
+          letterSpacing: -0.5,
         ),
         toolbarHeight: 64,
-        shape: Border(
-          bottom: BorderSide(color: outlineVariantLight, width: 0.5),
-        ),
       ),
 
       cardTheme: CardThemeData(
@@ -244,8 +270,7 @@ class AppTheme {
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusLg),
-          side: const BorderSide(color: outlineVariantLight, width: 0.5),
+          borderRadius: BorderRadius.circular(radiusXl),
         ),
         margin: const EdgeInsets.symmetric(
           horizontal: spacingMd,
@@ -862,7 +887,7 @@ class AppTheme {
   static ThemeData get darkTheme {
     const colorScheme = ColorScheme(
       brightness: Brightness.dark,
-      primary: Color(0xFF80D6A3),
+      primary: Color(0xFF6FDFAA),
       onPrimary: Color(0xFF001207),
       primaryContainer: primaryGreenDark,
       onPrimaryContainer: primaryGreenContainer,
@@ -889,7 +914,7 @@ class AppTheme {
       inverseSurface: inverseSurfaceDark,
       onInverseSurface: inverseOnSurfaceDark,
       inversePrimary: inversePrimaryDark,
-      surfaceTint: Color(0xFF80D6A3),
+      surfaceTint: Color(0xFF6FDFAA),
     );
 
     return ThemeData(
@@ -910,22 +935,19 @@ class AppTheme {
       ),
 
       appBarTheme: const AppBarTheme(
-        backgroundColor: surfaceDark,
+        backgroundColor: Colors.transparent,
         foregroundColor: onSurfaceDark,
         surfaceTintColor: Colors.transparent,
         elevation: elevationLevel0,
-        scrolledUnderElevation: elevationLevel1,
+        scrolledUnderElevation: elevationLevel0,
         centerTitle: true,
         titleTextStyle: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w700,
           color: onSurfaceDark,
-          letterSpacing: -0.3,
+          letterSpacing: -0.5,
         ),
         toolbarHeight: 64,
-        shape: Border(
-          bottom: BorderSide(color: outlineVariantDark, width: 0.5),
-        ),
       ),
 
       cardTheme: CardThemeData(
@@ -934,8 +956,7 @@ class AppTheme {
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusLg),
-          side: const BorderSide(color: outlineVariantDark, width: 0.5),
+          borderRadius: BorderRadius.circular(radiusXl),
         ),
         margin: const EdgeInsets.symmetric(
           horizontal: spacingMd,
@@ -946,7 +967,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style:
             ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF80D6A3),
+              backgroundColor: const Color(0xFF6FDFAA),
               foregroundColor: const Color(0xFF001207),
               disabledBackgroundColor: outlineVariantDark,
               disabledForegroundColor: onSurfaceVariantDark.withValues(
@@ -985,7 +1006,7 @@ class AppTheme {
 
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF80D6A3),
+          backgroundColor: const Color(0xFF6FDFAA),
           foregroundColor: const Color(0xFF001207),
           minimumSize: const Size(double.infinity, 56),
           padding: const EdgeInsets.symmetric(
@@ -1006,7 +1027,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style:
             OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF80D6A3),
+              foregroundColor: const Color(0xFF6FDFAA),
               disabledForegroundColor: onSurfaceVariantDark.withValues(
                 alpha: 0.38,
               ),
@@ -1015,7 +1036,7 @@ class AppTheme {
                 horizontal: spacingLg,
                 vertical: spacingMd,
               ),
-              side: const BorderSide(color: Color(0xFF80D6A3), width: 1.5),
+              side: const BorderSide(color: Color(0xFF6FDFAA), width: 1.5),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(radiusMd),
               ),
@@ -1027,13 +1048,13 @@ class AppTheme {
             ).copyWith(
               overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
                 if (states.contains(WidgetState.pressed)) {
-                  return const Color(0xFF80D6A3).withValues(alpha: 0.12);
+                  return const Color(0xFF6FDFAA).withValues(alpha: 0.12);
                 }
                 if (states.contains(WidgetState.hovered)) {
-                  return const Color(0xFF80D6A3).withValues(alpha: 0.08);
+                  return const Color(0xFF6FDFAA).withValues(alpha: 0.08);
                 }
                 if (states.contains(WidgetState.focused)) {
-                  return const Color(0xFF80D6A3).withValues(alpha: 0.12);
+                  return const Color(0xFF6FDFAA).withValues(alpha: 0.12);
                 }
                 return null;
               }),
@@ -1043,7 +1064,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style:
             TextButton.styleFrom(
-              foregroundColor: const Color(0xFF80D6A3),
+              foregroundColor: const Color(0xFF6FDFAA),
               disabledForegroundColor: onSurfaceVariantDark.withValues(
                 alpha: 0.38,
               ),
@@ -1063,13 +1084,13 @@ class AppTheme {
             ).copyWith(
               overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
                 if (states.contains(WidgetState.pressed)) {
-                  return const Color(0xFF80D6A3).withValues(alpha: 0.12);
+                  return const Color(0xFF6FDFAA).withValues(alpha: 0.12);
                 }
                 if (states.contains(WidgetState.hovered)) {
-                  return const Color(0xFF80D6A3).withValues(alpha: 0.08);
+                  return const Color(0xFF6FDFAA).withValues(alpha: 0.08);
                 }
                 if (states.contains(WidgetState.focused)) {
-                  return const Color(0xFF80D6A3).withValues(alpha: 0.12);
+                  return const Color(0xFF6FDFAA).withValues(alpha: 0.12);
                 }
                 return null;
               }),
@@ -1093,7 +1114,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: const BorderSide(color: Color(0xFF80D6A3), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF6FDFAA), width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
@@ -1126,7 +1147,7 @@ class AppTheme {
           fontWeight: FontWeight.w500,
         ),
         floatingLabelStyle: const TextStyle(
-          color: Color(0xFF80D6A3),
+          color: Color(0xFF6FDFAA),
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
@@ -1286,12 +1307,12 @@ class AppTheme {
         brightness: Brightness.dark,
         elevation: elevationLevel0,
         pressElevation: elevationLevel1,
-        checkmarkColor: const Color(0xFF80D6A3),
+        checkmarkColor: const Color(0xFF6FDFAA),
       ),
 
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: surfaceDark,
-        selectedItemColor: Color(0xFF80D6A3),
+        selectedItemColor: Color(0xFF6FDFAA),
         unselectedItemColor: onSurfaceVariantDark,
         type: BottomNavigationBarType.fixed,
         elevation: elevationLevel3,
@@ -1316,7 +1337,7 @@ class AppTheme {
             return const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF80D6A3),
+              color: Color(0xFF6FDFAA),
             );
           }
           return const TextStyle(
@@ -1328,7 +1349,7 @@ class AppTheme {
         iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
           if (states.contains(WidgetState.selected)) {
             return const IconThemeData(
-              color: Color(0xFF80D6A3),
+              color: Color(0xFF6FDFAA),
               size: 26,
               fill: 1,
             );
@@ -1346,7 +1367,7 @@ class AppTheme {
       ),
 
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: const Color(0xFF80D6A3),
+        backgroundColor: const Color(0xFF6FDFAA),
         foregroundColor: const Color(0xFF001207),
         elevation: elevationLevel3,
         focusElevation: elevationLevel4,
@@ -1431,18 +1452,18 @@ class AppTheme {
       ),
 
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: Color(0xFF80D6A3),
+        color: Color(0xFF6FDFAA),
         linearTrackColor: surfaceVariantDark,
         circularTrackColor: surfaceVariantDark,
         refreshBackgroundColor: surfaceVariantDark,
       ),
 
       sliderTheme: SliderThemeData(
-        activeTrackColor: const Color(0xFF80D6A3),
+        activeTrackColor: const Color(0xFF6FDFAA),
         inactiveTrackColor: surfaceVariantDark,
-        thumbColor: const Color(0xFF80D6A3),
-        overlayColor: const Color(0xFF80D6A3).withValues(alpha: 0.12),
-        valueIndicatorColor: const Color(0xFF80D6A3),
+        thumbColor: const Color(0xFF6FDFAA),
+        overlayColor: const Color(0xFF6FDFAA).withValues(alpha: 0.12),
+        valueIndicatorColor: const Color(0xFF6FDFAA),
         valueIndicatorTextStyle: const TextStyle(
           color: Color(0xFF001207),
           fontSize: 12,
@@ -1450,14 +1471,14 @@ class AppTheme {
         trackHeight: 4,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
-        activeTickMarkColor: const Color(0xFF80D6A3),
+        activeTickMarkColor: const Color(0xFF6FDFAA),
         inactiveTickMarkColor: outlineVariantDark,
       ),
 
       tabBarTheme: TabBarThemeData(
-        labelColor: const Color(0xFF80D6A3),
+        labelColor: const Color(0xFF6FDFAA),
         unselectedLabelColor: onSurfaceVariantDark,
-        indicatorColor: const Color(0xFF80D6A3),
+        indicatorColor: const Color(0xFF6FDFAA),
         indicatorSize: TabBarIndicatorSize.label,
         indicator: BoxDecoration(
           borderRadius: BorderRadius.circular(radiusSm),
@@ -1471,10 +1492,10 @@ class AppTheme {
         dividerColor: Colors.transparent,
         overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
           if (states.contains(WidgetState.pressed)) {
-            return const Color(0xFF80D6A3).withValues(alpha: 0.12);
+            return const Color(0xFF6FDFAA).withValues(alpha: 0.12);
           }
           if (states.contains(WidgetState.hovered)) {
-            return const Color(0xFF80D6A3).withValues(alpha: 0.08);
+            return const Color(0xFF6FDFAA).withValues(alpha: 0.08);
           }
           return null;
         }),
@@ -1546,10 +1567,10 @@ class AppTheme {
       ),
 
       dividerColor: outlineVariantDark,
-      focusColor: const Color(0xFF80D6A3).withValues(alpha: 0.12),
-      hoverColor: const Color(0xFF80D6A3).withValues(alpha: 0.08),
-      highlightColor: const Color(0xFF80D6A3).withValues(alpha: 0.12),
-      splashColor: const Color(0xFF80D6A3).withValues(alpha: 0.15),
+      focusColor: const Color(0xFF6FDFAA).withValues(alpha: 0.12),
+      hoverColor: const Color(0xFF6FDFAA).withValues(alpha: 0.08),
+      highlightColor: const Color(0xFF6FDFAA).withValues(alpha: 0.12),
+      splashColor: const Color(0xFF6FDFAA).withValues(alpha: 0.15),
     );
   }
 
@@ -1596,7 +1617,7 @@ class AppTheme {
       cardTheme: base.cardTheme.copyWith(
         color: paper,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusLg),
+          borderRadius: BorderRadius.circular(radiusXl),
           // A card with no fill contrast needs a real border to read as a card.
           side: BorderSide(color: ink, width: 1.5),
         ),
@@ -1757,6 +1778,7 @@ extension ThemeExtensions on BuildContext {
   List<BoxShadow> get shadowPrimary => AppTheme.shadowColoredPrimary;
   List<BoxShadow> get shadowError => AppTheme.shadowColoredError;
   List<BoxShadow> get shadowGlowPrimary => AppTheme.shadowGlowPrimary;
+  List<BoxShadow> get shadowGlowCardiac => AppTheme.shadowGlowCardiac;
 }
 
 class AppGlassContainer extends StatelessWidget {

@@ -116,13 +116,13 @@ class ScreeningModeDialog extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+      borderRadius: BorderRadius.circular(AppTheme.radiusXl),
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spacingMd),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXl),
           border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
           ),
           color: theme.colorScheme.surface,
         ),

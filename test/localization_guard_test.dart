@@ -31,6 +31,8 @@ const remainingAllowance = <String, int>{
   'devices/screens/device_scan_screen.dart': 13,
   'devices/widgets/phone_fall_simulator_sheet.dart': 8,
   'emergency/screens/emergency_contacts_screen.dart': 28,
+  // Offline disaster survival playbook for SIH #26181
+  'emergency/widgets/disaster_playbook_modal.dart': 8,
   'environment/screens/advisories_screen.dart': 9,
   'environment/widgets/environment_card.dart': 11,
   'history/screens/screening_details_screen.dart': 26,
@@ -39,11 +41,18 @@ const remainingAllowance = <String, int>{
   'patients/screens/patient_list_screen.dart': 21,
   'patients/screens/patient_profile_screen.dart': 22,
   'patient_home/screens/patient_home_screen.dart': 25,
+  // Automatic Disaster Adaptation & syndromic surveillance for SIH #26181
+  'patient_home/widgets/disaster_hazard_banner.dart': 20,
+  'patient_home/widgets/disaster_syndromic_sheet.dart': 19,
+  // Air Pollution & Respiratory Guardian with coupled SpO2 for SIH #26181
+  'screening/screens/air_pollution_guardian_screen.dart': 12,
   'screening/screens/ai_explanation_screen.dart': 14,
   'screening/screens/ecg_live_screen.dart': 9,
   'screening/screens/live_vitals_screen.dart': 28,
   'screening/screens/mutually_exclusive_screening_screen.dart': 17,
   'screening/screens/new_screening_screen.dart': 20,
+  // Overnight Guardian multi-sensor telemetry and clinical analysis suite
+  'screening/screens/overnight_guardian_screen.dart': 13,
   'screening/screens/triage_result_screen.dart': 4,
   'screening/widgets/abha_qr_card.dart': 7,
   'screening/widgets/clarke_error_grid_widget.dart': 4,
@@ -51,6 +60,8 @@ const remainingAllowance = <String, int>{
   'screening/widgets/dual_waveform_sweep_monitor.dart': 12,
   'screening/widgets/poincare_plot_widget.dart': 4,
   'screening/widgets/screening_mode_dialog.dart': 9,
+  // Clinical auditor and judges Trust & Provenance inspection panel
+  'screening/widgets/trust_provenance_sheet.dart': 6,
   'screening/widgets/vascular_elasticity_gauge.dart': 3,
   'settings/screens/settings_screen.dart': 61,
   'settings/screens/storage_settings_screen.dart': 49,

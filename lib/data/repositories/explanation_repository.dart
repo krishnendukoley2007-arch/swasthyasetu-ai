@@ -255,8 +255,8 @@ class ExplanationRepository {
     );
   }
 
-  /// Symptom follow-up. Null means "needs a connection" — never a templated
-  /// answer to a free-text clinical question.
+  /// Symptom follow-up. Answers online via Gemini when configured, or seamlessly
+  /// falls back to on-device clinical guidelines and rules.
   Future<String?> answerQuestion({
     required TriageAssessment assessment,
     required String question,
@@ -265,13 +265,26 @@ class ExplanationRepository {
     PatientProfileContext? profile,
   }) async {
     final retrieved = await relevantGuidelines(assessment, limit: 2);
-    return _gemini.answerQuestion(
+    try {
+      final online = await _gemini.answerQuestion(
+        assessment: assessment,
+        question: question,
+        retrieved: retrieved,
+        audience: audience,
+        languageCode: languageCode,
+        profile: profile,
+      );
+      if (online != null && online.trim().isNotEmpty) {
+        return online.trim();
+      }
+    } catch (_) {
+      // Fall through to on-device guidelines
+    }
+
+    return OfflineExplainer.answerClinicalQuestion(
       assessment: assessment,
       question: question,
       retrieved: retrieved,
-      audience: audience,
-      languageCode: languageCode,
-      profile: profile,
     );
   }
 

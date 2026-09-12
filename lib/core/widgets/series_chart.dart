@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/widgets/clinical_primitives.dart';
 
 /// One point on a series. A null [v] is a BLE dropout: it renders as a gap in
@@ -252,12 +251,16 @@ class _SeriesChartState extends State<SeriesChart>
                   child: Container(
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: ClinicalPalette.hairline(context),
-                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x14000000),
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -412,12 +415,30 @@ class _SeriesPainter extends CustomPainter {
           ..lineTo(run.last.dx, baseY)
           ..lineTo(run.first.dx, baseY)
           ..close();
-        canvas.drawPath(area, Paint()..color = stroke.withValues(alpha: 0.10));
+        final gradientPaint = Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              stroke.withValues(alpha: 0.28),
+              stroke.withValues(alpha: 0.02),
+            ],
+          ).createShader(Rect.fromLTRB(padL, padT, padL + innerW, baseY));
+        canvas.drawPath(area, gradientPaint);
+
+        final glowPaint = Paint()
+          ..color = stroke.withValues(alpha: 0.25)
+          ..strokeWidth = 4.2
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round;
+        canvas.drawPath(line, glowPaint);
+
         canvas.drawPath(
           line,
           Paint()
             ..color = stroke
-            ..strokeWidth = 2
+            ..strokeWidth = 2.2
             ..style = PaintingStyle.stroke
             ..strokeCap = StrokeCap.round
             ..strokeJoin = StrokeJoin.round,

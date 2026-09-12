@@ -140,7 +140,7 @@ const unsigned char bmp_mascot_blink[] PROGMEM = {
 enum PageState { PAGE_HOME = 0, PAGE_SPO2, PAGE_ECG, PAGE_TEMP, PAGE_SYS };
 volatile PageState currentPage = PAGE_HOME;
 
-enum SystemState { SYS_IDLE = 0, MEASURE_SPO2, MEASURE_ECG, MEASURE_TEMP };
+enum SystemState { SYS_IDLE = 0, MEASURE_SPO2, MEASURE_ECG, MEASURE_TEMP, MEASURE_DUAL };
 volatile SystemState sysState = SYS_IDLE;
 unsigned long measurementStartTime = 0;
 unsigned long measurementDuration = 0; // 0 = Continuous/Infinite streaming
@@ -302,7 +302,7 @@ int ledBleBlinkPulsesLeft =
 
 // Called once per core1TaskFunction() loop iteration.
 void updateStatusLed(unsigned long ms) {
-  if (sysState == MEASURE_SPO2 || sysState == MEASURE_ECG) {
+  if (sysState == MEASURE_SPO2 || sysState == MEASURE_ECG || sysState == MEASURE_DUAL) {
     digitalWrite(LED_PIN, showHeartIcon ? HIGH : LOW);
     return;
   }
@@ -485,6 +485,11 @@ class MyControlCallbacks : public BLECharacteristicCallbacks {
       currentPage = PAGE_TEMP;
       powerSensors(MEASURE_TEMP);
       measurementDuration = (len >= 2) ? targetDurationMs : 5000;
+    } else if (cmd == 0x04) {
+      // 0x04 = Continuous Dual Mode (ECG + SpO2 Guardian)
+      currentPage = PAGE_ECG;
+      powerSensors(MEASURE_DUAL);
+      measurementDuration = (len >= 2) ? targetDurationMs : 0; // default 0 = Continuous/Infinite
     } else if (cmd == 0x00) {
       currentPage = PAGE_HOME;
       powerSensors(SYS_IDLE);
@@ -497,7 +502,20 @@ class MyControlCallbacks : public BLECharacteristicCallbacks {
 // MUTUALLY EXCLUSIVE POWER MANAGEMENT
 // ---------------------------------------------------------
 void powerSensors(SystemState targetMode) {
-  if (targetMode == MEASURE_ECG) {
+  if (targetMode == MEASURE_DUAL) {
+    digitalWrite(ECG_SDN_PIN, HIGH); // AD8232 ON
+    if (maxFound) {
+      particleSensor.wakeUp();  // MAX ON — Red and IR LEDs glow continuously!
+      particleSensor.clearFIFO();
+    }
+    resetEcgDsp();
+    resetPpgDsp();
+    leadOffDebounceCount = 0;
+    leadOff = false;
+    ecgBaselineSeeded = false;
+    xQueueReset(ecgQueue);
+    resetEcgWaveformPacker();
+  } else if (targetMode == MEASURE_ECG) {
     digitalWrite(ECG_SDN_PIN, HIGH); // AD8232 ON
     if (maxFound)
       particleSensor.shutDown(); // MAX OFF
@@ -549,24 +567,38 @@ void powerSensors(SystemState targetMode) {
 // ---------------------------------------------------------
 // HARDWARE TIMER (ECG SAMPLING)
 // ---------------------------------------------------------
-#define ECG_LEAD_OFF_THRESHOLD 25 // 25 samples @ 250Hz = 100ms sustained high
+// 75 samples @ 250Hz = 300ms sustained high.
+// Dry stainless-steel electrodes experience momentary contact impedance shifts
+// (100-200ms) from micro-movements. 300ms filters out contact noise while
+// promptly detecting true electrode detachment. For clinical recordings,
+// 3M Red Dot adhesive gel electrodes are recommended.
+#define ECG_LEAD_OFF_THRESHOLD 75
 
 void IRAM_ATTR onEcgTimer() {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   portENTER_CRITICAL_ISR(&timerMux);
-  if (sysState == MEASURE_ECG) {
+  if (sysState == MEASURE_ECG || sysState == MEASURE_DUAL) {
     // Debounce LO+/LO- with hysteresis so single-sample noise spikes or
     // momentary skin contact impedance shifts don't cause rapid leads-off
     // flickering.
     bool rawLo = (digitalRead(ECG_LO_PLUS_PIN) != 0) ||
                  (digitalRead(ECG_LO_MINUS_PIN) != 0);
+    int rawAdc = analogRead(ECG_ANALOG_PIN);
+    currentECG = rawAdc;
+
     if (rawLo) {
-      if (leadOffDebounceCount < ECG_LEAD_OFF_THRESHOLD + 5) {
-        leadOffDebounceCount++;
+      // If dry-finger contact on 2 leads is present without 3rd lead,
+      // but active biopotential signal is clearly in valid range (350..3800),
+      // do not falsely latch leads-off disconnect!
+      if (rawAdc > 350 && rawAdc < 3800) {
+        if (leadOffDebounceCount > 0) leadOffDebounceCount--;
+      } else {
+        if (leadOffDebounceCount < ECG_LEAD_OFF_THRESHOLD + 10) {
+          leadOffDebounceCount++;
+        }
       }
       if (leadOffDebounceCount >= ECG_LEAD_OFF_THRESHOLD) {
         leadOff = true;
-        currentECG = 0;
       }
     } else {
       if (leadOffDebounceCount > 0) {
@@ -576,16 +608,12 @@ void IRAM_ATTR onEcgTimer() {
         leadOff = false;
       }
     }
-
-    if (!leadOff) {
-      currentECG = analogRead(ECG_ANALOG_PIN);
-    }
   }
   portEXIT_CRITICAL_ISR(&timerMux);
   // Queue send outside the critical section; yield immediately if a
   // higher-priority task (the Core 0 consumer) was woken so the 250 Hz
   // sample stream doesn't overrun the queue between ISRs.
-  if (sysState == MEASURE_ECG) {
+  if (sysState == MEASURE_ECG || sysState == MEASURE_DUAL) {
     int16_t sample = currentECG;
     if (xQueueSendFromISR(ecgQueue, (void *)&sample,
                           &xHigherPriorityTaskWoken) != pdTRUE) {
@@ -881,73 +909,69 @@ void core0TaskFunction(void *pvParameters) {
     esp_task_wdt_reset();
     unsigned long current_time = millis();
 
-    if (sysState == MEASURE_ECG) {
-      if (xQueueReceive(ecgQueue, &raw_sample, pdMS_TO_TICKS(10))) {
-        // LEADS-OFF GATE: with electrodes detached the AD8232 input
-        // floats and picks up mains (50/60 Hz) noise + phase-lead
-        // network ringing. Never feed that phantom signal into the
-        // DSP, the display history or the BLE stream — freeze the
-        // trace and let the UI/app show "LEADS OFF" instead.
-        if (leadOff) {
+    if (sysState == MEASURE_ECG || sysState == MEASURE_DUAL) {
+      if (xQueueReceive(ecgQueue, &raw_sample, pdMS_TO_TICKS(sysState == MEASURE_DUAL ? 3 : 10))) {
+        // LEADS-OFF GATE:
+        // Only suppress if voltage is completely railed/detached (noise)
+        if (leadOff && (raw_sample <= 200 || raw_sample >= 3900)) {
           ecgBaselineSeeded = false;
-          continue;
-        }
-
-        // 50 Hz notch -> 40 Hz LP
-        double clean = ecgConditioningApply((double)raw_sample);
-
-        // Fast baseline acquisition and anti-saturation tracking:
-        // Wait for the AD8232 op-amp to power up (> 500 counts) before seeding
-        // baseline. If a baseline shift (motion/touch) moves clean by > 150
-        // counts from b_n, adapt rapidly (tau ~ 80ms) so the trace never gets
-        // stuck at the screen edge as a flat line!
-        if (!ecgBaselineSeeded) {
-          if (clean > 500.0) {
-            b_n = clean;
-            f_fast = clean;
-            f_slow = clean;
-            ecgBaselineSeeded = true;
-          }
         } else {
-          double offset = fabs(clean - b_n);
-          if (offset > 150.0) {
-            b_n = b_n * 0.95 + clean * 0.05;
+          // 50 Hz notch -> 40 Hz LP
+          double clean = ecgConditioningApply((double)raw_sample);
+
+          // Fast baseline acquisition and anti-saturation tracking:
+          // Wait for the AD8232 op-amp to power up (> 500 counts) before seeding
+          // baseline. If a baseline shift (motion/touch) moves clean by > 150
+          // counts from b_n, adapt rapidly (tau ~ 80ms) so the trace never gets
+          // stuck at the screen edge as a flat line!
+          if (!ecgBaselineSeeded) {
+            if (clean > 500.0) {
+              b_n = clean;
+              f_fast = clean;
+              f_slow = clean;
+              ecgBaselineSeeded = true;
+            }
+          } else {
+            double offset = fabs(clean - b_n);
+            if (offset > 150.0) {
+              b_n = b_n * 0.95 + clean * 0.05;
+            }
           }
-        }
 
-        double filtered = processECG_BaselineRemoval(clean);
-        detectRPeak(filtered, current_time);
+          double filtered = processECG_BaselineRemoval(clean);
+          detectRPeak(filtered, current_time);
 
-        // Sweep speed decimation: record every 2nd sample (125 sps)
-        // so the 128-pixel window displays 1.024 seconds of cardiac rhythm
-        // (a full P-QRS-T complex) instead of spending 80% of its time in the
-        // flat isoelectric diastole!
-        static uint8_t ecgDecimator = 0;
-        if ((++ecgDecimator % 2) == 0) {
-          int disp_val = (int)(filtered / 8.0);
-          if (disp_val > 26)
-            disp_val = 26;
-          if (disp_val < -26)
-            disp_val = -26;
-          ecgHistory[ecgHead] = (int8_t)disp_val;
-          ecgHead = (ecgHead + 1) % 128;
-        }
+          // Sweep speed decimation: record every 2nd sample (125 sps)
+          // so the 128-pixel window displays 1.024 seconds of cardiac rhythm
+          static uint8_t ecgDecimator = 0;
+          if ((++ecgDecimator % 2) == 0) {
+            int disp_val = (int)(filtered / 8.0);
+            if (disp_val > 26)
+              disp_val = 26;
+            if (disp_val < -26)
+              disp_val = -26;
+            ecgHistory[ecgHead] = (int8_t)disp_val;
+            ecgHead = (ecgHead + 1) % 128;
+          }
 
-        if (deviceConnected) {
-          int16_t transmit_val = (int16_t)filtered;
-          ecgBleBuffer[ecgBleBufferIdx++] = (transmit_val & 0xFF);
-          ecgBleBuffer[ecgBleBufferIdx++] = (transmit_val >> 8) & 0xFF;
-          if (ecgBleBufferIdx >= 16) {
-            uint8_t tx_frame[20] = {0x02, 0x01, 0x00, 0x00};
-            memcpy(&tx_frame[4], ecgBleBuffer, 16);
-            pWaveformChar->setValue(tx_frame, 20);
-            pWaveformChar->notify();
-            ecgBleBufferIdx = 0;
-            bleFrames++;
+          if (deviceConnected) {
+            int16_t transmit_val = (int16_t)filtered;
+            ecgBleBuffer[ecgBleBufferIdx++] = (transmit_val & 0xFF);
+            ecgBleBuffer[ecgBleBufferIdx++] = (transmit_val >> 8) & 0xFF;
+            if (ecgBleBufferIdx >= 16) {
+              uint8_t tx_frame[20] = {0x02, 0x01, 0x00, 0x00};
+              memcpy(&tx_frame[4], ecgBleBuffer, 16);
+              pWaveformChar->setValue(tx_frame, 20);
+              pWaveformChar->notify();
+              ecgBleBufferIdx = 0;
+              bleFrames++;
+            }
           }
         }
       }
-    } else if (sysState == MEASURE_SPO2) {
+    }
+
+    if (sysState == MEASURE_SPO2 || sysState == MEASURE_DUAL) {
       if (maxFound) {
         particleSensor.check();
         while (particleSensor.available()) {
@@ -957,8 +981,10 @@ void core0TaskFunction(void *pvParameters) {
           processSpO2AndHR(red, ir, current_time);
         }
       }
-      vTaskDelay(pdMS_TO_TICKS(10));
-    } else {
+      if (sysState == MEASURE_SPO2) {
+        vTaskDelay(pdMS_TO_TICKS(10));
+      }
+    } else if (sysState != MEASURE_ECG) {
       vTaskDelay(pdMS_TO_TICKS(50)); // Idle power savings
     }
   }
@@ -1124,9 +1150,9 @@ void drawPageSpO2(unsigned long ms) {
 }
 
 void drawPageECG(unsigned long ms) {
-  if (sysState == MEASURE_ECG) {
+  if (sysState == MEASURE_ECG || sysState == MEASURE_DUAL) {
     if (ms - measurementStartAnimTime < ANIM_STING_MS) {
-      drawStartSting(ms, "ECG");
+      drawStartSting(ms, sysState == MEASURE_DUAL ? "DUAL" : "ECG");
       return;
     }
     // Draw Full Screen Scrolling Graph
@@ -1158,10 +1184,15 @@ void drawPageECG(unsigned long ms) {
     if (current_hr > 0) {
       display.print(current_hr);
       display.print(" BPM");
+      if (sysState == MEASURE_DUAL && current_spo2 > 0) {
+        display.print(" | ");
+        display.print(current_spo2);
+        display.print("%");
+      }
     }
     unsigned long elapsed = ms - measurementStartTime;
     if (measurementDuration == 0) {
-      display.setCursor(68, 2);
+      display.setCursor(70, 2);
       unsigned int sec = (unsigned int)(elapsed / 1000);
       char tbuf[16];
       snprintf(tbuf, sizeof(tbuf), "%02u:%02u [C]", sec / 60, sec % 60);
@@ -1453,11 +1484,11 @@ void core1TaskFunction(void *pvParameters) {
           flags |= 0x01; // beat flash
         if (leadOff)
           flags |= 0x04; // lead-off
-        if (!fingerPresent && sysState == MEASURE_SPO2)
+        if (!fingerPresent && (sysState == MEASURE_SPO2 || sysState == MEASURE_DUAL))
           flags |= 0x08; // finger-off
-        if (spo2Locked && sysState == MEASURE_SPO2)
+        if (spo2Locked && (sysState == MEASURE_SPO2 || sysState == MEASURE_DUAL))
           flags |= 0x10; // SpO2 reading stabilized (3 stable windows)
-        if (ppgLowSignal && sysState == MEASURE_SPO2 && fingerPresent)
+        if (ppgLowSignal && (sysState == MEASURE_SPO2 || sysState == MEASURE_DUAL) && fingerPresent)
           flags |= 0x20; // low perfusion — poor optical signal
         tx_telemetry[9] = flags;
         tx_telemetry[14] = battery_percent;

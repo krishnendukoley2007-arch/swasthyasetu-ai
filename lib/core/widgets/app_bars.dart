@@ -48,12 +48,6 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: AppTheme.elevationLevel1,
       toolbarHeight: 64,
       bottom: bottom,
-      shape: Border(
-        bottom: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: 1,
-        ),
-      ),
     );
   }
 
@@ -127,12 +121,6 @@ class AppSliverAppBar extends StatelessWidget {
               ),
             )
           : null,
-      shape: Border(
-        bottom: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: 1,
-        ),
-      ),
     );
   }
 }
@@ -233,12 +221,6 @@ class _AppSearchAppBarState extends State<AppSearchAppBar> {
       elevation: 0,
       scrolledUnderElevation: AppTheme.elevationLevel1,
       toolbarHeight: 64,
-      shape: Border(
-        bottom: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: 1,
-        ),
-      ),
     );
   }
 }
