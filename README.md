@@ -9,7 +9,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.5.0%20%28build%206%29-2563eb?style=for-the-badge)](pubspec.yaml)
 [![Platform](https://img.shields.io/badge/Android-8.0%2B%20%7C%20Web%20%7C%20ESP32-3ddc84?style=for-the-badge&logo=android&logoColor=white)](pubspec.yaml)
-[![Tests](https://img.shields.io/badge/tests-549%20passing-16a34a?style=for-the-badge)](test/)
+[![Tests](https://img.shields.io/badge/tests-557%20passing-16a34a?style=for-the-badge)](test/)
 [![Linter](https://img.shields.io/badge/flutter%20analyze-0%20issues-brightgreen?style=for-the-badge)](lib/)
 [![Qualcomm 26181](https://img.shields.io/badge/Qualcomm%20Contest-Problem%2026181-orange?style=for-the-badge)](https://github.com/helloworld3003/swasthya-setu-ai-private)
 [![Live Web Dashboard](https://img.shields.io/badge/live%20workstation-Netlify-00ad9f?style=for-the-badge&logo=netlify&logoColor=white)](https://prismatic-sfogliatella-1e040e.netlify.app/)
@@ -77,6 +77,7 @@
 - [☀️ **Climate Heat Guardian (Moran PSI)**](#4--climate-heat-guardian-moran-psi-engine)
 - [🌙 **Overnight Guardian (Sleep & ODI)**](#5--continuous-overnight-guardian-sleep--recovery-tracking)
 - [📕 **Offline Disaster Survival Playbook**](#6--offline-disaster-survival--water-purification-playbook)
+- [🎙️ **Multilingual Offline Audio Coach**](#9--multilingual-offline-audio-coach-hindi--bengali-voice-guidance)
 
 </td>
 <td valign="top" width="33%">
@@ -486,6 +487,18 @@ flowchart TD
 ### 8. 📡 Disaster Offline BLE Mesh Relay Beaconing
 - **Offline Distress Broadcasting:** Transmits encrypted 16-byte frames containing GPS coordinates, severity risk band (Red/Orange/Yellow), and SOS Event ID via BLE advertising packets when all telecom infrastructure is offline.
 - **Relay Protocol Design:** Designed for peer-to-peer relay hopping where nearby devices running SwasthyaSetu AI capture and cache the beacon, relaying it automatically when cellular or Wi-Fi connectivity returns.
+
+### 9. 🎙️ Multilingual Offline Audio Coach (Hindi & Bengali Voice Guidance)
+- **Spoken Voice Guidance for Illiterate Community Members (`lib/core/services/audio_coach_service.dart`):**
+  - Offline-first voice coaching powered by native Android TTS calibrated with a soothing, human-like cadence (speech rate `0.45`, natural pitch `1.0`, zero robotic AI artifacts).
+  - Native language support in **Hindi (`hi-IN`)**, **Bengali (`bn-IN`)**, and **English (`en-IN`)**.
+- **"What is My Situation?" ("मेरी स्थिति क्या है?" / "আমার অবস্থা কেমন?"):**
+  - Prominent audio card on the triage result screen designed for non-literate community members who cannot read on-screen text or clinical graphs.
+  - Generates conversational, empathetic explanations of screening results, explaining vitals in plain language with immediate practical guidance (drinking clean water with pinch of salt/sugar, resting, seeking ASHA assistance).
+- **Audio-Guided Breathing & Heat Hydration Prompts:**
+  - Synchronized vocal cues during the 10-second Pursed-Lip Guided Breathing Metronome (4-second inhale, 6-second exhale) to promote airway positive pressure during severe pollution.
+  - Periodic, culturally contextual hydration reminders for outdoor workers and vulnerable elders in extreme heat.
+  - Expandable synchronized transcript view and interactive audio controls (Play, Pause, Stop, Language switcher).
 
 ---
 

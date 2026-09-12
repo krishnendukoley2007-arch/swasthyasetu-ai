@@ -8,6 +8,7 @@ import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/vulnerability_persona.dart';
 import 'package:swasthyasetu_ai/features/environment/state/environment_providers.dart';
 import 'package:swasthyasetu_ai/features/patient_home/state/vulnerability_persona_controller.dart';
+import 'package:swasthyasetu_ai/features/screening/state/audio_coach_controller.dart';
 
 /// Dynamically adapts the upper dashboard HUD to the active vulnerability persona.
 class PersonaAdaptiveHud extends ConsumerWidget {
@@ -152,6 +153,15 @@ class _OutdoorWorkerHud extends ConsumerWidget {
                 icon: const Icon(Icons.shield_rounded, size: 18),
                 label: const Text('Heat Guardian'),
               ),
+              IconButton.filledTonal(
+                tooltip: 'Listen to Voice Advice',
+                icon: const Icon(Icons.volume_up_rounded, size: 18),
+                onPressed: () {
+                  ref
+                      .read(audioCoachControllerProvider.notifier)
+                      .speakHydration(isHotWeather: isHot);
+                },
+              ),
             ],
           ),
         ],
@@ -161,11 +171,11 @@ class _OutdoorWorkerHud extends ConsumerWidget {
 }
 
 // ────────────────────────── 2. Elderly Citizen HUD ──────────────────────────
-class _ElderlyCitizenHud extends StatelessWidget {
+class _ElderlyCitizenHud extends ConsumerWidget {
   const _ElderlyCitizenHud();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return AppCard(
@@ -295,6 +305,15 @@ class _ElderlyCitizenHud extends StatelessWidget {
                 tooltip: 'Overnight Guardian',
                 onPressed: () => context.push('/screening/overnight-guardian'),
                 icon: const Icon(Icons.bedtime_rounded),
+              ),
+              IconButton.filledTonal(
+                tooltip: 'Listen to Voice Advice',
+                icon: const Icon(Icons.volume_up_rounded, size: 18),
+                onPressed: () {
+                  ref
+                      .read(audioCoachControllerProvider.notifier)
+                      .speakHydration(isElderly: true);
+                },
               ),
             ],
           ),

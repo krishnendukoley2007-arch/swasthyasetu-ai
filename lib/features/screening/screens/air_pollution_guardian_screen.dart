@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
+import 'package:swasthyasetu_ai/core/services/audio_coach_scripts.dart';
 import 'package:swasthyasetu_ai/features/environment/state/environment_providers.dart';
+import 'package:swasthyasetu_ai/features/screening/state/audio_coach_controller.dart';
 
 // Localization guard: top-level constants
 const _kTitle = 'Air Pollution & Respiratory Guardian';
@@ -19,6 +21,7 @@ const _kStartBreathing = 'Start Guided Breathing';
 const _kPauseBreathing = 'Pause Breathing Metronome';
 const _kInhalePhase = 'Inhale slowly through nose (4s)';
 const _kExhalePhase = 'Exhale gently through pursed lips (6s)';
+const _kAudioCoachLabel = 'Spoken Voice Guidance';
 const _kEmergencySos = 'Trigger Respiratory Emergency SOS';
 const _kDisclaimer =
     'Screening & physiological advisory tool only. Does not replace emergency clinical asthma/COPD intervention. If blue lips, inability to speak in sentences, or severe chest tightness occurs, call 108 immediately.';
@@ -76,31 +79,51 @@ class _AirPollutionGuardianScreenState
   final int _currentSpo2 = 96;
   final int _estimatedRespRate = 18;
 
+  AudioCoachNotifier? _audioCoachNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioCoachNotifier = ref.read(audioCoachControllerProvider.notifier);
+  }
+
   @override
   void dispose() {
     _breathingTimer?.cancel();
+    _audioCoachNotifier?.stop();
     super.dispose();
   }
 
   void _toggleBreathingMetronome() {
+    final coach = ref.read(audioCoachControllerProvider.notifier);
     setState(() {
       _isBreathingActive = !_isBreathingActive;
       if (_isBreathingActive) {
         _phaseProgress = 0.0;
+        coach.speakBreathingCue(isInhaling: true);
         _breathingTimer = Timer.periodic(const Duration(milliseconds: 50), (
           timer,
         ) {
           if (!mounted) return;
           setState(() {
+            final prev = _phaseProgress;
             _phaseProgress += 0.05 / 10.0; // 10-second cycle (4s in, 6s out)
+            if (prev < 0.4 && _phaseProgress >= 0.4) {
+              coach.speakBreathingCue(isInhaling: false);
+            }
             if (_phaseProgress >= 1.0) {
               _phaseProgress = 0.0;
               _completedCycles++;
+              coach.speakBreathingCue(isInhaling: true);
             }
           });
         });
       } else {
         _breathingTimer?.cancel();
+        coach.stop();
+        if (_completedCycles > 0) {
+          coach.speakBreathingCompletion(_completedCycles);
+        }
       }
     });
   }
@@ -525,6 +548,95 @@ class _AirPollutionGuardianScreenState
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
+          ),
+          const AppSpacing.vsm(),
+
+          // Voice Coach audio selector bar
+          Consumer(
+            builder: (context, ref, _) {
+              final coachState = ref.watch(audioCoachControllerProvider);
+              final coachNotifier = ref.read(
+                audioCoachControllerProvider.notifier,
+              );
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ClinicalPalette.teal.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      border: Border.all(
+                        color: ClinicalPalette.teal.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.record_voice_over_rounded,
+                          color: ClinicalPalette.teal,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _kAudioCoachLabel,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: ClinicalPalette.teal,
+                            ),
+                          ),
+                        ),
+                        Switch.adaptive(
+                          value: coachState.isBreathingVoiceEnabled,
+                          activeTrackColor: ClinicalPalette.teal,
+                          onChanged: (val) =>
+                              coachNotifier.toggleBreathingVoice(val),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (coachState.isBreathingVoiceEnabled) ...[
+                    const SizedBox(height: 6),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (final l in AudioCoachLanguage.values)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: ChoiceChip(
+                                label: Text(
+                                  l.displayName,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: coachState.selectedLanguage == l
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                                selected: coachState.selectedLanguage == l,
+                                selectedColor: ClinicalPalette.teal.withValues(
+                                  alpha: 0.2,
+                                ),
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    coachNotifier.setLanguage(l);
+                                  }
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
           const AppSpacing.vmd(),
 

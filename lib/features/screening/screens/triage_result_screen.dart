@@ -20,6 +20,7 @@ import 'package:swasthyasetu_ai/core/services/edge_ai_service.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
 import 'package:swasthyasetu_ai/features/screening/widgets/doctor_referral_dialog.dart';
 import 'package:swasthyasetu_ai/features/screening/widgets/trust_provenance_sheet.dart';
+import 'package:swasthyasetu_ai/features/screening/widgets/what_is_my_situation_card.dart';
 import 'package:uuid/uuid.dart';
 
 const _kAiPatternTitle = 'Edge AI Pattern Check';
@@ -576,6 +577,14 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                   .fadeIn(
                     duration: 600.ms,
                     delay: 800.ms,
+                    curve: AppTheme.curveDecelerate,
+                  )
+                  .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
+              _buildWhatIsMySituationCard()
+                  .animate(controller: _mainController, autoPlay: false)
+                  .fadeIn(
+                    duration: 600.ms,
+                    delay: 850.ms,
                     curve: AppTheme.curveDecelerate,
                   )
                   .slideY(begin: 0.2, end: 0, curve: AppTheme.curveDecelerate),
@@ -1689,6 +1698,47 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
         ).showSnackBar(SnackBar(content: Text('Could not generate PDF: $e')));
       }
     }
+  }
+
+  Widget _buildWhatIsMySituationCard() {
+    if (_triageResult == null) return const SizedBox.shrink();
+
+    final draft = ref.read(screeningDraftProvider);
+    final sample =
+        draft.sample ??
+        HealthSample(
+          timestamp: DateTime.now().millisecondsSinceEpoch,
+          heartRateBpm: _triageResult!.vitals['heart_rate'] ?? 72,
+          spo2Percent: _triageResult!.vitals['spo2'] ?? 98,
+          temperatureC:
+              (_triageResult!.vitals['temperature'] as num?)?.toDouble() ??
+              36.6,
+          estimatedGlucose: _triageResult!.vitals['glucose'] ?? 100,
+          estimatedSystolic: _triageResult!.vitals['systolic'] ?? 120,
+          estimatedDiastolic: _triageResult!.vitals['diastolic'] ?? 80,
+          ecgSignalQuality:
+              (_triageResult!.vitals['ecg_quality'] as num?)?.toDouble() ?? 0.9,
+          rPeakDetected: true,
+          rrIntervalMs: 800,
+          batteryPercent: 90,
+        );
+
+    final riskBand = switch (_triageResult!.level.toUpperCase()) {
+      'RED' => RiskBand.red,
+      'YELLOW' => RiskBand.yellow,
+      _ => RiskBand.green,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
+      child: WhatIsMySituationCard(
+        band: riskBand,
+        sample: sample,
+        patientName: _patient?.name,
+        score: _triageResult!.score,
+        symptoms: _triageResult!.symptoms,
+      ),
+    );
   }
 
   Widget _buildVernacularGuidanceCard(Color riskColor) {

@@ -45,6 +45,7 @@
    - [4.18 Accessibility, Localization & Audio Advisories](#418-accessibility-localization--audio-advisories)
    - [4.19 Longitudinal Early Warning Trajectory Engine (SIH #26181 Step 1)](#419-longitudinal-early-warning-trajectory-engine-sih-26181-step-1)
    - [4.20 Tailored Vulnerability Companion Personas & Adaptive HUD (SIH #26181 Step 2)](#420-tailored-vulnerability-companion-personas--adaptive-hud-sih-26181-step-2)
+   - [4.21 Multilingual Offline Audio Coach & "Then What is My Situation?" (SIH #26181 Step 3)](#421-multilingual-offline-audio-coach--then-what-is-my-situation-sih-26181-step-3)
 5. [Operator Guide: Step-by-Step Instructions](#5-operator-guide-step-by-step-instructions)
    - [5.1 Initial Setup & Role Selection](#51-initial-setup--role-selection)
    - [5.2 Pairing the SSAI-SENSE-01 Board (or Using Demo Mode)](#52-pairing-the-ssai-sense-01-board-or-using-demo-mode)
@@ -513,6 +514,20 @@ Located in `lib/domain/models/vulnerability_persona.dart`, `lib/features/patient
   - **Chronic Cardiorespiratory HUD:** Ambient NAQI/$\text{PM}_{2.5}$ cardiorespiratory distress gauge, quick-launch shortcut to the interactive 4s/6s Pursed-Lip Breathing Metronome, and medication staging checklists.
   - **General Resident HUD:** 7-day longitudinal stability radar, regional epidemic incubation status, and community disaster safety advisories.
 - **Interactive Persona Switcher:** Floating horizontal selector allows instant switching between personas while persisting user selection in local encrypted storage.
+
+### 4.21 Multilingual Offline Audio Coach & "Then What is My Situation?" (SIH #26181 Step 3)
+Located in `lib/core/services/audio_coach_service.dart`, `lib/core/services/audio_coach_scripts.dart`, `lib/features/screening/state/audio_coach_controller.dart`, and `lib/features/screening/widgets/what_is_my_situation_card.dart`:
+- **Empathetic Offline Voice Architecture:**
+  - Built specifically for illiterate rural citizens and community elders who cannot read on-screen text or interpret clinical charts.
+  - Powered by Android's native offline Text-to-Speech engine (`flutter_tts`) tuned to an unhurried, reassuring human-like cadence (speech rate `0.45`, natural pitch `1.0`, volume `1.0`) that sounds like a caring village healthcare worker (ASHA Didi), completely avoiding sterile robotic AI speech.
+  - Full native localized voice guidance across **Hindi (`hi-IN`)**, **Bengali (`bn-IN`)**, and **English (`en-IN`)**.
+- **Prominent "What is My Situation?" ("मेरी स्थिति क्या है?" / "আমার অবস্থা কেমন?") Spoken Assessment:**
+  - Rendered prominently on the Triage Result Screen immediately following vital sign measurement and hazard analysis.
+  - Features an animated pulsing speaker avatar, quick language-selector chips (हिन्दी / বাংলা / English), audio progress tracking, and an expandable live synchronized transcript drawer for literate family members or health workers.
+  - Translates complex multi-vital patterns into empathetic, actionable speech (e.g., *"Namaste. Your heartbeat is normal at 76, and your oxygen is strong at 98%. Everything looks stable today. Please drink a glass of boiled water and continue your daily routine with confidence."*).
+- **Synchronized Guided Breathing & Hydration Cues:**
+  - **Pursed-Lip Breathing Metronome Sync:** Automatically speaks soothing inhale ("धीरे-धीरे नाक से गहरी सांस लें...") and exhale ("अब होठों को गोल करके धीरे-धीरे सांस छोड़ें...") cues synchronized with the 4s/6s respiratory metronome in `AirPollutionGuardianScreen`.
+  - **Extreme Heat Hydration Advisories:** Spoken reminders on the Heat Guardian HUD reminding outdoor workers and elders with blunted thirst to take small, frequent sips of water with lemon and a pinch of salt.
 
 ---
 

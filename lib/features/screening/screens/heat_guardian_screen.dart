@@ -7,6 +7,7 @@ import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/rules/clinical_signal_analysis.dart';
 import 'package:swasthyasetu_ai/features/environment/state/environment_providers.dart';
+import 'package:swasthyasetu_ai/features/screening/state/audio_coach_controller.dart';
 
 // Localization guard: top-level constants
 const _kTitle = 'Heat Guardian';
@@ -15,6 +16,7 @@ const _kPsiDescription =
     'Real-time clinical fusion of core body temperature, cardiovascular drift, and ambient heat.';
 const _kHydrationTitle = 'Hydration Tracker';
 const _kLogDrink = 'Drink 250ml Water';
+const _kListenAdvice = 'Listen to Voice Advice';
 const _kHydrationGoal = 'Goal: 2.5L / Shift';
 const _kRestPlannerTitle = 'Work / Rest Cycle Advisor';
 const _kEmergencySos = 'Trigger Heat Emergency SOS';
@@ -457,6 +459,16 @@ class _HeatGuardianScreenState extends ConsumerState<HeatGuardianScreen> {
             icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
             onPressed: _logWaterIntake,
             minHeight: 50,
+          ),
+          const SizedBox(height: 8),
+          AppOutlinedButton(
+            label: _kListenAdvice,
+            icon: const Icon(Icons.volume_up_rounded, size: 20),
+            onPressed: () {
+              ref
+                  .read(audioCoachControllerProvider.notifier)
+                  .speakHydration(isHotWeather: true);
+            },
           ),
         ],
       ),

@@ -4,7 +4,10 @@ import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/domain/models/early_warning_trajectory.dart';
+import 'package:swasthyasetu_ai/domain/models/health_sample.dart';
+import 'package:swasthyasetu_ai/domain/rules/risk_engine.dart';
 import 'package:swasthyasetu_ai/features/patient_home/state/vulnerability_persona_controller.dart';
+import 'package:swasthyasetu_ai/features/screening/state/audio_coach_controller.dart';
 
 /// 7-Day Cumulative Early Warning Trajectory Card.
 ///
@@ -71,26 +74,56 @@ class EarlyWarningTrajectoryCard extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
-                        vertical: 3,
+                        vertical: 2,
                       ),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: statusColor.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
                       ),
                       child: Text(
-                        assessment.severity.label,
+                        assessment.severity.label.toUpperCase(),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: statusColor,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
                   ],
                 ),
+              ),
+              IconButton.filledTonal(
+                tooltip: 'Listen to Trajectory Voice Summary',
+                icon: const Icon(Icons.volume_up_rounded, size: 20),
+                onPressed: () {
+                  final sample = HealthSample(
+                    timestamp: DateTime.now().millisecondsSinceEpoch,
+                    heartRateBpm:
+                        72 + assessment.thermalDebt.restingHrDriftBpm.toInt(),
+                    spo2Percent: (98 - assessment.respiratoryCurve.spo2Drop)
+                        .clamp(70.0, 100.0)
+                        .toInt(),
+                    temperatureC: 36.6,
+                    estimatedGlucose: 100,
+                    estimatedSystolic: 120,
+                    estimatedDiastolic: 80,
+                    ecgSignalQuality: 0.9,
+                    rPeakDetected: true,
+                    rrIntervalMs: 800,
+                    batteryPercent: 90,
+                  );
+                  ref
+                      .read(audioCoachControllerProvider.notifier)
+                      .speakWhatIsMySituation(
+                        band: assessment.severity == TrajectorySeverity.critical
+                            ? RiskBand.red
+                            : (assessment.severity == TrajectorySeverity.warning
+                                  ? RiskBand.yellow
+                                  : RiskBand.green),
+                        sample: sample,
+                        trajectorySummary: assessment.actionableEarlyWarning,
+                      );
+                },
               ),
             ],
           ),
