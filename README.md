@@ -33,8 +33,8 @@
   <a href="#-the-circuit">
     <img src="https://img.shields.io/badge/⚡%20CIRCUIT%20SCHEMATIC-0d6efd?style=for-the-badge" alt="Circuit Schematic">
   </a>
-  <a href="#-scrollable-system-workflows">
-    <img src="https://img.shields.io/badge/🔄%20WORKFLOWS-6f42c1?style=for-the-badge" alt="Workflows">
+  <a href="#-unified-end-to-end-system-workflow">
+    <img src="https://img.shields.io/badge/🔄%20WORKFLOW-6f42c1?style=for-the-badge" alt="Workflows">
   </a>
 </p>
 
@@ -84,7 +84,7 @@
 **Hardware, Architecture & Quality**
 - [🎨 Product Design & 3D Enclosure](#-product-design)
 - [⚡ The Circuit & Schematic](#-the-circuit)
-- [🔄 **Scrollable System Workflows (Mermaid)**](#-scrollable-system-workflows)
+- [🔄 **Unified System Workflow (Mermaid)**](#-unified-end-to-end-system-workflow)
 - [🧠 Grounded Gemini AI & Snapdragon](#7--grounded-google-gemini-online-ai-personalized--non-alarmist)
 - [📡 Disaster Offline BLE Mesh Relay](#8--disaster-offline-ble-mesh-relay-beaconing)
 - [🔌 Flash the Firmware](#-flash-the-firmware)
@@ -296,200 +296,121 @@ The **SSAI-SENSE-01** diagnostic circuit integrates clinical-grade biopotential 
 
 ---
 
-## 🔄 Scrollable System Workflows
+## 🔄 Unified End-to-End System Workflow
 
-The following unified flowchart maps the complete clinical and disaster lifecycle — integrating **sensor ingestion**, **deterministic triage**, **automatic disaster adaptation**, **continuous guardians**, **grounded AI explanation**, and **disaster BLE mesh emergency relay**:
+The following comprehensive architecture flowchart integrates the complete clinical and disaster lifecycle into **one unified, perfectly balanced master workflow**:
+1. **Multi-Modal Data Ingestion:** Real-time sensor biopotentials paired with atmospheric and environmental feeds.
+2. **On-Device Integrity Gating & Hazard Fusion:** Strict 20-byte BLE binary protocol parsing, physical skin-contact gating, and the automated climate disaster classifier.
+3. **Four Balanced Guardian & Triage Pillars:** Deterministic clinical triage, continuous overnight sleep tracking, climate heat strain (Moran PSI), and respiratory/post-flood waterborne defense.
+4. **Dual Resolution Pathways:** Reassuring, grounded Google Gemini AI home-care for routine/moderate readings versus rapid emergency dispatch, store-and-forward BLE mesh relay, and the offline survival playbook during critical alerts or telecom blackouts.
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#ffffff', 'primaryTextColor': '#000000', 'primaryBorderColor': '#000000', 'lineColor': '#000000', 'textColor': '#000000', 'mainBkg': '#ffffff', 'nodeBorder': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#000000', 'edgeLabelBackground': '#ffffff' }}}%%
 flowchart TD
-    %% INGESTION & DATA VALIDATION
-    subgraph INGEST["<b>🩺 Live Telemetry & Environment Ingestion</b>"]
-        IN_DATA["<b>SSAI-SENSE 20-Byte BLE Frame + Patient Context</b><br/>(ECG, PPG, Temp, IMU, Age, BMI, Conditions)"]
-        ENV_DATA["<b>Ambient Environment & Barometer</b><br/>(Open-Meteo, IMD Alert, BME280 ΔP, AQI)"]
-        IN_CHECK{"<b>Any sensor<br/>value missing?</b>"}
-        IN_DASH["<b>Render missing metric as '—'</b><br/>(Never 0, never guessed)"]
-        IN_DATA --> IN_CHECK
-        ENV_DATA --> HAZARD_FUSION
-        IN_CHECK -->|"Yes"| IN_DASH
-        IN_CHECK -->|"No"| ROUTER{"<b>Select Active<br/>Monitoring Mode</b>"}
-        IN_DASH --> ROUTER
-    end
-
-    %% AUTOMATIC DISASTER HAZARD ENGINE
-    subgraph HAZARD_FUSION["<b>🌪️ Automated Disaster Hazard Engine</b>"]
-        FUSE_CHECK{"<b>Trigger Criteria?</b><br/>• Rain ≥ 25mm or ΔP ≤ -3.5 hPa<br/>• Heatwave Apparent ≥ 38°C<br/>• AQI ≥ 200 or PM2.5 ≥ 120<br/>• Manual Relief Camp Mode"}
-        HAZ_FLOOD["<b>🌊 FLOOD DETECTED</b><br/>Activate Syndromic Waterborne Screen"]
-        HAZ_HEAT["<b>☀️ HEATWAVE DETECTED</b><br/>Activate Moran PSI Thermal Strain"]
-        HAZ_SMOG["<b>🌫️ SEVERE SMOG DETECTED</b><br/>Activate Air Guardian & Metronome"]
-        HAZ_CALM["<b>🟢 NORMAL SENTINEL MODE</b><br/>Background environmental monitoring"]
-
-        FUSE_CHECK -->|"Flood / Storm"| HAZ_FLOOD
-        FUSE_CHECK -->|"Heatwave"| HAZ_HEAT
-        FUSE_CHECK -->|"Severe Smog"| HAZ_SMOG
-        FUSE_CHECK -->|"Normal"| HAZ_CALM
-    end
-
-    %% BRANCHING TO MONITORING ENGINES
-    ROUTER -->|"Point-of-Care Screening"| TRIAGE_SUB
-    ROUTER -->|"Sleep / Recovery Mode"| SLEEP_SUB
-    ROUTER -->|"Extreme Heat / Work"| HEAT_SUB
-    ROUTER -->|"Smog / Respiratory"| SMOG_SUB
-    HAZ_FLOOD --> POST_FLOOD_CHECK
-    HAZ_HEAT --> HEAT_SUB
-    HAZ_SMOG --> SMOG_SUB
-
-    %% 1. DETERMINISTIC TRIAGE ENGINE
-    subgraph TRIAGE_SUB["<b>⚡ Deterministic Triage Rule Engine</b>"]
-        CRIT_CHECK{"<b>Critical Red Threshold?</b><br/>• SpO2 < 90%<br/>• HR < 40 or > 130 BPM<br/>• Temp > 39.5°C or < 35°C<br/>• Severe Fall Detected"}
-        AMB_CHECK{"<b>Warning Amber Threshold?</b><br/>• SpO2 90–94%<br/>• HR 40–50 or 100–130 BPM<br/>• Mild Fever 38.0–39.4°C"}
+    %% =========================================================================
+    %% STAGE 1: MULTI-MODAL DATA INGESTION
+    %% =========================================================================
+    subgraph STAGE1["<b>STAGE 1: MULTI-MODAL TELEMETRY & CLIMATE INGESTION</b>"]
+        direction LR
+        SENSE["<b>🔬 SSAI-SENSE-01 Wearable Diagnostic Node</b><br/>• <b>AD8232 Lead I ECG:</b> 250 Hz cardiac electrical biopotential<br/>• <b>MAX30102 Optical PPG:</b> Dual-wavelength SpO2 & Heart Rate<br/>• <b>MLX90614 Medical IR:</b> Non-contact core body temperature<br/>• <b>MPU6050 6-Axis IMU:</b> Fall impact detection & nocturnal rest"]
         
-        CRIT_CHECK -->|"YES"| BAND_RED["<b>🔴 URGENT (Red Band)</b><br/>Score 70–100 • High Risk"]
-        CRIT_CHECK -->|"NO"| AMB_CHECK
-        AMB_CHECK -->|"YES"| BAND_YELLOW["<b>🟡 SOON (Yellow Band)</b><br/>Score 30–69 • Moderate Risk"]
-        AMB_CHECK -->|"NO"| BAND_GREEN["<b>🟢 ROUTINE (Green Band)</b><br/>Score 0–29 • Normal Baseline"]
+        ENV["<b>🌦️ Real-Time Climate & Atmospheric Feeds</b><br/>• <b>Open-Meteo Weather:</b> Live rainfall rate & WMO storm codes<br/>• <b>IMD Official Alerts:</b> Regional heatwave, storm & cyclone bands<br/>• <b>BME280 Barometer:</b> Rapid atmospheric pressure collapse (ΔP)<br/>• <b>Air Quality Stations:</b> Continuous NAQI, PM2.5 & PM10 tracking"]
     end
 
-    %% 2. OVERNIGHT GUARDIAN ENGINE
-    subgraph SLEEP_SUB["<b>🌙 Continuous Overnight Guardian</b>"]
-        SLEEP_STREAM["<b>Passive 8-Hour Telemetry</b><br/>(Adhesive Lead I + Silicone Sleeve)"]
-        DIP_WINDOW{"<b>Time between<br/>01:00 – 04:30 AM?</b>"}
-        DIP_CALC["<b>Nocturnal Dipping Analyzer</b><br/>(Compare night vs daytime baseline)"]
-        DIP_NORM["<b>✅ Normal Dipper Pattern</b><br/>(10%–20% restorative dip)"]
-        DIP_ALERT["<b>⚠️ Non-Dipper Pattern</b><br/>(Nocturnal hypertension marker)"]
-        SPO2_CHECK{"<b>SpO2 Sustained<br/>Below 90%?</b>"}
-        ODI_ALERT["<b>⚠️ Oxygen Desaturation Event</b><br/>(Flag Obstructive Sleep Apnea)"]
-
-        SLEEP_STREAM --> DIP_WINDOW
-        DIP_WINDOW -->|"YES"| DIP_CALC
-        DIP_CALC -->|"Dip ≥ 10%"| DIP_NORM
-        DIP_CALC -->|"Dip < 10%"| DIP_ALERT
-        SLEEP_STREAM --> SPO2_CHECK
-        SPO2_CHECK -->|"YES"| ODI_ALERT
+    %% =========================================================================
+    %% STAGE 2: ON-DEVICE PROCESSING & TRIGGER FUSION
+    %% =========================================================================
+    subgraph STAGE2["<b>STAGE 2: ON-DEVICE INTEGRITY GATING & DISASTER TRIGGER FUSION</b>"]
+        direction LR
+        GATE["<b>🛡️ BLE Protocol & Integrity Gating</b><br/>• Strict 20-byte static binary frame validation<br/>• Hardware skin-contact & lead-off gating (LO+/LO-)<br/>• Zero fabricated gaps (missing metrics render strictly as '—')"]
+        
+        HAZARD["<b>🌪️ Automated Climate Hazard Classifier</b><br/>• <b>Flash Flood:</b> Rain ≥ 25mm, WMO codes 80-82/95-99, or ΔP ≤ -3.5 hPa in 3h<br/>• <b>Heatwave / Smog:</b> Apparent temp ≥ 38°C or ambient AQI ≥ 200<br/>• <b>Relief Mode:</b> Manual offline override for disaster camp workers"]
     end
 
-    %% 3. HEAT GUARDIAN ENGINE
-    subgraph HEAT_SUB["<b>☀️ Climate Disaster Heat Guardian</b>"]
-        HEAT_INPUT["<b>Biometrics (T_core, HR, HRV)</b><br/>+ Ambient Wet-Bulb Weather"]
-        PSI_CALC["<b>Moran Physiological Strain Index (PSI)</b><br/>PSI = 5×ΔT_core + 5×ΔHR"]
-        PSI_DECIDE{"<b>Calculated PSI Level</b><br/>(0–10 Scale)"}
-        PSI_SAFE["<b>🟢 Low Strain (PSI 0–2.9)</b><br/>Safe to continue field activity"]
-        PSI_WARN["<b>🟡 Moderate Strain (PSI 3.0–6.4)</b><br/>💧 Hydration Alert: 250ml / 15-20 min"]
-        PSI_DANGER["<b>🔴 Severe Strain (PSI 6.5–10)</b><br/>🛑 Mandatory Shaded Rest Protocol"]
+    SENSE -->|"20-Byte BLE Telemetry"| GATE
+    ENV -->|"Atmospheric Metrics"| HAZARD
 
-        HEAT_INPUT --> PSI_CALC
-        PSI_CALC --> PSI_DECIDE
-        PSI_DECIDE -->|"0.0–2.9"| PSI_SAFE
-        PSI_DECIDE -->|"3.0–6.4"| PSI_WARN
-        PSI_DECIDE -->|"6.5–10.0"| PSI_DANGER
+    %% =========================================================================
+    %% STAGE 3: BALANCED GUARDIAN & TRIAGE PILLARS (2x2 BALANCED GRID)
+    %% =========================================================================
+    subgraph STAGE3A["<b>STAGE 3A: POINT-OF-CARE CLINICAL TRIAGE & CONTINUOUS OVERNIGHT GUARDIAN</b>"]
+        direction LR
+        TRIAGE["<b>⚡ Deterministic Clinical Triage Engine</b><br/>• <b>Deterministic Thresholds:</b> SpO2, Heart Rate, Core Temp, Falls<br/>• Advisory AI flags never alter deterministic triage bands (Mandate 2.5)<br/>• <b>Risk Classification:</b> 🟢 Routine (0-29) • 🟡 Soon (30-69) • 🔴 Urgent (70-100)"]
+        
+        SLEEP["<b>🌙 Continuous Overnight Sleep Guardian</b><br/>• <b>Dual Trend Stream:</b> Continuous 8-hour Heart Rate & SpO2 recording<br/>• <b>ECG Oscilloscope:</b> 280-sample sweep with directional interpolation<br/>• <b>Clinical Markers:</b> Restorative dip window (01:00-04:30) & ODI sleep apnea"]
     end
 
-    %% 4. AIR POLLUTION & RESPIRATORY GUARDIAN
-    subgraph SMOG_SUB["<b>🫁 Air Pollution Guardian & Pursed-Lip Metronome</b>"]
-        AIR_INPUT["<b>Live AQI / PM2.5 + SpO2 & Heart Rate</b>"]
-        CDI_CALC["<b>Cardiorespiratory Distress Index</b><br/>Couples Hypoxia with PM2.5 Toxicity"]
-        METRONOME["<b>Pursed-Lip Breathing Metronome</b><br/>4s Nasal Inhale ➔ 6s Pursed Exhale<br/>(PEEP Effect Prevents Airway Collapse)"]
-        AIR_INPUT --> CDI_CALC --> METRONOME
+    subgraph STAGE3B["<b>STAGE 3B: AUTOMATIC CLIMATE DISASTER GUARDIANS (HEAT & RESPIRATORY/FLOOD)</b>"]
+        direction LR
+        HEAT["<b>☀️ Climate Disaster Heat Guardian (Moran PSI)</b><br/>• <b>Moran Index (0.0 to 10.0):</b> PSI = 5×ΔCore Temp + 5×ΔHeart Rate<br/>• Fuses cardiovascular drift, autonomic HRV suppression & wet-bulb heat<br/>• <b>Protective Protocol:</b> Dynamic 250ml hydration timer & shaded work/rest cycles"]
+        
+        RESP["<b>🫁 Respiratory & Post-Flood Waterborne Guardian</b><br/>• <b>Air Pollution CDI:</b> Telemetry coupling of SpO2 with toxic PM2.5 levels<br/>• <b>Pursed-Lip Metronome:</b> 4s nasal inhale / 6s pursed exhale creates PEEP effect<br/>• <b>Post-Flood Syndromic:</b> Screens cholera, leptospirosis, cellulitis & WHO ORS"]
     end
 
-    %% 5. POST-FLOOD SYNDROMIC CHECKLIST
-    subgraph POST_FLOOD_CHECK["<b>💧 60-Second Post-Flood Syndromic Surveillance</b>"]
-        SURVEY["<b>Interactive Questionnaire</b><br/>• Rice-water diarrhea & vomiting?<br/>• Wading in water + fever + calf pain?<br/>• Submerged skin cuts or puncture wounds?"]
-        CHOLERA_ALERT["<b>⚠️ Cholera / Severe Dehydration Risk</b><br/>Immediate WHO ORS + Zinc"]
-        LEPTO_ALERT["<b>⚠️ Leptospirosis Warning</b><br/>Early Doxycycline prophylaxis triage"]
-        SURVEY --> CHOLERA_ALERT
-        SURVEY --> LEPTO_ALERT
+    GATE -->|"Point-of-Care Vitals"| TRIAGE
+    GATE -->|"Passive Sleep Telemetry"| SLEEP
+    HAZARD -->|"Thermal Stress Event"| HEAT
+    HAZARD -->|"Smog / Flood Trigger"| RESP
+
+    %% =========================================================================
+    %% STAGE 4: ACTIONABLE OUTCOMES & EMERGENCY RESOLUTION PATHWAYS
+    %% =========================================================================
+    subgraph STAGE4A["<b>STAGE 4A: REASSURING PERSONALIZED HOME CARE (ROUTINE & MODERATE READINGS)</b>"]
+        AI_CARE["<b>🧠 Grounded Google Gemini Online AI & Evidence-Based Recovery Guidance</b><br/>• <b>Patient Grounding:</b> Tailored to Age, Sex, BMI / WHO weight status, chronic ailments, and self-reported symptoms<br/>• <b>Non-Alarmist Care:</b> Eliminates reflexive 'rush to doctor' prompts; explains physiological mechanisms in clear plain language<br/>• <b>Actionable Support:</b> Warm fluid hydration, postural rest (elevated pillows for cough), saline gargles, and activity pacing"]
     end
 
-    %% REASSURING EXPLANATION (NON-CRITICAL)
-    BAND_GREEN --> EXPLAIN["<b>🧠 Grounded Two-Tier AI Explanation</b><br/>(Personalized to Age, BMI, Complaints — Non-Alarmist)"]
-    BAND_YELLOW --> EXPLAIN
-    DIP_NORM --> EXPLAIN
-    DIP_ALERT --> EXPLAIN
-    PSI_SAFE --> EXPLAIN
-    PSI_WARN --> EXPLAIN
-
-    %% EMERGENCY ESCALATION & MESH RELAY (CRITICAL PATH)
-    BAND_RED --> ESCALATE_SUB
-    ODI_ALERT --> ESCALATE_SUB
-    PSI_DANGER --> ESCALATE_SUB
-    CHOLERA_ALERT --> ESCALATE_SUB
-
-    %% 6. DISASTER RELAY, PLAYBOOK & SOS
-    subgraph ESCALATE_SUB["<b>🆘 Emergency Dispatch & Resilient BLE Mesh Relay</b>"]
-        GRID_DETECT{"<b>Cellular Grid<br/>Available?</b>"}
-        SMS_DISPATCH["<b>📱 Instant SMS & WhatsApp Dispatch</b><br/>(GPS Coordinates + Triage Summary)"]
-        BLE_MESH["<b>📡 Grid Down / Flood Mode:</b><br/>Broadcast Encrypted 16-Byte BLE Beacon"]
-        P2P_RELAY["<b>👥 Nearby SwasthyaSetu Community Nodes</b><br/>Store-and-Forward Mesh Hopping"]
-        PLAYBOOK["<b>📕 Offline Disaster Survival Playbook</b><br/>Boiling, Chlorine, SODIS, WHO ORS, Heatstroke First Aid"]
-        RELIEF_UPLINK["<b>🏥 Uplink to Emergency Base & Relief Teams</b><br/>(National Emergency 112 / NDMA 1078)"]
-
-        GRID_DETECT -->|"YES"| SMS_DISPATCH
-        GRID_DETECT -->|"NO"| BLE_MESH
-        BLE_MESH --> P2P_RELAY
-        P2P_RELAY --> RELIEF_UPLINK
-        GRID_DETECT --> PLAYBOOK
+    subgraph STAGE4B["<b>STAGE 4B: DISASTER RELIEF, SOS DISPATCH & BLE MESH RELAY (CRITICAL READINGS & BLACKOUT)</b>"]
+        direction LR
+        SOS_NET["<b>📱 Connected Emergency Dispatch</b><br/>• Instant SMS & WhatsApp SOS broadcast<br/>• GPS coordinates & triage vital summary<br/>• Direct dialers: 112 (National), 108 (Ambulance)"]
+        
+        SOS_MESH["<b>📡 Telecom Blackout BLE Mesh Relay</b><br/>• Encrypted 16-byte SOS packet broadcast<br/>• Store-and-forward peer hopping across nodes<br/>• Autonomous uplink to NDRF & relief bases"]
+        
+        SOS_BOOK["<b>📕 Offline Disaster Survival Playbook</b><br/>• Water decontamination: Boiling, Chlorine, SODIS<br/>• Active heatstroke cooling (ice packs in axillae/groin)<br/>• WHO ORS home recipe: 1L water + 6 tsp sugar + 1/2 tsp salt"]
     end
 
-    %% HIGH-CONTRAST JET BLACK STYLING ACROSS ALL NODES & SUBGRAPHS
-    style INGEST fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
-    style HAZARD_FUSION fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
-    style TRIAGE_SUB fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
-    style SLEEP_SUB fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
-    style HEAT_SUB fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
-    style SMOG_SUB fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
-    style POST_FLOOD_CHECK fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
-    style ESCALATE_SUB fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    TRIAGE -->|"🟢 Routine / 🟡 Soon"| AI_CARE
+    SLEEP -->|"Restorative Dipping"| AI_CARE
+    HEAT -->|"Safe / Moderate Strain"| AI_CARE
+    RESP -->|"Controlled Pacing"| AI_CARE
 
-    style IN_DATA fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style ENV_DATA fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style IN_CHECK fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style IN_DASH fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style ROUTER fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style FUSE_CHECK fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    TRIAGE -->|"🔴 Urgent Red Band"| SOS_NET
+    SLEEP -->|"⚠️ Severe Hypoxemia"| SOS_NET
+    HEAT -->|"🛑 Heatstroke (PSI ≥ 6.5)"| SOS_BOOK
+    RESP -->|"⚠️ Cholera / Sepsis Alert"| SOS_MESH
 
-    style HAZ_FLOOD fill:#ffcdd2,stroke:#b71c1c,stroke-width:2px,color:#000000
-    style HAZ_HEAT fill:#fff59d,stroke:#f57f17,stroke-width:2px,color:#000000
-    style HAZ_SMOG fill:#e1bee7,stroke:#6a1b9a,stroke-width:2px,color:#000000
-    style HAZ_CALM fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:#000000
+    %% STYLING: HIGH-CONTRAST BOLD JET BLACK
+    style STAGE1 fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style STAGE2 fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style STAGE3A fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style STAGE3B fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style STAGE4A fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+    style STAGE4B fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
 
-    style CRIT_CHECK fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style AMB_CHECK fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style BAND_RED fill:#ffcdd2,stroke:#b71c1c,stroke-width:2.5px,color:#000000
-    style BAND_YELLOW fill:#fff59d,stroke:#f57f17,stroke-width:2.5px,color:#000000
-    style BAND_GREEN fill:#c8e6c9,stroke:#1b5e20,stroke-width:2.5px,color:#000000
+    style SENSE fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style ENV fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style GATE fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style HAZARD fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
 
-    style SLEEP_STREAM fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style DIP_WINDOW fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style DIP_CALC fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style DIP_NORM fill:#c8e6c9,stroke:#1b5e20,stroke-width:2.5px,color:#000000
-    style DIP_ALERT fill:#ffcdd2,stroke:#b71c1c,stroke-width:2.5px,color:#000000
-    style SPO2_CHECK fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style ODI_ALERT fill:#ffcdd2,stroke:#b71c1c,stroke-width:2.5px,color:#000000
+    style TRIAGE fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style SLEEP fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style HEAT fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style RESP fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
 
-    style HEAT_INPUT fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style PSI_CALC fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style PSI_DECIDE fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style PSI_SAFE fill:#c8e6c9,stroke:#1b5e20,stroke-width:2.5px,color:#000000
-    style PSI_WARN fill:#fff59d,stroke:#f57f17,stroke-width:2.5px,color:#000000
-    style PSI_DANGER fill:#ffcdd2,stroke:#b71c1c,stroke-width:2.5px,color:#000000
-
-    style AIR_INPUT fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style CDI_CALC fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style METRONOME fill:#e1bee7,stroke:#6a1b9a,stroke-width:2px,color:#000000
-
-    style SURVEY fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style CHOLERA_ALERT fill:#ffcdd2,stroke:#b71c1c,stroke-width:2px,color:#000000
-    style LEPTO_ALERT fill:#fff59d,stroke:#f57f17,stroke-width:2px,color:#000000
-
-    style EXPLAIN fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style GRID_DETECT fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style SMS_DISPATCH fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style BLE_MESH fill:#fff59d,stroke:#f57f17,stroke-width:2.5px,color:#000000
-    style P2P_RELAY fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    style PLAYBOOK fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:#000000
-    style RELIEF_UPLINK fill:#c8e6c9,stroke:#1b5e20,stroke-width:2.5px,color:#000000
+    style AI_CARE fill:#c8e6c9,stroke:#1b5e20,stroke-width:2.5px,color:#000000
+    style SOS_NET fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style SOS_MESH fill:#fff59d,stroke:#f57f17,stroke-width:2.5px,color:#000000
+    style SOS_BOOK fill:#ffcdd2,stroke:#b71c1c,stroke-width:2.5px,color:#000000
 ```
+
+### 📖 End-to-End Workflow Breakdown
+
+| Stage | Subsystem & Function | Clinical & Disaster Operational Design |
+| :--- | :--- | :--- |
+| **Stage 1** | **Multi-Modal Data Ingestion** | Simultaneously samples biopotentials from **SSAI-SENSE-01** (250 Hz Lead I ECG, MAX30102 PPG, MLX90614 medical IR temp, MPU6050 fall IMU) and ambient environmental telemetry (Open-Meteo rain codes, IMD alert tiers, BME280 barometric pressure, NAQI). |
+| **Stage 2** | **On-Device Gating & Hazard Fusion** | Enforces the strict **20-byte binary frame** invariant, validates physical skin-contact gating, guarantees zero fabricated gaps (missing values render strictly as `—`), and runs the pure Dart **Disaster Hazard Engine** to flag flash floods ($\Delta P \le -3.5\text{ hPa}$ in 3h or rain $\ge 25\text{ mm}$), heatwaves, or toxic smog. |
+| **Stage 3** | **Four Balanced Clinical & Disaster Pillars** | • **Deterministic Triage:** Objective thresholds compute 🟢 Routine, 🟡 Soon, or 🔴 Urgent bands without statistical AI interference (`GEMINI.md` Mandate 2.5).<br>• **Overnight Sleep Guardian:** 8-hour continuous trend monitoring, Lead I ECG oscilloscope sweep, nocturnal dipping analysis ($01:00\text{--}04:30\text{ AM}$), and ODI sleep apnea detection.<br>• **Climate Heat Guardian:** Real-time Moran Physiological Strain Index (PSI $0\text{--}10$), dynamic $250\text{ ml}$ hydration countdown, and shaded work/rest scheduler.<br>• **Respiratory & Post-Flood Guardian:** Cardiorespiratory Distress Index (CDI), animated **Pursed-Lip Guided Breathing Metronome** (PEEP effect), and 60-second post-flood syndromic screening (cholera, leptospirosis, cellulitis) with WHO ORS recipe. |
+| **Stage 4** | **Dual Resolution & Action Pathways** | • **Routine / Stable Path (Stage 4A):** Personalized, non-alarmist health explanations powered by Google Gemini AI grounded in user BMI, age, and chronic history.<br>• **Emergency & Blackout Path (Stage 4B):** During grid or cellular failure, activates the offline survival playbook and broadcasts encrypted 16-byte BLE mesh beacons hopped peer-to-peer to disaster response teams. |
+
 
 ---
 
