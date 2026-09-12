@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:swasthyasetu_ai/data/database/app_database.dart';
 import 'package:swasthyasetu_ai/domain/models/audience.dart';
+import 'package:swasthyasetu_ai/domain/models/vulnerability_persona.dart';
 
 /// Every persisted preference key in one place. Strings are namespaced so a
 /// stray `getSetting('language')` from some other layer can't collide.
@@ -9,6 +10,7 @@ abstract final class SettingKeys {
   static const themeMode = 'pref.themeMode';
   static const highContrast = 'pref.highContrast';
   static const reducedMotion = 'pref.reducedMotion';
+  static const vulnerabilityPersona = 'pref.vulnerabilityPersona';
 
   static const workerName = 'profile.workerName';
   static const workerId = 'profile.workerId';
@@ -116,6 +118,7 @@ class AppSettingsSnapshot {
   /// Who explanations are written for. Nurse by default, so an existing install
   /// keeps the wording it had.
   final Audience audience;
+  final VulnerabilityPersona vulnerabilityPersona;
 
   /// Reference cuff calibration for PTT blood pressure estimation
   final int? bpCalibrationSystolic;
@@ -150,6 +153,7 @@ class AppSettingsSnapshot {
     this.lastSyncAt,
     this.geminiApiKey = '',
     this.audience = Audience.nurse,
+    this.vulnerabilityPersona = VulnerabilityPersona.generalCommunity,
     this.bpCalibrationSystolic,
     this.bpCalibrationDiastolic,
     this.bpCalibrationAt,
@@ -187,6 +191,9 @@ class AppSettingsSnapshot {
       lastSyncAt: DateTime.tryParse(m[SettingKeys.lastSyncAt] ?? ''),
       geminiApiKey: m[SettingKeys.geminiApiKey] ?? '',
       audience: Audience.fromStorage(m[SettingKeys.audience]),
+      vulnerabilityPersona: VulnerabilityPersona.fromStorage(
+        m[SettingKeys.vulnerabilityPersona],
+      ),
       bpCalibrationSystolic: int.tryParse(
         m[SettingKeys.bpCalibrationSystolic] ?? '',
       ),
@@ -233,6 +240,7 @@ class AppSettingsSnapshot {
     DateTime? lastSyncAt,
     String? geminiApiKey,
     Audience? audience,
+    VulnerabilityPersona? vulnerabilityPersona,
     int? bpCalibrationSystolic,
     int? bpCalibrationDiastolic,
     DateTime? bpCalibrationAt,
@@ -258,6 +266,7 @@ class AppSettingsSnapshot {
     lastSyncAt: lastSyncAt ?? this.lastSyncAt,
     geminiApiKey: geminiApiKey ?? this.geminiApiKey,
     audience: audience ?? this.audience,
+    vulnerabilityPersona: vulnerabilityPersona ?? this.vulnerabilityPersona,
     bpCalibrationSystolic: bpCalibrationSystolic ?? this.bpCalibrationSystolic,
     bpCalibrationDiastolic:
         bpCalibrationDiastolic ?? this.bpCalibrationDiastolic,
@@ -325,6 +334,9 @@ class SettingsRepository {
 
   Future<void> setAudience(Audience audience) =>
       setString(SettingKeys.audience, audience.storageValue);
+
+  Future<void> setVulnerabilityPersona(VulnerabilityPersona persona) =>
+      setString(SettingKeys.vulnerabilityPersona, persona.storageValue);
 
   Future<void> markSynced(DateTime at) =>
       setString(SettingKeys.lastSyncAt, at.toIso8601String());

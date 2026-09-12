@@ -43,6 +43,8 @@
    - [4.16 Offline-First SQLite (Drift) & Auto-Sync Queue](#416-offline-first-sqlite-drift--auto-sync-queue)
    - [4.17 Hardware Diagnostics & Protocol Hex Inspector](#417-hardware-diagnostics--protocol-hex-inspector)
    - [4.18 Accessibility, Localization & Audio Advisories](#418-accessibility-localization--audio-advisories)
+   - [4.19 Longitudinal Early Warning Trajectory Engine (SIH #26181 Step 1)](#419-longitudinal-early-warning-trajectory-engine-sih-26181-step-1)
+   - [4.20 Tailored Vulnerability Companion Personas & Adaptive HUD (SIH #26181 Step 2)](#420-tailored-vulnerability-companion-personas--adaptive-hud-sih-26181-step-2)
 5. [Operator Guide: Step-by-Step Instructions](#5-operator-guide-step-by-step-instructions)
    - [5.1 Initial Setup & Role Selection](#51-initial-setup--role-selection)
    - [5.2 Pairing the SSAI-SENSE-01 Board (or Using Demo Mode)](#52-pairing-the-ssai-sense-01-board-or-using-demo-mode)
@@ -480,6 +482,37 @@ Accessible at `/devices/diagnostics`:
 - **Full Multi-Language Support:** Localized in English, Hindi (हिन्दी), and Bengali (বাংলা) via Flutter ARB localization.
 - **High-Scale Accessibility:** Layouts are engineered to scale seamlessly up to **`textScaleFactor: 2.0`** without text clipping or layout overflow.
 - **Voice / Audio Advisories:** Synthesizes spoken voice alerts in local dialects for illiterate patients.
+
+### 4.19 Longitudinal Early Warning Trajectory Engine (SIH #26181 Step 1)
+Located in `lib/domain/rules/early_warning_trajectory_engine.dart` and `lib/domain/models/early_warning_trajectory.dart`:
+- **Rolling Multi-Day Physiological Baseline:** Instead of relying only on instantaneous point-in-time measurements, the engine fuses 3-day and 7-day rolling biometric logs to recognize insidious, creeping deterioration days before overt clinical emergencies occur.
+- **Cumulative Thermal Debt Trajectory:**
+  - Evaluates consecutive hot nights (ambient temp $\ge 28^\circ\text{C}$ or nocturnal Heat Index) and nocturnal resting heart rate.
+  - Detects incomplete autonomic recovery ($\Delta \text{HR} \ge 8\text{ bpm}$ above baseline over 3 consecutive nights).
+  - Triggers proactive warnings for impending heat exhaustion, cardiovascular strain, and autonomic burnout.
+- **Trailing Respiratory Degradation Curve:**
+  - Evaluates cumulative 48-hour $\text{PM}_{2.5}$ exposure alongside resting $\text{SpO}_2$ trajectories.
+  - Flags pre-bronchospasm risk when baseline $\text{SpO}_2$ slips by $\ge 2\%$ across consecutive readings during severe smog events.
+  - Automatically recommends proactive inhaler staging, guided pursed-lip breathing, and indoor air containment.
+- **Post-Flood 14-Day Epidemic Incubation Timeline:**
+  - **Days 1–3 (Acute Waterborne Phase):** High-vigilance screening for acute cholera, *E. coli*, profuse rice-water diarrhea, and hypovolemic dehydration.
+  - **Days 4–8 (Zoonotic/Wound Phase):** Sentinel tracking for leptospirosis (*Weil's disease*), high fever with intense calf pain, conjunctival suffusion, and open wound cellulitis/sepsis from wading in floodwaters.
+  - **Days 9–14 (Vector-Borne Phase):** Surveillance for stagnant pool mosquito vectors (Dengue, Malaria, Chikungunya), retro-orbital headache, saddleback fever, and petechial rashes.
+- **Mandate Adherence:** Pure Dart implementation (zero Flutter UI dependencies), strictly deterministic bands, and full Mandate 2.5 compliance (AI flags are advisory and never alter trajectory bands).
+
+### 4.20 Tailored Vulnerability Companion Personas & Adaptive HUD (SIH #26181 Step 2)
+Located in `lib/domain/models/vulnerability_persona.dart`, `lib/features/patient_home/widgets/vulnerability_persona_selector.dart`, and `lib/features/patient_home/widgets/persona_adaptive_hud.dart`:
+- **Dynamic Demographic Inference & Cohort Tagging:** Automatically suggests or allows manual selection of tailored vulnerability personas based on age, occupation, and chronic disease flags:
+  - **Outdoor Worker:** Construction laborers, farmers, delivery personnel, and street vendors exposed to radiant heat and physical exertion.
+  - **Elderly Citizen:** Individuals aged 65+ with elevated fall risk, blunted thirst reflexes, and nocturnal cardiovascular vulnerability.
+  - **Chronic Cardiorespiratory:** Individuals managing COPD, asthma, heart failure, or hypertension vulnerable to sudden air quality or thermal shifts.
+  - **General Resident:** Standard community members needing baseline wellness, epidemic alerts, and disaster readiness.
+- **Cohort-Tailored Adaptive HUD:**
+  - **Outdoor Worker HUD:** Displays real-time Moran Physiological Strain Index (PSI 0–10), active hydration countdown timer, quick `+250 ml` water intake logging, and wet-bulb rest-cycle advisories.
+  - **Elderly Citizen HUD:** 24/7 fall sentinel status indicator, nocturnal blood pressure/heart rate dipping tracker, blunted thirst reminder, and one-tap emergency SOS latch.
+  - **Chronic Cardiorespiratory HUD:** Ambient NAQI/$\text{PM}_{2.5}$ cardiorespiratory distress gauge, quick-launch shortcut to the interactive 4s/6s Pursed-Lip Breathing Metronome, and medication staging checklists.
+  - **General Resident HUD:** 7-day longitudinal stability radar, regional epidemic incubation status, and community disaster safety advisories.
+- **Interactive Persona Switcher:** Floating horizontal selector allows instant switching between personas while persisting user selection in local encrypted storage.
 
 ---
 

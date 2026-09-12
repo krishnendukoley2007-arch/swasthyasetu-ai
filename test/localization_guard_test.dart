@@ -44,6 +44,10 @@ const remainingAllowance = <String, int>{
   // Automatic Disaster Adaptation & syndromic surveillance for SIH #26181
   'patient_home/widgets/disaster_hazard_banner.dart': 20,
   'patient_home/widgets/disaster_syndromic_sheet.dart': 19,
+  // Vulnerability Persona & Early Warning Trajectory Engine for SIH #26181
+  'patient_home/widgets/early_warning_trajectory_card.dart': 8,
+  'patient_home/widgets/persona_adaptive_hud.dart': 37,
+  'patient_home/widgets/vulnerability_persona_selector.dart': 1,
   // Air Pollution & Respiratory Guardian with coupled SpO2 for SIH #26181
   'screening/screens/air_pollution_guardian_screen.dart': 12,
   'screening/screens/ai_explanation_screen.dart': 14,

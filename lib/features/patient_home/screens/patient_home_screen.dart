@@ -21,6 +21,9 @@ import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/environment/state/environment_providers.dart';
 import 'package:swasthyasetu_ai/features/environment/widgets/environment_card.dart';
 import 'package:swasthyasetu_ai/features/patient_home/widgets/disaster_hazard_banner.dart';
+import 'package:swasthyasetu_ai/features/patient_home/widgets/early_warning_trajectory_card.dart';
+import 'package:swasthyasetu_ai/features/patient_home/widgets/persona_adaptive_hud.dart';
+import 'package:swasthyasetu_ai/features/patient_home/widgets/vulnerability_persona_selector.dart';
 import 'package:swasthyasetu_ai/features/screening/state/screening_draft.dart';
 
 /// The patient's own home: connect the ESP32, run a self-check, understand
@@ -108,6 +111,12 @@ class PatientHomeScreen extends ConsumerWidget {
               children: [
                 _buildGreeting(context, account),
                 const AppSpacing.vmd(),
+                const VulnerabilityPersonaSelector(),
+                const AppSpacing.vmd(),
+                const PersonaAdaptiveHud(),
+                const AppSpacing.vmd(),
+                const EarlyWarningTrajectoryCard(),
+                const AppSpacing.vlg(),
                 DisasterHazardBanner(
                   heartRateBpm: latestScreening?.heartRate,
                   temperatureC: latestScreening?.temperature,

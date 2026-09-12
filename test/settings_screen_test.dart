@@ -9,6 +9,7 @@ import 'package:swasthyasetu_ai/data/repositories/emergency_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/settings_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/audience.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
+import 'package:swasthyasetu_ai/domain/models/vulnerability_persona.dart';
 import 'package:swasthyasetu_ai/features/auth/state/auth_controller.dart';
 import 'package:swasthyasetu_ai/features/settings/screens/settings_screen.dart';
 import 'package:swasthyasetu_ai/l10n/generated/app_localizations.dart';
@@ -53,6 +54,12 @@ class _FakeSettingsController extends StateNotifier<AppSettingsSnapshot>
   Future<void> setAudience(Audience audience) async {
     calls.add('setAudience:${audience.storageValue}');
     state = state.copyWith(audience: audience);
+  }
+
+  @override
+  Future<void> setVulnerabilityPersona(VulnerabilityPersona persona) async {
+    calls.add('setVulnerabilityPersona:${persona.storageValue}');
+    state = state.copyWith(vulnerabilityPersona: persona);
   }
 
   @override

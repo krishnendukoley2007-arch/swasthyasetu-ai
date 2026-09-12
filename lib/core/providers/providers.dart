@@ -24,6 +24,7 @@ import 'package:swasthyasetu_ai/data/repositories/screening_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/settings_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/audience.dart';
 import 'package:swasthyasetu_ai/domain/models/patient.dart';
+import 'package:swasthyasetu_ai/domain/models/vulnerability_persona.dart';
 
 /// The single dependency-injection surface for the app. Everything stateful
 /// hangs off `databaseProvider`, so a test can override that one provider with
@@ -193,6 +194,11 @@ class SettingsController extends StateNotifier<AppSettingsSnapshot> {
   Future<void> setAudience(Audience audience) async {
     state = state.copyWith(audience: audience);
     await _repo.setAudience(audience);
+  }
+
+  Future<void> setVulnerabilityPersona(VulnerabilityPersona persona) async {
+    state = state.copyWith(vulnerabilityPersona: persona);
+    await _repo.setVulnerabilityPersona(persona);
   }
 
   /// Trimmed, because a key pasted from a browser almost always arrives with a

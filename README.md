@@ -9,7 +9,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.5.0%20%28build%206%29-2563eb?style=for-the-badge)](pubspec.yaml)
 [![Platform](https://img.shields.io/badge/Android-8.0%2B%20%7C%20Web%20%7C%20ESP32-3ddc84?style=for-the-badge&logo=android&logoColor=white)](pubspec.yaml)
-[![Tests](https://img.shields.io/badge/tests-534%20passing-16a34a?style=for-the-badge)](test/)
+[![Tests](https://img.shields.io/badge/tests-549%20passing-16a34a?style=for-the-badge)](test/)
 [![Linter](https://img.shields.io/badge/flutter%20analyze-0%20issues-brightgreen?style=for-the-badge)](lib/)
 [![Qualcomm 26181](https://img.shields.io/badge/Qualcomm%20Contest-Problem%2026181-orange?style=for-the-badge)](https://github.com/helloworld3003/swasthya-setu-ai-private)
 [![Live Web Dashboard](https://img.shields.io/badge/live%20workstation-Netlify-00ad9f?style=for-the-badge&logo=netlify&logoColor=white)](https://prismatic-sfogliatella-1e040e.netlify.app/)
@@ -88,7 +88,7 @@
 - [🧠 Grounded Gemini AI & Snapdragon](#7--grounded-google-gemini-online-ai-personalized--non-alarmist)
 - [📡 Disaster Offline BLE Mesh Relay](#8--disaster-offline-ble-mesh-relay-beaconing)
 - [🔌 Flash the Firmware](#-flash-the-firmware)
-- [🧪 Quality Invariants & 534 Tests](#-automated-testing--quality-invariants)
+- [🧪 Quality Invariants & 549 Tests](#-automated-testing--quality-invariants)
 
 </td>
 </tr>
@@ -121,6 +121,8 @@ India confronts severe, recurring public health catastrophes during extreme clim
 | **Thermal Strain Monitoring** | Outdoor laborers suffer silent heatstroke under high humidity and radiant heat. | **Climate Heat Guardian** running the **Moran Physiological Strain Index (PSI)** ($0\text{--}10$), active hydration countdown ($250\text{ ml}$ every 15–20 min), and dynamic shaded rest scheduler. | [`heat_guardian_screen.dart`](lib/features/screening/screens/heat_guardian_screen.dart)<br>Full Moran formula. |
 | **Continuous Nocturnal Tracking** | Sleep apnea and non-dipping nocturnal hypertension trigger sudden cardiac events. | **Continuous Overnight Guardian** with 8-hour continuous trend telemetry, Lead I ECG oscilloscope sweep, **nocturnal dipping analyzer** ($01:00\text{--}04:30\text{ AM}$), and Oxygen Desaturation Index (ODI). | [`overnight_guardian_screen.dart`](lib/features/screening/screens/overnight_guardian_screen.dart)<br>Validated clinical engine. |
 | **Total Telecom Blackout Survival** | Disaster zones lose internet, cellular towers, and phone networks. | **Offline Disaster Survival Playbook** (water decontamination via rolling boil, chlorine tablets, SODIS, heatstroke cooling, cyclone safety) and **Store-and-Forward BLE Mesh Relay Beacons** (16-byte encrypted frames). | [`disaster_playbook_modal.dart`](lib/features/emergency/widgets/disaster_playbook_modal.dart)<br>Available offline. |
+| **Longitudinal Trajectory Warnings** | Acute emergencies are preceded by insidious, multi-day creeping physiological decline. | **Longitudinal Early Warning Trajectory Engine** analyzing rolling 3-day and 7-day biometrics: cumulative thermal debt ($\Delta\text{HR} \ge 8\text{ bpm}$ over 3 hot nights), trailing 48h $\text{PM}_{2.5}$ respiratory curves ($\text{SpO}_2$ drops $\ge 2\%$), and 14-day post-flood epidemic incubation tracking (Days 1–3 cholera, 4–8 leptospirosis, 9–14 vector-borne). | [`early_warning_trajectory_engine.dart`](lib/domain/rules/early_warning_trajectory_engine.dart)<br>Pure Dart, 100% test pass. |
+| **Tailored Vulnerability Companions** | Generic health recommendations fail outdoor workers, vulnerable elders, and chronic lung patients. | **Tailored Vulnerability Companion Personas & Adaptive HUDs** (Outdoor Worker with Moran PSI & hydration quick-logging; Elderly Citizen with 24/7 fall sentinel & nocturnal dipping; Chronic Care with NAQI & pursed-lip breathing coach; General Community with 7-day stability radar). | [`vulnerability_persona.dart`](lib/domain/models/vulnerability_persona.dart), [`persona_adaptive_hud.dart`](lib/features/patient_home/widgets/persona_adaptive_hud.dart). |
 | **Privacy-Preserving On-Device Intelligence** | Vulnerable citizens require private, sub-millisecond AI inference without cloud leaks. | **Qualcomm Snapdragon CPU Telemetry & Edge AI Autoencoder** executing 100% on-device inference (< 1 ms latency) with zero cloud data transmission. | [`qnn_service.dart`](lib/core/services/qnn_service.dart), [`edge_ai_service.dart`](lib/core/services/edge_ai_service.dart). |
 
 ---
@@ -536,7 +538,7 @@ flutter --version
 flutter pub get
 ```
 
-### 4. Run Automated Test Suite (534 Tests Passing)
+### 4. Run Automated Test Suite (549 Tests Passing)
 ```powershell
 # Run the entire test suite
 flutter test
@@ -613,8 +615,8 @@ The modular firmware sketch is located at [`firmware/SSAI_SENSE_final/SSAI_SENSE
 
 Every modification to the codebase must strictly satisfy these quality invariants:
 
-- **534 Automated Tests:** 100% pass rate across unit tests, widget tests, protocol parsers, invariant tests, disaster triggers, and clinical calculators.
-- **Accessibility & Font Scaling Invariant:** Every screen is tested at **`textScaleFactor: 2.0`** with zero pixel clipping or overflow (`test/overflow_test.dart` — 92 layout combinations).
+- **549 Automated Tests:** 100% pass rate across unit tests, widget tests, protocol parsers, invariant tests, disaster triggers, and clinical calculators.
+- **Accessibility & Font Scaling Invariant:** Every screen is tested at **`textScaleFactor: 2.0`** with zero pixel clipping or overflow (`test/overflow_test.dart` — 128 layout combinations).
 - **Binary Frame Integrity:** Validates exact 20-byte BLE telemetry frames matching firmware `static_assert(sizeof(telemetry_frame_t) == 20)`.
 - **Map Honesty:** When location consent is OFF, the map explicitly declares *"Location is OFF"* rather than rendering an empty misleading map.
 - **No Fabricated Gaps:** Missing or excluded metrics render strictly as `—` (em dash), never `0` or simulated approximations.
@@ -622,7 +624,7 @@ Every modification to the codebase must strictly satisfy these quality invariant
 - **Storage Stays English:** SQLite database keys, exported JSON/CSV, and rule engine tags remain 100% English regardless of UI language (Hindi, Bengali, English).
 
 ```powershell
-# Run full test suite (534 passing)
+# Run full test suite (549 passing)
 flutter test
 
 # Verify 2.0x font scaling layout compliance (92 permutations)
@@ -646,11 +648,11 @@ lib/
 │   ├── database/         Local encrypted SQLite database schema
 │   └── repositories/     Offline patient and screening repositories
 ├── domain/           🧠 Pure Dart models and deterministic clinical rule engines
-│   ├── models/           Patient, DisasterHazard, SyndromicSurvey, Vitals
-│   └── rules/            Risk engine, DisasterHazardEngine, OvernightAnalysisEngine
+│   ├── models/           Patient, DisasterHazard, EarlyWarningTrajectory, VulnerabilityPersona
+│   └── rules/            Risk engine, DisasterHazardEngine, EarlyWarningTrajectoryEngine
 ├── features/         🎯 Feature modules:
 │   ├── screening/        Overnight Guardian, Heat Guardian, Air Pollution Guardian, ECG live
-│   ├── patient_home/     Disaster Hazard Banner, 60s Syndromic Sheet, Guardian Hub
+│   ├── patient_home/     Adaptive Persona HUD, Early Warning Radar, Syndromic Sheet
 │   ├── dashboard/        Clinician home, General AI assistant, community telemetry
 │   ├── emergency/        Disaster Playbook Modal, BLE mesh beacon, SOS dispatch
 │   ├── auth/             Google Sign-In, Phone OTP, patient profile onboarding
@@ -660,7 +662,7 @@ firmware/             🔌 SSAI_SENSE_final — ESP32 firmware sketch (ECG, PPG,
 hardware/             🎨 3D enclosure renders, circuit schematic, HARDWARE.md manual
 tools/                💻 ecg_dashboard.html — Web-Bluetooth live diagnostic workstation
 website/              🌐 PWA web dashboard deployed at https://prismatic-sfogliatella-1e040e.netlify.app/
-test/                 🧪 534 unit, widget, overflow, and protocol tests
+test/                 🧪 549 unit, widget, overflow, and protocol tests
 ```
 
 ---
