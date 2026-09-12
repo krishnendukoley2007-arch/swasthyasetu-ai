@@ -71,6 +71,7 @@ releases/
 ai_context_bundle/
 Important Files/
 Important Files.zip
+*.zip
 
 # Python & Backend Caches
 backend/venv/
