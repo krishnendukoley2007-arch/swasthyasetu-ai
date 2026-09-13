@@ -61,6 +61,8 @@ dependencies:
   pdf: ^3.13.0
   firebase_ai: ^2.3.0
   flutter_tts: ^4.2.5
+  flex_color_scheme: ^8.4.0
+  google_fonts: ^8.2.1
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
 
 class AppPageTransitions {
@@ -1441,5 +1442,56 @@ class ReducedMotion {
 
   static T getValue<T>(BuildContext context, T normal, T reduced) {
     return shouldReduceMotion(context) ? reduced : normal;
+  }
+}
+
+/// Standardized tactile micro-animations for clinical widgets
+extension AppWidgetAnimateExtensions on Widget {
+  /// Fluid staggered card entrance: subtle fade + slide up
+  Widget appCardEntrance({int index = 0, Duration? delay}) {
+    final effectiveDelay = delay ?? Duration(milliseconds: 40 * index);
+    return animate()
+        .fadeIn(
+          delay: effectiveDelay,
+          duration: const Duration(milliseconds: 320),
+          curve: AppTheme.curveDecelerate,
+        )
+        .slideY(
+          begin: 0.08,
+          end: 0.0,
+          delay: effectiveDelay,
+          duration: const Duration(milliseconds: 320),
+          curve: AppTheme.curveDecelerate,
+        );
+  }
+
+  /// Gentle cardiac heartbeat pulse for live rate indicators
+  Widget appCardiacPulse({bool isLive = true}) {
+    if (!isLive) return this;
+    return animate(onPlay: (controller) => controller.repeat())
+        .scale(
+          begin: const Offset(1.0, 1.0),
+          end: const Offset(1.04, 1.04),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        )
+        .then()
+        .scale(
+          begin: const Offset(1.04, 1.04),
+          end: const Offset(1.0, 1.0),
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+  }
+
+  /// Subtle status shimmer for active link or processing pills
+  Widget appStatusShimmer({bool isGlowing = true}) {
+    if (!isGlowing) return this;
+    return animate(
+      onPlay: (controller) => controller.repeat(reverse: true),
+    ).shimmer(
+      duration: const Duration(milliseconds: 2000),
+      color: const Color(0x33FFFFFF),
+    );
   }
 }

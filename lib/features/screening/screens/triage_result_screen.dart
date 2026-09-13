@@ -30,6 +30,7 @@ const _kAiPatternDiffers =
     'Rhythm pattern differs from normal baseline — consider routine check';
 const _kAiAdvisoryNotice =
     'ADVISORY ONLY (Mandate 2.5) — Does not affect clinical triage band';
+const _kAiBenchmarkLabel = 'Inspect Neural Reconstruction & Benchmark';
 const _kDownloadPdfLabel = 'PDF Report';
 const _kDownloadPdfTooltip = 'Download Clinical PDF Report';
 
@@ -630,7 +631,9 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
 
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
-      child: AppCard(
+      child: AppTactileCard(
+        enableTilt: true,
+        margin: EdgeInsets.zero,
         color: containerColor.withValues(alpha: 0.3),
         padding: const EdgeInsets.all(AppTheme.spacingXl),
         border: BorderSide(color: riskColor.withValues(alpha: 0.3), width: 2),
@@ -1373,6 +1376,35 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen>
                 color: theme.colorScheme.outline,
                 fontStyle: FontStyle.italic,
                 fontSize: 10,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacingSm),
+            InkWell(
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              onTap: () => context.push('/ai/benchmark'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.analytics_outlined,
+                      size: 14,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        _kAiBenchmarkLabel,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

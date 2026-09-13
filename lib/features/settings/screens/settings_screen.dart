@@ -105,6 +105,13 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: context.l10n.settingsRunDiagnosticsBody,
               onTap: () => context.push('/devices/diagnostics'),
             ),
+            _NavTile(
+              icon: Icons.psychology_rounded,
+              title: 'On-Device AI Benchmark',
+              subtitle:
+                  '1D-CNN autoencoder rhythm anomaly benchmark & NPU profiling',
+              onTap: () => context.push('/ai/benchmark'),
+            ),
           ]),
 
           _Section(context.l10n.settingsEmergency, [

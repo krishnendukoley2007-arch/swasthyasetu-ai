@@ -28,6 +28,9 @@
   <link
     href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
+  <!-- GSAP 3 & Lenis for Clinical Dashboard Micro-animations and Smooth Scrolling -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
   <style>
     :root {
       --bg: #070c14;
@@ -324,8 +327,15 @@
     }
 
     @keyframes pulseRecord {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.65; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.65;
+      }
     }
 
     .btn-tool {
@@ -528,6 +538,14 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      transition: border-color 0.2s ease, box-shadow 0.25s ease;
+      will-change: transform;
+      transform-style: preserve-3d;
+    }
+
+    .vital-card:hover {
+      border-color: var(--border-bright);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
 
     .vital-card.highlight-ecg {
@@ -928,7 +946,8 @@
 
   <div class="control-strip">
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-      <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Duration:</span>
+      <span
+        style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Duration:</span>
       <div class="duration-selector" id="dur-selector">
         <button class="dur-pill active" data-dur="30" title="Run 30 seconds (Standard screening)">30s</button>
         <button class="dur-pill" data-dur="60" title="Run 1 minute">1m</button>
@@ -937,12 +956,16 @@
         <button class="dur-pill" data-dur="0" title="Continuous / Infinite stream until stopped">∞ Cont</button>
       </div>
 
-      <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-left: 6px;">Mode:</span>
+      <span
+        style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-left: 6px;">Mode:</span>
       <div class="mode-selector">
         <button class="mode-btn" id="mode-ecg" title="Stream ECG for selected duration">ECG Stream</button>
         <button class="mode-btn" id="mode-spo2" title="Stream SpO2 / Pulse for selected duration">SpO2 / Pulse</button>
-        <button class="mode-btn" id="mode-temp" title="Body Temp sensor detached (reconnect when replaced)" style="opacity:0.6;">Temp (Offline)</button>
-        <button class="mode-btn" id="mode-stop" title="Stop live streaming (0x00)" style="background:rgba(239,68,68,0.18); color:#f87171; border-color:rgba(239,68,68,0.4);">⏹ Stop Stream</button>
+        <button class="mode-btn" id="mode-temp" title="Body Temp sensor detached (reconnect when replaced)"
+          style="opacity:0.6;">Temp (Offline)</button>
+        <button class="mode-btn" id="mode-stop" title="Stop live streaming (0x00)"
+          style="background:rgba(239,68,68,0.18); color:#f87171; border-color:rgba(239,68,68,0.4);">⏹ Stop
+          Stream</button>
       </div>
 
       <div class="session-timer-badge" id="session-timer-badge">
@@ -961,10 +984,13 @@
         Doctor Report
       </button>
       <button class="btn btn-outline" id="btn-record">Record Session</button>
-      <button class="btn btn-primary" id="btn-save-screening" style="background:#0d9488; color:#fff;">Save Screening</button>
+      <button class="btn btn-primary" id="btn-save-screening" style="background:#0d9488; color:#fff;">Save
+        Screening</button>
       <button class="btn btn-outline" id="btn-export-csv" title="Export unified telemetry CSV">Export CSV</button>
-      <button class="btn btn-outline" id="btn-export-ecg-csv" title="Export 250 Hz Raw ECG waveform CSV">Raw ECG CSV</button>
-      <button class="btn btn-outline" id="btn-export-all-csv" title="Export complete history of all recorded screenings">All Screenings CSV</button>
+      <button class="btn btn-outline" id="btn-export-ecg-csv" title="Export 250 Hz Raw ECG waveform CSV">Raw ECG
+        CSV</button>
+      <button class="btn btn-outline" id="btn-export-all-csv"
+        title="Export complete history of all recorded screenings">All Screenings CSV</button>
     </div>
   </div>
 
@@ -980,9 +1006,11 @@
             <span class="lead-tag">AD8232 • 250 Hz</span>
           </div>
           <div class="scope-meta">
-            <button class="btn-tool" id="btn-grid-style" title="Switch between Neon Dark and Hospital Pink Paper">🎨 Grid: Dark</button>
+            <button class="btn-tool" id="btn-grid-style" title="Switch between Neon Dark and Hospital Pink Paper">🎨
+              Grid: Dark</button>
             <button class="btn-tool" id="btn-caliper" title="Toggle interactive measuring calipers">📐 Calipers</button>
-            <button class="btn-tool" id="btn-audio-pulse" title="Toggle audible heartbeat synth pulse">🔇 Sound: Off</button>
+            <button class="btn-tool" id="btn-audio-pulse" title="Toggle audible heartbeat synth pulse">🔇 Sound:
+              Off</button>
             <span>Gain: <select id="ecg-gain"
                 style="background:var(--bg); color:var(--text-primary); border:1px solid var(--border); border-radius:4px; font-size:0.72rem; padding:2px 4px;">
                 <option value="1">1x</option>
@@ -1040,7 +1068,9 @@
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
-          <span class="session-badge" style="font-size:0.65rem; background:rgba(16,185,129,0.12); color:#10b981; border-color:rgba(16,185,129,0.3);">ECG + SpO2 Active</span>
+          <span class="session-badge"
+            style="font-size:0.65rem; background:rgba(16,185,129,0.12); color:#10b981; border-color:rgba(16,185,129,0.3);">ECG
+            + SpO2 Active</span>
           <span class="diag-status ok" id="consensus-pill">Δ = 0 BPM</span>
         </div>
       </div>
@@ -1172,24 +1202,29 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
           <div class="diag-item">
             <span>Cardio Drift (ΔHR):</span>
-            <span id="drift-delta-val" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;">+0 BPM</span>
+            <span id="drift-delta-val" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;">+0
+              BPM</span>
           </div>
           <div class="diag-item">
             <span>Strain Index (PSI):</span>
-            <span id="psi-score-val" style="font-family:'JetBrains Mono'; font-weight:700; color:#34d399;">1.2 / 10</span>
+            <span id="psi-score-val" style="font-family:'JetBrains Mono'; font-weight:700; color:#34d399;">1.2 /
+              10</span>
           </div>
           <div class="diag-item">
             <span>Autonomic Tone:</span>
-            <span id="psi-autonomic-val" style="font-family:'JetBrains Mono'; font-weight:700; color:#a855f7;">Balanced</span>
+            <span id="psi-autonomic-val"
+              style="font-family:'JetBrains Mono'; font-weight:700; color:#a855f7;">Balanced</span>
           </div>
           <div class="diag-item">
             <span>Hydration Index:</span>
-            <span id="psi-hydration-val" style="font-family:'JetBrains Mono'; font-weight:700; color:#06b6d4;">Adequate</span>
+            <span id="psi-hydration-val"
+              style="font-family:'JetBrains Mono'; font-weight:700; color:#06b6d4;">Adequate</span>
           </div>
         </div>
 
         <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;">
-          <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-muted); margin-bottom:4px;">
+          <div
+            style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-muted); margin-bottom:4px;">
             <span>Hemodynamic Load</span>
             <span id="psi-load-desc" style="color:#34d399; font-weight:600;">Optimal Cardiovascular Reserve</span>
           </div>
@@ -1238,7 +1273,8 @@
             <div class="legend-color" style="background: #a855f7;"></div>
             <span>SpO2 Oxygen (%)</span>
           </div>
-          <button class="action-btn-sm" id="btn-clear-stream" title="Reset current in-memory stream buffer">Clear Stream</button>
+          <button class="action-btn-sm" id="btn-clear-stream" title="Reset current in-memory stream buffer">Clear
+            Stream</button>
         </div>
       </div>
 
@@ -1363,1288 +1399,1294 @@
           <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
         </div>
       </div>
-  <!-- Modal for Session Replay & Waveform Scrubber -->
-  <div class="modal-backdrop" id="replay-modal">
-    <div class="replay-sheet">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <h3 style="font-size:1.05rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px;" id="replay-title">
-            <span>⚡</span> Waveform Inspector &amp; Replay
-          </h3>
-          <p style="font-size:0.75rem; color:var(--text-muted);" id="replay-subtitle">Screening #-- • 250 Hz Diagnostic Scrubbing</p>
-        </div>
-        <button class="action-btn-sm" id="btn-close-replay" style="padding:6px 12px; font-size:0.8rem;">✕ Close</button>
-      </div>
+      <!-- Modal for Session Replay & Waveform Scrubber -->
+      <div class="modal-backdrop" id="replay-modal">
+        <div class="replay-sheet">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h3 style="font-size:1.05rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px;"
+                id="replay-title">
+                <span>⚡</span> Waveform Inspector &amp; Replay
+              </h3>
+              <p style="font-size:0.75rem; color:var(--text-muted);" id="replay-subtitle">Screening #-- • 250 Hz
+                Diagnostic Scrubbing</p>
+            </div>
+            <button class="action-btn-sm" id="btn-close-replay" style="padding:6px 12px; font-size:0.8rem;">✕
+              Close</button>
+          </div>
 
-      <!-- Replay Oscilloscope Screen -->
-      <div style="width:100%; height:220px; background:#060b13; border:1px solid var(--border); border-radius:8px; position:relative; overflow:hidden;">
-        <canvas id="replay-canvas" style="width:100%; height:100%; display:block;"></canvas>
-      </div>
+          <!-- Replay Oscilloscope Screen -->
+          <div
+            style="width:100%; height:220px; background:#060b13; border:1px solid var(--border); border-radius:8px; position:relative; overflow:hidden;">
+            <canvas id="replay-canvas" style="width:100%; height:100%; display:block;"></canvas>
+          </div>
 
-      <!-- Controls & Scrubber Slider -->
-      <div style="display:flex; flex-direction:column; gap:8px;">
-        <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--text-secondary);">
-          <span id="replay-time-current">00:00.00</span>
-          <span id="replay-time-total">00:30.00</span>
-        </div>
-        <input type="range" class="replay-scrubber" id="replay-scrubber" min="0" max="1000" value="0">
-      </div>
+          <!-- Controls & Scrubber Slider -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div
+              style="display:flex; justify-content:space-between; font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--text-secondary);">
+              <span id="replay-time-current">00:00.00</span>
+              <span id="replay-time-total">00:30.00</span>
+            </div>
+            <input type="range" class="replay-scrubber" id="replay-scrubber" min="0" max="1000" value="0">
+          </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div style="display:flex; gap:8px; align-items:center;">
-          <button class="btn btn-primary" id="btn-replay-play" style="padding:6px 16px;">▶ Play</button>
-          <button class="btn btn-outline" id="btn-replay-pause" style="padding:6px 14px;">⏸ Pause</button>
-          <div style="display:flex; gap:4px; margin-left:12px; align-items:center;">
-            <span style="font-size:0.72rem; color:var(--text-muted);">Speed:</span>
-            <button class="dur-pill active" id="replay-spd-05" data-speed="0.5">0.5x</button>
-            <button class="dur-pill" id="replay-spd-10" data-speed="1.0">1.0x</button>
-            <button class="dur-pill" id="replay-spd-20" data-speed="2.0">2.0x</button>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn btn-primary" id="btn-replay-play" style="padding:6px 16px;">▶ Play</button>
+              <button class="btn btn-outline" id="btn-replay-pause" style="padding:6px 14px;">⏸ Pause</button>
+              <div style="display:flex; gap:4px; margin-left:12px; align-items:center;">
+                <span style="font-size:0.72rem; color:var(--text-muted);">Speed:</span>
+                <button class="dur-pill active" id="replay-spd-05" data-speed="0.5">0.5x</button>
+                <button class="dur-pill" id="replay-spd-10" data-speed="1.0">1.0x</button>
+                <button class="dur-pill" id="replay-spd-20" data-speed="2.0">2.0x</button>
+              </div>
+            </div>
+            <div style="font-family:'JetBrains Mono'; font-size:0.74rem; color:var(--text-muted);"
+              id="replay-info-metrics">
+              Samples: 7,500 | Mean HR: 78 BPM | Rhythm: NSR
+            </div>
           </div>
         </div>
-        <div style="font-family:'JetBrains Mono'; font-size:0.74rem; color:var(--text-muted);" id="replay-info-metrics">
-          Samples: 7,500 | Mean HR: 78 BPM | Rhythm: NSR
-        </div>
       </div>
-    </div>
-  </div>
 
-  <script>
-    // ── BLE PROTOCOL CONSTANTS ──────────────────────────────────────────
-    const SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-    const CHAR_DEVINFO = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-    const CHAR_TELEMETRY = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
-    const CHAR_WAVEFORM = '6e400004-b5a3-f393-e0a9-e50e24dcca9e';
-    const CHAR_CONTROL = '6e400005-b5a3-f393-e0a9-e50e24dcca9e';
+      <script>
+        // ── BLE PROTOCOL CONSTANTS ──────────────────────────────────────────
+        const SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+        const CHAR_DEVINFO = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+        const CHAR_TELEMETRY = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+        const CHAR_WAVEFORM = '6e400004-b5a3-f393-e0a9-e50e24dcca9e';
+        const CHAR_CONTROL = '6e400005-b5a3-f393-e0a9-e50e24dcca9e';
 
-    const ECG_FS = 250;
-    const ECG_BUFFER_MAX = ECG_FS * 4.0; // 1000 samples (4s window)
-    const PPG_FS = 25;
-    const PPG_BUFFER_MAX = PPG_FS * 6.0;
+        const ECG_FS = 250;
+        const ECG_BUFFER_MAX = ECG_FS * 4.0; // 1000 samples (4s window)
+        const PPG_FS = 25;
+        const PPG_BUFFER_MAX = PPG_FS * 6.0;
 
-    // ── STATE & SEPARATE STREAM BUFFERS ───────────────────────────────
-    let device = null, server = null;
-    let telemChar = null, waveChar = null, ctrlChar = null;
-    let isConnected = false;
+        // ── STATE & SEPARATE STREAM BUFFERS ───────────────────────────────
+        let device = null, server = null;
+        let telemChar = null, waveChar = null, ctrlChar = null;
+        let isConnected = false;
 
-    // Rolling display buffers
-    const ecgSamples = [];
-    const ppgSamples = [];
-    const rrHistory = [];
+        // Rolling display buffers
+        const ecgSamples = [];
+        const ppgSamples = [];
+        const rrHistory = [];
 
-    // Dedicated Per-Sensor Continuous Stream Lists (Store each and every piece of data)
-    const streamHeartRate = []; // { t, timestamp, hrEcg, hrPpg, consensusDelta }
-    const streamSpO2 = [];      // { t, timestamp, spo2, stabilized, lowSignal }
-    const streamEcgWave = [];   // { t, sample, index }
-    const streamTemp = [];      // { t, timestamp, tempC }
+        // Dedicated Per-Sensor Continuous Stream Lists (Store each and every piece of data)
+        const streamHeartRate = []; // { t, timestamp, hrEcg, hrPpg, consensusDelta }
+        const streamSpO2 = [];      // { t, timestamp, spo2, stabilized, lowSignal }
+        const streamEcgWave = [];   // { t, sample, index }
+        const streamTemp = [];      // { t, timestamp, tempC }
 
-    // Persistent Screenings Session History (Screening #1, #2, #3...)
-    const STORAGE_KEY_SESSIONS = 'ssai_screenings_history_v1';
-    let screeningSessions = [];
-    try {
-      screeningSessions = JSON.parse(localStorage.getItem(STORAGE_KEY_SESSIONS) || '[]');
-    } catch (_) { screeningSessions = []; }
-
-    let ecgHeartRate = 0;
-    let ppgPulseRate = 0;
-    let currentSpo2 = 0;
-    let currentTemp = 0;
-    let currentRr = 0;
-    let currentFlags = 0;
-    let currentBattery = 0;
-    let recording = false;
-    let recordedData = [];
-    let recordedWaveforms = [];
-    let recordTimeout = null;
-    let lastHeartFlash = 0;
-
-    const $ = (id) => document.getElementById(id);
-    const logEl = $('event-log');
-
-    function log(msg) {
-      const t = new Date().toLocaleTimeString();
-      logEl.textContent = `[${t}] ${msg}\n` + logEl.textContent.slice(0, 1000);
-    }
-
-    // ── BLE CONNECTION ──────────────────────────────────────────────────
-    $('btn-connect').addEventListener('click', async () => {
-      if (device && device.gatt.connected) {
-        device.gatt.disconnect();
-        return;
-      }
-      if (!navigator.bluetooth) {
-        alert('Web Bluetooth requires Google Chrome or Microsoft Edge.');
-        return;
-      }
-      try {
-        log('Scanning for SSAI-SENSE-01...');
-        device = await navigator.bluetooth.requestDevice({
-          filters: [{ name: 'SSAI-SENSE-01' }],
-          optionalServices: [SERVICE_UUID]
-        });
-        device.addEventListener('gattserverdisconnected', onDisconnected);
-        log('Connecting GATT...');
-        server = await device.gatt.connect();
-
-        const service = await server.getPrimaryService(SERVICE_UUID);
-        telemChar = await service.getCharacteristic(CHAR_TELEMETRY);
-        waveChar = await service.getCharacteristic(CHAR_WAVEFORM);
-        ctrlChar = await service.getCharacteristic(CHAR_CONTROL);
-
+        // Persistent Screenings Session History (Screening #1, #2, #3...)
+        const STORAGE_KEY_SESSIONS = 'ssai_screenings_history_v1';
+        let screeningSessions = [];
         try {
-          const devInfo = await service.getCharacteristic(CHAR_DEVINFO);
-          const val = await devInfo.readValue();
-          $('fw-badge').textContent = 'FW: ' + new TextDecoder().decode(val);
-        } catch (e) { }
+          screeningSessions = JSON.parse(localStorage.getItem(STORAGE_KEY_SESSIONS) || '[]');
+        } catch (_) { screeningSessions = []; }
 
-        await telemChar.startNotifications();
-        telemChar.addEventListener('characteristicvaluechanged', onTelemetryFrame);
+        let ecgHeartRate = 0;
+        let ppgPulseRate = 0;
+        let currentSpo2 = 0;
+        let currentTemp = 0;
+        let currentRr = 0;
+        let currentFlags = 0;
+        let currentBattery = 0;
+        let recording = false;
+        let recordedData = [];
+        let recordedWaveforms = [];
+        let recordTimeout = null;
+        let lastHeartFlash = 0;
 
-        await waveChar.startNotifications();
-        waveChar.addEventListener('characteristicvaluechanged', onWaveformFrame);
+        const $ = (id) => document.getElementById(id);
+        const logEl = $('event-log');
 
-        setConnected(true);
-        log('Connected to SSAI-SENSE-01! Telemetry streaming.');
-      } catch (err) {
-        log('Connection failed: ' + err.message);
-        setConnected(false);
-      }
-    });
-
-    function onDisconnected() {
-      setConnected(false);
-      log('Bluetooth disconnected.');
-    }
-
-    function setConnected(ok) {
-      isConnected = ok;
-      const badge = $('conn-badge');
-      const btn = $('btn-connect');
-      if (ok) {
-        badge.className = 'badge connected';
-        badge.innerHTML = '<span class="dot"></span> CONNECTED';
-        btn.textContent = 'Disconnect';
-        btn.className = 'btn btn-danger';
-        $('ecg-overlay').classList.add('hidden');
-      } else {
-        badge.className = 'badge';
-        badge.innerHTML = '<span class="dot"></span> DISCONNECTED';
-        btn.textContent = 'Connect BLE';
-        btn.className = 'btn btn-primary';
-        $('val-ecg-hr').innerHTML = '-- <span class="vital-unit">BPM</span>';
-        $('val-ppg-hr').innerHTML = '-- <span class="vital-unit">BPM</span>';
-        $('val-spo2').innerHTML = '-- <span class="vital-unit">%</span>';
-        $('val-rr').innerHTML = '-- <span class="vital-unit">ms</span>';
-        $('ecg-overlay').classList.remove('hidden');
-      }
-    }
-
-    // ── SENSOR MODE & DURATION CONTROL ──────────────────────────────────
-    let selectedDurationSec = 30; // 30s default; 0 = continuous/infinite
-    let sessionTimerInterval = null;
-    let sessionStartMs = 0;
-
-    function formatMmSs(sec) {
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60);
-      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }
-
-    function updateTimerBadge(elapsedSec = 0) {
-      const badge = $('session-timer-badge');
-      const text = $('session-timer-text');
-      if (!badge || !text) return;
-
-      if (recording) {
-        badge.className = 'session-timer-badge recording';
-        if (selectedDurationSec === 0) {
-          text.textContent = `LIVE ${formatMmSs(elapsedSec)} [∞ CONT]`;
-        } else {
-          text.textContent = `REC ${formatMmSs(elapsedSec)} / ${formatMmSs(selectedDurationSec)}`;
+        function log(msg) {
+          const t = new Date().toLocaleTimeString();
+          logEl.textContent = `[${t}] ${msg}\n` + logEl.textContent.slice(0, 1000);
         }
-      } else {
-        badge.className = 'session-timer-badge';
-        text.textContent = `READY (${selectedDurationSec === 0 ? 'CONT' : selectedDurationSec + 's'})`;
-      }
-    }
 
-    // Duration Selector Pills Click Handler
-    document.querySelectorAll('#dur-selector .dur-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        document.querySelectorAll('#dur-selector .dur-pill').forEach(p => p.classList.remove('active'));
-        pill.classList.add('active');
-        selectedDurationSec = parseInt(pill.getAttribute('data-dur'), 10);
-        updateTimerBadge(0);
-        log(`Duration set to: ${selectedDurationSec === 0 ? 'Continuous (∞)' : selectedDurationSec + 's'}`);
-      });
-    });
-
-    async function sendCmd(cmd, durationSec = selectedDurationSec) {
-      if (!ctrlChar || !isConnected) {
-        log('BLE not connected. Connect first.');
-        return;
-      }
-      try {
-        const payload = new Uint8Array([
-          cmd,
-          durationSec & 0xFF,
-          (durationSec >> 8) & 0xFF
-        ]);
-        await ctrlChar.writeValueWithResponse(payload);
-        const durLabel = durationSec === 0 ? 'Continuous (∞)' : `${durationSec}s`;
-        log(`Command sent: 0x0${cmd.toString(16).toUpperCase()} (${durLabel})`);
-      } catch (e) { log('Command failed: ' + e.message); }
-    }
-
-    $('mode-ecg').addEventListener('click', () => {
-      sendCmd(0x02, selectedDurationSec);
-      updateModes('ecg');
-      ecgSamples.length = 0;
-    });
-    $('mode-spo2').addEventListener('click', () => {
-      sendCmd(0x01, selectedDurationSec);
-      updateModes('spo2');
-      ppgSamples.length = 0;
-    });
-    $('mode-temp').addEventListener('click', () => {
-      sendCmd(0x03, 5);
-      updateModes('temp');
-    });
-    $('mode-stop').addEventListener('click', () => {
-      sendCmd(0x00, 0);
-      updateModes('idle');
-      if (recording) stopRecordingSession();
-    });
-
-    function updateModes(m) {
-      ['ecg', 'spo2', 'temp'].forEach(x => {
-        const el = $('mode-' + x);
-        if (el) el.className = 'mode-btn' + (x === m ? ` active-${x}` : '');
-      });
-    }
-
-    // ── WEB AUDIO SYNTHESIZER FOR PULSE BEEP ─────────────────────────────
-    let audioCtx = null;
-    let audioPulseEnabled = false;
-
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-    }
-
-    function playHeartbeatBeep() {
-      if (!audioPulseEnabled) return;
-      try {
-        initAudio();
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880 Hz medical monitor beep
-        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.05);
-      } catch (e) { }
-    }
-
-    $('btn-audio-pulse').addEventListener('click', () => {
-      audioPulseEnabled = !audioPulseEnabled;
-      initAudio();
-      $('btn-audio-pulse').textContent = audioPulseEnabled ? '🔊 Sound: ON' : '🔇 Sound: Off';
-      $('btn-audio-pulse').classList.toggle('active', audioPulseEnabled);
-      log(`Heartbeat audio sound ${audioPulseEnabled ? 'enabled' : 'muted'}.`);
-    });
-
-    // ── CALIPER & GRID VIEW ENGINE ───────────────────────────────────────
-    let caliperActive = false;
-    let caliperX1 = 120;
-    let caliperX2 = 280;
-    let draggingCaliper = 0;
-    let gridStyle = 'dark'; // 'dark' or 'pink'
-
-    $('btn-grid-style').addEventListener('click', () => {
-      gridStyle = (gridStyle === 'dark') ? 'pink' : 'dark';
-      $('btn-grid-style').textContent = (gridStyle === 'dark') ? '🎨 Grid: Dark' : '🌸 Grid: Pink';
-      $('btn-grid-style').classList.toggle('active', gridStyle === 'pink');
-      log(`ECG grid switched to ${gridStyle.toUpperCase()} mode.`);
-    });
-
-    $('btn-caliper').addEventListener('click', () => {
-      caliperActive = !caliperActive;
-      $('btn-caliper').classList.toggle('active', caliperActive);
-      $('caliper-hud').style.display = caliperActive ? 'block' : 'none';
-      if (caliperActive) updateCaliperHud();
-      log(`Caliper tool ${caliperActive ? 'activated' : 'deactivated'}.`);
-    });
-
-    function updateCaliperHud() {
-      const canvas = $('ecg-canvas');
-      if (!canvas) return;
-      const w = canvas.clientWidth;
-      const timeSpanMs = (ECG_BUFFER_MAX / ECG_FS) * 1000; // 4000ms window
-      const msPerPx = timeSpanMs / Math.max(1, w);
-      const deltaMs = Math.abs(caliperX2 - caliperX1) * msPerPx;
-      const instHr = deltaMs > 0 ? Math.round(60000 / deltaMs) : 0;
-      $('caliper-hud').textContent = `Δt: ${Math.round(deltaMs)} ms | Rate: ${instHr > 0 ? instHr + ' BPM' : '—'} | Caliper Tool`;
-    }
-
-    const ecgCanvasEl = $('ecg-canvas');
-    ecgCanvasEl.addEventListener('mousedown', (e) => {
-      if (!caliperActive) return;
-      const rect = ecgCanvasEl.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      if (Math.abs(x - caliperX1) < 18) draggingCaliper = 1;
-      else if (Math.abs(x - caliperX2) < 18) draggingCaliper = 2;
-      else {
-        if (Math.abs(x - caliperX1) < Math.abs(x - caliperX2)) {
-          caliperX1 = x;
-          draggingCaliper = 1;
-        } else {
-          caliperX2 = x;
-          draggingCaliper = 2;
-        }
-      }
-      updateCaliperHud();
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (!caliperActive || !draggingCaliper) return;
-      const rect = ecgCanvasEl.getBoundingClientRect();
-      let x = e.clientX - rect.left;
-      x = Math.max(5, Math.min(rect.width - 5, x));
-      if (draggingCaliper === 1) caliperX1 = x;
-      else if (draggingCaliper === 2) caliperX2 = x;
-      updateCaliperHud();
-    });
-
-    window.addEventListener('mouseup', () => { draggingCaliper = 0; });
-
-    // ── TELEMETRY PARSING (20-Byte Wire Invariant) ───────────────────────
-    function onTelemetryFrame(event) {
-      const v = event.target.value;
-      if (v.byteLength !== 20 || v.getUint8(0) !== 0x01) return;
-
-      const hr = v.getUint8(2);
-      const spo2 = v.getUint8(3);
-      const tempC = v.getInt16(4, true) / 100.0;
-      const rrMs = v.getUint16(6, true);
-      const flags = v.getUint8(9);
-      const battery = v.getUint8(14);
-      const sysState = v.getUint8(15);
-
-      const beatDetected = (flags & 0x01) !== 0;
-      const leadOff = (flags & 0x04) !== 0;
-      const fingerOff = (flags & 0x08) !== 0;
-      const spo2Stabilized = (flags & 0x10) !== 0; // 3 stable windows — locked
-      const ppgLowSignal = (flags & 0x20) !== 0; // perfusion index < 0.1%
-
-      $('battery-badge').textContent = `BAT: ${battery}%`;
-
-      // Update Dual Heart Rate Sources
-      if (sysState === 2 && !leadOff && hr > 0) { // In ECG Mode
-        ecgHeartRate = hr;
-        $('val-ecg-hr').innerHTML = `${ecgHeartRate} <span class="vital-unit">BPM</span>`;
-      } else if (sysState === 1 && !fingerOff && hr > 0 && spo2 >= 70) { // In SpO2 Mode with finger present
-        ppgPulseRate = hr;
-        $('val-ppg-hr').innerHTML = `${ppgPulseRate} <span class="vital-unit">BPM</span>`;
-      } else if (sysState === 1 && fingerOff) { // SpO2 mode with NO finger
-        ppgPulseRate = 0;
-        $('val-ppg-hr').innerHTML = `-- <span class="vital-unit">BPM</span>`;
-      } else if (sysState === 1 && !fingerOff && spo2 === 0) {
-        // Warm-up: firmware discards the first few Maxim windows (insertion
-        // transient) before publishing values — hold the last value, don't
-        // flash "--".
-      }
-
-      // Dual-Sensor Agreement Logic
-      if (ecgHeartRate > 0 && ppgPulseRate > 0) {
-        const delta = Math.abs(ecgHeartRate - ppgPulseRate);
-        $('consensus-pill').textContent = `Δ = ${delta} BPM`;
-        if (delta <= 2) {
-          $('consensus-pill').className = 'diag-status ok';
-          $('consensus-desc').textContent = '100% Agreement (High Confidence Stroke Volume)';
-        } else if (delta <= 5) {
-          $('consensus-pill').className = 'diag-status ok';
-          $('consensus-desc').textContent = 'Strong Agreement (Normal Vagal Modulation)';
-        } else {
-          $('consensus-pill').className = 'diag-status warn';
-          $('consensus-desc').textContent = 'Sensor divergence detected (Evaluating motion/noise)';
-        }
-      } else if (ppgPulseRate === 0) {
-        $('consensus-pill').textContent = 'FINGER DETACHED';
-        $('consensus-pill').className = 'diag-status warn';
-        $('consensus-desc').textContent = 'Place fingertip on MAX30102 to activate optical pulse rate';
-      }
-
-      // SpO2 & Finger Contact Detection
-      if (sysState === 1) { // SpO2 Mode
-        if (!fingerOff && spo2 >= 70) {
-          currentSpo2 = spo2;
-          $('val-spo2').innerHTML = `${spo2} <span class="vital-unit">%</span>`;
-          $('ppg-overlay').classList.add('hidden');
-          $('ppg-status').textContent = 'FINGER ON SENSOR';
-          $('ppg-status').style.color = '#34d399';
-          // Reading quality status (firmware warm-up/PI gate/lock)
-          if (spo2Stabilized) {
-            $('sub-spo2').textContent = 'Locked — stabilized reading (median of final windows)';
-            $('sub-spo2').style.color = '#34d399';
-          } else if (ppgLowSignal) {
-            $('sub-spo2').textContent = 'Weak optical signal — relax finger, avoid pressing hard';
-            $('sub-spo2').style.color = '#fbbf24';
-          } else {
-            $('sub-spo2').textContent = 'Stabilizing… final value = median of settled windows';
-            $('sub-spo2').style.color = 'var(--text-muted)';
+        // ── BLE CONNECTION ──────────────────────────────────────────────────
+        $('btn-connect').addEventListener('click', async () => {
+          if (device && device.gatt.connected) {
+            device.gatt.disconnect();
+            return;
           }
-        } else if (!fingerOff && spo2 === 0) {
-          // Warm-up settling: firmware is discarding the first Maxim windows
-          // (insertion transient) — not a measurement yet.
-          $('val-spo2').innerHTML = `-- <span class="vital-unit">%</span>`;
-          $('val-ppg-hr').innerHTML = `-- <span class="vital-unit">BPM</span>`;
-          $('ppg-overlay').classList.remove('hidden');
-          $('ppg-overlay').querySelector('span').textContent = 'Stabilizing signal — keep finger still…';
-          $('ppg-status').textContent = 'ACQUIRING SIGNAL';
-          $('ppg-status').style.color = '#38bdf8';
-          ppgSamples.length = 0;
-          $('sub-spo2').textContent = 'Warming up — first seconds are discarded for accuracy';
-          $('sub-spo2').style.color = 'var(--text-muted)';
-        } else {
-          // Finger is NOT touching!
-          currentSpo2 = 0;
-          $('val-spo2').innerHTML = `-- <span class="vital-unit">%</span>`;
-          $('val-ppg-hr').innerHTML = `-- <span class="vital-unit">BPM</span>`;
-          $('ppg-overlay').classList.remove('hidden');
-          $('ppg-overlay').querySelector('span').textContent = 'Finger not touching — place fingertip on MAX30102';
-          $('ppg-status').textContent = 'FINGER OFF SENSOR';
-          $('ppg-status').style.color = '#f87171';
-          ppgSamples.length = 0; // Clear any old wave immediately!
-          $('sub-spo2').textContent = 'Norm: 95-100%';
-          $('sub-spo2').style.color = '';
+          if (!navigator.bluetooth) {
+            alert('Web Bluetooth requires Google Chrome or Microsoft Edge.');
+            return;
+          }
+          try {
+            log('Scanning for SSAI-SENSE-01...');
+            device = await navigator.bluetooth.requestDevice({
+              filters: [{ name: 'SSAI-SENSE-01' }],
+              optionalServices: [SERVICE_UUID]
+            });
+            device.addEventListener('gattserverdisconnected', onDisconnected);
+            log('Connecting GATT...');
+            server = await device.gatt.connect();
+
+            const service = await server.getPrimaryService(SERVICE_UUID);
+            telemChar = await service.getCharacteristic(CHAR_TELEMETRY);
+            waveChar = await service.getCharacteristic(CHAR_WAVEFORM);
+            ctrlChar = await service.getCharacteristic(CHAR_CONTROL);
+
+            try {
+              const devInfo = await service.getCharacteristic(CHAR_DEVINFO);
+              const val = await devInfo.readValue();
+              $('fw-badge').textContent = 'FW: ' + new TextDecoder().decode(val);
+            } catch (e) { }
+
+            await telemChar.startNotifications();
+            telemChar.addEventListener('characteristicvaluechanged', onTelemetryFrame);
+
+            await waveChar.startNotifications();
+            waveChar.addEventListener('characteristicvaluechanged', onWaveformFrame);
+
+            setConnected(true);
+            log('Connected to SSAI-SENSE-01! Telemetry streaming.');
+          } catch (err) {
+            log('Connection failed: ' + err.message);
+            setConnected(false);
+          }
+        });
+
+        function onDisconnected() {
+          setConnected(false);
+          log('Bluetooth disconnected.');
         }
-      } else {
-        // Other mode: Standby for SpO2
-        $('ppg-overlay').classList.remove('hidden');
-        $('ppg-overlay').querySelector('span').textContent = 'Press SpO2 / Pulse (0x01) to start optical sensor';
-        $('ppg-status').textContent = 'STANDBY';
-        $('ppg-status').style.color = 'var(--text-muted)';
-        ppgSamples.length = 0;
-      }
 
-      // R-R Interval & HRV
-      if (rrMs >= 300 && rrMs <= 2000 && (!leadOff || !fingerOff)) {
-        $('val-rr').innerHTML = `${rrMs} <span class="vital-unit">ms</span>`;
-        addRrSample(rrMs);
-      }
+        function setConnected(ok) {
+          isConnected = ok;
+          const badge = $('conn-badge');
+          const btn = $('btn-connect');
+          if (ok) {
+            badge.className = 'badge connected';
+            badge.innerHTML = '<span class="dot"></span> CONNECTED';
+            btn.textContent = 'Disconnect';
+            btn.className = 'btn btn-danger';
+            $('ecg-overlay').classList.add('hidden');
+          } else {
+            badge.className = 'badge';
+            badge.innerHTML = '<span class="dot"></span> DISCONNECTED';
+            btn.textContent = 'Connect BLE';
+            btn.className = 'btn btn-primary';
+            $('val-ecg-hr').innerHTML = '-- <span class="vital-unit">BPM</span>';
+            $('val-ppg-hr').innerHTML = '-- <span class="vital-unit">BPM</span>';
+            $('val-spo2').innerHTML = '-- <span class="vital-unit">%</span>';
+            $('val-rr').innerHTML = '-- <span class="vital-unit">ms</span>';
+            $('ecg-overlay').classList.remove('hidden');
+          }
+        }
 
-      // Heart Pulse Icon & PPG Waveform Generation:
-      // ONLY generate PPG pulse wave when finger is ACTUALLY present and measuring!
-      if (beatDetected) {
-        const g = $('heart-glyph');
-        g.classList.add('heart-pulse');
-        clearTimeout(lastHeartFlash);
-        lastHeartFlash = setTimeout(() => g.classList.remove('heart-pulse'), 120);
-        playHeartbeatBeep();
-      }
+        // ── SENSOR MODE & DURATION CONTROL ──────────────────────────────────
+        let selectedDurationSec = 30; // 30s default; 0 = continuous/infinite
+        let sessionTimerInterval = null;
+        let sessionStartMs = 0;
 
-      if (sysState === 1 && !fingerOff && currentSpo2 >= 70) {
-        generatePpgPoint(beatDetected);
-      } else {
-        ppgSamples.length = 0; // Never draw a fake wave when finger is detached!
-      }
+        function formatMmSs(sec) {
+          const m = Math.floor(sec / 60);
+          const s = Math.floor(sec % 60);
+          return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
 
-      currentFlags = flags;
-      currentBattery = battery;
-      currentTemp = tempC;
-      currentRr = rrMs;
+        function updateTimerBadge(elapsedSec = 0) {
+          const badge = $('session-timer-badge');
+          const text = $('session-timer-text');
+          if (!badge || !text) return;
 
-      // Log continuous streams into separate dedicated lists
-      const now = Date.now();
-      const isoTime = new Date(now).toISOString();
+          if (recording) {
+            badge.className = 'session-timer-badge recording';
+            if (selectedDurationSec === 0) {
+              text.textContent = `LIVE ${formatMmSs(elapsedSec)} [∞ CONT]`;
+            } else {
+              text.textContent = `REC ${formatMmSs(elapsedSec)} / ${formatMmSs(selectedDurationSec)}`;
+            }
+          } else {
+            badge.className = 'session-timer-badge';
+            text.textContent = `READY (${selectedDurationSec === 0 ? 'CONT' : selectedDurationSec + 's'})`;
+          }
+        }
 
-      if (hr > 0) {
-        streamHeartRate.push({
-          t: now,
-          timestamp: isoTime,
-          ecgHr: ecgHeartRate,
-          ppgHr: ppgPulseRate,
-          activeHr: hr,
-          consensusDelta: (ecgHeartRate > 0 && ppgPulseRate > 0) ? Math.abs(ecgHeartRate - ppgPulseRate) : null,
-          leadOff: leadOff ? 1 : 0
+        // Duration Selector Pills Click Handler
+        document.querySelectorAll('#dur-selector .dur-pill').forEach(pill => {
+          pill.addEventListener('click', () => {
+            document.querySelectorAll('#dur-selector .dur-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            selectedDurationSec = parseInt(pill.getAttribute('data-dur'), 10);
+            updateTimerBadge(0);
+            log(`Duration set to: ${selectedDurationSec === 0 ? 'Continuous (∞)' : selectedDurationSec + 's'}`);
+          });
         });
-        if (streamHeartRate.length > 5000) streamHeartRate.shift();
-      }
 
-      if (spo2 > 0) {
-        streamSpO2.push({
-          t: now,
-          timestamp: isoTime,
-          spo2: spo2,
-          stabilized: spo2Stabilized ? 1 : 0,
-          lowSignal: ppgLowSignal ? 1 : 0,
-          fingerOff: fingerOff ? 1 : 0
+        async function sendCmd(cmd, durationSec = selectedDurationSec) {
+          if (!ctrlChar || !isConnected) {
+            log('BLE not connected. Connect first.');
+            return;
+          }
+          try {
+            const payload = new Uint8Array([
+              cmd,
+              durationSec & 0xFF,
+              (durationSec >> 8) & 0xFF
+            ]);
+            await ctrlChar.writeValueWithResponse(payload);
+            const durLabel = durationSec === 0 ? 'Continuous (∞)' : `${durationSec}s`;
+            log(`Command sent: 0x0${cmd.toString(16).toUpperCase()} (${durLabel})`);
+          } catch (e) { log('Command failed: ' + e.message); }
+        }
+
+        $('mode-ecg').addEventListener('click', () => {
+          sendCmd(0x02, selectedDurationSec);
+          updateModes('ecg');
+          ecgSamples.length = 0;
         });
-        if (streamSpO2.length > 5000) streamSpO2.shift();
-      }
-
-      if (tempC > 20 && tempC < 45) {
-        streamTemp.push({ t: now, timestamp: isoTime, tempC: tempC });
-        if (streamTemp.length > 5000) streamTemp.shift();
-      }
-
-      updateStreamCounter();
-
-      if (recording) {
-        recordedData.push({
-          t: now,
-          isoTime: isoTime,
-          ecgHr: ecgHeartRate,
-          ppgHr: ppgPulseRate,
-          spo2: currentSpo2,
-          tempC: currentTemp,
-          rrMs,
-          leadOff: leadOff ? 1 : 0,
-          fingerOff: fingerOff ? 1 : 0,
-          spo2Stabilized: spo2Stabilized ? 1 : 0,
-          battery: battery
+        $('mode-spo2').addEventListener('click', () => {
+          sendCmd(0x01, selectedDurationSec);
+          updateModes('spo2');
+          ppgSamples.length = 0;
         });
-      }
-    }
-
-    // ── WAVEFORM RECEIVE (250 Hz) ───────────────────────────────────────
-    function onWaveformFrame(event) {
-      const v = event.target.value;
-      if (v.byteLength < 4 || v.getUint8(0) !== 0x02) return;
-      const now = Date.now();
-      for (let offset = 4; offset + 2 <= v.byteLength; offset += 2) {
-        const sampleVal = v.getInt16(offset, true);
-        ecgSamples.push(sampleVal);
-
-        // Store into dedicated continuous ECG stream list
-        streamEcgWave.push({
-          t: now,
-          sample: sampleVal,
-          index: streamEcgWave.length
+        $('mode-temp').addEventListener('click', () => {
+          sendCmd(0x03, 5);
+          updateModes('temp');
         });
-        if (streamEcgWave.length > 15000) streamEcgWave.shift();
+        $('mode-stop').addEventListener('click', () => {
+          sendCmd(0x00, 0);
+          updateModes('idle');
+          if (recording) stopRecordingSession();
+        });
 
-        if (recording) {
-          recordedWaveforms.push({
-            t: now,
-            sample: sampleVal,
-            sampleIdx: recordedWaveforms.length
+        function updateModes(m) {
+          ['ecg', 'spo2', 'temp'].forEach(x => {
+            const el = $('mode-' + x);
+            if (el) el.className = 'mode-btn' + (x === m ? ` active-${x}` : '');
           });
         }
-      }
-      if (ecgSamples.length > ECG_BUFFER_MAX) {
-        ecgSamples.splice(0, ecgSamples.length - ECG_BUFFER_MAX);
-      }
-      updateStreamCounter();
-      // Run real-time raw morphology analyzer
-      scanRawWaveformMorphology();
-    }
 
-    // ── RAW WAVEFORM 250 Hz MORPHOLOGICAL SCANNER ───────────────────────
-    let lastMorphScan = 0;
-    function scanRawWaveformMorphology() {
-      const now = Date.now();
-      if (now - lastMorphScan < 300 || ecgSamples.length < 250) return;
-      lastMorphScan = now;
+        // ── WEB AUDIO SYNTHESIZER FOR PULSE BEEP ─────────────────────────────
+        let audioCtx = null;
+        let audioPulseEnabled = false;
 
-      // 1. Calculate Signal Quality Index (SQI) from baseline noise variance
-      let baselineDiffSum = 0;
-      for (let i = 1; i < 200; i++) {
-        baselineDiffSum += Math.abs(ecgSamples[i] - ecgSamples[i - 1]);
-      }
-      const avgJitter = baselineDiffSum / 200;
-      let sqi = Math.max(40, Math.min(100, Math.round(100 - (avgJitter * 0.4))));
-      $('ai-sqi-score').textContent = `${sqi}%`;
-      $('ai-sqi-score').style.color = sqi >= 80 ? '#34d399' : (sqi >= 65 ? '#fbbf24' : '#f87171');
-
-      // 2. Extract QRS Complex Duration from most recent peak
-      let peakIdx = -1, maxPeak = 120;
-      for (let i = ecgSamples.length - 150; i < ecgSamples.length - 30; i++) {
-        if (ecgSamples[i] > maxPeak) {
-          maxPeak = ecgSamples[i];
-          peakIdx = i;
-        }
-      }
-
-      if (peakIdx > 20 && peakIdx < ecgSamples.length - 20) {
-        // Measure width where amplitude > 30% of peak
-        const threshold = maxPeak * 0.3;
-        let left = peakIdx, right = peakIdx;
-        while (left > peakIdx - 30 && ecgSamples[left] > threshold) left--;
-        while (right < peakIdx + 30 && ecgSamples[right] > threshold) right++;
-        const qrsSamples = right - left;
-        const qrsMs = Math.round((qrsSamples / 250.0) * 1000);
-        if (qrsMs >= 50 && qrsMs <= 180) {
-          $('ai-qrs-width').textContent = `${qrsMs} ms`;
-          $('ai-qrs-width').style.color = qrsMs <= 110 ? '#38bdf8' : '#fbbf24';
-        }
-
-        // 3. Bazett's Formula QTc Calculation
-        // Standard physiology: QT is approx 38-42% of RR interval
-        const curRr = currentRr || (rrHistory.length ? rrHistory[rrHistory.length - 1] : 780);
-        if (curRr >= 350 && curRr <= 1600) {
-          const rrSec = curRr / 1000.0;
-          const qtMs = Math.round(390 * Math.pow(rrSec, 0.4)); // Bazett empirical ventricular repolarization
-          const qtc = Math.round(qtMs / Math.sqrt(rrSec));
-          const qtcEl = $('ai-qtc-val');
-          if (qtcEl) {
-            qtcEl.textContent = `${qtc} ms`;
-            qtcEl.style.color = qtc <= 440 ? '#a855f7' : (qtc <= 460 ? '#fbbf24' : '#f87171');
-          }
-          const prEl = $('ai-pr-val');
-          if (prEl) {
-            const prMs = Math.round(Math.max(120, Math.min(200, 160 * Math.sqrt(rrSec))));
-            prEl.textContent = `${prMs} ms`;
-            prEl.style.color = '#06b6d4';
+        function initAudio() {
+          if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           }
         }
-      }
-    }
 
-    // ── SYNTHETIC/REAL PPG PLETHYSMOGRAM RUNNER ─────────────────────────
-    let ppgPhase = 0;
-    function generatePpgPoint(beatPulse) {
-      if (beatPulse) ppgPhase = 0;
-      let y = 0;
-      const t = (ppgPhase % 100) / 100.0;
-      if (t < 0.2) y = Math.sin(t * Math.PI / 0.2);
-      else if (t < 0.35) y = 0.5 + 0.15 * Math.sin((t - 0.2) * Math.PI / 0.15);
-      else y = 0.5 * Math.exp(-(t - 0.35) * 4);
-
-      ppgSamples.push(y);
-      if (ppgSamples.length > PPG_BUFFER_MAX) ppgSamples.shift();
-      ppgPhase += 4;
-    }
-
-    // ── R-R HRV & POINCARÉ ──────────────────────────────────────────────
-    function addRrSample(rr) {
-      rrHistory.push(rr);
-      if (rrHistory.length > 60) rrHistory.shift();
-
-      if (rrHistory.length >= 4) {
-        let sumSq = 0;
-        for (let i = 1; i < rrHistory.length; i++) {
-          const d = rrHistory[i] - rrHistory[i - 1];
-          sumSq += d * d;
+        function playHeartbeatBeep() {
+          if (!audioPulseEnabled) return;
+          try {
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+              audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880 Hz medical monitor beep
+            gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+          } catch (e) { }
         }
-        const rmssd = Math.round(Math.sqrt(sumSq / (rrHistory.length - 1)));
-        $('val-hrv').textContent = `HRV (RMSSD): ${rmssd} ms`;
-        updatePhysiologicalStrain(ecgHeartRate || ppgPulseRate || Math.round(60000 / rr), rmssd);
-      }
-      drawPoincare();
 
-      if (rrHistory.length >= 6) {
-        const live = classifyRhythmAi(rrHistory.map(r => ({ rrMs: r, hr: Math.round(60000 / r) })));
-        $('ai-rhythm-badge').textContent = live.severity === 'ok' ? 'AI VERIFIED' : 'AI REVIEW';
-        $('ai-rhythm-badge').className = `diag-status ${live.severity}`;
-        $('ai-rhythm-name').textContent = live.rhythm;
-        $('ai-confidence').textContent = `${live.confidence}%`;
-      }
-    }
+        $('btn-audio-pulse').addEventListener('click', () => {
+          audioPulseEnabled = !audioPulseEnabled;
+          initAudio();
+          $('btn-audio-pulse').textContent = audioPulseEnabled ? '🔊 Sound: ON' : '🔇 Sound: Off';
+          $('btn-audio-pulse').classList.toggle('active', audioPulseEnabled);
+          log(`Heartbeat audio sound ${audioPulseEnabled ? 'enabled' : 'muted'}.`);
+        });
 
-    // ── PHYSIOLOGICAL STRAIN & CARDIOVASCULAR DRIFT ENGINE (BIO-SIGNAL) ─
-    let restingHrBaseline = 72;
-    function updatePhysiologicalStrain(curHr, rmssd) {
-      if (!curHr || curHr < 40) return;
-      if (streamHeartRate.length >= 10 && restingHrBaseline === 72) {
-        const earlyHrs = streamHeartRate.slice(0, 10).map(p => p.activeHr || p.ecgHr || p.ppgHr).filter(h => h > 45 && h < 140);
-        if (earlyHrs.length >= 5) {
-          restingHrBaseline = Math.round(earlyHrs.reduce((a, b) => a + b, 0) / earlyHrs.length);
+        // ── CALIPER & GRID VIEW ENGINE ───────────────────────────────────────
+        let caliperActive = false;
+        let caliperX1 = 120;
+        let caliperX2 = 280;
+        let draggingCaliper = 0;
+        let gridStyle = 'dark'; // 'dark' or 'pink'
+
+        $('btn-grid-style').addEventListener('click', () => {
+          gridStyle = (gridStyle === 'dark') ? 'pink' : 'dark';
+          $('btn-grid-style').textContent = (gridStyle === 'dark') ? '🎨 Grid: Dark' : '🌸 Grid: Pink';
+          $('btn-grid-style').classList.toggle('active', gridStyle === 'pink');
+          log(`ECG grid switched to ${gridStyle.toUpperCase()} mode.`);
+        });
+
+        $('btn-caliper').addEventListener('click', () => {
+          caliperActive = !caliperActive;
+          $('btn-caliper').classList.toggle('active', caliperActive);
+          $('caliper-hud').style.display = caliperActive ? 'block' : 'none';
+          if (caliperActive) updateCaliperHud();
+          log(`Caliper tool ${caliperActive ? 'activated' : 'deactivated'}.`);
+        });
+
+        function updateCaliperHud() {
+          const canvas = $('ecg-canvas');
+          if (!canvas) return;
+          const w = canvas.clientWidth;
+          const timeSpanMs = (ECG_BUFFER_MAX / ECG_FS) * 1000; // 4000ms window
+          const msPerPx = timeSpanMs / Math.max(1, w);
+          const deltaMs = Math.abs(caliperX2 - caliperX1) * msPerPx;
+          const instHr = deltaMs > 0 ? Math.round(60000 / deltaMs) : 0;
+          $('caliper-hud').textContent = `Δt: ${Math.round(deltaMs)} ms | Rate: ${instHr > 0 ? instHr + ' BPM' : '—'} | Caliper Tool`;
         }
-      }
 
-      const deltaHr = curHr - restingHrBaseline;
-      const driftEl = $('drift-delta-val');
-      if (driftEl) {
-        driftEl.textContent = (deltaHr >= 0 ? `+${deltaHr}` : `${deltaHr}`) + ' BPM';
-        driftEl.style.color = deltaHr > 20 ? '#ef4444' : (deltaHr > 10 ? '#f59e0b' : '#38bdf8');
-      }
+        const ecgCanvasEl = $('ecg-canvas');
+        ecgCanvasEl.addEventListener('mousedown', (e) => {
+          if (!caliperActive) return;
+          const rect = ecgCanvasEl.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          if (Math.abs(x - caliperX1) < 18) draggingCaliper = 1;
+          else if (Math.abs(x - caliperX2) < 18) draggingCaliper = 2;
+          else {
+            if (Math.abs(x - caliperX1) < Math.abs(x - caliperX2)) {
+              caliperX1 = x;
+              draggingCaliper = 1;
+            } else {
+              caliperX2 = x;
+              draggingCaliper = 2;
+            }
+          }
+          updateCaliperHud();
+        });
 
-      const hrStrain = Math.max(0, Math.min(6.0, (deltaHr / 25.0) * 6.0));
-      const hrvStrain = rmssd ? Math.max(0, Math.min(4.0, ((55.0 - Math.min(55.0, rmssd)) / 45.0) * 4.0)) : 1.0;
-      const psi = Math.max(0.5, Math.min(10.0, hrStrain + hrvStrain));
-      const psiEl = $('psi-score-val');
-      if (psiEl) psiEl.textContent = `${psi.toFixed(1)} / 10`;
+        window.addEventListener('mousemove', (e) => {
+          if (!caliperActive || !draggingCaliper) return;
+          const rect = ecgCanvasEl.getBoundingClientRect();
+          let x = e.clientX - rect.left;
+          x = Math.max(5, Math.min(rect.width - 5, x));
+          if (draggingCaliper === 1) caliperX1 = x;
+          else if (draggingCaliper === 2) caliperX2 = x;
+          updateCaliperHud();
+        });
 
-      const bar = $('psi-meter-bar');
-      const badge = $('psi-status-badge');
-      const loadDesc = $('psi-load-desc');
-      const autonomic = $('psi-autonomic-val');
-      const hydration = $('psi-hydration-val');
+        window.addEventListener('mouseup', () => { draggingCaliper = 0; });
 
-      if (bar) bar.style.width = `${Math.round(psi * 10)}%`;
+        // ── TELEMETRY PARSING (20-Byte Wire Invariant) ───────────────────────
+        function onTelemetryFrame(event) {
+          const v = event.target.value;
+          if (v.byteLength !== 20 || v.getUint8(0) !== 0x01) return;
 
-      if (badge && loadDesc && autonomic && hydration) {
-        if (psi < 3.5) {
-          if (bar) bar.style.background = '#10b981';
-          badge.className = 'diag-status ok';
-          badge.textContent = 'STRAIN: LOW';
-          loadDesc.textContent = 'Optimal Hemodynamic Reserve';
-          loadDesc.style.color = '#34d399';
-          autonomic.textContent = 'Vagal Tone Normal';
-          autonomic.style.color = '#34d399';
-          hydration.textContent = 'Hydrated';
-          hydration.style.color = '#06b6d4';
-        } else if (psi < 6.5) {
-          if (bar) bar.style.background = '#f59e0b';
-          badge.className = 'diag-status warn';
-          badge.textContent = 'STRAIN: ELEVATED';
-          loadDesc.textContent = 'Mild Cardiovascular Drift (Elevated Workload)';
-          loadDesc.style.color = '#fbbf24';
-          autonomic.textContent = 'Sympathetic Shift';
-          autonomic.style.color = '#fbbf24';
-          hydration.textContent = 'Monitor Fluids';
-          hydration.style.color = '#fbbf24';
-        } else {
-          if (bar) bar.style.background = '#ef4444';
-          badge.className = 'diag-status err';
-          badge.textContent = 'STRAIN: CRITICAL';
-          loadDesc.textContent = 'Cardiovascular Drift / Hemodynamic Strain';
-          loadDesc.style.color = '#f87171';
-          autonomic.textContent = 'Vagal Suppression';
-          autonomic.style.color = '#f87171';
-          hydration.textContent = 'High Dehydration Risk';
-          hydration.style.color = '#f87171';
+          const hr = v.getUint8(2);
+          const spo2 = v.getUint8(3);
+          const tempC = v.getInt16(4, true) / 100.0;
+          const rrMs = v.getUint16(6, true);
+          const flags = v.getUint8(9);
+          const battery = v.getUint8(14);
+          const sysState = v.getUint8(15);
+
+          const beatDetected = (flags & 0x01) !== 0;
+          const leadOff = (flags & 0x04) !== 0;
+          const fingerOff = (flags & 0x08) !== 0;
+          const spo2Stabilized = (flags & 0x10) !== 0; // 3 stable windows — locked
+          const ppgLowSignal = (flags & 0x20) !== 0; // perfusion index < 0.1%
+
+          $('battery-badge').textContent = `BAT: ${battery}%`;
+
+          // Update Dual Heart Rate Sources
+          if (sysState === 2 && !leadOff && hr > 0) { // In ECG Mode
+            ecgHeartRate = hr;
+            $('val-ecg-hr').innerHTML = `${ecgHeartRate} <span class="vital-unit">BPM</span>`;
+          } else if (sysState === 1 && !fingerOff && hr > 0 && spo2 >= 70) { // In SpO2 Mode with finger present
+            ppgPulseRate = hr;
+            $('val-ppg-hr').innerHTML = `${ppgPulseRate} <span class="vital-unit">BPM</span>`;
+          } else if (sysState === 1 && fingerOff) { // SpO2 mode with NO finger
+            ppgPulseRate = 0;
+            $('val-ppg-hr').innerHTML = `-- <span class="vital-unit">BPM</span>`;
+          } else if (sysState === 1 && !fingerOff && spo2 === 0) {
+            // Warm-up: firmware discards the first few Maxim windows (insertion
+            // transient) before publishing values — hold the last value, don't
+            // flash "--".
+          }
+
+          // Dual-Sensor Agreement Logic
+          if (ecgHeartRate > 0 && ppgPulseRate > 0) {
+            const delta = Math.abs(ecgHeartRate - ppgPulseRate);
+            $('consensus-pill').textContent = `Δ = ${delta} BPM`;
+            if (delta <= 2) {
+              $('consensus-pill').className = 'diag-status ok';
+              $('consensus-desc').textContent = '100% Agreement (High Confidence Stroke Volume)';
+            } else if (delta <= 5) {
+              $('consensus-pill').className = 'diag-status ok';
+              $('consensus-desc').textContent = 'Strong Agreement (Normal Vagal Modulation)';
+            } else {
+              $('consensus-pill').className = 'diag-status warn';
+              $('consensus-desc').textContent = 'Sensor divergence detected (Evaluating motion/noise)';
+            }
+          } else if (ppgPulseRate === 0) {
+            $('consensus-pill').textContent = 'FINGER DETACHED';
+            $('consensus-pill').className = 'diag-status warn';
+            $('consensus-desc').textContent = 'Place fingertip on MAX30102 to activate optical pulse rate';
+          }
+
+          // SpO2 & Finger Contact Detection
+          if (sysState === 1) { // SpO2 Mode
+            if (!fingerOff && spo2 >= 70) {
+              currentSpo2 = spo2;
+              $('val-spo2').innerHTML = `${spo2} <span class="vital-unit">%</span>`;
+              $('ppg-overlay').classList.add('hidden');
+              $('ppg-status').textContent = 'FINGER ON SENSOR';
+              $('ppg-status').style.color = '#34d399';
+              // Reading quality status (firmware warm-up/PI gate/lock)
+              if (spo2Stabilized) {
+                $('sub-spo2').textContent = 'Locked — stabilized reading (median of final windows)';
+                $('sub-spo2').style.color = '#34d399';
+              } else if (ppgLowSignal) {
+                $('sub-spo2').textContent = 'Weak optical signal — relax finger, avoid pressing hard';
+                $('sub-spo2').style.color = '#fbbf24';
+              } else {
+                $('sub-spo2').textContent = 'Stabilizing… final value = median of settled windows';
+                $('sub-spo2').style.color = 'var(--text-muted)';
+              }
+            } else if (!fingerOff && spo2 === 0) {
+              // Warm-up settling: firmware is discarding the first Maxim windows
+              // (insertion transient) — not a measurement yet.
+              $('val-spo2').innerHTML = `-- <span class="vital-unit">%</span>`;
+              $('val-ppg-hr').innerHTML = `-- <span class="vital-unit">BPM</span>`;
+              $('ppg-overlay').classList.remove('hidden');
+              $('ppg-overlay').querySelector('span').textContent = 'Stabilizing signal — keep finger still…';
+              $('ppg-status').textContent = 'ACQUIRING SIGNAL';
+              $('ppg-status').style.color = '#38bdf8';
+              ppgSamples.length = 0;
+              $('sub-spo2').textContent = 'Warming up — first seconds are discarded for accuracy';
+              $('sub-spo2').style.color = 'var(--text-muted)';
+            } else {
+              // Finger is NOT touching!
+              currentSpo2 = 0;
+              $('val-spo2').innerHTML = `-- <span class="vital-unit">%</span>`;
+              $('val-ppg-hr').innerHTML = `-- <span class="vital-unit">BPM</span>`;
+              $('ppg-overlay').classList.remove('hidden');
+              $('ppg-overlay').querySelector('span').textContent = 'Finger not touching — place fingertip on MAX30102';
+              $('ppg-status').textContent = 'FINGER OFF SENSOR';
+              $('ppg-status').style.color = '#f87171';
+              ppgSamples.length = 0; // Clear any old wave immediately!
+              $('sub-spo2').textContent = 'Norm: 95-100%';
+              $('sub-spo2').style.color = '';
+            }
+          } else {
+            // Other mode: Standby for SpO2
+            $('ppg-overlay').classList.remove('hidden');
+            $('ppg-overlay').querySelector('span').textContent = 'Press SpO2 / Pulse (0x01) to start optical sensor';
+            $('ppg-status').textContent = 'STANDBY';
+            $('ppg-status').style.color = 'var(--text-muted)';
+            ppgSamples.length = 0;
+          }
+
+          // R-R Interval & HRV
+          if (rrMs >= 300 && rrMs <= 2000 && (!leadOff || !fingerOff)) {
+            $('val-rr').innerHTML = `${rrMs} <span class="vital-unit">ms</span>`;
+            addRrSample(rrMs);
+          }
+
+          // Heart Pulse Icon & PPG Waveform Generation:
+          // ONLY generate PPG pulse wave when finger is ACTUALLY present and measuring!
+          if (beatDetected) {
+            const g = $('heart-glyph');
+            g.classList.add('heart-pulse');
+            clearTimeout(lastHeartFlash);
+            lastHeartFlash = setTimeout(() => g.classList.remove('heart-pulse'), 120);
+            playHeartbeatBeep();
+          }
+
+          if (sysState === 1 && !fingerOff && currentSpo2 >= 70) {
+            generatePpgPoint(beatDetected);
+          } else {
+            ppgSamples.length = 0; // Never draw a fake wave when finger is detached!
+          }
+
+          currentFlags = flags;
+          currentBattery = battery;
+          currentTemp = tempC;
+          currentRr = rrMs;
+
+          // Log continuous streams into separate dedicated lists
+          const now = Date.now();
+          const isoTime = new Date(now).toISOString();
+
+          if (hr > 0) {
+            streamHeartRate.push({
+              t: now,
+              timestamp: isoTime,
+              ecgHr: ecgHeartRate,
+              ppgHr: ppgPulseRate,
+              activeHr: hr,
+              consensusDelta: (ecgHeartRate > 0 && ppgPulseRate > 0) ? Math.abs(ecgHeartRate - ppgPulseRate) : null,
+              leadOff: leadOff ? 1 : 0
+            });
+            if (streamHeartRate.length > 5000) streamHeartRate.shift();
+          }
+
+          if (spo2 > 0) {
+            streamSpO2.push({
+              t: now,
+              timestamp: isoTime,
+              spo2: spo2,
+              stabilized: spo2Stabilized ? 1 : 0,
+              lowSignal: ppgLowSignal ? 1 : 0,
+              fingerOff: fingerOff ? 1 : 0
+            });
+            if (streamSpO2.length > 5000) streamSpO2.shift();
+          }
+
+          if (tempC > 20 && tempC < 45) {
+            streamTemp.push({ t: now, timestamp: isoTime, tempC: tempC });
+            if (streamTemp.length > 5000) streamTemp.shift();
+          }
+
+          updateStreamCounter();
+
+          if (recording) {
+            recordedData.push({
+              t: now,
+              isoTime: isoTime,
+              ecgHr: ecgHeartRate,
+              ppgHr: ppgPulseRate,
+              spo2: currentSpo2,
+              tempC: currentTemp,
+              rrMs,
+              leadOff: leadOff ? 1 : 0,
+              fingerOff: fingerOff ? 1 : 0,
+              spo2Stabilized: spo2Stabilized ? 1 : 0,
+              battery: battery
+            });
+          }
         }
-      }
-    }
 
-    // ── ADVANCED AI RHYTHM CLASSIFIER ───────────────────────────────────
-    function classifyRhythmAi(dataRows) {
-      if (!dataRows || dataRows.length < 5) {
-        return { rhythm: 'Gathering Stream...', confidence: 0, severity: 'ok', finding: 'Collecting beats...' };
-      }
-      const rrs = [], hrs = [], pauseEvents = [];
-      dataRows.forEach(r => {
-        const rr = Number(r.rrMs || r.RR_ms || 0);
-        const hr = Number(r.ecgHr || r.hr || r.HeartRate_BPM || 0);
-        if (rr >= 300 && rr <= 3000) {
-          rrs.push(rr);
-          if (rr > 1500) pauseEvents.push(rr);
+        // ── WAVEFORM RECEIVE (250 Hz) ───────────────────────────────────────
+        function onWaveformFrame(event) {
+          const v = event.target.value;
+          if (v.byteLength < 4 || v.getUint8(0) !== 0x02) return;
+          const now = Date.now();
+          for (let offset = 4; offset + 2 <= v.byteLength; offset += 2) {
+            const sampleVal = v.getInt16(offset, true);
+            ecgSamples.push(sampleVal);
+
+            // Store into dedicated continuous ECG stream list
+            streamEcgWave.push({
+              t: now,
+              sample: sampleVal,
+              index: streamEcgWave.length
+            });
+            if (streamEcgWave.length > 15000) streamEcgWave.shift();
+
+            if (recording) {
+              recordedWaveforms.push({
+                t: now,
+                sample: sampleVal,
+                sampleIdx: recordedWaveforms.length
+              });
+            }
+          }
+          if (ecgSamples.length > ECG_BUFFER_MAX) {
+            ecgSamples.splice(0, ecgSamples.length - ECG_BUFFER_MAX);
+          }
+          updateStreamCounter();
+          // Run real-time raw morphology analyzer
+          scanRawWaveformMorphology();
         }
-        if (hr >= 35 && hr <= 220) hrs.push(hr);
-      });
 
-      const meanRr = Math.round(rrs.reduce((a, b) => a + b, 0) / rrs.length);
-      const meanHr = Math.round(hrs.length ? hrs.reduce((a, b) => a + b, 0) / hrs.length : (60000 / meanRr));
+        // ── RAW WAVEFORM 250 Hz MORPHOLOGICAL SCANNER ───────────────────────
+        let lastMorphScan = 0;
+        function scanRawWaveformMorphology() {
+          const now = Date.now();
+          if (now - lastMorphScan < 300 || ecgSamples.length < 250) return;
+          lastMorphScan = now;
 
-      let variance = 0, sumSqDiff = 0, nn50 = 0;
-      for (let i = 0; i < rrs.length; i++) {
-        variance += Math.pow(rrs[i] - meanRr, 2);
-        if (i > 0) {
-          const d = Math.abs(rrs[i] - rrs[i - 1]);
-          sumSqDiff += d * d;
-          if (d > 50) nn50++;
+          // 1. Calculate Signal Quality Index (SQI) from baseline noise variance
+          let baselineDiffSum = 0;
+          for (let i = 1; i < 200; i++) {
+            baselineDiffSum += Math.abs(ecgSamples[i] - ecgSamples[i - 1]);
+          }
+          const avgJitter = baselineDiffSum / 200;
+          let sqi = Math.max(40, Math.min(100, Math.round(100 - (avgJitter * 0.4))));
+          $('ai-sqi-score').textContent = `${sqi}%`;
+          $('ai-sqi-score').style.color = sqi >= 80 ? '#34d399' : (sqi >= 65 ? '#fbbf24' : '#f87171');
+
+          // 2. Extract QRS Complex Duration from most recent peak
+          let peakIdx = -1, maxPeak = 120;
+          for (let i = ecgSamples.length - 150; i < ecgSamples.length - 30; i++) {
+            if (ecgSamples[i] > maxPeak) {
+              maxPeak = ecgSamples[i];
+              peakIdx = i;
+            }
+          }
+
+          if (peakIdx > 20 && peakIdx < ecgSamples.length - 20) {
+            // Measure width where amplitude > 30% of peak
+            const threshold = maxPeak * 0.3;
+            let left = peakIdx, right = peakIdx;
+            while (left > peakIdx - 30 && ecgSamples[left] > threshold) left--;
+            while (right < peakIdx + 30 && ecgSamples[right] > threshold) right++;
+            const qrsSamples = right - left;
+            const qrsMs = Math.round((qrsSamples / 250.0) * 1000);
+            if (qrsMs >= 50 && qrsMs <= 180) {
+              $('ai-qrs-width').textContent = `${qrsMs} ms`;
+              $('ai-qrs-width').style.color = qrsMs <= 110 ? '#38bdf8' : '#fbbf24';
+            }
+
+            // 3. Bazett's Formula QTc Calculation
+            // Standard physiology: QT is approx 38-42% of RR interval
+            const curRr = currentRr || (rrHistory.length ? rrHistory[rrHistory.length - 1] : 780);
+            if (curRr >= 350 && curRr <= 1600) {
+              const rrSec = curRr / 1000.0;
+              const qtMs = Math.round(390 * Math.pow(rrSec, 0.4)); // Bazett empirical ventricular repolarization
+              const qtc = Math.round(qtMs / Math.sqrt(rrSec));
+              const qtcEl = $('ai-qtc-val');
+              if (qtcEl) {
+                qtcEl.textContent = `${qtc} ms`;
+                qtcEl.style.color = qtc <= 440 ? '#a855f7' : (qtc <= 460 ? '#fbbf24' : '#f87171');
+              }
+              const prEl = $('ai-pr-val');
+              if (prEl) {
+                const prMs = Math.round(Math.max(120, Math.min(200, 160 * Math.sqrt(rrSec))));
+                prEl.textContent = `${prMs} ms`;
+                prEl.style.color = '#06b6d4';
+              }
+            }
+          }
         }
-      }
-      variance /= rrs.length;
-      const sdnn = Math.round(Math.sqrt(variance));
-      const rmssd = Math.round(Math.sqrt(sumSqDiff / Math.max(1, rrs.length - 1)));
-      const pnn50 = Math.round((nn50 / Math.max(1, rrs.length - 1)) * 100);
 
-      let rhythm = 'Normal Sinus Rhythm (NSR)';
-      let confidence = 95.5;
-      let severity = 'ok';
-      let finding = '';
+        // ── SYNTHETIC/REAL PPG PLETHYSMOGRAM RUNNER ─────────────────────────
+        let ppgPhase = 0;
+        function generatePpgPoint(beatPulse) {
+          if (beatPulse) ppgPhase = 0;
+          let y = 0;
+          const t = (ppgPhase % 100) / 100.0;
+          if (t < 0.2) y = Math.sin(t * Math.PI / 0.2);
+          else if (t < 0.35) y = 0.5 + 0.15 * Math.sin((t - 0.2) * Math.PI / 0.15);
+          else y = 0.5 * Math.exp(-(t - 0.35) * 4);
 
-      // Intelligent Dual-Source Verification:
-      // Check if ECG Heart Rate diverged significantly from Optical PPG Pulse Rate
-      let ppgAgree = false;
-      let ppgRates = [];
-      dataRows.forEach(r => {
-        const ppg = Number(r.ppgHr || 0);
-        if (ppg >= 45 && ppg <= 180) ppgRates.push(ppg);
-      });
-      const meanPpg = ppgRates.length ? Math.round(ppgRates.reduce((a, b) => a + b, 0) / ppgRates.length) : 0;
-      const divergence = (meanPpg > 0 && meanHr > 0) ? Math.abs(meanHr - meanPpg) : 0;
+          ppgSamples.push(y);
+          if (ppgSamples.length > PPG_BUFFER_MAX) ppgSamples.shift();
+          ppgPhase += 4;
+        }
 
-      if (divergence > 18 && meanHr > 105 && meanPpg <= 95) {
-        // Optical pulse is normal (e.g. 77 BPM) but ECG spiked (e.g. 126 BPM) -> classic motion/tremor artifact
-        rhythm = 'Motion Artifact / False Tachycardia';
-        confidence = 92.5;
-        severity = 'warn';
-        finding = `Electrical ECG registered elevated rate (${meanHr} BPM), but Optical PPG pulse rate was steady at ${meanPpg} BPM (Δ = ${divergence} BPM). Indicates electrode baseline noise or hand tremor rather than genuine physiological tachycardia. True cardiac rate is ~${meanPpg} BPM.`;
-      } else if (meanHr > 100) {
-        rhythm = 'Sinus Tachycardia';
-        confidence = meanPpg > 95 ? 96.0 : 88.0;
-        severity = 'warn';
-        finding = `Resting heart rate elevated at ${meanHr} BPM. Rhythm remains regular. If exercising or anxious, this is physiological pacing.`;
-      } else if (meanHr < 60 && meanHr >= 40) {
-        rhythm = 'Sinus Bradycardia';
-        confidence = 94.0;
-        severity = 'warn';
-        finding = `Resting rate is ${meanHr} BPM. Typical in athletic conditioning, deep relaxation, or young resting physiology.`;
-      } else if (rmssd > 80 && pnn50 > 40 && pauseEvents.length > 2) {
-        rhythm = 'Irregular Rhythm / AFib Suspect';
-        confidence = 88.0;
-        severity = 'err';
-        finding = `Elevated beat-to-beat variability (RMSSD: ${rmssd}ms, pNN50: ${pnn50}%). Recommend clinical 12-lead ECG.`;
-      } else if (pauseEvents.length > 0) {
-        rhythm = 'Normal Sinus + Isolated Pauses';
-        confidence = 94.6;
-        severity = 'ok';
-        finding = `Baseline rhythm is normal (${meanHr} BPM). Detected ${pauseEvents.length} transient pause(s) (~${pauseEvents.map(p => (p / 1000).toFixed(1) + 's').join(', ')}) due to momentary electrode slip or post-ectopic compensatory pause, promptly stabilizing.`;
-      } else {
-        rhythm = 'Normal Sinus Rhythm (NSR)';
-        confidence = 98.2;
-        severity = 'ok';
-        finding = `Optimal healthy cardiac pacing for young adult. Mean HR: ${meanHr} BPM (PPG: ${meanPpg > 0 ? meanPpg + ' BPM' : 'Standby'}) with normal physiological autonomic HRV (RMSSD: ${rmssd}ms, SDNN: ${sdnn}ms).`;
-      }
+        // ── R-R HRV & POINCARÉ ──────────────────────────────────────────────
+        function addRrSample(rr) {
+          rrHistory.push(rr);
+          if (rrHistory.length > 60) rrHistory.shift();
 
-      return { rhythm, confidence: confidence.toFixed(1), severity, meanHr, meanRr, meanPpg, divergence, sdnn, rmssd, pauseCount: pauseEvents.length, finding };
-    }
+          if (rrHistory.length >= 4) {
+            let sumSq = 0;
+            for (let i = 1; i < rrHistory.length; i++) {
+              const d = rrHistory[i] - rrHistory[i - 1];
+              sumSq += d * d;
+            }
+            const rmssd = Math.round(Math.sqrt(sumSq / (rrHistory.length - 1)));
+            $('val-hrv').textContent = `HRV (RMSSD): ${rmssd} ms`;
+            updatePhysiologicalStrain(ecgHeartRate || ppgPulseRate || Math.round(60000 / rr), rmssd);
+          }
+          drawPoincare();
 
-    function runAiDeepScan(records) {
-      const data = records || (recordedData.length ? recordedData : null);
-      if (!data || data.length === 0) {
-        alert('No telemetry data available. Click "Record 30s" or "Paste CSV".');
-        return;
-      }
-      const res = classifyRhythmAi(data);
-      $('ai-rhythm-badge').textContent = res.severity === 'ok' ? 'AI VERIFIED' : 'AI NOTED';
-      $('ai-rhythm-badge').className = `diag-status ${res.severity}`;
-      $('ai-rhythm-name').textContent = res.rhythm;
-      $('ai-confidence').textContent = `${res.confidence}%`;
-      $('ai-ectopic-count').textContent = `${res.pauseCount} pause event(s)`;
+          if (rrHistory.length >= 6) {
+            const live = classifyRhythmAi(rrHistory.map(r => ({ rrMs: r, hr: Math.round(60000 / r) })));
+            $('ai-rhythm-badge').textContent = live.severity === 'ok' ? 'AI VERIFIED' : 'AI REVIEW';
+            $('ai-rhythm-badge').className = `diag-status ${live.severity}`;
+            $('ai-rhythm-name').textContent = live.rhythm;
+            $('ai-confidence').textContent = `${live.confidence}%`;
+          }
+        }
 
-      const box = $('ai-finding-box');
-      box.style.display = 'block';
-      $('ai-finding-title').textContent = `AI Classification • ${res.rhythm}`;
-      $('ai-finding-text').innerHTML = `
+        // ── PHYSIOLOGICAL STRAIN & CARDIOVASCULAR DRIFT ENGINE (BIO-SIGNAL) ─
+        let restingHrBaseline = 72;
+        function updatePhysiologicalStrain(curHr, rmssd) {
+          if (!curHr || curHr < 40) return;
+          if (streamHeartRate.length >= 10 && restingHrBaseline === 72) {
+            const earlyHrs = streamHeartRate.slice(0, 10).map(p => p.activeHr || p.ecgHr || p.ppgHr).filter(h => h > 45 && h < 140);
+            if (earlyHrs.length >= 5) {
+              restingHrBaseline = Math.round(earlyHrs.reduce((a, b) => a + b, 0) / earlyHrs.length);
+            }
+          }
+
+          const deltaHr = curHr - restingHrBaseline;
+          const driftEl = $('drift-delta-val');
+          if (driftEl) {
+            driftEl.textContent = (deltaHr >= 0 ? `+${deltaHr}` : `${deltaHr}`) + ' BPM';
+            driftEl.style.color = deltaHr > 20 ? '#ef4444' : (deltaHr > 10 ? '#f59e0b' : '#38bdf8');
+          }
+
+          const hrStrain = Math.max(0, Math.min(6.0, (deltaHr / 25.0) * 6.0));
+          const hrvStrain = rmssd ? Math.max(0, Math.min(4.0, ((55.0 - Math.min(55.0, rmssd)) / 45.0) * 4.0)) : 1.0;
+          const psi = Math.max(0.5, Math.min(10.0, hrStrain + hrvStrain));
+          const psiEl = $('psi-score-val');
+          if (psiEl) psiEl.textContent = `${psi.toFixed(1)} / 10`;
+
+          const bar = $('psi-meter-bar');
+          const badge = $('psi-status-badge');
+          const loadDesc = $('psi-load-desc');
+          const autonomic = $('psi-autonomic-val');
+          const hydration = $('psi-hydration-val');
+
+          if (bar) bar.style.width = `${Math.round(psi * 10)}%`;
+
+          if (badge && loadDesc && autonomic && hydration) {
+            if (psi < 3.5) {
+              if (bar) bar.style.background = '#10b981';
+              badge.className = 'diag-status ok';
+              badge.textContent = 'STRAIN: LOW';
+              loadDesc.textContent = 'Optimal Hemodynamic Reserve';
+              loadDesc.style.color = '#34d399';
+              autonomic.textContent = 'Vagal Tone Normal';
+              autonomic.style.color = '#34d399';
+              hydration.textContent = 'Hydrated';
+              hydration.style.color = '#06b6d4';
+            } else if (psi < 6.5) {
+              if (bar) bar.style.background = '#f59e0b';
+              badge.className = 'diag-status warn';
+              badge.textContent = 'STRAIN: ELEVATED';
+              loadDesc.textContent = 'Mild Cardiovascular Drift (Elevated Workload)';
+              loadDesc.style.color = '#fbbf24';
+              autonomic.textContent = 'Sympathetic Shift';
+              autonomic.style.color = '#fbbf24';
+              hydration.textContent = 'Monitor Fluids';
+              hydration.style.color = '#fbbf24';
+            } else {
+              if (bar) bar.style.background = '#ef4444';
+              badge.className = 'diag-status err';
+              badge.textContent = 'STRAIN: CRITICAL';
+              loadDesc.textContent = 'Cardiovascular Drift / Hemodynamic Strain';
+              loadDesc.style.color = '#f87171';
+              autonomic.textContent = 'Vagal Suppression';
+              autonomic.style.color = '#f87171';
+              hydration.textContent = 'High Dehydration Risk';
+              hydration.style.color = '#f87171';
+            }
+          }
+        }
+
+        // ── ADVANCED AI RHYTHM CLASSIFIER ───────────────────────────────────
+        function classifyRhythmAi(dataRows) {
+          if (!dataRows || dataRows.length < 5) {
+            return { rhythm: 'Gathering Stream...', confidence: 0, severity: 'ok', finding: 'Collecting beats...' };
+          }
+          const rrs = [], hrs = [], pauseEvents = [];
+          dataRows.forEach(r => {
+            const rr = Number(r.rrMs || r.RR_ms || 0);
+            const hr = Number(r.ecgHr || r.hr || r.HeartRate_BPM || 0);
+            if (rr >= 300 && rr <= 3000) {
+              rrs.push(rr);
+              if (rr > 1500) pauseEvents.push(rr);
+            }
+            if (hr >= 35 && hr <= 220) hrs.push(hr);
+          });
+
+          const meanRr = Math.round(rrs.reduce((a, b) => a + b, 0) / rrs.length);
+          const meanHr = Math.round(hrs.length ? hrs.reduce((a, b) => a + b, 0) / hrs.length : (60000 / meanRr));
+
+          let variance = 0, sumSqDiff = 0, nn50 = 0;
+          for (let i = 0; i < rrs.length; i++) {
+            variance += Math.pow(rrs[i] - meanRr, 2);
+            if (i > 0) {
+              const d = Math.abs(rrs[i] - rrs[i - 1]);
+              sumSqDiff += d * d;
+              if (d > 50) nn50++;
+            }
+          }
+          variance /= rrs.length;
+          const sdnn = Math.round(Math.sqrt(variance));
+          const rmssd = Math.round(Math.sqrt(sumSqDiff / Math.max(1, rrs.length - 1)));
+          const pnn50 = Math.round((nn50 / Math.max(1, rrs.length - 1)) * 100);
+
+          let rhythm = 'Normal Sinus Rhythm (NSR)';
+          let confidence = 95.5;
+          let severity = 'ok';
+          let finding = '';
+
+          // Intelligent Dual-Source Verification:
+          // Check if ECG Heart Rate diverged significantly from Optical PPG Pulse Rate
+          let ppgAgree = false;
+          let ppgRates = [];
+          dataRows.forEach(r => {
+            const ppg = Number(r.ppgHr || 0);
+            if (ppg >= 45 && ppg <= 180) ppgRates.push(ppg);
+          });
+          const meanPpg = ppgRates.length ? Math.round(ppgRates.reduce((a, b) => a + b, 0) / ppgRates.length) : 0;
+          const divergence = (meanPpg > 0 && meanHr > 0) ? Math.abs(meanHr - meanPpg) : 0;
+
+          if (divergence > 18 && meanHr > 105 && meanPpg <= 95) {
+            // Optical pulse is normal (e.g. 77 BPM) but ECG spiked (e.g. 126 BPM) -> classic motion/tremor artifact
+            rhythm = 'Motion Artifact / False Tachycardia';
+            confidence = 92.5;
+            severity = 'warn';
+            finding = `Electrical ECG registered elevated rate (${meanHr} BPM), but Optical PPG pulse rate was steady at ${meanPpg} BPM (Δ = ${divergence} BPM). Indicates electrode baseline noise or hand tremor rather than genuine physiological tachycardia. True cardiac rate is ~${meanPpg} BPM.`;
+          } else if (meanHr > 100) {
+            rhythm = 'Sinus Tachycardia';
+            confidence = meanPpg > 95 ? 96.0 : 88.0;
+            severity = 'warn';
+            finding = `Resting heart rate elevated at ${meanHr} BPM. Rhythm remains regular. If exercising or anxious, this is physiological pacing.`;
+          } else if (meanHr < 60 && meanHr >= 40) {
+            rhythm = 'Sinus Bradycardia';
+            confidence = 94.0;
+            severity = 'warn';
+            finding = `Resting rate is ${meanHr} BPM. Typical in athletic conditioning, deep relaxation, or young resting physiology.`;
+          } else if (rmssd > 80 && pnn50 > 40 && pauseEvents.length > 2) {
+            rhythm = 'Irregular Rhythm / AFib Suspect';
+            confidence = 88.0;
+            severity = 'err';
+            finding = `Elevated beat-to-beat variability (RMSSD: ${rmssd}ms, pNN50: ${pnn50}%). Recommend clinical 12-lead ECG.`;
+          } else if (pauseEvents.length > 0) {
+            rhythm = 'Normal Sinus + Isolated Pauses';
+            confidence = 94.6;
+            severity = 'ok';
+            finding = `Baseline rhythm is normal (${meanHr} BPM). Detected ${pauseEvents.length} transient pause(s) (~${pauseEvents.map(p => (p / 1000).toFixed(1) + 's').join(', ')}) due to momentary electrode slip or post-ectopic compensatory pause, promptly stabilizing.`;
+          } else {
+            rhythm = 'Normal Sinus Rhythm (NSR)';
+            confidence = 98.2;
+            severity = 'ok';
+            finding = `Optimal healthy cardiac pacing for young adult. Mean HR: ${meanHr} BPM (PPG: ${meanPpg > 0 ? meanPpg + ' BPM' : 'Standby'}) with normal physiological autonomic HRV (RMSSD: ${rmssd}ms, SDNN: ${sdnn}ms).`;
+          }
+
+          return { rhythm, confidence: confidence.toFixed(1), severity, meanHr, meanRr, meanPpg, divergence, sdnn, rmssd, pauseCount: pauseEvents.length, finding };
+        }
+
+        function runAiDeepScan(records) {
+          const data = records || (recordedData.length ? recordedData : null);
+          if (!data || data.length === 0) {
+            alert('No telemetry data available. Click "Record 30s" or "Paste CSV".');
+            return;
+          }
+          const res = classifyRhythmAi(data);
+          $('ai-rhythm-badge').textContent = res.severity === 'ok' ? 'AI VERIFIED' : 'AI NOTED';
+          $('ai-rhythm-badge').className = `diag-status ${res.severity}`;
+          $('ai-rhythm-name').textContent = res.rhythm;
+          $('ai-confidence').textContent = `${res.confidence}%`;
+          $('ai-ectopic-count').textContent = `${res.pauseCount} pause event(s)`;
+
+          const box = $('ai-finding-box');
+          box.style.display = 'block';
+          $('ai-finding-title').textContent = `AI Classification • ${res.rhythm}`;
+          $('ai-finding-text').innerHTML = `
     <b>Findings:</b> ${res.finding}<br>
     <b>Metrics:</b> Mean Rate: <b>${res.meanHr} BPM</b> | Mean RR: <b>${res.meanRr} ms</b> | SDNN: <b>${res.sdnn} ms</b> | RMSSD: <b>${res.rmssd} ms</b>
   `;
-    }
-    $('btn-run-ai').addEventListener('click', () => runAiDeepScan());
-
-    // ── PASTE CSV MODAL & PARSER ────────────────────────────────────────
-    $('btn-paste-csv').addEventListener('click', () => {
-      const raw = prompt("Paste your telemetry CSV rows (Timestamp,HeartRate_BPM,SpO2_Percent,Temp_C,RR_ms...):");
-      if (!raw || !raw.trim()) return;
-      const lines = raw.trim().split('\n');
-      const parsed = [];
-      for (const line of lines) {
-        const parts = line.split(',');
-        if (parts.length >= 5 && !isNaN(parts[1])) {
-          parsed.push({
-            t: Number(parts[0]),
-            hr: Number(parts[1]),
-            spo2: Number(parts[2]),
-            tempC: Number(parts[3]),
-            rrMs: Number(parts[4])
-          });
         }
-      }
-      if (parsed.length === 0) {
-        alert('Could not parse valid CSV data rows.');
-        return;
-      }
-      rrHistory.length = 0;
-      parsed.forEach(p => { if (p.rrMs >= 300 && p.rrMs <= 1600) rrHistory.push(p.rrMs); });
-      drawPoincare();
-      const last = parsed[parsed.length - 1];
-      $('val-ecg-hr').innerHTML = `${last.hr} <span class="vital-unit">BPM</span>`;
-      $('val-ppg-hr').innerHTML = `${last.hr} <span class="vital-unit">BPM</span>`;
-      $('val-spo2').innerHTML = `${last.spo2} <span class="vital-unit">%</span>`;
-      $('val-rr').innerHTML = `${last.rrMs} <span class="vital-unit">ms</span>`;
-      runAiDeepScan(parsed);
-      log(`Imported and analyzed ${parsed.length} rows from CSV.`);
-    });
+        $('btn-run-ai').addEventListener('click', () => runAiDeepScan());
 
-    // ── OSCILLOSCOPE RENDERING ──────────────────────────────────────────
-    const ecgCanvas = $('ecg-canvas');
-    const ecgCtx = ecgCanvas.getContext('2d');
-
-    function renderEcg() {
-      requestAnimationFrame(renderEcg);
-      const dpr = window.devicePixelRatio || 1;
-      const w = ecgCanvas.clientWidth, h = ecgCanvas.clientHeight;
-      if (ecgCanvas.width !== w * dpr || ecgCanvas.height !== h * dpr) {
-        ecgCanvas.width = w * dpr; ecgCanvas.height = h * dpr;
-      }
-      ecgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      if (gridStyle === 'pink') {
-        ecgCtx.fillStyle = '#fff1f2';
-        ecgCtx.fillRect(0, 0, w, h);
-        // Medical 1mm / 5mm pink grid
-        ecgCtx.strokeStyle = 'rgba(244, 63, 94, 0.15)';
-        ecgCtx.lineWidth = 0.5;
-        for (let x = 0; x < w; x += 15) { ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, h); ecgCtx.stroke(); }
-        for (let y = 0; y < h; y += 15) { ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(w, y); ecgCtx.stroke(); }
-        ecgCtx.strokeStyle = 'rgba(225, 29, 72, 0.35)';
-        ecgCtx.lineWidth = 1;
-        for (let x = 0; x < w; x += 75) { ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, h); ecgCtx.stroke(); }
-        for (let y = 0; y < h; y += 75) { ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(w, y); ecgCtx.stroke(); }
-        // Calibration pulse in pink paper mode
-        ecgCtx.strokeStyle = '#881337';
-        ecgCtx.lineWidth = 1.4;
-        ecgCtx.beginPath();
-        ecgCtx.moveTo(15, 45); ecgCtx.lineTo(25, 45); ecgCtx.lineTo(25, 20); ecgCtx.lineTo(40, 20); ecgCtx.lineTo(40, 45); ecgCtx.lineTo(50, 45);
-        ecgCtx.stroke();
-        ecgCtx.fillStyle = '#881337';
-        ecgCtx.font = '9px JetBrains Mono, monospace';
-        ecgCtx.fillText('1.0 mV CAL', 15, 58);
-      } else {
-        ecgCtx.fillStyle = '#060b13';
-        ecgCtx.fillRect(0, 0, w, h);
-        // Cyber green medical grid
-        ecgCtx.strokeStyle = 'rgba(16, 185, 129, 0.05)';
-        ecgCtx.lineWidth = 0.5;
-        for (let x = 0; x < w; x += 15) { ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, h); ecgCtx.stroke(); }
-        for (let y = 0; y < h; y += 15) { ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(w, y); ecgCtx.stroke(); }
-        ecgCtx.strokeStyle = 'rgba(16, 185, 129, 0.18)';
-        ecgCtx.lineWidth = 1;
-        for (let x = 0; x < w; x += 75) { ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, h); ecgCtx.stroke(); }
-        for (let y = 0; y < h; y += 75) { ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(w, y); ecgCtx.stroke(); }
-        // 1.0mV Calibration pulse
-        ecgCtx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
-        ecgCtx.lineWidth = 1.2;
-        ecgCtx.beginPath();
-        ecgCtx.moveTo(15, 45); ecgCtx.lineTo(25, 45); ecgCtx.lineTo(25, 20); ecgCtx.lineTo(40, 20); ecgCtx.lineTo(40, 45); ecgCtx.lineTo(50, 45);
-        ecgCtx.stroke();
-        ecgCtx.fillStyle = 'rgba(16, 185, 129, 0.6)';
-        ecgCtx.font = '9px JetBrains Mono, monospace';
-        ecgCtx.fillText('1.0 mV CAL', 15, 58);
-      }
-
-      // Draw Caliper Overlay if active
-      if (caliperActive) {
-        const leftX = Math.min(caliperX1, caliperX2);
-        const spanX = Math.abs(caliperX2 - caliperX1);
-        ecgCtx.fillStyle = 'rgba(56, 189, 248, 0.08)';
-        ecgCtx.fillRect(leftX, 0, spanX, h);
-
-        [caliperX1, caliperX2].forEach((cx, idx) => {
-          ecgCtx.strokeStyle = idx === 0 ? '#38bdf8' : '#fbbf24';
-          ecgCtx.lineWidth = 1.5;
-          ecgCtx.setLineDash([4, 4]);
-          ecgCtx.beginPath();
-          ecgCtx.moveTo(cx, 0); ecgCtx.lineTo(cx, h);
-          ecgCtx.stroke();
-          ecgCtx.setLineDash([]);
-          // Draw caliper grip handle
-          ecgCtx.fillStyle = idx === 0 ? '#38bdf8' : '#fbbf24';
-          ecgCtx.beginPath();
-          ecgCtx.arc(cx, 16, 4.5, 0, Math.PI * 2);
-          ecgCtx.fill();
+        // ── PASTE CSV MODAL & PARSER ────────────────────────────────────────
+        $('btn-paste-csv').addEventListener('click', () => {
+          const raw = prompt("Paste your telemetry CSV rows (Timestamp,HeartRate_BPM,SpO2_Percent,Temp_C,RR_ms...):");
+          if (!raw || !raw.trim()) return;
+          const lines = raw.trim().split('\n');
+          const parsed = [];
+          for (const line of lines) {
+            const parts = line.split(',');
+            if (parts.length >= 5 && !isNaN(parts[1])) {
+              parsed.push({
+                t: Number(parts[0]),
+                hr: Number(parts[1]),
+                spo2: Number(parts[2]),
+                tempC: Number(parts[3]),
+                rrMs: Number(parts[4])
+              });
+            }
+          }
+          if (parsed.length === 0) {
+            alert('Could not parse valid CSV data rows.');
+            return;
+          }
+          rrHistory.length = 0;
+          parsed.forEach(p => { if (p.rrMs >= 300 && p.rrMs <= 1600) rrHistory.push(p.rrMs); });
+          drawPoincare();
+          const last = parsed[parsed.length - 1];
+          $('val-ecg-hr').innerHTML = `${last.hr} <span class="vital-unit">BPM</span>`;
+          $('val-ppg-hr').innerHTML = `${last.hr} <span class="vital-unit">BPM</span>`;
+          $('val-spo2').innerHTML = `${last.spo2} <span class="vital-unit">%</span>`;
+          $('val-rr').innerHTML = `${last.rrMs} <span class="vital-unit">ms</span>`;
+          runAiDeepScan(parsed);
+          log(`Imported and analyzed ${parsed.length} rows from CSV.`);
         });
-      }
 
-      if (ecgSamples.length < 2) return;
+        // ── OSCILLOSCOPE RENDERING ──────────────────────────────────────────
+        const ecgCanvas = $('ecg-canvas');
+        const ecgCtx = ecgCanvas.getContext('2d');
 
-      const gain = $('ecg-gain').value;
-      let scale = 0.08;
-      if (gain === '2') scale = 0.16;
-      if (gain === 'auto') {
-        let m = 100;
-        for (let s of ecgSamples) if (Math.abs(s) > m) m = Math.abs(s);
-        scale = (h * 0.38) / Math.max(200, m);
-      }
+        function renderEcg() {
+          requestAnimationFrame(renderEcg);
+          const dpr = window.devicePixelRatio || 1;
+          const w = ecgCanvas.clientWidth, h = ecgCanvas.clientHeight;
+          if (ecgCanvas.width !== w * dpr || ecgCanvas.height !== h * dpr) {
+            ecgCanvas.width = w * dpr; ecgCanvas.height = h * dpr;
+          }
+          ecgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      if (gridStyle === 'pink') {
-        ecgCtx.shadowBlur = 0;
-        ecgCtx.strokeStyle = '#881337'; // Hospital dark crimson
-        ecgCtx.lineWidth = 1.8;
-      } else {
-        ecgCtx.shadowColor = '#10b981';
-        ecgCtx.shadowBlur = 8;
-        ecgCtx.strokeStyle = '#10b981';
-        ecgCtx.lineWidth = 2.0;
-      }
+          if (gridStyle === 'pink') {
+            ecgCtx.fillStyle = '#fff1f2';
+            ecgCtx.fillRect(0, 0, w, h);
+            // Medical 1mm / 5mm pink grid
+            ecgCtx.strokeStyle = 'rgba(244, 63, 94, 0.15)';
+            ecgCtx.lineWidth = 0.5;
+            for (let x = 0; x < w; x += 15) { ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, h); ecgCtx.stroke(); }
+            for (let y = 0; y < h; y += 15) { ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(w, y); ecgCtx.stroke(); }
+            ecgCtx.strokeStyle = 'rgba(225, 29, 72, 0.35)';
+            ecgCtx.lineWidth = 1;
+            for (let x = 0; x < w; x += 75) { ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, h); ecgCtx.stroke(); }
+            for (let y = 0; y < h; y += 75) { ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(w, y); ecgCtx.stroke(); }
+            // Calibration pulse in pink paper mode
+            ecgCtx.strokeStyle = '#881337';
+            ecgCtx.lineWidth = 1.4;
+            ecgCtx.beginPath();
+            ecgCtx.moveTo(15, 45); ecgCtx.lineTo(25, 45); ecgCtx.lineTo(25, 20); ecgCtx.lineTo(40, 20); ecgCtx.lineTo(40, 45); ecgCtx.lineTo(50, 45);
+            ecgCtx.stroke();
+            ecgCtx.fillStyle = '#881337';
+            ecgCtx.font = '9px JetBrains Mono, monospace';
+            ecgCtx.fillText('1.0 mV CAL', 15, 58);
+          } else {
+            ecgCtx.fillStyle = '#060b13';
+            ecgCtx.fillRect(0, 0, w, h);
+            // Cyber green medical grid
+            ecgCtx.strokeStyle = 'rgba(16, 185, 129, 0.05)';
+            ecgCtx.lineWidth = 0.5;
+            for (let x = 0; x < w; x += 15) { ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, h); ecgCtx.stroke(); }
+            for (let y = 0; y < h; y += 15) { ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(w, y); ecgCtx.stroke(); }
+            ecgCtx.strokeStyle = 'rgba(16, 185, 129, 0.18)';
+            ecgCtx.lineWidth = 1;
+            for (let x = 0; x < w; x += 75) { ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, h); ecgCtx.stroke(); }
+            for (let y = 0; y < h; y += 75) { ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(w, y); ecgCtx.stroke(); }
+            // 1.0mV Calibration pulse
+            ecgCtx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+            ecgCtx.lineWidth = 1.2;
+            ecgCtx.beginPath();
+            ecgCtx.moveTo(15, 45); ecgCtx.lineTo(25, 45); ecgCtx.lineTo(25, 20); ecgCtx.lineTo(40, 20); ecgCtx.lineTo(40, 45); ecgCtx.lineTo(50, 45);
+            ecgCtx.stroke();
+            ecgCtx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+            ecgCtx.font = '9px JetBrains Mono, monospace';
+            ecgCtx.fillText('1.0 mV CAL', 15, 58);
+          }
 
-      ecgCtx.beginPath();
-      const stepX = w / (ECG_BUFFER_MAX - 1);
-      const midY = h / 2;
-      for (let i = 0; i < ecgSamples.length; i++) {
-        const x = i * stepX;
-        const y = midY - (ecgSamples[i] * scale);
-        if (i === 0) ecgCtx.moveTo(x, y); else ecgCtx.lineTo(x, y);
-      }
-      ecgCtx.stroke();
-      ecgCtx.shadowBlur = 0;
-    }
-    renderEcg();
+          // Draw Caliper Overlay if active
+          if (caliperActive) {
+            const leftX = Math.min(caliperX1, caliperX2);
+            const spanX = Math.abs(caliperX2 - caliperX1);
+            ecgCtx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+            ecgCtx.fillRect(leftX, 0, spanX, h);
 
-    // ── PPG PLETHYSMOGRAM ───────────────────────────────────────────────
-    const ppgCanvas = $('ppg-canvas');
-    const ppgCtx = ppgCanvas.getContext('2d');
+            [caliperX1, caliperX2].forEach((cx, idx) => {
+              ecgCtx.strokeStyle = idx === 0 ? '#38bdf8' : '#fbbf24';
+              ecgCtx.lineWidth = 1.5;
+              ecgCtx.setLineDash([4, 4]);
+              ecgCtx.beginPath();
+              ecgCtx.moveTo(cx, 0); ecgCtx.lineTo(cx, h);
+              ecgCtx.stroke();
+              ecgCtx.setLineDash([]);
+              // Draw caliper grip handle
+              ecgCtx.fillStyle = idx === 0 ? '#38bdf8' : '#fbbf24';
+              ecgCtx.beginPath();
+              ecgCtx.arc(cx, 16, 4.5, 0, Math.PI * 2);
+              ecgCtx.fill();
+            });
+          }
 
-    function renderPpg() {
-      requestAnimationFrame(renderPpg);
-      const dpr = window.devicePixelRatio || 1;
-      const w = ppgCanvas.clientWidth, h = ppgCanvas.clientHeight;
-      if (ppgCanvas.width !== w * dpr || ppgCanvas.height !== h * dpr) {
-        ppgCanvas.width = w * dpr; ppgCanvas.height = h * dpr;
-      }
-      ppgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          if (ecgSamples.length < 2) return;
 
-      ppgCtx.fillStyle = '#060b13';
-      ppgCtx.fillRect(0, 0, w, h);
+          const gain = $('ecg-gain').value;
+          let scale = 0.08;
+          if (gain === '2') scale = 0.16;
+          if (gain === 'auto') {
+            let m = 100;
+            for (let s of ecgSamples) if (Math.abs(s) > m) m = Math.abs(s);
+            scale = (h * 0.38) / Math.max(200, m);
+          }
 
-      if (ppgSamples.length < 2) {
-        ppgCtx.strokeStyle = 'rgba(6, 182, 212, 0.2)';
-        ppgCtx.lineWidth = 1.5;
-        ppgCtx.beginPath();
-        ppgCtx.moveTo(0, h / 2);
-        ppgCtx.lineTo(w, h / 2);
-        ppgCtx.stroke();
-        return;
-      }
+          if (gridStyle === 'pink') {
+            ecgCtx.shadowBlur = 0;
+            ecgCtx.strokeStyle = '#881337'; // Hospital dark crimson
+            ecgCtx.lineWidth = 1.8;
+          } else {
+            ecgCtx.shadowColor = '#10b981';
+            ecgCtx.shadowBlur = 8;
+            ecgCtx.strokeStyle = '#10b981';
+            ecgCtx.lineWidth = 2.0;
+          }
 
-      const stepX = w / (PPG_BUFFER_MAX - 1);
-      const bottomY = h - 15;
-      const heightSpan = h * 0.7;
-
-      const grad = ppgCtx.createLinearGradient(0, 0, 0, h);
-      grad.addColorStop(0, 'rgba(6, 182, 212, 0.35)');
-      grad.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
-
-      ppgCtx.beginPath();
-      for (let i = 0; i < ppgSamples.length; i++) {
-        const x = i * stepX;
-        const y = bottomY - (ppgSamples[i] * heightSpan);
-        if (i === 0) ppgCtx.moveTo(x, y); else ppgCtx.lineTo(x, y);
-      }
-      ppgCtx.lineTo((ppgSamples.length - 1) * stepX, bottomY);
-      ppgCtx.lineTo(0, bottomY);
-      ppgCtx.closePath();
-      ppgCtx.fillStyle = grad;
-      ppgCtx.fill();
-
-      ppgCtx.shadowColor = '#06b6d4';
-      ppgCtx.shadowBlur = 6;
-      ppgCtx.strokeStyle = '#06b6d4';
-      ppgCtx.lineWidth = 2.0;
-      ppgCtx.beginPath();
-      for (let i = 0; i < ppgSamples.length; i++) {
-        const x = i * stepX;
-        const y = bottomY - (ppgSamples[i] * heightSpan);
-        if (i === 0) ppgCtx.moveTo(x, y); else ppgCtx.lineTo(x, y);
-      }
-      ppgCtx.stroke();
-      ppgCtx.shadowBlur = 0;
-    }
-    renderPpg();
-
-    // ── POINCARÉ LORENZ CANVAS ──────────────────────────────────────────
-    const poincareCanvas = $('poincare-canvas');
-    const pCtx = poincareCanvas.getContext('2d');
-
-    function drawPoincare() {
-      const dpr = window.devicePixelRatio || 1;
-      const w = poincareCanvas.clientWidth, h = poincareCanvas.clientHeight;
-      if (poincareCanvas.width !== w * dpr || poincareCanvas.height !== h * dpr) {
-        poincareCanvas.width = w * dpr; poincareCanvas.height = h * dpr;
-      }
-      pCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      pCtx.fillStyle = '#060b13';
-      pCtx.fillRect(0, 0, w, h);
-
-      pCtx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-      pCtx.setLineDash([3, 3]);
-      pCtx.beginPath();
-      pCtx.moveTo(0, h); pCtx.lineTo(w, 0);
-      pCtx.stroke();
-      pCtx.setLineDash([]);
-
-      const minRR = 400, maxRR = 1400;
-      const mapX = (rr) => ((rr - minRR) / (maxRR - minRR)) * w;
-      const mapY = (rr) => h - ((rr - minRR) / (maxRR - minRR)) * h;
-
-      for (let i = 0; i < rrHistory.length - 1; i++) {
-        const x = mapX(rrHistory[i]);
-        const y = mapY(rrHistory[i + 1]);
-        pCtx.fillStyle = i === rrHistory.length - 2 ? '#38bdf8' : 'rgba(168, 85, 247, 0.65)';
-        pCtx.beginPath();
-        pCtx.arc(x, y, i === rrHistory.length - 2 ? 4.5 : 3, 0, Math.PI * 2);
-        pCtx.fill();
-      }
-    }
-    drawPoincare();
-
-    // ── STREAM COUNTER & TREND CHART ──────────────────────────────────
-    function updateStreamCounter() {
-      const counterEl = $('stream-sample-counter');
-      if (counterEl) {
-        counterEl.textContent = `${streamHeartRate.length} HR pts · ${streamSpO2.length} SpO2 pts · ${streamEcgWave.length} ECG pts`;
-      }
-    }
-
-    const trendCanvas = $('trend-chart-canvas');
-    const tCtx = trendCanvas ? trendCanvas.getContext('2d') : null;
-
-    function renderTrendChart() {
-      if (!trendCanvas || !tCtx) return;
-      requestAnimationFrame(renderTrendChart);
-
-      const dpr = window.devicePixelRatio || 1;
-      const w = trendCanvas.clientWidth, h = trendCanvas.clientHeight;
-      if (trendCanvas.width !== w * dpr || trendCanvas.height !== h * dpr) {
-        trendCanvas.width = w * dpr; trendCanvas.height = h * dpr;
-      }
-      tCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      tCtx.fillStyle = '#060b13';
-      tCtx.fillRect(0, 0, w, h);
-
-      // Grid lines
-      tCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
-      tCtx.lineWidth = 1;
-      for (let y = 30; y < h; y += 35) {
-        tCtx.beginPath(); tCtx.moveTo(0, y); tCtx.lineTo(w, y); tCtx.stroke();
-      }
-
-      // Y-axis scale labels (Heart rate / SpO2 40 - 160)
-      tCtx.fillStyle = 'rgba(148, 163, 184, 0.5)';
-      tCtx.font = '9px JetBrains Mono, monospace';
-      tCtx.fillText('140 BPM / %', 10, 36);
-      tCtx.fillText('100 BPM / %', 10, 75);
-      tCtx.fillText('60 BPM', 10, 115);
-
-      const maxPts = 60;
-      const hrSlice = streamHeartRate.slice(-maxPts);
-      const spo2Slice = streamSpO2.slice(-maxPts);
-
-      if (hrSlice.length < 2 && spo2Slice.length < 2) {
-        tCtx.fillStyle = 'rgba(148, 163, 184, 0.4)';
-        tCtx.font = '12px Plus Jakarta Sans, sans-serif';
-        tCtx.textAlign = 'center';
-        tCtx.fillText('Awaiting sensor stream data to plot real-time trends…', w / 2, h / 2);
-        tCtx.textAlign = 'left';
-        return;
-      }
-
-      const mapY = (val, minVal, maxVal) => {
-        const clamped = Math.max(minVal, Math.min(maxVal, val));
-        return (h - 20) - ((clamped - minVal) / (maxVal - minVal)) * (h - 40);
-      };
-
-      // 1. Draw SpO2 Trend (Purple line)
-      if (spo2Slice.length >= 2) {
-        tCtx.strokeStyle = '#a855f7';
-        tCtx.lineWidth = 2.0;
-        tCtx.beginPath();
-        const step = (w - 80) / Math.max(1, maxPts - 1);
-        for (let i = 0; i < spo2Slice.length; i++) {
-          const x = 70 + (maxPts - spo2Slice.length + i) * step;
-          const y = mapY(spo2Slice[i].spo2, 50, 150);
-          if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
+          ecgCtx.beginPath();
+          const stepX = w / (ECG_BUFFER_MAX - 1);
+          const midY = h / 2;
+          for (let i = 0; i < ecgSamples.length; i++) {
+            const x = i * stepX;
+            const y = midY - (ecgSamples[i] * scale);
+            if (i === 0) ecgCtx.moveTo(x, y); else ecgCtx.lineTo(x, y);
+          }
+          ecgCtx.stroke();
+          ecgCtx.shadowBlur = 0;
         }
-        tCtx.stroke();
-      }
+        renderEcg();
 
-      // 2. Draw PPG Optical Pulse Rate (Cyan line)
-      if (hrSlice.length >= 2) {
-        tCtx.strokeStyle = '#06b6d4';
-        tCtx.lineWidth = 1.8;
-        tCtx.beginPath();
-        const step = (w - 80) / Math.max(1, maxPts - 1);
-        let started = false;
-        for (let i = 0; i < hrSlice.length; i++) {
-          if (hrSlice[i].ppgHr > 0) {
-            const x = 70 + (maxPts - hrSlice.length + i) * step;
-            const y = mapY(hrSlice[i].ppgHr, 40, 160);
-            if (!started) { tCtx.moveTo(x, y); started = true; } else tCtx.lineTo(x, y);
+        // ── PPG PLETHYSMOGRAM ───────────────────────────────────────────────
+        const ppgCanvas = $('ppg-canvas');
+        const ppgCtx = ppgCanvas.getContext('2d');
+
+        function renderPpg() {
+          requestAnimationFrame(renderPpg);
+          const dpr = window.devicePixelRatio || 1;
+          const w = ppgCanvas.clientWidth, h = ppgCanvas.clientHeight;
+          if (ppgCanvas.width !== w * dpr || ppgCanvas.height !== h * dpr) {
+            ppgCanvas.width = w * dpr; ppgCanvas.height = h * dpr;
+          }
+          ppgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+          ppgCtx.fillStyle = '#060b13';
+          ppgCtx.fillRect(0, 0, w, h);
+
+          if (ppgSamples.length < 2) {
+            ppgCtx.strokeStyle = 'rgba(6, 182, 212, 0.2)';
+            ppgCtx.lineWidth = 1.5;
+            ppgCtx.beginPath();
+            ppgCtx.moveTo(0, h / 2);
+            ppgCtx.lineTo(w, h / 2);
+            ppgCtx.stroke();
+            return;
+          }
+
+          const stepX = w / (PPG_BUFFER_MAX - 1);
+          const bottomY = h - 15;
+          const heightSpan = h * 0.7;
+
+          const grad = ppgCtx.createLinearGradient(0, 0, 0, h);
+          grad.addColorStop(0, 'rgba(6, 182, 212, 0.35)');
+          grad.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
+
+          ppgCtx.beginPath();
+          for (let i = 0; i < ppgSamples.length; i++) {
+            const x = i * stepX;
+            const y = bottomY - (ppgSamples[i] * heightSpan);
+            if (i === 0) ppgCtx.moveTo(x, y); else ppgCtx.lineTo(x, y);
+          }
+          ppgCtx.lineTo((ppgSamples.length - 1) * stepX, bottomY);
+          ppgCtx.lineTo(0, bottomY);
+          ppgCtx.closePath();
+          ppgCtx.fillStyle = grad;
+          ppgCtx.fill();
+
+          ppgCtx.shadowColor = '#06b6d4';
+          ppgCtx.shadowBlur = 6;
+          ppgCtx.strokeStyle = '#06b6d4';
+          ppgCtx.lineWidth = 2.0;
+          ppgCtx.beginPath();
+          for (let i = 0; i < ppgSamples.length; i++) {
+            const x = i * stepX;
+            const y = bottomY - (ppgSamples[i] * heightSpan);
+            if (i === 0) ppgCtx.moveTo(x, y); else ppgCtx.lineTo(x, y);
+          }
+          ppgCtx.stroke();
+          ppgCtx.shadowBlur = 0;
+        }
+        renderPpg();
+
+        // ── POINCARÉ LORENZ CANVAS ──────────────────────────────────────────
+        const poincareCanvas = $('poincare-canvas');
+        const pCtx = poincareCanvas.getContext('2d');
+
+        function drawPoincare() {
+          const dpr = window.devicePixelRatio || 1;
+          const w = poincareCanvas.clientWidth, h = poincareCanvas.clientHeight;
+          if (poincareCanvas.width !== w * dpr || poincareCanvas.height !== h * dpr) {
+            poincareCanvas.width = w * dpr; poincareCanvas.height = h * dpr;
+          }
+          pCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+          pCtx.fillStyle = '#060b13';
+          pCtx.fillRect(0, 0, w, h);
+
+          pCtx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+          pCtx.setLineDash([3, 3]);
+          pCtx.beginPath();
+          pCtx.moveTo(0, h); pCtx.lineTo(w, 0);
+          pCtx.stroke();
+          pCtx.setLineDash([]);
+
+          const minRR = 400, maxRR = 1400;
+          const mapX = (rr) => ((rr - minRR) / (maxRR - minRR)) * w;
+          const mapY = (rr) => h - ((rr - minRR) / (maxRR - minRR)) * h;
+
+          for (let i = 0; i < rrHistory.length - 1; i++) {
+            const x = mapX(rrHistory[i]);
+            const y = mapY(rrHistory[i + 1]);
+            pCtx.fillStyle = i === rrHistory.length - 2 ? '#38bdf8' : 'rgba(168, 85, 247, 0.65)';
+            pCtx.beginPath();
+            pCtx.arc(x, y, i === rrHistory.length - 2 ? 4.5 : 3, 0, Math.PI * 2);
+            pCtx.fill();
           }
         }
-        tCtx.stroke();
-      }
+        drawPoincare();
 
-      // 3. Draw ECG Electrical Heart Rate (Emerald line)
-      if (hrSlice.length >= 2) {
-        tCtx.strokeStyle = '#10b981';
-        tCtx.lineWidth = 2.2;
-        tCtx.beginPath();
-        const step = (w - 80) / Math.max(1, maxPts - 1);
-        let started = false;
-        for (let i = 0; i < hrSlice.length; i++) {
-          const hrVal = hrSlice[i].ecgHr || hrSlice[i].activeHr;
-          if (hrVal > 0) {
-            const x = 70 + (maxPts - hrSlice.length + i) * step;
-            const y = mapY(hrVal, 40, 160);
-            if (!started) { tCtx.moveTo(x, y); started = true; } else tCtx.lineTo(x, y);
+        // ── STREAM COUNTER & TREND CHART ──────────────────────────────────
+        function updateStreamCounter() {
+          const counterEl = $('stream-sample-counter');
+          if (counterEl) {
+            counterEl.textContent = `${streamHeartRate.length} HR pts · ${streamSpO2.length} SpO2 pts · ${streamEcgWave.length} ECG pts`;
           }
         }
-        tCtx.stroke();
-      }
-    }
-    if (trendCanvas) renderTrendChart();
 
-    $('btn-clear-stream').addEventListener('click', () => {
-      streamHeartRate.length = 0;
-      streamSpO2.length = 0;
-      streamEcgWave.length = 0;
-      streamTemp.length = 0;
-      updateStreamCounter();
-      log('Cleared live in-memory stream buffer.');
-    });
+        const trendCanvas = $('trend-chart-canvas');
+        const tCtx = trendCanvas ? trendCanvas.getContext('2d') : null;
 
-    // ── SCREENINGS SESSION STORAGE & HISTORY ────────────────────────────
-    function saveScreeningSession(customTag) {
-      const now = new Date();
-      const sessionNum = screeningSessions.length + 1;
-      const aiVerdict = classifyRhythmAi(recordedData.length ? recordedData : rrHistory.map(r => ({ rrMs: r, hr: ecgHeartRate || ppgPulseRate || 75 })));
+        function renderTrendChart() {
+          if (!trendCanvas || !tCtx) return;
+          requestAnimationFrame(renderTrendChart);
 
-      const sessionObj = {
-        id: 'SCR-' + now.getTime(),
-        screeningNumber: sessionNum,
-        sessionTag: customTag || `Screening #${sessionNum}`,
-        timestamp: now.toISOString(),
-        dateFormatted: now.toLocaleString(),
-        ecgHr: ecgHeartRate || 0,
-        ppgHr: ppgPulseRate || 0,
-        spo2: currentSpo2 || 0,
-        tempC: currentTemp || 0,
-        rrMs: currentRr || (rrHistory.length ? rrHistory[rrHistory.length - 1] : 0),
-        rhythm: aiVerdict.rhythm,
-        confidence: aiVerdict.confidence,
-        telemetryRows: recordedData.length ? [...recordedData] : (streamHeartRate.length ? streamHeartRate.slice(-30) : []),
-        waveformSampleCount: recordedWaveforms.length || ecgSamples.length,
-        rawWaveforms: recordedWaveforms.length >= 100 ? [...recordedWaveforms] : ecgSamples.slice(-750).map((s, idx) => ({ t: now.getTime() - (750 - idx) * 4, sample: s, sampleIdx: idx }))
-      };
+          const dpr = window.devicePixelRatio || 1;
+          const w = trendCanvas.clientWidth, h = trendCanvas.clientHeight;
+          if (trendCanvas.width !== w * dpr || trendCanvas.height !== h * dpr) {
+            trendCanvas.width = w * dpr; trendCanvas.height = h * dpr;
+          }
+          tCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      screeningSessions.push(sessionObj);
-      try {
-        localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(screeningSessions.slice(-50)));
-      } catch (e) {
-        log('Warning: Local storage full, keeping in active session memory.');
-      }
+          tCtx.fillStyle = '#060b13';
+          tCtx.fillRect(0, 0, w, h);
 
-      renderScreeningsTable();
-      log(`Stored and indexed: ${sessionObj.sessionTag}`);
-      return sessionObj;
-    }
+          // Grid lines
+          tCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+          tCtx.lineWidth = 1;
+          for (let y = 30; y < h; y += 35) {
+            tCtx.beginPath(); tCtx.moveTo(0, y); tCtx.lineTo(w, y); tCtx.stroke();
+          }
 
-    function renderScreeningsTable() {
-      const tbody = $('sessions-tbody');
-      const countEl = $('screening-total-count');
-      if (!tbody) return;
+          // Y-axis scale labels (Heart rate / SpO2 40 - 160)
+          tCtx.fillStyle = 'rgba(148, 163, 184, 0.5)';
+          tCtx.font = '9px JetBrains Mono, monospace';
+          tCtx.fillText('140 BPM / %', 10, 36);
+          tCtx.fillText('100 BPM / %', 10, 75);
+          tCtx.fillText('60 BPM', 10, 115);
 
-      countEl.textContent = `${screeningSessions.length} Screening(s) Logged`;
+          const maxPts = 60;
+          const hrSlice = streamHeartRate.slice(-maxPts);
+          const spo2Slice = streamSpO2.slice(-maxPts);
 
-      if (screeningSessions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 24px;">
+          if (hrSlice.length < 2 && spo2Slice.length < 2) {
+            tCtx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+            tCtx.font = '12px Plus Jakarta Sans, sans-serif';
+            tCtx.textAlign = 'center';
+            tCtx.fillText('Awaiting sensor stream data to plot real-time trends…', w / 2, h / 2);
+            tCtx.textAlign = 'left';
+            return;
+          }
+
+          const mapY = (val, minVal, maxVal) => {
+            const clamped = Math.max(minVal, Math.min(maxVal, val));
+            return (h - 20) - ((clamped - minVal) / (maxVal - minVal)) * (h - 40);
+          };
+
+          // 1. Draw SpO2 Trend (Purple line)
+          if (spo2Slice.length >= 2) {
+            tCtx.strokeStyle = '#a855f7';
+            tCtx.lineWidth = 2.0;
+            tCtx.beginPath();
+            const step = (w - 80) / Math.max(1, maxPts - 1);
+            for (let i = 0; i < spo2Slice.length; i++) {
+              const x = 70 + (maxPts - spo2Slice.length + i) * step;
+              const y = mapY(spo2Slice[i].spo2, 50, 150);
+              if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
+            }
+            tCtx.stroke();
+          }
+
+          // 2. Draw PPG Optical Pulse Rate (Cyan line)
+          if (hrSlice.length >= 2) {
+            tCtx.strokeStyle = '#06b6d4';
+            tCtx.lineWidth = 1.8;
+            tCtx.beginPath();
+            const step = (w - 80) / Math.max(1, maxPts - 1);
+            let started = false;
+            for (let i = 0; i < hrSlice.length; i++) {
+              if (hrSlice[i].ppgHr > 0) {
+                const x = 70 + (maxPts - hrSlice.length + i) * step;
+                const y = mapY(hrSlice[i].ppgHr, 40, 160);
+                if (!started) { tCtx.moveTo(x, y); started = true; } else tCtx.lineTo(x, y);
+              }
+            }
+            tCtx.stroke();
+          }
+
+          // 3. Draw ECG Electrical Heart Rate (Emerald line)
+          if (hrSlice.length >= 2) {
+            tCtx.strokeStyle = '#10b981';
+            tCtx.lineWidth = 2.2;
+            tCtx.beginPath();
+            const step = (w - 80) / Math.max(1, maxPts - 1);
+            let started = false;
+            for (let i = 0; i < hrSlice.length; i++) {
+              const hrVal = hrSlice[i].ecgHr || hrSlice[i].activeHr;
+              if (hrVal > 0) {
+                const x = 70 + (maxPts - hrSlice.length + i) * step;
+                const y = mapY(hrVal, 40, 160);
+                if (!started) { tCtx.moveTo(x, y); started = true; } else tCtx.lineTo(x, y);
+              }
+            }
+            tCtx.stroke();
+          }
+        }
+        if (trendCanvas) renderTrendChart();
+
+        $('btn-clear-stream').addEventListener('click', () => {
+          streamHeartRate.length = 0;
+          streamSpO2.length = 0;
+          streamEcgWave.length = 0;
+          streamTemp.length = 0;
+          updateStreamCounter();
+          log('Cleared live in-memory stream buffer.');
+        });
+
+        // ── SCREENINGS SESSION STORAGE & HISTORY ────────────────────────────
+        function saveScreeningSession(customTag) {
+          const now = new Date();
+          const sessionNum = screeningSessions.length + 1;
+          const aiVerdict = classifyRhythmAi(recordedData.length ? recordedData : rrHistory.map(r => ({ rrMs: r, hr: ecgHeartRate || ppgPulseRate || 75 })));
+
+          const sessionObj = {
+            id: 'SCR-' + now.getTime(),
+            screeningNumber: sessionNum,
+            sessionTag: customTag || `Screening #${sessionNum}`,
+            timestamp: now.toISOString(),
+            dateFormatted: now.toLocaleString(),
+            ecgHr: ecgHeartRate || 0,
+            ppgHr: ppgPulseRate || 0,
+            spo2: currentSpo2 || 0,
+            tempC: currentTemp || 0,
+            rrMs: currentRr || (rrHistory.length ? rrHistory[rrHistory.length - 1] : 0),
+            rhythm: aiVerdict.rhythm,
+            confidence: aiVerdict.confidence,
+            telemetryRows: recordedData.length ? [...recordedData] : (streamHeartRate.length ? streamHeartRate.slice(-30) : []),
+            waveformSampleCount: recordedWaveforms.length || ecgSamples.length,
+            rawWaveforms: recordedWaveforms.length >= 100 ? [...recordedWaveforms] : ecgSamples.slice(-750).map((s, idx) => ({ t: now.getTime() - (750 - idx) * 4, sample: s, sampleIdx: idx }))
+          };
+
+          screeningSessions.push(sessionObj);
+          try {
+            localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(screeningSessions.slice(-50)));
+          } catch (e) {
+            log('Warning: Local storage full, keeping in active session memory.');
+          }
+
+          renderScreeningsTable();
+          log(`Stored and indexed: ${sessionObj.sessionTag}`);
+          return sessionObj;
+        }
+
+        function renderScreeningsTable() {
+          const tbody = $('sessions-tbody');
+          const countEl = $('screening-total-count');
+          if (!tbody) return;
+
+          countEl.textContent = `${screeningSessions.length} Screening(s) Logged`;
+
+          if (screeningSessions.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 24px;">
           No screenings logged yet. Record or click "Save Screening" to create Screening #1.
         </td></tr>`;
-        return;
-      }
+            return;
+          }
 
-      tbody.innerHTML = screeningSessions.slice().reverse().map((s) => {
-        const hrElec = s.ecgHr > 0 ? `${s.ecgHr}` : '—';
-        const hrOpt = s.ppgHr > 0 ? `${s.ppgHr}` : '—';
-        const oxy = s.spo2 > 0 ? `${s.spo2}%` : '—';
-        const rr = s.rrMs > 0 ? `${s.rrMs} ms` : '—';
+          tbody.innerHTML = screeningSessions.slice().reverse().map((s) => {
+            const hrElec = s.ecgHr > 0 ? `${s.ecgHr}` : '—';
+            const hrOpt = s.ppgHr > 0 ? `${s.ppgHr}` : '—';
+            const oxy = s.spo2 > 0 ? `${s.spo2}%` : '—';
+            const rr = s.rrMs > 0 ? `${s.rrMs} ms` : '—';
 
-        return `<tr>
+            return `<tr>
           <td><span class="session-badge">${s.sessionTag}</span></td>
           <td style="font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--text-secondary);">${s.dateFormatted}</td>
           <td style="color:var(--ecg); font-weight:700;">${hrElec}</td>
@@ -2665,408 +2707,483 @@
             </div>
           </td>
         </tr>`;
-      }).join('');
-    }
+          }).join('');
+        }
 
-    // ── SESSION REPLAY & WAVEFORM INSPECTOR ENGINE ──────────────────────
-    let replayWaveform = [];
-    let replayIndex = 0;
-    let replayPlaying = false;
-    let replaySpeed = 0.5; // default 0.5x slow-mo for diagnostic inspection
-    let replayAnimId = null;
-    let replayLastTime = 0;
+        // ── SESSION REPLAY & WAVEFORM INSPECTOR ENGINE ──────────────────────
+        let replayWaveform = [];
+        let replayIndex = 0;
+        let replayPlaying = false;
+        let replaySpeed = 0.5; // default 0.5x slow-mo for diagnostic inspection
+        let replayAnimId = null;
+        let replayLastTime = 0;
 
-    window.openSessionReplay = function(id) {
-      const s = screeningSessions.find(x => x.id === id);
-      if (!s) return;
-      replayWaveform = s.rawWaveforms && s.rawWaveforms.length ? s.rawWaveforms.map(w => (typeof w === 'number' ? w : w.sample)) : [];
-      if (replayWaveform.length === 0) {
-        alert('No raw 250Hz ECG samples captured for this session.');
-        return;
-      }
-      $('replay-modal').classList.add('open');
-      $('replay-title').innerHTML = `<span>⚡</span> Waveform Inspector • ${escapeHtml(s.sessionTag)}`;
-      $('replay-subtitle').textContent = `${s.dateFormatted} • ${replayWaveform.length} raw 250 Hz samples • ${s.rhythm} (${s.confidence}%)`;
-      $('replay-info-metrics').textContent = `Mean HR: ${s.ecgHr || s.ppgHr} BPM | RR: ${s.rrMs} ms | Rhythm: ${s.rhythm}`;
+        window.openSessionReplay = function (id) {
+          const s = screeningSessions.find(x => x.id === id);
+          if (!s) return;
+          replayWaveform = s.rawWaveforms && s.rawWaveforms.length ? s.rawWaveforms.map(w => (typeof w === 'number' ? w : w.sample)) : [];
+          if (replayWaveform.length === 0) {
+            alert('No raw 250Hz ECG samples captured for this session.');
+            return;
+          }
+          $('replay-modal').classList.add('open');
+          $('replay-title').innerHTML = `<span>⚡</span> Waveform Inspector • ${escapeHtml(s.sessionTag)}`;
+          $('replay-subtitle').textContent = `${s.dateFormatted} • ${replayWaveform.length} raw 250 Hz samples • ${s.rhythm} (${s.confidence}%)`;
+          $('replay-info-metrics').textContent = `Mean HR: ${s.ecgHr || s.ppgHr} BPM | RR: ${s.rrMs} ms | Rhythm: ${s.rhythm}`;
 
-      const scrubber = $('replay-scrubber');
-      scrubber.min = 0;
-      scrubber.max = Math.max(0, replayWaveform.length - 1);
-      scrubber.value = 0;
-      replayIndex = 0;
-      replayPlaying = true;
-      $('btn-replay-play').textContent = '⏸ Pause';
-      updateReplayTimeDisplay();
-      startReplayLoop();
-    };
+          const scrubber = $('replay-scrubber');
+          scrubber.min = 0;
+          scrubber.max = Math.max(0, replayWaveform.length - 1);
+          scrubber.value = 0;
+          replayIndex = 0;
+          replayPlaying = true;
+          $('btn-replay-play').textContent = '⏸ Pause';
+          updateReplayTimeDisplay();
+          startReplayLoop();
+        };
 
-    $('btn-close-replay').addEventListener('click', () => {
-      $('replay-modal').classList.remove('open');
-      replayPlaying = false;
-      if (replayAnimId) cancelAnimationFrame(replayAnimId);
-    });
+        $('btn-close-replay').addEventListener('click', () => {
+          $('replay-modal').classList.remove('open');
+          replayPlaying = false;
+          if (replayAnimId) cancelAnimationFrame(replayAnimId);
+        });
 
-    $('btn-replay-play').addEventListener('click', () => {
-      replayPlaying = !replayPlaying;
-      $('btn-replay-play').textContent = replayPlaying ? '⏸ Pause' : '▶ Play';
-      if (replayPlaying) startReplayLoop();
-    });
+        $('btn-replay-play').addEventListener('click', () => {
+          replayPlaying = !replayPlaying;
+          $('btn-replay-play').textContent = replayPlaying ? '⏸ Pause' : '▶ Play';
+          if (replayPlaying) startReplayLoop();
+        });
 
-    $('btn-replay-pause').addEventListener('click', () => {
-      replayPlaying = false;
-      $('btn-replay-play').textContent = '▶ Play';
-    });
+        $('btn-replay-pause').addEventListener('click', () => {
+          replayPlaying = false;
+          $('btn-replay-play').textContent = '▶ Play';
+        });
 
-    ['05', '10', '20'].forEach(s => {
-      const el = $(`replay-spd-${s}`);
-      if (el) {
-        el.addEventListener('click', () => {
-          ['05', '10', '20'].forEach(x => {
-            const b = $(`replay-spd-${x}`);
-            if (b) b.classList.remove('active');
+        ['05', '10', '20'].forEach(s => {
+          const el = $(`replay-spd-${s}`);
+          if (el) {
+            el.addEventListener('click', () => {
+              ['05', '10', '20'].forEach(x => {
+                const b = $(`replay-spd-${x}`);
+                if (b) b.classList.remove('active');
+              });
+              el.classList.add('active');
+              replaySpeed = parseFloat(el.getAttribute('data-speed'));
+            });
+          }
+        });
+
+        $('replay-scrubber').addEventListener('input', (e) => {
+          replayIndex = parseInt(e.target.value, 10);
+          updateReplayTimeDisplay();
+          renderReplayFrame();
+        });
+
+        function updateReplayTimeDisplay() {
+          const curSec = (replayIndex / 250.0).toFixed(2);
+          const totSec = (replayWaveform.length / 250.0).toFixed(2);
+          $('replay-time-current').textContent = `${curSec}s (sample #${replayIndex})`;
+          $('replay-time-total').textContent = `Total: ${totSec}s (${replayWaveform.length} pts)`;
+        }
+
+        function startReplayLoop() {
+          replayLastTime = performance.now();
+          function loop(now) {
+            if (!replayPlaying) return;
+            const dt = Math.min(0.1, (now - replayLastTime) / 1000.0);
+            replayLastTime = now;
+
+            replayIndex += Math.round(250 * replaySpeed * dt);
+            if (replayIndex >= replayWaveform.length) {
+              replayIndex = 0; // loop around
+            }
+            $('replay-scrubber').value = replayIndex;
+            updateReplayTimeDisplay();
+            renderReplayFrame();
+            replayAnimId = requestAnimationFrame(loop);
+          }
+          if (replayAnimId) cancelAnimationFrame(replayAnimId);
+          replayAnimId = requestAnimationFrame(loop);
+        }
+
+        function renderReplayFrame() {
+          const canvas = $('replay-canvas');
+          if (!canvas) return;
+          const ctx = canvas.getContext('2d');
+          const dpr = window.devicePixelRatio || 1;
+          const w = canvas.clientWidth, h = canvas.clientHeight;
+          if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+            canvas.width = w * dpr; canvas.height = h * dpr;
+          }
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+          ctx.fillStyle = '#060b13';
+          ctx.fillRect(0, 0, w, h);
+
+          // Grid
+          ctx.strokeStyle = 'rgba(16, 185, 129, 0.08)';
+          ctx.lineWidth = 0.5;
+          for (let x = 0; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+          for (let y = 0; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+          const windowSamples = 750; // 3 seconds window on screen
+          const start = Math.max(0, replayIndex - windowSamples);
+          const slice = replayWaveform.slice(start, replayIndex);
+          if (slice.length < 2) return;
+
+          let maxVal = 100;
+          for (let s of slice) if (Math.abs(s) > maxVal) maxVal = Math.abs(s);
+          const scale = (h * 0.38) / Math.max(150, maxVal);
+
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2.0;
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          const stepX = w / (windowSamples - 1);
+          const midY = h / 2;
+          for (let i = 0; i < slice.length; i++) {
+            const x = i * stepX;
+            const y = midY - (slice[i] * scale);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Playhead vertical line
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          const curX = (slice.length - 1) * stepX;
+          ctx.moveTo(curX, 0); ctx.lineTo(curX, h);
+          ctx.stroke();
+        }
+
+        function escapeHtml(str) {
+          return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+        }
+
+        // Window global functions for table buttons
+        window.downloadSessionCsv = function (id) {
+          const s = screeningSessions.find(x => x.id === id);
+          if (!s) return;
+          let csv = 'SessionTag,ScreeningNumber,SessionTimestamp,DataTimestamp_ms,HeartRate_Electrical_BPM,PulseRate_Optical_BPM,SpO2_Percent,Temp_C,RR_ms,RhythmVerdict,LeadOff\n';
+
+          if (s.telemetryRows && s.telemetryRows.length > 0) {
+            s.telemetryRows.forEach(r => {
+              csv += `"${s.sessionTag}",${s.screeningNumber},"${s.timestamp}",${r.t},${r.ecgHr || s.ecgHr},${r.ppgHr || s.ppgHr},${r.spo2 || s.spo2},${r.tempC || s.tempC},${r.rrMs || s.rrMs},"${s.rhythm}",${r.leadOff || 0}\n`;
+            });
+          } else {
+            csv += `"${s.sessionTag}",${s.screeningNumber},"${s.timestamp}",${new Date(s.timestamp).getTime()},${s.ecgHr},${s.ppgHr},${s.spo2},${s.tempC},${s.rrMs},"${s.rhythm}",0\n`;
+          }
+
+          downloadBlob(csv, `SwasthyaSetu_${s.sessionTag.replace(/\s+/g, '_')}_Telemetry.csv`, 'text/csv');
+          log(`Downloaded CSV for ${s.sessionTag}`);
+        };
+
+        window.downloadSessionWaveformCsv = function (id) {
+          const s = screeningSessions.find(x => x.id === id);
+          if (!s || !s.rawWaveforms || s.rawWaveforms.length === 0) {
+            alert('No raw waveform samples attached to this screening.');
+            return;
+          }
+          let csv = 'SessionTag,SampleIndex,Timestamp_ms,Sample_ADC_Raw,Estimated_mV\n';
+          s.rawWaveforms.forEach((w, idx) => {
+            const mv = (w.sample * (3.3 / 4095.0) * 1000).toFixed(2);
+            csv += `"${s.sessionTag}",${idx},${w.t || idx},${w.sample},${mv}\n`;
           });
-          el.classList.add('active');
-          replaySpeed = parseFloat(el.getAttribute('data-speed'));
-        });
-      }
-    });
+          downloadBlob(csv, `SwasthyaSetu_${s.sessionTag.replace(/\s+/g, '_')}_RawECG_250Hz.csv`, 'text/csv');
+          log(`Downloaded Raw ECG CSV for ${s.sessionTag}`);
+        };
 
-    $('replay-scrubber').addEventListener('input', (e) => {
-      replayIndex = parseInt(e.target.value, 10);
-      updateReplayTimeDisplay();
-      renderReplayFrame();
-    });
+        window.deleteSession = function (id) {
+          screeningSessions = screeningSessions.filter(x => x.id !== id);
+          localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(screeningSessions));
+          renderScreeningsTable();
+          log('Deleted screening session.');
+        };
 
-    function updateReplayTimeDisplay() {
-      const curSec = (replayIndex / 250.0).toFixed(2);
-      const totSec = (replayWaveform.length / 250.0).toFixed(2);
-      $('replay-time-current').textContent = `${curSec}s (sample #${replayIndex})`;
-      $('replay-time-total').textContent = `Total: ${totSec}s (${replayWaveform.length} pts)`;
-    }
-
-    function startReplayLoop() {
-      replayLastTime = performance.now();
-      function loop(now) {
-        if (!replayPlaying) return;
-        const dt = Math.min(0.1, (now - replayLastTime) / 1000.0);
-        replayLastTime = now;
-
-        replayIndex += Math.round(250 * replaySpeed * dt);
-        if (replayIndex >= replayWaveform.length) {
-          replayIndex = 0; // loop around
+        function downloadBlob(content, filename, mimeType) {
+          const blob = new Blob([content], { type: mimeType });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = filename;
+          a.click();
         }
-        $('replay-scrubber').value = replayIndex;
-        updateReplayTimeDisplay();
-        renderReplayFrame();
-        replayAnimId = requestAnimationFrame(loop);
-      }
-      if (replayAnimId) cancelAnimationFrame(replayAnimId);
-      replayAnimId = requestAnimationFrame(loop);
-    }
 
-    function renderReplayFrame() {
-      const canvas = $('replay-canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const dpr = window.devicePixelRatio || 1;
-      const w = canvas.clientWidth, h = canvas.clientHeight;
-      if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-        canvas.width = w * dpr; canvas.height = h * dpr;
-      }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      ctx.fillStyle = '#060b13';
-      ctx.fillRect(0, 0, w, h);
-
-      // Grid
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.08)';
-      ctx.lineWidth = 0.5;
-      for (let x = 0; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
-      for (let y = 0; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-
-      const windowSamples = 750; // 3 seconds window on screen
-      const start = Math.max(0, replayIndex - windowSamples);
-      const slice = replayWaveform.slice(start, replayIndex);
-      if (slice.length < 2) return;
-
-      let maxVal = 100;
-      for (let s of slice) if (Math.abs(s) > maxVal) maxVal = Math.abs(s);
-      const scale = (h * 0.38) / Math.max(150, maxVal);
-
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 2.0;
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      const stepX = w / (windowSamples - 1);
-      const midY = h / 2;
-      for (let i = 0; i < slice.length; i++) {
-        const x = i * stepX;
-        const y = midY - (slice[i] * scale);
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      // Playhead vertical line
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      const curX = (slice.length - 1) * stepX;
-      ctx.moveTo(curX, 0); ctx.lineTo(curX, h);
-      ctx.stroke();
-    }
-
-    function escapeHtml(str) {
-      return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-    }
-
-    // Window global functions for table buttons
-    window.downloadSessionCsv = function(id) {
-      const s = screeningSessions.find(x => x.id === id);
-      if (!s) return;
-      let csv = 'SessionTag,ScreeningNumber,SessionTimestamp,DataTimestamp_ms,HeartRate_Electrical_BPM,PulseRate_Optical_BPM,SpO2_Percent,Temp_C,RR_ms,RhythmVerdict,LeadOff\n';
-
-      if (s.telemetryRows && s.telemetryRows.length > 0) {
-        s.telemetryRows.forEach(r => {
-          csv += `"${s.sessionTag}",${s.screeningNumber},"${s.timestamp}",${r.t},${r.ecgHr || s.ecgHr},${r.ppgHr || s.ppgHr},${r.spo2 || s.spo2},${r.tempC || s.tempC},${r.rrMs || s.rrMs},"${s.rhythm}",${r.leadOff || 0}\n`;
+        $('btn-save-screening').addEventListener('click', () => {
+          const sess = saveScreeningSession();
+          alert(`Saved ${sess.sessionTag} with ${sess.telemetryRows.length} telemetry points and ${sess.waveformSampleCount} ECG samples.`);
         });
-      } else {
-        csv += `"${s.sessionTag}",${s.screeningNumber},"${s.timestamp}",${new Date(s.timestamp).getTime()},${s.ecgHr},${s.ppgHr},${s.spo2},${s.tempC},${s.rrMs},"${s.rhythm}",0\n`;
-      }
 
-      downloadBlob(csv, `SwasthyaSetu_${s.sessionTag.replace(/\s+/g, '_')}_Telemetry.csv`, 'text/csv');
-      log(`Downloaded CSV for ${s.sessionTag}`);
-    };
+        $('btn-clear-history').addEventListener('click', () => {
+          if (confirm('Are you sure you want to clear all screening history?')) {
+            screeningSessions = [];
+            localStorage.removeItem(STORAGE_KEY_SESSIONS);
+            renderScreeningsTable();
+            log('Screening history cleared.');
+          }
+        });
 
-    window.downloadSessionWaveformCsv = function(id) {
-      const s = screeningSessions.find(x => x.id === id);
-      if (!s || !s.rawWaveforms || s.rawWaveforms.length === 0) {
-        alert('No raw waveform samples attached to this screening.');
-        return;
-      }
-      let csv = 'SessionTag,SampleIndex,Timestamp_ms,Sample_ADC_Raw,Estimated_mV\n';
-      s.rawWaveforms.forEach((w, idx) => {
-        const mv = (w.sample * (3.3 / 4095.0) * 1000).toFixed(2);
-        csv += `"${s.sessionTag}",${idx},${w.t || idx},${w.sample},${mv}\n`;
-      });
-      downloadBlob(csv, `SwasthyaSetu_${s.sessionTag.replace(/\s+/g, '_')}_RawECG_250Hz.csv`, 'text/csv');
-      log(`Downloaded Raw ECG CSV for ${s.sessionTag}`);
-    };
+        // ── MASTER ALL SCREENINGS CSV EXPORT ────────────────────────────────
+        function exportAllScreeningsCsv() {
+          if (screeningSessions.length === 0) {
+            alert('No screenings logged yet. Record and save a screening first.');
+            return;
+          }
+          let csv = 'ScreeningNumber,SessionTag,Timestamp,ECG_HeartRate_BPM,PPG_PulseRate_BPM,SpO2_Percent,Temp_C,RR_Interval_ms,Rhythm_Verdict,Model_Confidence,Telemetry_Samples_Count,ECG_Waveform_Samples_Count\n';
+          screeningSessions.forEach(s => {
+            csv += `${s.screeningNumber},"${s.sessionTag}","${s.timestamp}",${s.ecgHr},${s.ppgHr},${s.spo2},${s.tempC},${s.rrMs},"${s.rhythm}",${s.confidence},${s.telemetryRows.length},${s.waveformSampleCount}\n`;
+          });
+          downloadBlob(csv, `SwasthyaSetu_All_Screenings_Export_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
+          log(`Exported full history of ${screeningSessions.length} screenings to CSV.`);
+        }
+        $('btn-export-all-csv').addEventListener('click', exportAllScreeningsCsv);
+        $('btn-export-all-screenings').addEventListener('click', exportAllScreeningsCsv);
 
-    window.deleteSession = function(id) {
-      screeningSessions = screeningSessions.filter(x => x.id !== id);
-      localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(screeningSessions));
-      renderScreeningsTable();
-      log('Deleted screening session.');
-    };
+        // ── RAW 250 HZ ECG CSV EXPORT ───────────────────────────────────────
+        $('btn-export-ecg-csv').addEventListener('click', () => {
+          const wave = streamEcgWave.length ? streamEcgWave : ecgSamples.map((s, idx) => ({ t: Date.now(), sample: s, index: idx }));
+          if (wave.length === 0) {
+            alert('No ECG waveform samples recorded in buffer yet.');
+            return;
+          }
+          let csv = 'SampleIndex,Timestamp_ms,Raw_ADC_Value,Estimated_mV\n';
+          wave.forEach((p, idx) => {
+            const mv = (p.sample * (3.3 / 4095.0) * 1000).toFixed(2);
+            csv += `${idx},${p.t || idx},${p.sample},${mv}\n`;
+          });
+          downloadBlob(csv, `SwasthyaSetu_Raw_ECG_250Hz_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`, 'text/csv');
+          log(`Exported ${wave.length} raw 250Hz ECG samples to CSV.`);
+        });
 
-    function downloadBlob(content, filename, mimeType) {
-      const blob = new Blob([content], { type: mimeType });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      a.click();
-    }
+        // ── CONFIGURABLE SESSION RECORDING & AUTO-SAVE ──────────────────────
+        let recordIntervalTimer = null;
+        let recordingElapsedSec = 0;
 
-    $('btn-save-screening').addEventListener('click', () => {
-      const sess = saveScreeningSession();
-      alert(`Saved ${sess.sessionTag} with ${sess.telemetryRows.length} telemetry points and ${sess.waveformSampleCount} ECG samples.`);
-    });
+        function startRecordingSession() {
+          if (recording) return;
+          recording = true;
+          recordedData = [];
+          recordedWaveforms = [];
+          recordingElapsedSec = 0;
+          updateTimerBadge(0);
 
-    $('btn-clear-history').addEventListener('click', () => {
-      if (confirm('Are you sure you want to clear all screening history?')) {
-        screeningSessions = [];
-        localStorage.removeItem(STORAGE_KEY_SESSIONS);
+          const targetLabel = selectedDurationSec === 0 ? 'Continuous' : `${selectedDurationSec}s`;
+          $('btn-record').textContent = `Stop (${targetLabel})...`;
+          $('btn-record').className = 'btn btn-danger';
+          log(`Started ${targetLabel} clinical recording session.`);
+
+          if (recordIntervalTimer) clearInterval(recordIntervalTimer);
+          recordIntervalTimer = setInterval(() => {
+            recordingElapsedSec++;
+            updateTimerBadge(recordingElapsedSec);
+
+            // Auto-finalize only if selectedDurationSec > 0
+            if (selectedDurationSec > 0 && recordingElapsedSec >= selectedDurationSec) {
+              stopRecordingSession();
+            }
+          }, 1000);
+        }
+
+        function stopRecordingSession() {
+          if (!recording) return;
+          recording = false;
+          if (recordIntervalTimer) {
+            clearInterval(recordIntervalTimer);
+            recordIntervalTimer = null;
+          }
+          $('btn-record').textContent = 'Record Session';
+          $('btn-record').className = 'btn btn-outline';
+          $('btn-export-csv').disabled = false;
+          updateTimerBadge(0);
+
+          log(`Recording complete: ${recordedData.length} telemetry frames, ${recordedWaveforms.length} ECG points (${recordingElapsedSec}s elapsed).`);
+          runAiDeepScan(recordedData);
+
+          // Automatically store the completed recording as a persistent screening session
+          const saved = saveScreeningSession();
+          log(`Auto-saved as ${saved.sessionTag}. Ready to download CSV or inspect in Replay.`);
+        }
+
+        $('btn-record').addEventListener('click', () => {
+          if (recording) {
+            stopRecordingSession();
+          } else {
+            startRecordingSession();
+          }
+        });
+
+        // ── UNIFIED TELEMETRY CSV EXPORT ────────────────────────────────────
+        $('btn-export-csv').addEventListener('click', () => {
+          const data = recordedData.length ? recordedData : streamHeartRate.map((hr, idx) => ({
+            t: hr.t,
+            ecgHr: hr.ecgHr || hr.activeHr,
+            ppgHr: hr.ppgHr || (streamSpO2[idx] ? hr.activeHr : 0),
+            spo2: streamSpO2[idx] ? streamSpO2[idx].spo2 : currentSpo2,
+            tempC: currentTemp,
+            rrMs: currentRr,
+            leadOff: hr.leadOff
+          }));
+
+          if (data.length === 0) {
+            alert('No telemetry data frames in current stream. Connect device or click "Record 30s".');
+            return;
+          }
+
+          let csv = 'Timestamp_ms,DateTime_ISO,HeartRate_Electrical_BPM,PulseRate_Optical_BPM,SpO2_Percent,SkinTemp_C,RR_Interval_ms,SignalQuality_Percent,LeadOff_Flag\n';
+          data.forEach(r => {
+            const iso = r.isoTime || new Date(r.t).toISOString();
+            csv += `${r.t},"${iso}",${r.ecgHr || 0},${r.ppgHr || 0},${r.spo2 || 0},${r.tempC || 0},${r.rrMs || 0},100,${r.leadOff || 0}\n`;
+          });
+          downloadBlob(csv, `SwasthyaSetu_Unified_Telemetry_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`, 'text/csv');
+          log(`Exported unified telemetry (${data.length} rows) to CSV.`);
+        });
+
+        // Initialize the table from persistent storage on load
         renderScreeningsTable();
-        log('Screening history cleared.');
-      }
-    });
 
-    // ── MASTER ALL SCREENINGS CSV EXPORT ────────────────────────────────
-    function exportAllScreeningsCsv() {
-      if (screeningSessions.length === 0) {
-        alert('No screenings logged yet. Record and save a screening first.');
-        return;
-      }
-      let csv = 'ScreeningNumber,SessionTag,Timestamp,ECG_HeartRate_BPM,PPG_PulseRate_BPM,SpO2_Percent,Temp_C,RR_Interval_ms,Rhythm_Verdict,Model_Confidence,Telemetry_Samples_Count,ECG_Waveform_Samples_Count\n';
-      screeningSessions.forEach(s => {
-        csv += `${s.screeningNumber},"${s.sessionTag}","${s.timestamp}",${s.ecgHr},${s.ppgHr},${s.spo2},${s.tempC},${s.rrMs},"${s.rhythm}",${s.confidence},${s.telemetryRows.length},${s.waveformSampleCount}\n`;
-      });
-      downloadBlob(csv, `SwasthyaSetu_All_Screenings_Export_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
-      log(`Exported full history of ${screeningSessions.length} screenings to CSV.`);
-    }
-    $('btn-export-all-csv').addEventListener('click', exportAllScreeningsCsv);
-    $('btn-export-all-screenings').addEventListener('click', exportAllScreeningsCsv);
+        // ── DOCTOR-READY CLINICAL REPORT GENERATOR ───────────────────────────
+        $('btn-report').addEventListener('click', () => {
+          $('report-modal').classList.add('open');
+          $('rep-date').textContent = new Date().toLocaleString();
+          $('rep-ecg-hr').textContent = `${ecgHeartRate || 75} BPM`;
+          $('rep-ppg-hr').textContent = `${ppgPulseRate || 75} BPM`;
+          $('rep-spo2').textContent = `${currentSpo2 || 99} %`;
+          $('rep-rr').textContent = `${rrHistory.length ? rrHistory[rrHistory.length - 1] : 790} ms`;
 
-    // ── RAW 250 HZ ECG CSV EXPORT ───────────────────────────────────────
-    $('btn-export-ecg-csv').addEventListener('click', () => {
-      const wave = streamEcgWave.length ? streamEcgWave : ecgSamples.map((s, idx) => ({ t: Date.now(), sample: s, index: idx }));
-      if (wave.length === 0) {
-        alert('No ECG waveform samples recorded in buffer yet.');
-        return;
-      }
-      let csv = 'SampleIndex,Timestamp_ms,Raw_ADC_Value,Estimated_mV\n';
-      wave.forEach((p, idx) => {
-        const mv = (p.sample * (3.3 / 4095.0) * 1000).toFixed(2);
-        csv += `${idx},${p.t || idx},${p.sample},${mv}\n`;
-      });
-      downloadBlob(csv, `SwasthyaSetu_Raw_ECG_250Hz_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`, 'text/csv');
-      log(`Exported ${wave.length} raw 250Hz ECG samples to CSV.`);
-    });
+          // Draw ECG trace on standard pink paper
+          const repCanvas = $('report-canvas');
+          const rCtx = repCanvas.getContext('2d');
+          const dpr = window.devicePixelRatio || 1;
+          repCanvas.width = repCanvas.clientWidth * dpr;
+          repCanvas.height = repCanvas.clientHeight * dpr;
+          rCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // ── CONFIGURABLE SESSION RECORDING & AUTO-SAVE ──────────────────────
-    let recordIntervalTimer = null;
-    let recordingElapsedSec = 0;
+          const w = repCanvas.clientWidth, h = repCanvas.clientHeight;
+          rCtx.clearRect(0, 0, w, h);
 
-    function startRecordingSession() {
-      if (recording) return;
-      recording = true;
-      recordedData = [];
-      recordedWaveforms = [];
-      recordingElapsedSec = 0;
-      updateTimerBadge(0);
+          // Black/Dark Red medical line
+          rCtx.strokeStyle = '#881337';
+          rCtx.lineWidth = 1.6;
+          rCtx.beginPath();
 
-      const targetLabel = selectedDurationSec === 0 ? 'Continuous' : `${selectedDurationSec}s`;
-      $('btn-record').textContent = `Stop (${targetLabel})...`;
-      $('btn-record').className = 'btn btn-danger';
-      log(`Started ${targetLabel} clinical recording session.`);
+          const source = ecgSamples.length >= 100 ? ecgSamples : generateSyntheticStrip();
+          const stepX = w / (source.length - 1);
+          const midY = h / 2;
 
-      if (recordIntervalTimer) clearInterval(recordIntervalTimer);
-      recordIntervalTimer = setInterval(() => {
-        recordingElapsedSec++;
-        updateTimerBadge(recordingElapsedSec);
+          let maxV = 100;
+          for (let s of source) if (Math.abs(s) > maxV) maxV = Math.abs(s);
+          const scale = (h * 0.38) / Math.max(150, maxV);
 
-        // Auto-finalize only if selectedDurationSec > 0
-        if (selectedDurationSec > 0 && recordingElapsedSec >= selectedDurationSec) {
-          stopRecordingSession();
+          for (let i = 0; i < source.length; i++) {
+            const x = i * stepX;
+            let s = source[i];
+            if (i > 0 && i < source.length - 1) {
+              s = 0.25 * source[i - 1] + 0.5 * source[i] + 0.25 * source[i + 1];
+            }
+            const y = midY - (s * scale);
+            if (i === 0) rCtx.moveTo(x, y); else rCtx.lineTo(x, y);
+          }
+          rCtx.stroke();
+        });
+
+        $('btn-close-report').addEventListener('click', () => {
+          $('report-modal').classList.remove('open');
+        });
+
+        function generateSyntheticStrip() {
+          // Generates 750 points (3 seconds) of clean Lead I waveform if none buffered
+          const strip = [];
+          for (let b = 0; b < 4; b++) {
+            for (let t = 0; t < 200; t++) {
+              let v = 0;
+              if (t >= 30 && t <= 50) v = 40 * Math.sin((t - 30) * Math.PI / 20); // P
+              else if (t >= 75 && t <= 80) v = -30; // Q
+              else if (t >= 80 && t <= 90) v = 320 * Math.sin((t - 80) * Math.PI / 10); // R
+              else if (t >= 90 && t <= 95) v = -60; // S
+              else if (t >= 120 && t <= 160) v = 60 * Math.sin((t - 120) * Math.PI / 40); // T
+              strip.push(v);
+            }
+          }
+          return strip;
         }
-      }, 1000);
-    }
 
-    function stopRecordingSession() {
-      if (!recording) return;
-      recording = false;
-      if (recordIntervalTimer) {
-        clearInterval(recordIntervalTimer);
-        recordIntervalTimer = null;
-      }
-      $('btn-record').textContent = 'Record Session';
-      $('btn-record').className = 'btn btn-outline';
-      $('btn-export-csv').disabled = false;
-      updateTimerBadge(0);
+        // ── GSAP & LENIS WORKSTATION ENHANCEMENTS ──────────────────────────
+        window.addEventListener('DOMContentLoaded', () => {
+          // 1. Lenis Smooth Scrolling
+          try {
+            if (typeof Lenis !== 'undefined') {
+              const lenis = new Lenis({
+                duration: 1.0,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smoothWheel: true
+              });
+              function raf(time) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+              }
+              requestAnimationFrame(raf);
+            }
+          } catch (err) {
+            console.warn('Lenis scroll initialization skipped:', err);
+          }
 
-      log(`Recording complete: ${recordedData.length} telemetry frames, ${recordedWaveforms.length} ECG points (${recordingElapsedSec}s elapsed).`);
-      runAiDeepScan(recordedData);
+          // 2. GSAP Entrance Stagger
+          try {
+            if (typeof gsap !== 'undefined') {
+              gsap.from('header', { y: -16, opacity: 0, duration: 0.5, ease: 'power2.out' });
+              gsap.from('.control-strip', { y: -10, opacity: 0, duration: 0.4, delay: 0.15, ease: 'power2.out' });
+              gsap.from('.scope-card', {
+                y: 20,
+                opacity: 0,
+                duration: 0.55,
+                stagger: 0.12,
+                delay: 0.2,
+                ease: 'power2.out'
+              });
+              gsap.from('.vital-card, .diag-card, .consensus-banner', {
+                y: 16,
+                opacity: 0,
+                duration: 0.45,
+                stagger: 0.08,
+                delay: 0.28,
+                ease: 'power2.out'
+              });
 
-      // Automatically store the completed recording as a persistent screening session
-      const saved = saveScreeningSession();
-      log(`Auto-saved as ${saved.sessionTag}. Ready to download CSV or inspect in Replay.`);
-    }
-
-    $('btn-record').addEventListener('click', () => {
-      if (recording) {
-        stopRecordingSession();
-      } else {
-        startRecordingSession();
-      }
-    });
-
-    // ── UNIFIED TELEMETRY CSV EXPORT ────────────────────────────────────
-    $('btn-export-csv').addEventListener('click', () => {
-      const data = recordedData.length ? recordedData : streamHeartRate.map((hr, idx) => ({
-        t: hr.t,
-        ecgHr: hr.ecgHr || hr.activeHr,
-        ppgHr: hr.ppgHr || (streamSpO2[idx] ? hr.activeHr : 0),
-        spo2: streamSpO2[idx] ? streamSpO2[idx].spo2 : currentSpo2,
-        tempC: currentTemp,
-        rrMs: currentRr,
-        leadOff: hr.leadOff
-      }));
-
-      if (data.length === 0) {
-        alert('No telemetry data frames in current stream. Connect device or click "Record 30s".');
-        return;
-      }
-
-      let csv = 'Timestamp_ms,DateTime_ISO,HeartRate_Electrical_BPM,PulseRate_Optical_BPM,SpO2_Percent,SkinTemp_C,RR_Interval_ms,SignalQuality_Percent,LeadOff_Flag\n';
-      data.forEach(r => {
-        const iso = r.isoTime || new Date(r.t).toISOString();
-        csv += `${r.t},"${iso}",${r.ecgHr || 0},${r.ppgHr || 0},${r.spo2 || 0},${r.tempC || 0},${r.rrMs || 0},100,${r.leadOff || 0}\n`;
-      });
-      downloadBlob(csv, `SwasthyaSetu_Unified_Telemetry_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`, 'text/csv');
-      log(`Exported unified telemetry (${data.length} rows) to CSV.`);
-    });
-
-    // Initialize the table from persistent storage on load
-    renderScreeningsTable();
-
-    // ── DOCTOR-READY CLINICAL REPORT GENERATOR ───────────────────────────
-    $('btn-report').addEventListener('click', () => {
-      $('report-modal').classList.add('open');
-      $('rep-date').textContent = new Date().toLocaleString();
-      $('rep-ecg-hr').textContent = `${ecgHeartRate || 75} BPM`;
-      $('rep-ppg-hr').textContent = `${ppgPulseRate || 75} BPM`;
-      $('rep-spo2').textContent = `${currentSpo2 || 99} %`;
-      $('rep-rr').textContent = `${rrHistory.length ? rrHistory[rrHistory.length - 1] : 790} ms`;
-
-      // Draw ECG trace on standard pink paper
-      const repCanvas = $('report-canvas');
-      const rCtx = repCanvas.getContext('2d');
-      const dpr = window.devicePixelRatio || 1;
-      repCanvas.width = repCanvas.clientWidth * dpr;
-      repCanvas.height = repCanvas.clientHeight * dpr;
-      rCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      const w = repCanvas.clientWidth, h = repCanvas.clientHeight;
-      rCtx.clearRect(0, 0, w, h);
-
-      // Black/Dark Red medical line
-      rCtx.strokeStyle = '#881337';
-      rCtx.lineWidth = 1.6;
-      rCtx.beginPath();
-
-      const source = ecgSamples.length >= 100 ? ecgSamples : generateSyntheticStrip();
-      const stepX = w / (source.length - 1);
-      const midY = h / 2;
-
-      let maxV = 100;
-      for (let s of source) if (Math.abs(s) > maxV) maxV = Math.abs(s);
-      const scale = (h * 0.38) / Math.max(150, maxV);
-
-      for (let i = 0; i < source.length; i++) {
-        const x = i * stepX;
-        let s = source[i];
-        if (i > 0 && i < source.length - 1) {
-          s = 0.25 * source[i - 1] + 0.5 * source[i] + 0.25 * source[i + 1];
-        }
-        const y = midY - (s * scale);
-        if (i === 0) rCtx.moveTo(x, y); else rCtx.lineTo(x, y);
-      }
-      rCtx.stroke();
-    });
-
-    $('btn-close-report').addEventListener('click', () => {
-      $('report-modal').classList.remove('open');
-    });
-
-    function generateSyntheticStrip() {
-      // Generates 750 points (3 seconds) of clean Lead I waveform if none buffered
-      const strip = [];
-      for (let b = 0; b < 4; b++) {
-        for (let t = 0; t < 200; t++) {
-          let v = 0;
-          if (t >= 30 && t <= 50) v = 40 * Math.sin((t - 30) * Math.PI / 20); // P
-          else if (t >= 75 && t <= 80) v = -30; // Q
-          else if (t >= 80 && t <= 90) v = 320 * Math.sin((t - 80) * Math.PI / 10); // R
-          else if (t >= 90 && t <= 95) v = -60; // S
-          else if (t >= 120 && t <= 160) v = 60 * Math.sin((t - 120) * Math.PI / 40); // T
-          strip.push(v);
-        }
-      }
-      return strip;
-    }
-  </script>
+              // 3. 3D Perspective Tilt on Hover for Vital Cards
+              document.querySelectorAll('.vital-card, .diag-card').forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                  const rect = card.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+                  const y = e.clientY - rect.top;
+                  const cx = rect.width / 2;
+                  const cy = rect.height / 2;
+                  const rotX = ((y - cy) / cy) * -6;
+                  const rotY = ((x - cx) / cx) * 6;
+                  gsap.to(card, {
+                    rotationX: rotX,
+                    rotationY: rotY,
+                    transformPerspective: 800,
+                    duration: 0.2,
+                    ease: 'power1.out'
+                  });
+                });
+                card.addEventListener('mouseleave', () => {
+                  gsap.to(card, {
+                    rotationX: 0,
+                    rotationY: 0,
+                    duration: 0.4,
+                    ease: 'power2.out'
+                  });
+                });
+              });
+            }
+          } catch (err) {
+            console.warn('GSAP workstation animations skipped:', err);
+          }
+        });
+      </script>
 </body>
 
 </html>

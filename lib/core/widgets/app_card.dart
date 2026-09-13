@@ -275,3 +275,152 @@ class AppFilledCard extends StatelessWidget {
     );
   }
 }
+
+/// A tactile 3D interactive card with gentle spring press scale,
+/// specular rim highlight, and responsive depth.
+class AppTactileCard extends StatefulWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final Color? color;
+  final double? elevation;
+  final BorderRadius? borderRadius;
+  final BorderSide? border;
+  final VoidCallback? onTap;
+  final bool isSelected;
+  final List<BoxShadow>? shadows;
+  final bool enableTilt;
+
+  const AppTactileCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.margin,
+    this.color,
+    this.elevation,
+    this.borderRadius,
+    this.border,
+    this.onTap,
+    this.isSelected = false,
+    this.shadows,
+    this.enableTilt = true,
+  });
+
+  @override
+  State<AppTactileCard> createState() => _AppTactileCardState();
+}
+
+class _AppTactileCardState extends State<AppTactileCard> {
+  bool _isPressed = false;
+  double _tiltX = 0.0;
+  double _tiltY = 0.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardBorderRadius =
+        widget.borderRadius ?? BorderRadius.circular(AppTheme.radiusXl);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final cardWidget = AppCard(
+      padding: widget.padding,
+      margin: EdgeInsets.zero,
+      color: widget.color,
+      elevation: _isPressed
+          ? 0.5
+          : (widget.elevation ?? AppTheme.elevationLevel1),
+      borderRadius: cardBorderRadius,
+      border:
+          widget.border ??
+          BorderSide(
+            color: isDark ? const Color(0x1AFFFFFF) : const Color(0x10000000),
+            width: 1,
+          ),
+      isSelected: widget.isSelected,
+      shadows: _isPressed
+          ? AppTheme.shadowTactile3DPressed
+          : (widget.shadows ?? AppTheme.shadowTactile3D),
+      onTap: widget.onTap,
+      child: widget.child,
+    );
+
+    // Subtle 3D perspective matrix transform
+    final transform = Matrix4.identity()
+      ..setEntry(3, 2, 0.001)
+      ..rotateX(_tiltX)
+      ..rotateY(_tiltY);
+
+    Widget interactive = Transform(
+      transform: transform,
+      alignment: FractionalOffset.center,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutCubic,
+        child: cardWidget,
+      ),
+    );
+
+    if (widget.onTap != null) {
+      interactive = Listener(
+        onPointerDown: (_) {
+          if (mounted) setState(() => _isPressed = true);
+        },
+        onPointerUp: (_) {
+          if (mounted) {
+            setState(() {
+              _isPressed = false;
+              _tiltX = 0;
+              _tiltY = 0;
+            });
+          }
+        },
+        onPointerCancel: (_) {
+          if (mounted) {
+            setState(() {
+              _isPressed = false;
+              _tiltX = 0;
+              _tiltY = 0;
+            });
+          }
+        },
+        child: MouseRegion(
+          onExit: (_) {
+            if (mounted) {
+              setState(() {
+                _tiltX = 0;
+                _tiltY = 0;
+              });
+            }
+          },
+          onHover: (event) {
+            if (!widget.enableTilt) return;
+            final renderBox = context.findRenderObject() as RenderBox?;
+            if (renderBox != null && renderBox.hasSize) {
+              final size = renderBox.size;
+              if (size.width > 0 && size.height > 0) {
+                final dx = (event.localPosition.dx / size.width) - 0.5;
+                final dy = (event.localPosition.dy / size.height) - 0.5;
+                setState(() {
+                  _tiltY = (dx * 0.04).clamp(-0.03, 0.03);
+                  _tiltX = (-dy * 0.04).clamp(-0.03, 0.03);
+                });
+              }
+            }
+          },
+          child: interactive,
+        ),
+      );
+    }
+
+    return Padding(
+      padding:
+          widget.margin ??
+          const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacingMd,
+            vertical: AppTheme.spacingSm,
+          ),
+      child: interactive,
+    );
+  }
+}

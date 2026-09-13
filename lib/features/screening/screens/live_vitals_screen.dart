@@ -1626,8 +1626,9 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
     final theme = Theme.of(context);
     final displayColor = vital.alert ? vital.alertColor : vital.color;
 
-    return AppElevatedCard(
+    return AppTactileCard(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
+      margin: EdgeInsets.zero,
       child: Column(
         children: [
           Row(
@@ -1804,7 +1805,7 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
         ? 'FAIR'
         : 'POOR';
 
-    return AppElevatedCard(
+    return AppTactileCard(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1954,7 +1955,7 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
   Widget _buildPPGCard() {
     final theme = Theme.of(context);
 
-    return AppElevatedCard(
+    return AppTactileCard(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2029,7 +2030,7 @@ class _LiveVitalsScreenState extends ConsumerState<LiveVitalsScreen>
   Widget _buildExperimentalBPCard() {
     final theme = Theme.of(context);
 
-    return AppCard(
+    return AppTactileCard(
       color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.1),
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       border: BorderSide(

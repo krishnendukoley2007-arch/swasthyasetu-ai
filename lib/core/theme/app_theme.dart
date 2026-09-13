@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Application chrome theme.
 ///
@@ -198,6 +199,17 @@ class AppTheme {
     BoxShadow(color: Color(0x33E8531E), blurRadius: 12, offset: Offset(0, 0)),
   ];
 
+  /// Tactile 3D card elevation: soft diffused ambient wash + subtle downward shift.
+  static const List<BoxShadow> shadowTactile3D = [
+    BoxShadow(color: Color(0x14000000), blurRadius: 14, offset: Offset(0, 6)),
+    BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2)),
+  ];
+
+  /// Pressed state shadow for tactile feedback.
+  static const List<BoxShadow> shadowTactile3DPressed = [
+    BoxShadow(color: Color(0x0F000000), blurRadius: 4, offset: Offset(0, 1)),
+  ];
+
   static ThemeData get lightTheme {
     const colorScheme = ColorScheme(
       brightness: Brightness.light,
@@ -249,6 +261,13 @@ class AppTheme {
       ),
 
       appBarTheme: const AppBarTheme(
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+          systemNavigationBarColor: surfaceLight,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
         backgroundColor: Colors.transparent,
         foregroundColor: onSurfaceLight,
         surfaceTintColor: Colors.transparent,
@@ -935,6 +954,13 @@ class AppTheme {
       ),
 
       appBarTheme: const AppBarTheme(
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          systemNavigationBarColor: surfaceDark,
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
         backgroundColor: Colors.transparent,
         foregroundColor: onSurfaceDark,
         surfaceTintColor: Colors.transparent,
@@ -1609,6 +1635,15 @@ class AppTheme {
       canvasColor: paper,
       dividerColor: scheme.outline,
       appBarTheme: base.appBarTheme.copyWith(
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+          systemNavigationBarColor: paper,
+          systemNavigationBarIconBrightness: isDark
+              ? Brightness.light
+              : Brightness.dark,
+        ),
         backgroundColor: paper,
         foregroundColor: ink,
         titleTextStyle: base.appBarTheme.titleTextStyle?.copyWith(color: ink),

@@ -128,5 +128,96 @@ void main() {
       );
       expect(liveResult.isDemo, isFalse);
     });
+
+    test(
+      'Synthetic Sinus Baseline pattern: normal sinus beat reconstructs with high fidelity (MSE < 0.05)',
+      () async {
+        final nsrRecord = EdgeAiService.record100Nsr;
+        final eval = await service.evaluateDetailedWindow(
+          ecgSamples: nsrRecord.samples,
+        );
+
+        expect(eval.isAnomaly, isFalse);
+        expect(eval.mse, lessThan(0.05));
+        expect(
+          eval.advisoryMessage,
+          contains('concordant with normal sinus baseline'),
+        );
+      },
+    );
+
+    test(
+      'Synthetic PVC Ectopic pattern: wide bizarre ventricular ectopic beat flags anomaly (MSE > 0.10)',
+      () async {
+        final pvcRecord = EdgeAiService.record119Pvc;
+        final eval = await service.evaluateDetailedWindow(
+          ecgSamples: pvcRecord.samples,
+        );
+
+        expect(eval.isAnomaly, isTrue);
+        expect(eval.mse, greaterThan(0.10));
+        expect(
+          eval.advisoryMessage,
+          contains('Atypical rhythm morphology flagged'),
+        );
+      },
+    );
+
+    test(
+      'Synthetic AFib Ripple pattern: fibrillatory baseline ripple flags anomaly (MSE >= 0.06)',
+      () async {
+        final afibRecord = EdgeAiService.record201Afib;
+        final eval = await service.evaluateDetailedWindow(
+          ecgSamples: afibRecord.samples,
+        );
+
+        expect(eval.isAnomaly, isTrue);
+        expect(eval.mse, greaterThanOrEqualTo(0.06));
+      },
+    );
+
+    test(
+      'evaluateDetailedWindow: exports 128-sample waveforms, squared residuals, and throughput',
+      () async {
+        final nsrRecord = EdgeAiService.record100Nsr;
+        final eval = await service.evaluateDetailedWindow(
+          ecgSamples: nsrRecord.samples,
+        );
+
+        expect(eval.inputNormalized.length, equals(128));
+        expect(eval.reconstructed.length, equals(128));
+        expect(eval.perSampleSquaredResidual.length, equals(128));
+        expect(eval.parameterCount, equals(119));
+        expect(eval.modelSizeBytes, equals(1840));
+        expect(eval.throughputBps, greaterThan(100.0));
+        expect(eval.hardwareBackend, contains('Qualcomm Snapdragon'));
+      },
+    );
+
+    test('measured latency across 500 iterations via Stopwatch', () async {
+      final samples = EdgeAiService.record100Nsr.samples;
+
+      // Warmup 50 runs
+      for (int i = 0; i < 50; i++) {
+        await service.evaluateDetailedWindow(ecgSamples: samples);
+      }
+
+      const int n = 500;
+      final sw = Stopwatch()..start();
+      for (int i = 0; i < n; i++) {
+        await service.evaluateDetailedWindow(ecgSamples: samples);
+      }
+      sw.stop();
+
+      final avgMs = (sw.elapsedMicroseconds / n) / 1000.0;
+      final throughput = 1000.0 / avgMs;
+      // print to console for factual verification
+      // ignore: avoid_print
+      print(
+        'ACTUAL MEASURED BENCHMARK: Latency = ${avgMs.toStringAsFixed(3)} ms/beat | Throughput = ${throughput.toStringAsFixed(0)} beats/sec',
+      );
+
+      expect(avgMs, lessThan(5.0)); // Well under mobile real-time threshold
+    });
   });
 }

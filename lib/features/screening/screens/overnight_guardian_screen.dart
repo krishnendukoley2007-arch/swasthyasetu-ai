@@ -500,7 +500,8 @@ class _OvernightGuardianScreenState
               : 'Standby — Ready to Monitor')
         : report.sleepRecoveryVerdict;
 
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: true,
       color: color.withValues(alpha: 0.1),
       border: BorderSide(color: color.withValues(alpha: 0.4), width: 1.5),
       child: Column(
@@ -854,7 +855,8 @@ class _OvernightGuardianScreenState
         ? '${scrubPoint.spo2.toStringAsFixed(1)}%'
         : '—';
 
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: false,
       padding: EdgeInsets.zero,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -1162,7 +1164,8 @@ class _OvernightGuardianScreenState
   Widget _buildFlaggedIssuesCard(ThemeData theme) {
     final events = _sessionReport!.events;
 
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1288,7 +1291,8 @@ class _OvernightGuardianScreenState
         ? 'RMSSD: ${report.rmssd} ms · Respiration: ${report.respiratoryRate}/min'
         : 'Autonomic Vagal Modulation';
 
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

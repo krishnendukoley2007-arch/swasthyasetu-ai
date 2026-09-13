@@ -460,7 +460,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     final action = _buildDeviceActionButton(isConnected);
 
-    return AppCard(
+    return AppTactileCard(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       child: LayoutBuilder(
         builder: (context, constraints) =>
@@ -632,8 +632,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final theme = Theme.of(context);
     final isZero = stat.value == '0';
 
-    return AppElevatedCard(
+    return AppTactileCard(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
+      margin: EdgeInsets.zero,
       onTap: stat.tapRoute == null ? null : () => context.go(stat.tapRoute!),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -722,8 +723,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             children: [
               // Heat Guardian Card
               Expanded(
-                child: AppElevatedCard(
+                child: AppTactileCard(
                   padding: const EdgeInsets.all(AppTheme.spacingMd),
+                  margin: EdgeInsets.zero,
                   onTap: () => context.push('/screening/heat-guardian'),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,8 +794,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const AppSpacing.hmd(),
               // Overnight Guardian Card
               Expanded(
-                child: AppElevatedCard(
+                child: AppTactileCard(
                   padding: const EdgeInsets.all(AppTheme.spacingMd),
+                  margin: EdgeInsets.zero,
                   onTap: () => context.push('/screening/overnight-guardian'),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -887,8 +890,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
           const AppSpacing.vsm(),
-          AppCard(
+          AppTactileCard(
             padding: const EdgeInsets.all(AppTheme.spacingLg),
+            onTap: last == null
+                ? null
+                : () => context.push('/screening-details/${last.id}'),
             child: last == null
                 ? _buildNoScreeningContent()
                 : _buildLastScreeningContent(last),
@@ -1192,43 +1198,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildActionButton(_ActionData action) {
     final theme = Theme.of(context);
 
-    return AppCard(
+    return AppTactileCard(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
+      margin: EdgeInsets.zero,
+      onTap: () => action.usePush
+          ? context.push(action.route)
+          : context.go(action.route),
       child: Stack(
         children: [
-          Positioned.fill(
-            child: InkWell(
-              onTap: () => action.usePush
-                  ? context.push(action.route)
-                  : context.go(action.route),
-              borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.spacingSm),
-                    decoration: BoxDecoration(
-                      color: action.color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                    ),
-                    child: Icon(action.icon, color: action.color, size: 24),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacingSm),
+                  decoration: BoxDecoration(
+                    color: action.color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                   ),
-                  const AppSpacing.vsm(),
-                  Flexible(
-                    child: Text(
-                      action.label,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                  child: Icon(action.icon, color: action.color, size: 24),
+                ),
+                const AppSpacing.vsm(),
+                Flexible(
+                  child: Text(
+                    action.label,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
                     ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           if (action.hasBadge)

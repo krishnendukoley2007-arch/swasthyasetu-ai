@@ -111,35 +111,52 @@ class PatientHomeScreen extends ConsumerWidget {
               children: [
                 _buildGreeting(context, account),
                 const AppSpacing.vmd(),
+
+                // 1. Today's Check ("I Am Okay Today")
+                _buildTodayCard(context, ref, patient),
+                const AppSpacing.vlg(),
+
+                // Hardware Connectivity ("Device is not connected" / "Device connected")
+                _buildDeviceCard(context, ref, patient),
+                const AppSpacing.vlg(),
+
+                // "My latest result" card
+                _buildLatestResult(context, ref, patient),
+                const AppSpacing.vlg(),
+
+                // 2. The Weather Around You
+                const EnvironmentCard(),
+                const AppSpacing.vlg(),
+
+                // 3. The Continuous Climate Guardians
+                _buildGuardianModes(context),
+                const AppSpacing.vlg(),
+
+                // 4. Disaster Psychological Shield Active
+                DisasterHazardBanner(
+                  heartRateBpm: latestScreening?.heartRate,
+                  temperatureC: latestScreening?.temperature,
+                ),
+                const AppSpacing.vlg(),
+
+                // 5. Community Early-Warning Network
+                _buildCommunityCard(context),
+                const AppSpacing.vlg(),
+
+                // 6. Vulnerability Persona, Adaptive HUD & 7-Day Early Warning Radar
                 const VulnerabilityPersonaSelector(),
                 const AppSpacing.vmd(),
                 const PersonaAdaptiveHud(),
                 const AppSpacing.vmd(),
                 const EarlyWarningTrajectoryCard(),
                 const AppSpacing.vlg(),
-                DisasterHazardBanner(
-                  heartRateBpm: latestScreening?.heartRate,
-                  temperatureC: latestScreening?.temperature,
-                ),
-                const AppSpacing.vlg(),
-                // The single primary state of the whole app: is this patient
-                // okay TODAY. Everything else on this page is secondary.
-                _buildTodayCard(context, ref, patient),
-                const AppSpacing.vlg(),
-                _buildCommunityCard(context),
-                const AppSpacing.vlg(),
-                const EnvironmentCard(),
-                const AppSpacing.vlg(),
-                _buildGuardianModes(context),
-                const AppSpacing.vlg(),
-                _buildDeviceCard(context, ref, patient),
-                const AppSpacing.vlg(),
-                _buildLatestResult(context, ref, patient),
-                const AppSpacing.vlg(),
+
                 _buildQuickLinks(context, patient),
                 const AppSpacing.vlg(),
                 _buildProfileCard(context, account),
                 const AppSpacing.vlg(),
+
+                // 7. At last: SOS & Medical Disclaimer
                 _buildSosCard(context, patient),
                 const AppSpacing.vlg(),
                 _buildDisclaimer(context),
@@ -253,7 +270,7 @@ class PatientHomeScreen extends ConsumerWidget {
     }
 
     if (today == null) {
-      return AppElevatedCard(
+      return AppTactileCard(
         padding: const EdgeInsets.all(AppTheme.spacingLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -305,7 +322,7 @@ class PatientHomeScreen extends ConsumerWidget {
       RiskBand.red => Icons.emergency_rounded,
     };
 
-    return AppElevatedCard(
+    return AppTactileCard(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       color: style.containerColor,
       child: Column(
@@ -382,7 +399,7 @@ class PatientHomeScreen extends ConsumerWidget {
 
   Widget _buildCommunityCard(BuildContext context) {
     final theme = Theme.of(context);
-    return AppCard(
+    return AppTactileCard(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       onTap: () => context.push('/community-hotspot'),
       child: Column(
@@ -493,7 +510,7 @@ class PatientHomeScreen extends ConsumerWidget {
       _ => false,
     };
 
-    return AppCard(
+    return AppTactileCard(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -644,7 +661,7 @@ class PatientHomeScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         ),
         const AppSpacing.vsm(),
-        AppCard(
+        AppTactileCard(
           padding: const EdgeInsets.all(AppTheme.spacingLg),
           child: latest == null
               ? Column(
@@ -1014,7 +1031,7 @@ class PatientHomeScreen extends ConsumerWidget {
 
   Widget _buildSosCard(BuildContext context, Patient patient) {
     final theme = Theme.of(context);
-    return AppCard(
+    return AppTactileCard(
       padding: const EdgeInsets.all(AppTheme.spacingLg),
       color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
       border: BorderSide(
@@ -1107,8 +1124,9 @@ class PatientHomeScreen extends ConsumerWidget {
               // Card 1: Heat Guardian
               SizedBox(
                 width: 175,
-                child: AppCard(
+                child: AppTactileCard(
                   padding: const EdgeInsets.all(AppTheme.spacingMd),
+                  margin: EdgeInsets.zero,
                   onTap: () => context.push('/screening/heat-guardian'),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1188,8 +1206,9 @@ class PatientHomeScreen extends ConsumerWidget {
               // Card 2: Air Pollution Guardian
               SizedBox(
                 width: 175,
-                child: AppCard(
+                child: AppTactileCard(
                   padding: const EdgeInsets.all(AppTheme.spacingMd),
+                  margin: EdgeInsets.zero,
                   onTap: () =>
                       context.push('/screening/air-pollution-guardian'),
                   child: Column(
@@ -1268,8 +1287,9 @@ class PatientHomeScreen extends ConsumerWidget {
               // Card 3: Overnight Guardian
               SizedBox(
                 width: 175,
-                child: AppCard(
+                child: AppTactileCard(
                   padding: const EdgeInsets.all(AppTheme.spacingMd),
+                  margin: EdgeInsets.zero,
                   onTap: () => context.push('/screening/overnight-guardian'),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

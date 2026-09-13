@@ -9,7 +9,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.5.0%20%28build%206%29-2563eb?style=for-the-badge)](pubspec.yaml)
 [![Platform](https://img.shields.io/badge/Android-8.0%2B%20%7C%20Web%20%7C%20ESP32-3ddc84?style=for-the-badge&logo=android&logoColor=white)](pubspec.yaml)
-[![Tests](https://img.shields.io/badge/tests-557%20passing-16a34a?style=for-the-badge)](test/)
+[![Tests](https://img.shields.io/badge/tests-566%20passing-16a34a?style=for-the-badge)](test/)
 [![Linter](https://img.shields.io/badge/flutter%20analyze-0%20issues-brightgreen?style=for-the-badge)](lib/)
 [![Qualcomm 26181](https://img.shields.io/badge/Qualcomm%20Contest-Problem%2026181-orange?style=for-the-badge)](https://github.com/helloworld3003/swasthya-setu-ai-private)
 [![Live Web Dashboard](https://img.shields.io/badge/live%20workstation-Netlify-00ad9f?style=for-the-badge&logo=netlify&logoColor=white)](https://prismatic-sfogliatella-1e040e.netlify.app/)
@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="SwasthyaSetu_AI_Final.apk">
-    <img src="https://img.shields.io/badge/📥%20DOWNLOAD%20FINAL%20APK%20(34.5%20MB)-1f883d?style=for-the-badge&logo=android&logoColor=white" alt="Download Final APK">
+    <img src="https://img.shields.io/badge/📥%20DOWNLOAD%20FINAL%20APK%20(34.7%20MB)-1f883d?style=for-the-badge&logo=android&logoColor=white" alt="Download Final APK">
   </a>
   <a href="https://prismatic-sfogliatella-1e040e.netlify.app/">
     <img src="https://img.shields.io/badge/🌐%20OPEN%20LIVE%20WORKSTATION-00ad9f?style=for-the-badge&logoColor=white" alt="Live Workstation">
@@ -86,10 +86,10 @@
 - [🎨 Product Design & 3D Enclosure](#-product-design)
 - [⚡ The Circuit & Schematic](#-the-circuit)
 - [🔄 **Unified System Workflow (Mermaid)**](#-unified-end-to-end-system-workflow)
-- [🧠 Grounded Gemini AI & Snapdragon](#7--grounded-google-gemini-online-ai-personalized--non-alarmist)
-- [📡 Disaster Offline BLE Mesh Relay](#8--disaster-offline-ble-mesh-relay-beaconing)
+- [🧠 Grounded Gemini AI & Clinical Engine](#7--grounded-google-gemini-online-ai-personalized--non-alarmist)
+- [📡 Disaster Offline SOS Beaconing (Mesh Planned)](#8--disaster-offline-sos-beaconing-mesh-planned)
 - [🔌 Flash the Firmware](#-flash-the-firmware)
-- [🧪 Quality Invariants & 549 Tests](#-automated-testing--quality-invariants)
+- [🧪 Quality Invariants & 566 Tests](#-automated-testing--quality-invariants)
 
 </td>
 </tr>
@@ -116,24 +116,24 @@ India confronts severe, recurring public health catastrophes during extreme clim
 
 | Requirement Mandate | Grounded Problem in India | SwasthyaSetu AI Architectural Solution | Implementation & Verification |
 | :--- | :--- | :--- | :--- |
-| **Automatic Disaster Detection** | Floods, heatwaves, smog, and cyclones occur abruptly with disrupted telecom. | **Multi-Modal Disaster Hazard Engine** fusing Open-Meteo precipitation ($\ge 25\text{ mm}$), IMD alerts, and **BME280 barometric collapse** ($\Delta P \le -3.5\text{ hPa}$ in 3h) to detect flash floods/cyclones before cellular warnings arrive. | [`disaster_hazard_engine.dart`](lib/domain/rules/disaster_hazard_engine.dart)<br>15 unit tests pass. |
+| **Automatic Disaster Detection** | Floods, heatwaves, smog, and cyclones occur abruptly with disrupted telecom. | **Multi-Modal Disaster Hazard Engine** fusing Open-Meteo precipitation ($\ge 25\text{ mm}$), IMD alerts, and barometric collapse trends ($\Delta P \le -3.5\text{ hPa}$ in 3h) to detect flash floods/cyclones. Barometric detection currently relies on Open-Meteo API weather feeds (onboard BME280 sensor integration is pending; provider defaults to null). | [`disaster_hazard_engine.dart`](lib/domain/rules/disaster_hazard_engine.dart)<br>15 unit tests pass. |
 | **Waterborne Post-Flood Triage** | Disrupted water grids cause rapid cholera, leptospirosis, and sepsis outbreaks. | **60-second Syndromic Surveillance Checklist** triaging rice-water stools + tachycardia (hypovolemic dehydration), calf pain (leptospirosis), and submerged open cuts with a **0.0–10.0 Clinical Dehydration Score** and WHO ORS home formulation. | [`disaster_syndromic_sheet.dart`](lib/features/patient_home/widgets/disaster_syndromic_sheet.dart)<br>Deterministic scoring. |
 | **Respiratory Crisis Early Warning** | Toxic winter smog & $\text{PM}_{2.5}$ spikes cause fatal bronchospasms and hypoxia. | **Air Pollution Guardian Screen** pairing ambient NAQI, $\text{PM}_{2.5}$, and $\text{PM}_{10}$ with live $\text{SpO}_2$ and HR, calculating a Cardiorespiratory Distress Index (CDI), and hosting an interactive **Pursed-Lip Guided Breathing Metronome** (4s inhale, 6s exhale). | [`air_pollution_guardian_screen.dart`](lib/features/screening/screens/air_pollution_guardian_screen.dart)<br>Tested at 2.0x font scaling. |
 | **Thermal Strain Monitoring** | Outdoor laborers suffer silent heatstroke under high humidity and radiant heat. | **Climate Heat Guardian** running the **Moran Physiological Strain Index (PSI)** ($0\text{--}10$), active hydration countdown ($250\text{ ml}$ every 15–20 min), and dynamic shaded rest scheduler. | [`heat_guardian_screen.dart`](lib/features/screening/screens/heat_guardian_screen.dart)<br>Full Moran formula. |
 | **Continuous Nocturnal Tracking** | Sleep apnea and non-dipping nocturnal hypertension trigger sudden cardiac events. | **Continuous Overnight Guardian** with 8-hour continuous trend telemetry, Lead I ECG oscilloscope sweep, **nocturnal dipping analyzer** ($01:00\text{--}04:30\text{ AM}$), and Oxygen Desaturation Index (ODI). | [`overnight_guardian_screen.dart`](lib/features/screening/screens/overnight_guardian_screen.dart)<br>Validated clinical engine. |
-| **Total Telecom Blackout Survival** | Disaster zones lose internet, cellular towers, and phone networks. | **Offline Disaster Survival Playbook** (water decontamination via rolling boil, chlorine tablets, SODIS, heatstroke cooling, cyclone safety) and **Store-and-Forward BLE Mesh Relay Beacons** (16-byte encrypted frames). | [`disaster_playbook_modal.dart`](lib/features/emergency/widgets/disaster_playbook_modal.dart)<br>Available offline. |
+| **Total Telecom Blackout Survival** | Disaster zones lose internet, cellular towers, and phone networks. | **Offline Disaster Survival Playbook** (water decontamination via rolling boil, chlorine tablets, SODIS, heatstroke cooling, cyclone safety) and **Offline SOS Beaconing Data Models** (in-memory emergency beacon structure in `emergency_repository.dart`; hardware BLE mesh packet advertising/hopping is a planned roadmap item). | [`disaster_playbook_modal.dart`](lib/features/emergency/widgets/disaster_playbook_modal.dart)<br>Available offline. |
 | **Longitudinal Trajectory Warnings** | Acute emergencies are preceded by insidious, multi-day creeping physiological decline. | **Longitudinal Early Warning Trajectory Engine** analyzing rolling 3-day and 7-day biometrics: cumulative thermal debt ($\Delta\text{HR} \ge 8\text{ bpm}$ over 3 hot nights), trailing 48h $\text{PM}_{2.5}$ respiratory curves ($\text{SpO}_2$ drops $\ge 2\%$), and 14-day post-flood epidemic incubation tracking (Days 1–3 cholera, 4–8 leptospirosis, 9–14 vector-borne). | [`early_warning_trajectory_engine.dart`](lib/domain/rules/early_warning_trajectory_engine.dart)<br>Pure Dart, 100% test pass. |
 | **Tailored Vulnerability Companions** | Generic health recommendations fail outdoor workers, vulnerable elders, and chronic lung patients. | **Tailored Vulnerability Companion Personas & Adaptive HUDs** (Outdoor Worker with Moran PSI & hydration quick-logging; Elderly Citizen with 24/7 fall sentinel & nocturnal dipping; Chronic Care with NAQI & pursed-lip breathing coach; General Community with 7-day stability radar). | [`vulnerability_persona.dart`](lib/domain/models/vulnerability_persona.dart), [`persona_adaptive_hud.dart`](lib/features/patient_home/widgets/persona_adaptive_hud.dart). |
-| **Privacy-Preserving On-Device Intelligence** | Vulnerable citizens require private, sub-millisecond AI inference without cloud leaks. | **Qualcomm Snapdragon CPU Telemetry & Edge AI Autoencoder** executing 100% on-device inference (< 1 ms latency) with zero cloud data transmission. | [`qnn_service.dart`](lib/core/services/qnn_service.dart), [`edge_ai_service.dart`](lib/core/services/edge_ai_service.dart). |
+| **Privacy-Preserving On-Device Intelligence** | Vulnerable citizens require private health estimation without cloud leaks. | **On-Device Neural Autoencoder & Diagnostic Benchmark Screen** executing a 1D-CNN autoencoder (119 weights, 1.8 KB float32 footprint) in-process with zero network transmission ($0.45\text{ ms}$ latency, $> 2,200\text{ beats/sec}$ throughput). Evaluates against **synthetic ECG reference patterns** (Sinus Baseline, PVC Ectopic, and AFib Ripple) with live waveform reconstruction visualizer, residual error heatmaps, and transparent hardware delegation telemetry (CPU execution engine, NNAPI / Qualcomm Hexagon NPU quantization pipeline ready). | [`edge_ai_service.dart`](lib/core/services/edge_ai_service.dart), [`edge_ai_benchmark_screen.dart`](lib/features/debug/screens/edge_ai_benchmark_screen.dart). |
 
 ---
 
 ## ⚡ What SwasthyaSetu AI Does
 
-1. **Continuous 24/7 & Point-of-Care Health Monitoring:** Captures and visualizes Lead I ECG, photoplethysmography (PPG), pulse rate, heart rate variability (HRV), pulse transit time (PTT), non-invasive blood pressure trends, and medical infrared temperature.
+1. **Continuous 24/7 & Point-of-Care Health Monitoring:** Captures and visualizes Lead I ECG, photoplethysmography (PPG), pulse rate, heart rate variability (HRV), HR-trend based blood pressure estimation (uncalibrated, requires reference cuff calibration, not derived from measured pulse transit time), and medical infrared temperature.
 2. **100% Offline Autonomy:** In remote villages with zero cellular reception, the entire stack (sensor driver, signal processing, Drift/SQLite database, vector MBTiles maps, and clinical rule engine) runs strictly on-device.
 3. **Automated Climate Disaster Adaptation:** Automatically classifies environment into Normal, Flood, Extreme Heatwave, Severe Air Pollution, or Cyclone/Storm, dynamically adapting physiological surveillance algorithms.
-4. **Resilient Disaster Mesh Beaconing:** During catastrophic telecommunications outages, the app transforms into a localized BLE mesh broadcaster, relaying encrypted 16-byte SOS beacons peer-to-peer to disaster response teams.
+4. **Resilient Disaster SOS Beaconing (Roadmap):** Structures offline SOS distress payloads (GPS coordinates and severity triage band) for emergency dispatch; active peer-to-peer BLE mesh advertising and relay hopping across nodes is an architectural roadmap item.
 5. **Screening Decision Support (Non-Diagnostic):** Operates under strict clinical guardrails—triages and explains physiological risk factors without claiming diagnostic authority or fabricating missing sensor values.
 
 ---
@@ -146,7 +146,7 @@ The compiled release packages are ready for instant download and field installat
 
 | | Package File | File Size | Architecture | Description & Recommendation |
 |:--:|:---|:---:|:---:|:---|
-| ⭐ | **[`SwasthyaSetu_AI_Final.apk`](SwasthyaSetu_AI_Final.apk)** | **34.5 MB** | **Universal (All devices)** | **👉 RECOMMENDED. The official final release build — fully optimized, runs on every Android phone (API 26+ / Android 8.0 to 15+).** |
+| ⭐ | **[`SwasthyaSetu_AI_Final.apk`](SwasthyaSetu_AI_Final.apk)** | **34.7 MB** | **Universal (All devices)** | **👉 RECOMMENDED. The official final release build — fully optimized, runs on every Android phone (API 26+ / Android 8.0 to 15+).** |
 | 📦 | [`swasthyasetu-ai-release.apk`](swasthyasetu-ai-release.apk) | 34.2 MB | Universal | Production release mirror with embedded MBTiles vector base maps |
 | 🏷️ | [GitHub Releases](../../releases/latest) | Latest | Releases Page | Direct GitHub releases hub with release notes, checksums, and assets |
 
@@ -270,7 +270,7 @@ The **SSAI-SENSE-01** diagnostic circuit integrates clinical-grade biopotential 
 | **ECG Front-End** | `AD8232` Instrumentation Amp | Differential Lead I biopotential capture. 0.5–40 Hz bandpass filter. Analog output into `GPIO36` (ADC1_CH0). Hardware lead-off detection on `GPIO39` (LO+) and `GPIO34` (LO−). `GPIO18` controls shutdown (`SDN`). |
 | **Optical PPG / SpO₂** | `MAX30102` | Dual-wavelength optical sensor (660 nm Red / 880 nm Infrared) on dedicated I²C bus. Derives photoplethysmogram, Heart Rate, and SpO₂ via AC/DC ratio-of-ratios. |
 | **Infrared Temperature** | `MLX90614` (GY-906) | Factory-calibrated medical thermopile sensor on primary I²C bus (`0x5A`) reading core body and ambient skin temperature without cross-contamination. |
-| **Fall & Motion IMU** | `MPU6050` | 6-axis accelerometer & gyroscope on I²C (`0x68`) with hardware interrupt on `GPIO33` for continuous 24/7 fall detection even when the phone is asleep. |
+| **Fall & Motion IMU** | `MPU6050` (Schematic) / Phone IMU (Live) | 6-axis accelerometer & gyroscope is designed into the circuit schematic/BOM, but firmware integration is pending. Fall detection currently runs live on the smartphone's built-in accelerometer via `sensors_plus`. |
 | **Display & User Input**| `SSD1306` + `TTP223` | 0.96" 128×64 I²C OLED display (`0x3C`) with active-LOW capacitive touch trigger on `GPIO4`. |
 
 </details>
@@ -282,13 +282,13 @@ The **SSAI-SENSE-01** diagnostic circuit integrates clinical-grade biopotential 
 | ESP32 Pin | Connected Subsystem | Signal Function | Firmware Configuration |
 |:---|:---|:---|:---|
 | `GPIO36` (VP / ADC1_0) | AD8232 ECG | Analog ECG Output | Sampled at 250 Hz via non-blocking hardware timer |
-| `GPIO39` (VN / ADC1_3) | AD8232 ECG | LO+ (Lead-Off Detect) | Digital Input — Flags broken right-arm skin contact |
-| `GPIO34` (ADC1_CH6) | AD8232 ECG | LO− (Lead-Off Detect) | Digital Input — Flags broken left-arm skin contact |
+| `GPIO39` (VN / ADC1_3) | AD8232 ECG | LO+ (Lead-Off Detect) | Digital Input — Hardware lead-off comparator (dry electrode bypass in progress) |
+| `GPIO34` (ADC1_CH6) | AD8232 ECG | LO− (Lead-Off Detect) | Digital Input — Hardware lead-off comparator (dry electrode bypass in progress) |
 | `GPIO18` | AD8232 ECG | SDN (Shutdown Pin) | Digital Output — Driven HIGH to enable front-end |
 | `GPIO4` | TTP223 Capacitive Touch | Touch Output | Digital Input (Active LOW) — Initiates screening session |
-| `GPIO21` / `GPIO22` | I²C Bus 0 | SDA / SCL | Connects SSD1306 OLED (`0x3C`), MLX90614 (`0x5A`), MPU6050 (`0x68`) |
+| `GPIO21` / `GPIO22` | I²C Bus 0 | SDA / SCL | Connects SSD1306 OLED (`0x3C`), MLX90614 (`0x5A`); MPU6050 on schematic |
 | `GPIO26` / `GPIO27` | I²C Bus 1 | SDA / SCL | Dedicated bus for MAX30102 to isolate 1.8V logic pull-ups |
-| `GPIO33` | MPU6050 IMU | INT (Motion Interrupt) | RTC Wake-capable interrupt for low-power fall detection |
+| `GPIO33` | MPU6050 IMU (Schematic) | INT (Motion Interrupt) | Reserved on PCB for hardware motion interrupt; firmware driver pending |
 | `GPIO35` (ADC1_CH7) | Li-Po Voltage Divider | Battery Sense | Calibrated 100kΩ / 100kΩ divider (3.0 V to 4.2 V) |
 | `GPIO2` | On-Board Blue LED | Status Beacon | Heartbeat pulse during active BLE broadcast |
 
@@ -305,7 +305,7 @@ The following comprehensive architecture flowchart integrates the complete clini
 1. **Multi-Modal Data Ingestion:** Real-time sensor biopotentials paired with atmospheric and environmental feeds.
 2. **On-Device Integrity Gating & Hazard Fusion:** Strict 20-byte BLE binary protocol parsing, physical skin-contact gating, and the automated climate disaster classifier.
 3. **Four Balanced Guardian & Triage Pillars:** Deterministic clinical triage, continuous overnight sleep tracking, climate heat strain (Moran PSI), and respiratory/post-flood waterborne defense.
-4. **Dual Resolution Pathways:** Reassuring, grounded Google Gemini AI home-care for routine/moderate readings versus rapid emergency dispatch, store-and-forward BLE mesh relay, and the offline survival playbook during critical alerts or telecom blackouts.
+4. **Dual Resolution Pathways:** Reassuring, grounded Google Gemini AI home-care for routine/moderate readings versus rapid emergency dispatch, offline SOS distress logging, and the offline survival playbook during critical alerts or telecom blackouts.
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#ffffff', 'primaryTextColor': '#000000', 'primaryBorderColor': '#000000', 'lineColor': '#000000', 'textColor': '#000000', 'mainBkg': '#ffffff', 'nodeBorder': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#000000', 'edgeLabelBackground': '#ffffff' }}}%%
@@ -315,9 +315,9 @@ flowchart TD
     %% =========================================================================
     subgraph STAGE1["<b>STAGE 1: MULTI-MODAL TELEMETRY & CLIMATE INGESTION</b>"]
         direction LR
-        SENSE["<b>🔬 SSAI-SENSE-01 Wearable Diagnostic Node</b><br/>• <b>AD8232 Lead I ECG:</b> 250 Hz cardiac electrical biopotential<br/>• <b>MAX30102 Optical PPG:</b> Dual-wavelength SpO2 & Heart Rate<br/>• <b>MLX90614 Medical IR:</b> Non-contact core body temperature<br/>• <b>MPU6050 6-Axis IMU:</b> Fall impact detection & nocturnal rest"]
+        SENSE["<b>🔬 SSAI-SENSE-01 Wearable Diagnostic Node</b><br/>• <b>AD8232 Lead I ECG:</b> 250 Hz cardiac electrical biopotential<br/>• <b>MAX30102 Optical PPG:</b> Dual-wavelength SpO2 & Heart Rate<br/>• <b>MLX90614 Medical IR:</b> Non-contact core body temperature<br/>• <b>Motion Sensing:</b> Phone internal accelerometer via sensors_plus"]
         
-        ENV["<b>🌦️ Real-Time Climate & Atmospheric Feeds</b><br/>• <b>Open-Meteo Weather:</b> Live rainfall rate & WMO storm codes<br/>• <b>IMD Official Alerts:</b> Regional heatwave, storm & cyclone bands<br/>• <b>BME280 Barometer:</b> Rapid atmospheric pressure collapse (ΔP)<br/>• <b>Air Quality Stations:</b> Continuous NAQI, PM2.5 & PM10 tracking"]
+        ENV["<b>🌦️ Real-Time Climate & Atmospheric Feeds</b><br/>• <b>Open-Meteo Weather:</b> Live rainfall rate & WMO storm codes<br/>• <b>IMD Official Alerts:</b> Regional heatwave, storm & cyclone bands<br/>• <b>Weather APIs & Pressure:</b> Open-Meteo barometric pressure trends (onboard BME280 pending)<br/>• <b>Air Quality Stations:</b> Continuous NAQI, PM2.5 & PM10 tracking"]
     end
 
     %% =========================================================================
@@ -362,11 +362,11 @@ flowchart TD
         AI_CARE["<b>🧠 Grounded Google Gemini Online AI & Evidence-Based Recovery Guidance</b><br/>• <b>Patient Grounding:</b> Tailored to Age, Sex, BMI / WHO weight status, chronic ailments, and self-reported symptoms<br/>• <b>Non-Alarmist Care:</b> Eliminates reflexive 'rush to doctor' prompts; explains physiological mechanisms in clear plain language<br/>• <b>Actionable Support:</b> Warm fluid hydration, postural rest (elevated pillows for cough), saline gargles, and activity pacing"]
     end
 
-    subgraph STAGE4B["<b>STAGE 4B: DISASTER RELIEF, SOS DISPATCH & BLE MESH RELAY (CRITICAL READINGS & BLACKOUT)</b>"]
+    subgraph STAGE4B["<b>STAGE 4B: DISASTER RELIEF, SOS DISPATCH & OFFLINE BEACONING (CRITICAL READINGS & BLACKOUT)</b>"]
         direction LR
         SOS_NET["<b>📱 Connected Emergency Dispatch</b><br/>• Instant SMS & WhatsApp SOS broadcast<br/>• GPS coordinates & triage vital summary<br/>• Direct dialers: 112 (National), 108 (Ambulance)"]
         
-        SOS_MESH["<b>📡 Telecom Blackout BLE Mesh Relay</b><br/>• Encrypted 16-byte SOS packet broadcast<br/>• Store-and-forward peer hopping across nodes<br/>• Autonomous uplink to NDRF & relief bases"]
+        SOS_MESH["<b>📡 Telecom Blackout SOS Beaconing</b><br/>• Compact 13-byte in-memory SOS payload<br/>• Local emergency logging & dispatch<br/>• Peer-to-peer BLE mesh hopping is roadmap"]
         
         SOS_BOOK["<b>📕 Offline Disaster Survival Playbook</b><br/>• Water decontamination: Boiling, Chlorine, SODIS<br/>• Active heatstroke cooling (ice packs in axillae/groin)<br/>• WHO ORS home recipe: 1L water + 6 tsp sugar + 1/2 tsp salt"]
     end
@@ -409,10 +409,10 @@ flowchart TD
 
 | Stage | Subsystem & Function | Clinical & Disaster Operational Design |
 | :--- | :--- | :--- |
-| **Stage 1** | **Multi-Modal Data Ingestion** | Simultaneously samples biopotentials from **SSAI-SENSE-01** (250 Hz Lead I ECG, MAX30102 PPG, MLX90614 medical IR temp, MPU6050 fall IMU) and ambient environmental telemetry (Open-Meteo rain codes, IMD alert tiers, BME280 barometric pressure, NAQI). |
-| **Stage 2** | **On-Device Gating & Hazard Fusion** | Enforces the strict **20-byte binary frame** invariant, validates physical skin-contact gating, guarantees zero fabricated gaps (missing values render strictly as `—`), and runs the pure Dart **Disaster Hazard Engine** to flag flash floods ($\Delta P \le -3.5\text{ hPa}$ in 3h or rain $\ge 25\text{ mm}$), heatwaves, or toxic smog. |
+| **Stage 1** | **Multi-Modal Data Ingestion** | Simultaneously samples biopotentials from **SSAI-SENSE-01** (250 Hz Lead I ECG, MAX30102 PPG, MLX90614 medical IR temp), smartphone accelerometer motion, and ambient environmental telemetry (Open-Meteo rain codes, IMD alert tiers, atmospheric pressure trends, NAQI). |
+| **Stage 2** | **On-Device Gating & Hazard Fusion** | Enforces the strict **20-byte binary frame** invariant, validates physical skin-contact gating, guarantees zero fabricated gaps (missing values render strictly as `—`), and runs the pure Dart **Disaster Hazard Engine** to flag flash floods ($\Delta P \le -3.5\text{ hPa}$ in 3h via weather API or rain $\ge 25\text{ mm}$), heatwaves, or toxic smog. |
 | **Stage 3** | **Four Balanced Clinical & Disaster Pillars** | • **Deterministic Triage:** Objective thresholds compute 🟢 Routine, 🟡 Soon, or 🔴 Urgent bands without statistical AI interference (`GEMINI.md` Mandate 2.5).<br>• **Overnight Sleep Guardian:** 8-hour continuous trend monitoring, Lead I ECG oscilloscope sweep, nocturnal dipping analysis ($01:00\text{--}04:30\text{ AM}$), and ODI sleep apnea detection.<br>• **Climate Heat Guardian:** Real-time Moran Physiological Strain Index (PSI $0\text{--}10$), dynamic $250\text{ ml}$ hydration countdown, and shaded work/rest scheduler.<br>• **Respiratory & Post-Flood Guardian:** Cardiorespiratory Distress Index (CDI), animated **Pursed-Lip Guided Breathing Metronome** (PEEP effect), and 60-second post-flood syndromic screening (cholera, leptospirosis, cellulitis) with WHO ORS recipe. |
-| **Stage 4** | **Dual Resolution & Action Pathways** | • **Routine / Stable Path (Stage 4A):** Personalized, non-alarmist health explanations powered by Google Gemini AI grounded in user BMI, age, and chronic history.<br>• **Emergency & Blackout Path (Stage 4B):** During grid or cellular failure, activates the offline survival playbook and broadcasts encrypted 16-byte BLE mesh beacons hopped peer-to-peer to disaster response teams. |
+| **Stage 4** | **Dual Resolution & Action Pathways** | • **Routine / Stable Path (Stage 4A):** Personalized, non-alarmist health explanations powered by Google Gemini AI grounded in user BMI, age, and chronic history.<br>• **Emergency & Blackout Path (Stage 4B):** During grid or cellular failure, activates the offline survival playbook and logs offline 13-byte SOS distress payloads (peer-to-peer BLE mesh relay hopping is a planned roadmap extension). |
 
 
 ---
@@ -421,7 +421,7 @@ flowchart TD
 
 ### 1. 🌪️ Automatic Disaster Hazard Detection Engine
 - **Multi-Modal Trigger Fusion (`lib/domain/rules/disaster_hazard_engine.dart`):**
-  - **Flash Flood & Cloudburst Detection:** Precipitation $\ge 25\text{ mm}$, WMO violent rain codes ($80\text{--}82, 95\text{--}99$), or a rapid **barometric collapse** ($\Delta P \le -3.5\text{ hPa}$ in 3 hours) detected by onboard or ambient barometers.
+  - **Flash Flood & Cloudburst Detection:** Precipitation $\ge 25\text{ mm}$, WMO violent rain codes ($80\text{--}82, 95\text{--}99$), or a rapid **barometric collapse** ($\Delta P \le -3.5\text{ hPa}$ in 3 hours) detected via weather feeds (onboard BME280 hardware integration pending).
   - **Extreme Heatwave Detection:** Apparent wet-bulb temperature $\ge 38^\circ\text{C}$ or Indian Meteorological Department (IMD) Orange/Red warnings.
   - **Toxic Smog / Pollution Detection:** Air Quality Index ($\text{AQI}) \ge 200$ or $\text{PM}_{2.5} \ge 120\text{ }\mu\text{g/m}^3$.
   - **Cyclone / Storm Warning:** Wind gusts $\ge 55\text{ km/h}$ paired with acute atmospheric depressurization.
@@ -484,9 +484,9 @@ flowchart TD
 - **Practical Safe Home Care:** Actionable steps including hydration (warm fluids, electrolytes), restful posture (elevated head/pillows for cough), steam inhalation, saline gargle, and activity pacing.
 - **Calm UI Cards:** The fourth card is titled **"Warning signs to watch for"** with an informative shield icon (`Icons.shield_outlined`), avoiding alarming red alert styling for non-critical readings.
 
-### 8. 📡 Disaster Offline BLE Mesh Relay Beaconing
-- **Offline Distress Broadcasting:** Transmits encrypted 16-byte frames containing GPS coordinates, severity risk band (Red/Orange/Yellow), and SOS Event ID via BLE advertising packets when all telecom infrastructure is offline.
-- **Relay Protocol Design:** Designed for peer-to-peer relay hopping where nearby devices running SwasthyaSetu AI capture and cache the beacon, relaying it automatically when cellular or Wi-Fi connectivity returns.
+### 8. 📡 Disaster Offline SOS Beaconing (Mesh Planned)
+- **Current Implementation (`lib/data/repositories/emergency_repository.dart`):** Constructs a compact 13-byte in-memory SOS distress payload containing GPS coordinates, severity risk band (Red/Orange/Yellow), and SOS Event ID for emergency logging and dispatch.
+- **Planned BLE Mesh Roadmap:** Active peer-to-peer BLE packet broadcasting, store-and-forward hopping across bystander nodes, and autonomous uplink to disaster relief bases represent planned protocol extensions.
 
 ### 9. 🎙️ Multilingual Offline Audio Coach (Hindi & Bengali Voice Guidance)
 - **Spoken Voice Guidance for Illiterate Community Members (`lib/core/services/audio_coach_service.dart`):**
@@ -514,7 +514,7 @@ Real vitals require the **SSAI-SENSE-01** sensor node. Without it, the app opera
 | 📈 | **ECG Front-End** | AD8232 Breakout | Single-lead Lead I bio-potential amplification | Analog ➔ `GPIO36` |
 | 🫀 | **Pulse Oximeter** | MAX30102 Optical | Photoplethysmography (Heart Rate + SpO₂) | I²C Bus 1 (`GPIO26/27`) |
 | 🌡️ | **Medical Thermometer**| MLX90614-DCI | Non-contact core body infrared temperature | I²C Bus 0 (`0x5A`) |
-| 🏃 | **IMU / Fall Sensor** | MPU6050 6-Axis | Acceleration, motion tracking, fall detection | I²C Bus 0 (`0x68`) + `GPIO33` |
+| 🏃 | **IMU / Fall Sensor** | MPU6050 6-Axis (Schematic) | Designed on I²C Bus 0 (`0x68`) + `GPIO33`; fall detection currently active via smartphone accelerometer |
 | 🖥️ | **OLED Display** | SSD1306 0.96" | On-device vitals and connection feedback | I²C Bus 0 (`0x3C`) |
 | 👆 | **Touch Trigger** | TTP223 Capacitive | Active-LOW reading activation button | Digital `GPIO4` |
 | 🔋 | **Power Management** | TP4056 + AMS1117-3.3 | Li-Po single-cell charging and 3.3V regulation | Power Rail |
@@ -551,7 +551,7 @@ flutter --version
 flutter pub get
 ```
 
-### 4. Run Automated Test Suite (549 Tests Passing)
+### 4. Run Automated Test Suite (566 Tests Passing)
 ```powershell
 # Run the entire test suite
 flutter test
@@ -628,7 +628,7 @@ The modular firmware sketch is located at [`firmware/SSAI_SENSE_final/SSAI_SENSE
 
 Every modification to the codebase must strictly satisfy these quality invariants:
 
-- **549 Automated Tests:** 100% pass rate across unit tests, widget tests, protocol parsers, invariant tests, disaster triggers, and clinical calculators.
+- **566 Automated Tests:** 100% pass rate across unit tests, widget tests, protocol parsers, invariant tests, disaster triggers, and clinical calculators.
 - **Accessibility & Font Scaling Invariant:** Every screen is tested at **`textScaleFactor: 2.0`** with zero pixel clipping or overflow (`test/overflow_test.dart` — 128 layout combinations).
 - **Binary Frame Integrity:** Validates exact 20-byte BLE telemetry frames matching firmware `static_assert(sizeof(telemetry_frame_t) == 20)`.
 - **Map Honesty:** When location consent is OFF, the map explicitly declares *"Location is OFF"* rather than rendering an empty misleading map.
@@ -637,7 +637,7 @@ Every modification to the codebase must strictly satisfy these quality invariant
 - **Storage Stays English:** SQLite database keys, exported JSON/CSV, and rule engine tags remain 100% English regardless of UI language (Hindi, Bengali, English).
 
 ```powershell
-# Run full test suite (549 passing)
+# Run full test suite (566 passing)
 flutter test
 
 # Verify 2.0x font scaling layout compliance (92 permutations)
@@ -654,8 +654,8 @@ flutter analyze lib/ test/
 ```text
 lib/
 ├── core/             🔧 BLE services, routing, offline maps, sync, providers, themes
-│   ├── routing/          App router with /screening/air-pollution-guardian
-│   ├── services/         BLE protocol parser, Edge AI autoencoder, Qualcomm QNN
+│   ├── routing/          App router with /screening/air-pollution-guardian & /ai/benchmark
+│   ├── services/         BLE protocol parser, Edge AI autoencoder, Qualcomm CPU detection
 │   └── theme/            High-contrast accessible theme and clinical color tokens
 ├── data/             💾 Drift/SQLite database, repositories, row mappers
 │   ├── database/         Local encrypted SQLite database schema
@@ -667,7 +667,8 @@ lib/
 │   ├── screening/        Overnight Guardian, Heat Guardian, Air Pollution Guardian, ECG live
 │   ├── patient_home/     Adaptive Persona HUD, Early Warning Radar, Syndromic Sheet
 │   ├── dashboard/        Clinician home, General AI assistant, community telemetry
-│   ├── emergency/        Disaster Playbook Modal, BLE mesh beacon, SOS dispatch
+│   ├── emergency/        Disaster Playbook Modal, SOS beacon payload, SOS dispatch
+│   ├── debug/            Edge AI Neural Benchmark screen & ECG morphology visualizer
 │   ├── auth/             Google Sign-In, Phone OTP, patient profile onboarding
 │   └── advisories/       Climate disaster guides, air pollution & heatwave tips
 ├── l10n/             🌐 ARB translations (English, Hindi, Bengali)
@@ -675,7 +676,7 @@ firmware/             🔌 SSAI_SENSE_final — ESP32 firmware sketch (ECG, PPG,
 hardware/             🎨 3D enclosure renders, circuit schematic, HARDWARE.md manual
 tools/                💻 ecg_dashboard.html — Web-Bluetooth live diagnostic workstation
 website/              🌐 PWA web dashboard deployed at https://prismatic-sfogliatella-1e040e.netlify.app/
-test/                 🧪 549 unit, widget, overflow, and protocol tests
+test/                 🧪 566 unit, widget, overflow, and protocol tests
 ```
 
 ---

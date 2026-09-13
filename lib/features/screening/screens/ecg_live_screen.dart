@@ -575,22 +575,22 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
                     // The strip is a drawing surface, not text, so it keeps its
                     // height at every text scale.
                     height: 260,
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: _window.length < 2
-                            ? _buildEmptyStrip(onBoard)
-                            : CustomPaint(
-                                size: Size.infinite,
-                                painter: _EcgStripPainter(
-                                  waveform: _window,
-                                  capacity: _windowSamples,
-                                  sampleRate: sampleRateHz,
-                                  color: AppTheme.infoBlue,
-                                  peakIndices: _metrics.peakIndices,
-                                ),
+                    child: AppTactileCard(
+                      padding: const EdgeInsets.all(16),
+                      margin: EdgeInsets.zero,
+                      enableTilt: false,
+                      child: _window.length < 2
+                          ? _buildEmptyStrip(onBoard)
+                          : CustomPaint(
+                              size: Size.infinite,
+                              painter: _EcgStripPainter(
+                                waveform: _window,
+                                capacity: _windowSamples,
+                                sampleRate: sampleRateHz,
+                                color: AppTheme.infoBlue,
+                                peakIndices: _metrics.peakIndices,
                               ),
-                      ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -876,90 +876,90 @@ class _EcgLiveScreenState extends ConsumerState<EcgLiveScreen> {
     final windowSeconds = (_window.length / sampleRateHz).toStringAsFixed(1);
     final rhythm = _metrics.rhythm;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Wrap, not Row: five readings do not fit across a 360 px screen
-            // once the system font is scaled up, and reflowing onto a second
-            // line keeps every label readable where a Row simply clipped them.
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: AppTheme.spacingLg,
-              runSpacing: AppTheme.spacingMd,
-              children: [
-                _buildMeasurement(
-                  'Heart Rate',
-                  _metrics.heartRateBpm?.toString(),
-                  'BPM',
-                ),
-                _buildMeasurement(
-                  'RR Interval',
-                  _metrics.rrIntervalMs?.toString(),
-                  'ms',
-                ),
-                _buildMeasurement(
-                  'QRS Duration',
-                  _metrics.qrsDurationMs?.toString(),
-                  'ms',
-                ),
-                _buildMeasurement(
-                  'Beats Detected',
-                  _metrics.beats?.toString(),
-                  'in $windowSeconds s',
-                ),
-                _buildMeasurement(
-                  'RR Scatter',
-                  _metrics.rrScatterMs?.toString(),
-                  'ms',
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.favorite_outline,
-                  size: 18,
-                  color: ClinicalPalette.cardiacAccent(context),
-                ),
-                const SizedBox(width: AppTheme.spacingSm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Rhythm',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+    return AppTactileCard(
+      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.zero,
+      enableTilt: false,
+      child: Column(
+        children: [
+          // Wrap, not Row: five readings do not fit across a 360 px screen
+          // once the system font is scaled up, and reflowing onto a second
+          // line keeps every label readable where a Row simply clipped them.
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: AppTheme.spacingLg,
+            runSpacing: AppTheme.spacingMd,
+            children: [
+              _buildMeasurement(
+                'Heart Rate',
+                _metrics.heartRateBpm?.toString(),
+                'BPM',
+              ),
+              _buildMeasurement(
+                'RR Interval',
+                _metrics.rrIntervalMs?.toString(),
+                'ms',
+              ),
+              _buildMeasurement(
+                'QRS Duration',
+                _metrics.qrsDurationMs?.toString(),
+                'ms',
+              ),
+              _buildMeasurement(
+                'Beats Detected',
+                _metrics.beats?.toString(),
+                'in $windowSeconds s',
+              ),
+              _buildMeasurement(
+                'RR Scatter',
+                _metrics.rrScatterMs?.toString(),
+                'ms',
+              ),
+            ],
+          ),
+          const Divider(height: 24),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.favorite_outline,
+                size: 18,
+                color: ClinicalPalette.cardiacAccent(context),
+              ),
+              const SizedBox(width: AppTheme.spacingSm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Rhythm',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
                       ),
-                      Text(
-                        rhythm == null
-                            ? context.l10n.rhythmUnclassified
-                            : ecgRhythmLabel(rhythm, context.l10n),
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    ),
+                    Text(
+                      rhythm == null
+                          ? context.l10n.rhythmUnclassified
+                          : ecgRhythmLabel(rhythm, context.l10n),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      Text(
-                        // The classifier's own caveat, carried to the screen
-                        // that shows its output.
-                        'Rule-based summary of rate and regularity — not a '
-                        'diagnosis.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                    ),
+                    Text(
+                      // The classifier's own caveat, carried to the screen
+                      // that shows its output.
+                      'Rule-based summary of rate and regularity — not a '
+                      'diagnosis.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

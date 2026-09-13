@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/routing/app_router.dart';
@@ -49,19 +50,36 @@ class SwasthyaSetuApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       builder: (context, child) {
-        // No textScaler clamp here. Squeezing the system font size back to 1.2×
-        // hides overflow rather than fixing it, and it overrides an
-        // accessibility setting the user deliberately chose — layouts are built
-        // to survive 2.0× instead.
-        return _Bootstrap(
-          child: FallAlarmListener(
-            child: ErrorBoundary(
-              fallbackBuilder: (error, stack, onRetry) => _DefaultErrorFallback(
-                error: error,
-                stack: stack,
-                onRetry: onRetry,
+        final platformDark =
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+        final isDark =
+            themeMode == ThemeMode.dark ||
+            (themeMode == ThemeMode.system && platformDark);
+        final overlay = SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+          systemNavigationBarColor: isDark
+              ? AppTheme.surfaceDark
+              : AppTheme.surfaceLight,
+          systemNavigationBarIconBrightness: isDark
+              ? Brightness.light
+              : Brightness.dark,
+        );
+
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: overlay,
+          child: _Bootstrap(
+            child: FallAlarmListener(
+              child: ErrorBoundary(
+                fallbackBuilder: (error, stack, onRetry) =>
+                    _DefaultErrorFallback(
+                      error: error,
+                      stack: stack,
+                      onRetry: onRetry,
+                    ),
+                child: child!,
               ),
-              child: child!,
             ),
           ),
         );

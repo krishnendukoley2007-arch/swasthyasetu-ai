@@ -484,3 +484,33 @@ if (webConnectBtn) {
 }
 
 console.log('🏥 SwasthyaSetu AI — Website loaded successfully');
+
+// ── GSAP & LENIS INTEGRATION ────────────────────────────
+try {
+    if (typeof Lenis !== 'undefined') {
+        const lenis = new Lenis({
+            duration: 1.1,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            smoothWheel: true
+        });
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+    }
+} catch (e) {
+    console.warn('Lenis initialization skipped:', e);
+}
+
+try {
+    if (typeof gsap !== 'undefined') {
+        gsap.from('#hero .hero-badges', { opacity: 0, y: -20, duration: 0.7, ease: 'power2.out' });
+        gsap.from('#hero h1', { opacity: 0, y: 30, duration: 0.8, delay: 0.15, ease: 'power2.out' });
+        gsap.from('#hero .hero-subtitle', { opacity: 0, y: 20, duration: 0.7, delay: 0.3, ease: 'power2.out' });
+        gsap.from('#hero .hero-actions', { opacity: 0, y: 20, duration: 0.7, delay: 0.45, ease: 'power2.out' });
+    }
+} catch (e) {
+    console.warn('GSAP initialization skipped:', e);
+}
+

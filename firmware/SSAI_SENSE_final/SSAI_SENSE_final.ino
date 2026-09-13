@@ -26,8 +26,7 @@
  * waveform byte layout, PROTOCOL_VERSION, battery voltage calibration,
  * BLE MTU/PHY, or OTA code — all untouched per spec.
  */
-#include "dsp_pure.h"       // hardware-free DSP (shared with native unit tests)
-#include "spo2_algorithm.h" // Maxim reference SpO2/HR algorithm (SparkFun lib)
+#include "dsp_pure.h" // hardware-free DSP (ECG, PPG SpO2/HR, MLX90614, battery curve)
 #include <Adafruit_GFX.h>
 #include <Adafruit_MLX90614.h>
 #include <Adafruit_SSD1306.h>
@@ -140,7 +139,13 @@ const unsigned char bmp_mascot_blink[] PROGMEM = {
 enum PageState { PAGE_HOME = 0, PAGE_SPO2, PAGE_ECG, PAGE_TEMP, PAGE_SYS };
 volatile PageState currentPage = PAGE_HOME;
 
-enum SystemState { SYS_IDLE = 0, MEASURE_SPO2, MEASURE_ECG, MEASURE_TEMP, MEASURE_DUAL };
+enum SystemState {
+  SYS_IDLE = 0,
+  MEASURE_SPO2,
+  MEASURE_ECG,
+  MEASURE_TEMP,
+  MEASURE_DUAL
+};
 volatile SystemState sysState = SYS_IDLE;
 unsigned long measurementStartTime = 0;
 unsigned long measurementDuration = 0; // 0 = Continuous/Infinite streaming
@@ -164,6 +169,8 @@ TaskHandle_t Core1Task;
 
 bool mlxFound = false;
 bool maxFound = false;
+bool bmeFound = false;
+bool mpuFound = false;
 volatile int16_t currentECG = 0;
 volatile bool leadOff = false;
 volatile uint8_t leadOffDebounceCount = 0;
@@ -175,6 +182,9 @@ volatile uint16_t ecg_hr = 0, spo2_hr = 0, current_hr = 0;
 volatile uint16_t last_rr_ms =
     0; // last R-R interval in ms (sent in telemetry bytes 6-7)
 volatile uint16_t current_spo2 = 0;
+volatile uint8_t current_ecg_sqi = 0;
+volatile uint8_t current_ppg_sqi = 0;
+volatile DualRateConcordance current_dual_concordance = DUAL_INSUFFICIENT_DATA;
 float current_temp = 0.0;
 float current_battery_v = 0;
 int battery_percent = 0;
@@ -302,7 +312,8 @@ int ledBleBlinkPulsesLeft =
 
 // Called once per core1TaskFunction() loop iteration.
 void updateStatusLed(unsigned long ms) {
-  if (sysState == MEASURE_SPO2 || sysState == MEASURE_ECG || sysState == MEASURE_DUAL) {
+  if (sysState == MEASURE_SPO2 || sysState == MEASURE_ECG ||
+      sysState == MEASURE_DUAL) {
     digitalWrite(LED_PIN, showHeartIcon ? HIGH : LOW);
     return;
   }
@@ -489,7 +500,8 @@ class MyControlCallbacks : public BLECharacteristicCallbacks {
       // 0x04 = Continuous Dual Mode (ECG + SpO2 Guardian)
       currentPage = PAGE_ECG;
       powerSensors(MEASURE_DUAL);
-      measurementDuration = (len >= 2) ? targetDurationMs : 0; // default 0 = Continuous/Infinite
+      measurementDuration =
+          (len >= 2) ? targetDurationMs : 0; // default 0 = Continuous/Infinite
     } else if (cmd == 0x00) {
       currentPage = PAGE_HOME;
       powerSensors(SYS_IDLE);
@@ -505,7 +517,7 @@ void powerSensors(SystemState targetMode) {
   if (targetMode == MEASURE_DUAL) {
     digitalWrite(ECG_SDN_PIN, HIGH); // AD8232 ON
     if (maxFound) {
-      particleSensor.wakeUp();  // MAX ON — Red and IR LEDs glow continuously!
+      particleSensor.wakeUp(); // MAX ON — Red and IR LEDs glow continuously!
       particleSensor.clearFIFO();
     }
     resetEcgDsp();
@@ -591,7 +603,8 @@ void IRAM_ATTR onEcgTimer() {
       // but active biopotential signal is clearly in valid range (350..3800),
       // do not falsely latch leads-off disconnect!
       if (rawAdc > 350 && rawAdc < 3800) {
-        if (leadOffDebounceCount > 0) leadOffDebounceCount--;
+        if (leadOffDebounceCount > 0)
+          leadOffDebounceCount--;
       } else {
         if (leadOffDebounceCount < ECG_LEAD_OFF_THRESHOLD + 10) {
           leadOffDebounceCount++;
@@ -662,7 +675,7 @@ float smoothed_spo2 = 0.0f;
 //    EMA happens to be at t=30s, the final saved value is the median of
 //    the last 5 accepted windows — outlier windows (motion spikes)
 //    can't sway the stored result the way a mean would.
-#define PPG_WARMUP_READS 3  // ~3 s of buffer-fresh windows after fill
+#define PPG_WARMUP_READS 3 // ~3 s of buffer-fresh windows after fill
 #define PPG_HISTORY_LEN 5
 #define PI_MIN_PERCENT 0.10f // AC/DC < 0.1% = useless pulsatile signal
 uint8_t ppgAlgoCount = 0;    // Maxim calls since measurement start
@@ -724,6 +737,8 @@ void processSpO2AndHR(uint32_t redValue, uint32_t irValue, unsigned long t_n) {
       fingerPresent = false;
       current_spo2 = 0;
       current_hr = 0;
+      spo2_hr = 0;
+      current_ppg_sqi = 0;
       showHeartIcon = false;
       ppgSamples = 0;
       ppgHead = 0;
@@ -781,7 +796,7 @@ void processSpO2AndHR(uint32_t redValue, uint32_t irValue, unsigned long t_n) {
     uint32_t lin_ir[PPG_BUFFER_SIZE];
     uint32_t lin_red[PPG_BUFFER_SIZE];
     uint32_t irMin = 0xFFFFFFFF, irMax = 0;
-    uint64_t irSum = 0;
+    uint64_t irSum = 0, redSum = 0;
     for (int i = 0; i < PPG_BUFFER_SIZE; i++) {
       int idx = (ppgHead + i) % PPG_BUFFER_SIZE;
       lin_ir[i] = irBuffer[idx];
@@ -791,6 +806,7 @@ void processSpO2AndHR(uint32_t redValue, uint32_t irValue, unsigned long t_n) {
       if (lin_ir[i] > irMax)
         irMax = lin_ir[i];
       irSum += lin_ir[i];
+      redSum += lin_red[i];
     }
 
     // Perfusion Index: AC peak-to-peak / DC mean on the IR channel.
@@ -798,15 +814,21 @@ void processSpO2AndHR(uint32_t redValue, uint32_t irValue, unsigned long t_n) {
     // information — any Maxim output from it would be noise-shaped, so
     // the window is accepted for nothing (display keeps last value).
     float irDc = (float)irSum / PPG_BUFFER_SIZE;
+    float redDc = (float)redSum / PPG_BUFFER_SIZE;
     ppgLowSignal = (irDc <= 0.0f) ||
                    (((float)(irMax - irMin) / irDc) * 100.0f < PI_MIN_PERCENT);
 
-    int32_t spo2Val = 0, hrVal = 0;
+    int32_t spo2Val = 0, hrVal = 0, ratioVal = 0;
     int8_t spo2Valid = 0, hrValid = 0;
-    maxim_heart_rate_and_oxygen_saturation(lin_ir, PPG_BUFFER_SIZE, lin_red,
-                                           &spo2Val, &spo2Valid, &hrVal,
-                                           &hrValid);
+    swasthya_calculate_spo2_and_hr(lin_ir, PPG_BUFFER_SIZE, lin_red,
+                                   &spo2Val, &spo2Valid, &hrVal,
+                                   &hrValid, &ratioVal);
     ppgAlgoCount++;
+
+    current_ppg_sqi = computePpgSqi(irDc, (float)(irMax - irMin), (uint16_t)hrVal, ppgLowSignal, fingerPresent);
+
+    Serial.printf("[PPG] HR: %d bpm (valid=%d) | SpO2: %d%% (valid=%d) | R*100: %d | RedDC: %.0f | IrDC: %.0f | SQI: %u\n",
+                  (int)hrVal, (int)hrValid, (int)spo2Val, (int)spo2Valid, (int)ratioVal, redDc, irDc, current_ppg_sqi);
 
     // WARM-UP DISCARD: the first PPG_WARMUP_READS windows after buffer
     // fill straddle the finger-insertion transient. Their outputs are
@@ -838,11 +860,16 @@ void processSpO2AndHR(uint32_t redValue, uint32_t irValue, unsigned long t_n) {
         smoothed_hr += delta * 0.35f;
       }
       current_hr = (uint16_t)(smoothed_hr + 0.5f);
+      spo2_hr = current_hr;
       hrHist[hrHistIdx] = hrVal;
       hrHistIdx = (hrHistIdx + 1) % PPG_HISTORY_LEN;
       if (nHrHist < PPG_HISTORY_LEN)
         nHrHist++;
       hrAccepted = true;
+
+      if (ecg_hr > 0 && spo2_hr > 0) {
+        current_dual_concordance = verifyDualHeartRate(ecg_hr, spo2_hr, current_ecg_sqi, current_ppg_sqi);
+      }
     }
 
     // Physiological smoothing and slew-rate limiting for SpO2
@@ -910,20 +937,22 @@ void core0TaskFunction(void *pvParameters) {
     unsigned long current_time = millis();
 
     if (sysState == MEASURE_ECG || sysState == MEASURE_DUAL) {
-      if (xQueueReceive(ecgQueue, &raw_sample, pdMS_TO_TICKS(sysState == MEASURE_DUAL ? 3 : 10))) {
+      if (xQueueReceive(ecgQueue, &raw_sample,
+                        pdMS_TO_TICKS(sysState == MEASURE_DUAL ? 3 : 10))) {
         // LEADS-OFF GATE:
         // Only suppress if voltage is completely railed/detached (noise)
         if (leadOff && (raw_sample <= 200 || raw_sample >= 3900)) {
           ecgBaselineSeeded = false;
+          current_ecg_sqi = 0;
         } else {
           // 50 Hz notch -> 40 Hz LP
           double clean = ecgConditioningApply((double)raw_sample);
 
           // Fast baseline acquisition and anti-saturation tracking:
-          // Wait for the AD8232 op-amp to power up (> 500 counts) before seeding
-          // baseline. If a baseline shift (motion/touch) moves clean by > 150
-          // counts from b_n, adapt rapidly (tau ~ 80ms) so the trace never gets
-          // stuck at the screen edge as a flat line!
+          // Wait for the AD8232 op-amp to power up (> 500 counts) before
+          // seeding baseline. If a baseline shift (motion/touch) moves clean by
+          // > 150 counts from b_n, adapt rapidly (tau ~ 80ms) so the trace
+          // never gets stuck at the screen edge as a flat line!
           if (!ecgBaselineSeeded) {
             if (clean > 500.0) {
               b_n = clean;
@@ -940,6 +969,15 @@ void core0TaskFunction(void *pvParameters) {
 
           double filtered = processECG_BaselineRemoval(clean);
           detectRPeak(filtered, current_time);
+
+          static uint8_t sqiDecimator = 0;
+          if (++sqiDecimator >= 25) { // ~10 Hz update
+            sqiDecimator = 0;
+            current_ecg_sqi = computeEcgSqi(fabs(f_fast - f_slow), last_peak_amp, last_rr_ms, leadOff);
+            if (ecg_hr > 0 && spo2_hr > 0) {
+              current_dual_concordance = verifyDualHeartRate(ecg_hr, spo2_hr, current_ecg_sqi, current_ppg_sqi);
+            }
+          }
 
           // Sweep speed decimation: record every 2nd sample (125 sps)
           // so the 128-pixel window displays 1.024 seconds of cardiac rhythm
@@ -1256,32 +1294,43 @@ void drawPageSys() {
   display.setTextSize(1);
   display.setCursor(0, 0);
   display.print("SYSTEM STATUS");
-  display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
+  display.drawLine(0, 9, 128, 9, SSD1306_WHITE);
 
-  display.setCursor(0, 16);
+  display.setCursor(0, 12);
   display.print("Bat: ");
   display.print(battery_percent);
   display.print("% (");
   display.print(current_battery_v, 2);
   display.print("V)");
 
-  unsigned long up = (millis() - bootTime) / 1000;
-  display.setCursor(0, 28);
-  display.print("Uptime: ");
-  display.print(up);
-  display.print("s");
-
-  display.setCursor(0, 40);
-  display.print("BLE Tx: ");
-  display.print(bleFrames);
-  // Surface dropped ECG samples (queue-full events) so a stalled Core 0
-  // consumer or an oversubscribed BLE link shows up here instead of
-  // just quietly degrading the waveform with no visible cause.
-  if (ecgQueueDropCount > 0) {
-    display.setCursor(0, 52);
-    display.print("ECG drops: ");
-    display.print(ecgQueueDropCount);
+  display.setCursor(0, 22);
+  display.print("SQI E:");
+  display.print(current_ecg_sqi);
+  display.print(" P:");
+  display.print(current_ppg_sqi);
+  if (current_dual_concordance == DUAL_CONCORDANT) {
+    display.print(" [OK]");
+  } else if (current_dual_concordance == DUAL_PHYSIOLOGICAL_DIVERGENCE) {
+    display.print(" [DIV]");
   }
+
+  display.setCursor(0, 32);
+  display.print("Sensors: MLX:");
+  display.print(mlxFound ? "+" : "-");
+  display.print(" MAX:");
+  display.print(maxFound ? "+" : "-");
+
+  display.setCursor(0, 42);
+  display.print("Aux Bus: ENV:");
+  display.print(bmeFound ? "+" : "-");
+  display.print(" IMU:");
+  display.print(mpuFound ? "+" : "-");
+
+  display.setCursor(0, 52);
+  display.print("BLE: ");
+  display.print(deviceConnected ? "LINKED" : "ADV");
+  display.print(" Tx:");
+  display.print(bleFrames);
 }
 
 // ---------------------------------------------------------
@@ -1326,7 +1375,8 @@ void core1TaskFunction(void *pvParameters) {
             measurementDuration = 5000;
           }
         } else {
-          // Manual stop: user holds touch button during active/continuous measurement
+          // Manual stop: user holds touch button during active/continuous
+          // measurement
           if (sysState == MEASURE_SPO2) {
             if (nSpo2Hist >= 3)
               current_spo2 = (uint16_t)medianOfI32(spo2Hist, nSpo2Hist);
@@ -1366,7 +1416,8 @@ void core1TaskFunction(void *pvParameters) {
         }
       }
 
-      // Only auto-finalize if measurementDuration is non-zero (0 = Continuous/Infinite)
+      // Only auto-finalize if measurementDuration is non-zero (0 =
+      // Continuous/Infinite)
       if (measurementDuration > 0 && elapsed > measurementDuration) {
         // Finalize specific readings
         if (sysState == MEASURE_TEMP && mlxFound) {
@@ -1478,17 +1529,21 @@ void core1TaskFunction(void *pvParameters) {
         tx_telemetry[5] = (temp_x100 >> 8) & 0xFF;
         tx_telemetry[6] = last_rr_ms & 0xFF;
         tx_telemetry[7] = (last_rr_ms >> 8) & 0xFF;
-        tx_telemetry[8] = leadOff ? 0 : 100;
+        tx_telemetry[8] = leadOff ? 0 : (current_ecg_sqi > 0 ? current_ecg_sqi : (sysState == MEASURE_ECG ? 85 : 100));
         uint8_t flags = 0;
         if (showHeartIcon)
           flags |= 0x01; // beat flash
         if (leadOff)
           flags |= 0x04; // lead-off
-        if (!fingerPresent && (sysState == MEASURE_SPO2 || sysState == MEASURE_DUAL))
+        if (!fingerPresent &&
+            (sysState == MEASURE_SPO2 || sysState == MEASURE_DUAL))
           flags |= 0x08; // finger-off
-        if (spo2Locked && (sysState == MEASURE_SPO2 || sysState == MEASURE_DUAL))
+        if (spo2Locked &&
+            (sysState == MEASURE_SPO2 || sysState == MEASURE_DUAL))
           flags |= 0x10; // SpO2 reading stabilized (3 stable windows)
-        if (ppgLowSignal && (sysState == MEASURE_SPO2 || sysState == MEASURE_DUAL) && fingerPresent)
+        if (ppgLowSignal &&
+            (sysState == MEASURE_SPO2 || sysState == MEASURE_DUAL) &&
+            fingerPresent)
           flags |= 0x20; // low perfusion — poor optical signal
         tx_telemetry[9] = flags;
         tx_telemetry[14] = battery_percent;
@@ -1833,14 +1888,36 @@ void setup() {
   I2C_MAX.begin(I2C1_SDA_PIN, I2C1_SCL_PIN);
   I2C_MAX.setTimeOut(50);
 
+  // Safe non-blocking probing of auxiliary I2C sensors (MPU6050 and BME280)
+  Wire.beginTransmission(0x68); // MPU6050 IMU
+  mpuFound = (Wire.endTransmission() == 0);
+
+  Wire.beginTransmission(0x76); // BME280 default
+  if (Wire.endTransmission() == 0) {
+    bmeFound = true;
+  } else {
+    Wire.beginTransmission(0x77); // BME280 alternate address
+    bmeFound = (Wire.endTransmission() == 0);
+  }
+
   mlxFound = mlx.begin();
   maxFound = particleSensor.begin(I2C_MAX, I2C_SPEED_FAST);
+  Serial.printf("[I2C PROBE] MLX90614: %s | MAX30102: %s | BME280: %s | MPU6050: %s\n",
+                mlxFound ? "FOUND" : "ABSENT",
+                maxFound ? "FOUND" : "ABSENT",
+                bmeFound ? "FOUND" : "ABSENT",
+                mpuFound ? "FOUND" : "ABSENT");
   // 100 sps / averaging 4 -> 25 sps effective over interfaces bundled
   // to work with the Maxim reference algorithm (4 s windows x 25 sps).
   // 0x3C (60, ~12mA) provides optimal tissue penetration and high SNR without
   // saturation.
-  if (maxFound)
+  if (maxFound) {
     particleSensor.setup(0x3C, 4, 2, 100, 411, 4096);
+    // Symmetric LED current: both Red and IR at 0x3C (~12 mA), matching the
+    // calibration condition of Maxim's empirical SpO2 polynomial.
+    particleSensor.setPulseAmplitudeRed(0x3C);
+    particleSensor.setPulseAmplitudeIR(0x3C);
+  }
   ecgConditioningInit();
 
   if (display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {

@@ -57,6 +57,7 @@ import 'package:swasthyasetu_ai/features/sync/screens/pending_sync_screen.dart';
 import 'package:swasthyasetu_ai/features/settings/screens/settings_screen.dart';
 import 'package:swasthyasetu_ai/features/settings/screens/storage_settings_screen.dart';
 import 'package:swasthyasetu_ai/features/debug/screens/ui_showcase_screen.dart';
+import 'package:swasthyasetu_ai/features/debug/screens/edge_ai_benchmark_screen.dart';
 import 'package:swasthyasetu_ai/features/dashboard/screens/general_ai_chat_screen.dart';
 import 'package:swasthyasetu_ai/features/dashboard/community_hotspot_screen.dart';
 
@@ -482,6 +483,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/devices/diagnostics',
         builder: (context, state) => const DeviceDiagnosticsScreen(),
+      ),
+      GoRoute(
+        path: '/ai/benchmark',
+        builder: (context, state) => const EdgeAiBenchmarkScreen(),
       ),
       GoRoute(
         path: '/emergency/contacts',

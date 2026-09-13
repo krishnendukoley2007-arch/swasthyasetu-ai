@@ -231,7 +231,8 @@ class _AirPollutionGuardianScreenState
     String aqiBandLabel,
     int aqi,
   ) {
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: true,
       color: aqiColor.withValues(alpha: 0.12),
       border: BorderSide(color: aqiColor.withValues(alpha: 0.5), width: 1.5),
       child: Column(
@@ -300,7 +301,8 @@ class _AirPollutionGuardianScreenState
   }
 
   Widget _buildStrainAlertCard(ThemeData theme) {
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: true,
       color: ClinicalPalette.coral.withValues(alpha: 0.15),
       border: BorderSide(
         color: ClinicalPalette.coral.withValues(alpha: 0.6),
@@ -502,7 +504,8 @@ class _AirPollutionGuardianScreenState
     bool isInhaling,
     double visualScale,
   ) {
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -750,7 +753,8 @@ class _AirPollutionGuardianScreenState
   }
 
   Widget _buildDefenseGuidelinesCard(ThemeData theme) {
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -842,7 +846,8 @@ class _AirPollutionGuardianScreenState
   }
 
   Widget _buildEmergencySosCard(ThemeData theme) {
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: true,
       color: ClinicalPalette.coral.withValues(alpha: 0.15),
       border: BorderSide(
         color: ClinicalPalette.coral.withValues(alpha: 0.5),

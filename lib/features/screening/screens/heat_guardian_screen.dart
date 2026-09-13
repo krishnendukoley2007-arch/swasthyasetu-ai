@@ -190,7 +190,8 @@ class _HeatGuardianScreenState extends ConsumerState<HeatGuardianScreen> {
     String psiBandLabel,
     double psiScore,
   ) {
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: true,
       color: psiColor.withValues(alpha: 0.12),
       border: BorderSide(color: psiColor.withValues(alpha: 0.5), width: 1.5),
       child: Column(
@@ -277,7 +278,8 @@ class _HeatGuardianScreenState extends ConsumerState<HeatGuardianScreen> {
     double coreTemp,
     int heartRate,
   ) {
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -407,7 +409,8 @@ class _HeatGuardianScreenState extends ConsumerState<HeatGuardianScreen> {
   }
 
   Widget _buildHydrationCard(ThemeData theme, String timeStr) {
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -499,7 +502,8 @@ class _HeatGuardianScreenState extends ConsumerState<HeatGuardianScreen> {
       ),
     };
 
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -593,7 +597,8 @@ class _HeatGuardianScreenState extends ConsumerState<HeatGuardianScreen> {
   }
 
   Widget _buildEmergencySosCard(ThemeData theme) {
-    return AppCard(
+    return AppTactileCard(
+      enableTilt: true,
       color: ClinicalPalette.coral.withValues(alpha: 0.1),
       border: BorderSide(color: ClinicalPalette.coral.withValues(alpha: 0.5)),
       child: Column(
