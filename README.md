@@ -7,11 +7,11 @@
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-1.5.0%20%28build%206%29-2563eb?style=for-the-badge)](pubspec.yaml)
-[![Platform](https://img.shields.io/badge/Android-8.0%2B%20%7C%20Web%20%7C%20ESP32-3ddc84?style=for-the-badge&logo=android&logoColor=white)](pubspec.yaml)
-[![Tests](https://img.shields.io/badge/tests-566%20passing-16a34a?style=for-the-badge)](test/)
+[![Version](https://img.shields.io/badge/version-1.5.1%20%28build%2010%29-2563eb?style=for-the-badge)](pubspec.yaml)
+[![Platform](https://img.shields.io/badge/Android-8.0%2B%20%7C%20Wear%20OS%20%7C%20Web%20%7C%20ESP32-3ddc84?style=for-the-badge&logo=android&logoColor=white)](pubspec.yaml)
+[![Tests](https://img.shields.io/badge/tests-583%20passing-16a34a?style=for-the-badge)](test/)
 [![Linter](https://img.shields.io/badge/flutter%20analyze-0%20issues-brightgreen?style=for-the-badge)](lib/)
-[![Qualcomm 26181](https://img.shields.io/badge/Qualcomm%20Contest-Problem%2026181-orange?style=for-the-badge)](https://github.com/helloworld3003/swasthya-setu-ai-private)
+[![Qualcomm 26181](https://img.shields.io/badge/Qualcomm%20Contest-Problem%2026181-orange?style=for-the-badge)](https://github.com/krishnendukoley2007-arch/swasthyasetu-ai)
 [![Live Web Dashboard](https://img.shields.io/badge/live%20workstation-Netlify-00ad9f?style=for-the-badge&logo=netlify&logoColor=white)](https://prismatic-sfogliatella-1e040e.netlify.app/)
 [![License](https://img.shields.io/badge/license-MIT-7c3aed?style=for-the-badge)](LICENSE)
 
@@ -78,6 +78,7 @@
 - [🌙 **Overnight Guardian (Sleep & ODI)**](#5--continuous-overnight-guardian-sleep--recovery-tracking)
 - [📕 **Offline Disaster Survival Playbook**](#6--offline-disaster-survival--water-purification-playbook)
 - [🎙️ **Multilingual Offline Audio Coach**](#9--multilingual-offline-audio-coach-hindi--bengali-voice-guidance)
+- [⌚ **Smartwatch Companion & Wear OS Standalone**](#10--smartwatch-companion-hub--wear-os-standalone-interface)
 
 </td>
 <td valign="top" width="33%">
@@ -89,7 +90,7 @@
 - [🧠 Grounded Gemini AI & Clinical Engine](#7--grounded-google-gemini-online-ai-personalized--non-alarmist)
 - [📡 Disaster Offline SOS Beaconing (Mesh Planned)](#8--disaster-offline-sos-beaconing-mesh-planned)
 - [🔌 Flash the Firmware](#-flash-the-firmware)
-- [🧪 Quality Invariants & 566 Tests](#-automated-testing--quality-invariants)
+- [🧪 Quality Invariants & 583 Tests](#-automated-testing--quality-invariants)
 
 </td>
 </tr>
@@ -500,6 +501,23 @@ flowchart TD
   - Periodic, culturally contextual hydration reminders for outdoor workers and vulnerable elders in extreme heat.
   - Expandable synchronized transcript view and interactive audio controls (Play, Pause, Stop, Language switcher).
 
+### 10. ⌚ Smartwatch Companion Hub & Wear OS Standalone Interface
+- **Wear OS & Smartwatch Telemetry Mirroring (`lib/core/services/wearable_service.dart`):**
+  - Seamless companion architecture supporting Wear OS (Galaxy Watch 4/5/6, Pixel Watch, TicWatch), Apple Watch (watchOS), and standard BLE smartwatches.
+  - Real-time bi-directional telemetry broadcast mirroring Heart Rate, $\text{SpO}_2$, Temperature, NEWS-2 Triage Risk Bands, and Sensor Board Battery directly to the patient's wrist.
+  - Ingests native smartwatch background telemetry including wrist resting heart rate, daily activity steps, and sleep cycle states via Health Connect and BLE GATT services.
+- **Wrist SOS Dispatch & Emergency Haptic Pulses:**
+  - One-touch wrist SOS dispatch with automated haptic alert patterns (`android.permission.VIBRATE`) to alert the wearer during acute decompensation, sudden nocturnal hypoxia, or severe heat strain events.
+  - Configurable notification thresholds and wrist alert silence controls to avoid alert fatigue.
+- **Dedicated Circular Wear OS Standalone UI (`lib/features/wearable/screens/wearable_screen.dart`):**
+  - Specially formatted high-contrast circular interface optimized for 360×360 to 450×450 round smartwatch displays and ambient power-saving modes.
+  - **One-Way Provenance Compliance (Mandate 2.1):** Displays unambiguous *"DEMO"* warning tags when running in simulated mode, strictly preventing simulation from masquerading as measured clinical readings.
+  - **No Fabricated Gaps (Mandate 2.3):** Missing or excluded sensor metrics strictly render as `—` (em dash), never misleading zeros or fabricated placeholders.
+  - **Advisory AI Flags (Mandate 2.5):** Emergency wrist vibration triggers strictly adhere to deterministic clinical thresholds.
+- **Interactive Hardware Watch Simulator (`lib/features/devices/screens/smartwatch_hub_screen.dart`):**
+  - Built-in hardware emulator accessible directly from the Device Scan screen (`/devices/smartwatch`), allowing field workers, clinicians, and contest evaluators to preview the exact wrist companion experience on their phone without requiring physical watch hardware.
+  - Supports live interactive vitals injection (normal vitals, critical distress, sensor disconnects) with real-time haptic feedback verification.
+
 ---
 
 ## 🔧 The Hardware
@@ -536,8 +554,8 @@ Follow these step-by-step instructions to clone, set up, test, and run SwasthyaS
 ### 2. Clone Repository & Setup PATH
 ```powershell
 # Clone the repository
-git clone https://github.com/helloworld3003/swasthya-setu-ai-private.git
-cd swasthya-setu-ai-private
+git clone https://github.com/krishnendukoley2007-arch/swasthyasetu-ai.git
+cd swasthyasetu-ai
 
 # Prepend Flutter to PATH (Windows PowerShell)
 $env:PATH = 'C:\flutter\bin;' + $env:PATH
@@ -551,13 +569,16 @@ flutter --version
 flutter pub get
 ```
 
-### 4. Run Automated Test Suite (566 Tests Passing)
+### 4. Run Automated Test Suite (583 Tests Passing)
 ```powershell
-# Run the entire test suite
+# Run the entire test suite (583 passing tests)
 flutter test
 
 # Run the strict layout & font-scaling overflow verification (92 permutations at 2.0x)
 flutter test test/overflow_test.dart
+
+# Run the wearable companion and smartwatch simulator tests
+flutter test test/wearable_screen_test.dart test/wearable_service_test.dart
 
 # Run the pure Dart disaster hazard engine unit tests
 flutter test test/domain/disaster_hazard_engine_test.dart
@@ -628,7 +649,7 @@ The modular firmware sketch is located at [`firmware/SSAI_SENSE_final/SSAI_SENSE
 
 Every modification to the codebase must strictly satisfy these quality invariants:
 
-- **566 Automated Tests:** 100% pass rate across unit tests, widget tests, protocol parsers, invariant tests, disaster triggers, and clinical calculators.
+- **583 Automated Tests:** 100% pass rate across unit tests, widget tests, protocol parsers, invariant tests, disaster triggers, clinical calculators, and smartwatch wearable services.
 - **Accessibility & Font Scaling Invariant:** Every screen is tested at **`textScaleFactor: 2.0`** with zero pixel clipping or overflow (`test/overflow_test.dart` — 128 layout combinations).
 - **Binary Frame Integrity:** Validates exact 20-byte BLE telemetry frames matching firmware `static_assert(sizeof(telemetry_frame_t) == 20)`.
 - **Map Honesty:** When location consent is OFF, the map explicitly declares *"Location is OFF"* rather than rendering an empty misleading map.
@@ -637,11 +658,14 @@ Every modification to the codebase must strictly satisfy these quality invariant
 - **Storage Stays English:** SQLite database keys, exported JSON/CSV, and rule engine tags remain 100% English regardless of UI language (Hindi, Bengali, English).
 
 ```powershell
-# Run full test suite (566 passing)
+# Run full test suite (583 passing)
 flutter test
 
 # Verify 2.0x font scaling layout compliance (92 permutations)
 flutter test test/overflow_test.dart
+
+# Run smartwatch companion & wearable test suite
+flutter test test/wearable_screen_test.dart test/wearable_service_test.dart
 
 # Run static analysis (0 issues)
 flutter analyze lib/ test/
@@ -654,8 +678,8 @@ flutter analyze lib/ test/
 ```text
 lib/
 ├── core/             🔧 BLE services, routing, offline maps, sync, providers, themes
-│   ├── routing/          App router with /screening/air-pollution-guardian & /ai/benchmark
-│   ├── services/         BLE protocol parser, Edge AI autoencoder, Qualcomm CPU detection
+│   ├── routing/          App router with /screening/air-pollution-guardian, /devices/smartwatch & /wearable
+│   ├── services/         BLE protocol parser, WearableService companion bridge, Edge AI autoencoder, Qualcomm CPU detection
 │   └── theme/            High-contrast accessible theme and clinical color tokens
 ├── data/             💾 Drift/SQLite database, repositories, row mappers
 │   ├── database/         Local encrypted SQLite database schema
@@ -665,6 +689,8 @@ lib/
 │   └── rules/            Risk engine, DisasterHazardEngine, EarlyWarningTrajectoryEngine
 ├── features/         🎯 Feature modules:
 │   ├── screening/        Overnight Guardian, Heat Guardian, Air Pollution Guardian, ECG live
+│   ├── wearable/         Circular Wear OS standalone watch interface with wrist triage
+│   ├── devices/          Device scan, BLE connection, diagnostics & Smartwatch Companion Hub
 │   ├── patient_home/     Adaptive Persona HUD, Early Warning Radar, Syndromic Sheet
 │   ├── dashboard/        Clinician home, General AI assistant, community telemetry
 │   ├── emergency/        Disaster Playbook Modal, SOS beacon payload, SOS dispatch
@@ -676,7 +702,7 @@ firmware/             🔌 SSAI_SENSE_final — ESP32 firmware sketch (ECG, PPG,
 hardware/             🎨 3D enclosure renders, circuit schematic, HARDWARE.md manual
 tools/                💻 ecg_dashboard.html — Web-Bluetooth live diagnostic workstation
 website/              🌐 PWA web dashboard deployed at https://prismatic-sfogliatella-1e040e.netlify.app/
-test/                 🧪 566 unit, widget, overflow, and protocol tests
+test/                 🧪 583 unit, widget, overflow, protocol, and wearable companion tests
 ```
 
 ---

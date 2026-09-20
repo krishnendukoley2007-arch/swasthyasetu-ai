@@ -128,3 +128,6 @@ test.csv
 # Duplicate Bundles & Local Archives
 All in One/
 information/
+
+# Separate Projects (Independent repository)
+fitness/
