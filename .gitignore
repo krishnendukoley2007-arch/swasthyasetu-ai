@@ -114,3 +114,17 @@ key.properties
 *.p12
 *.pem
 
+# Media, Presentations & Scratch Files (Excluded per repository policy)
+video/
+*.mp4
+*.pptx
+*.ppt
+*.avi
+*.mov
+test_preview.pdf
+test.csv
+9b527232629d27a9f0e3fe31f321cf7f.jpg
+
+# Duplicate Bundles & Local Archives
+All in One/
+information/

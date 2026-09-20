@@ -36,6 +36,8 @@ import 'package:swasthyasetu_ai/features/trends/screens/trends_screen.dart';
 import 'package:swasthyasetu_ai/features/devices/screens/device_scan_screen.dart';
 import 'package:swasthyasetu_ai/features/devices/screens/device_connection_screen.dart';
 import 'package:swasthyasetu_ai/features/devices/screens/device_diagnostics_screen.dart';
+import 'package:swasthyasetu_ai/features/devices/screens/smartwatch_hub_screen.dart';
+import 'package:swasthyasetu_ai/features/wearable/screens/wearable_screen.dart';
 import 'package:swasthyasetu_ai/features/emergency/screens/emergency_contacts_screen.dart';
 import 'package:swasthyasetu_ai/features/emergency/screens/sos_screen.dart';
 import 'package:swasthyasetu_ai/features/patient_home/screens/patient_home_screen.dart';
@@ -483,6 +485,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/devices/diagnostics',
         builder: (context, state) => const DeviceDiagnosticsScreen(),
+      ),
+      GoRoute(
+        path: '/devices/smartwatch',
+        builder: (context, state) => const SmartwatchHubScreen(),
+      ),
+      GoRoute(
+        path: '/wearable',
+        builder: (context, state) =>
+            const WearableScreen(isWatchStandalone: true),
       ),
       GoRoute(
         path: '/ai/benchmark',

@@ -8,6 +8,7 @@ import 'package:swasthyasetu_ai/core/providers/providers.dart';
 import 'package:swasthyasetu_ai/core/services/ble_service.dart';
 import 'package:swasthyasetu_ai/core/services/permission_service.dart';
 import 'package:swasthyasetu_ai/core/theme/app_theme.dart';
+import 'package:swasthyasetu_ai/core/theme/clinical_palette.dart';
 import 'package:swasthyasetu_ai/core/widgets/index.dart';
 import 'package:swasthyasetu_ai/data/repositories/device_repository.dart';
 import 'package:swasthyasetu_ai/domain/models/device.dart';
@@ -184,6 +185,8 @@ class _DeviceScanScreenState extends ConsumerState<DeviceScanScreen> {
                     _openConnection(remoteId: c.id, name: c.displayName),
               ),
             ),
+          const AppSpacing.vlg(),
+          _SmartwatchSection(onOpen: () => context.push('/devices/smartwatch')),
           const AppSpacing.vlg(),
           // Deliberately last, deliberately a different colour, deliberately not
           // in the list above.
@@ -689,6 +692,85 @@ class _Pill extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SmartwatchSection extends StatelessWidget {
+  final VoidCallback onOpen;
+
+  const _SmartwatchSection({required this.onOpen});
+
+  static const _hubTitle = 'Smartwatch Companion Hub';
+  static const _hubSubtitle =
+      'Sync live telemetry to Wear OS / Apple Watch with wrist SOS.';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClinicalPalette.hairline(context)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(AppTheme.spacingMd),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: ClinicalPalette.teal.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.watch_outlined,
+                  color: ClinicalPalette.teal,
+                  size: 24,
+                ),
+              ),
+              const AppSpacing.hmd(),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _hubTitle,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _hubSubtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const AppSpacing.hsm(),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

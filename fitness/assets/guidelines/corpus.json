@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "note": "Field-reference chunks for offline explanation. Retrieved lexically (BM25) and filtered by rule tag. These are triage/first-response guidance for a community health worker, not diagnostic criteria and not a substitute for clinical assessment.",
+  "chunks": [
+    {
+      "id": "spo2-critical-01",
+      "source": "WHO IMCI",
+      "title": "Oxygen saturation below 90%",
+      "ruleTags": ["spo2_critical"],
+      "body": "An oxygen saturation under 90% on room air is a danger sign at any age and needs same-day referral. Confirm the reading before acting: warm the hand, remove nail polish, keep the finger still, and allow the trace to settle for 30 seconds. A cold or poorly perfused finger reads falsely low. If the repeat reading is still under 90%, arrange transfer, keep the person sitting upright, and do not delay for further measurements. Record the value you referred on."
+    },
+    {
+      "id": "spo2-warning-01",
+      "source": "WHO IMCI",
+      "title": "Oxygen saturation 90-94%",
+      "ruleTags": ["spo2_warning"],
+      "body": "A saturation of 90-94% is below the usual range and deserves attention rather than alarm. Look for fast breathing, chest indrawing, or difficulty completing a sentence. Recheck after five minutes of quiet rest. If the person has a chronic lung condition their usual baseline may sit in this range, which is why the app tightens the threshold when the chronic-condition flag is set. Persistently low readings with any breathing symptom should be reviewed at a clinic the same day."
+    },
+    {
+      "id": "spo2-missing-01",
+      "source": "Device guidance",
+      "title": "No pulse oximetry reading captured",
+      "ruleTags": ["spo2_not_measured"],
+      "body": "A missing saturation value is not a normal value. The commonest causes are a loose sensor, a cold finger, movement, bright ambient light reaching the sensor, and nail polish. Re-seat the sensor on a warm finger, shield it from direct sunlight, and hold still for 30 seconds. Do not record a screening as normal while the oxygen reading is absent."
+    },
+    {
+      "id": "hr-tachy-critical-01",
+      "source": "WHO IMCI",
+      "title": "Very fast pulse at rest",
+      "ruleTags": ["hr_tachy_critical", "hr_tachy_warning"],
+      "body": "A resting pulse well above the expected range can accompany serious infection, dehydration, blood loss, pain, thyroid disease, or a rhythm disturbance. Measure again after five minutes of rest, because recent walking, fear, or a hot room all raise the rate. Check for fever, dry mouth and reduced skin turgor, and for bleeding. A fast pulse combined with fever and a low oxygen reading is the pattern that most often signals a body-wide infection and needs same-day assessment."
+    },
+    {
+      "id": "hr-brady-01",
+      "source": "WHO IMCI",
+      "title": "Slow pulse",
+      "ruleTags": ["hr_brady_critical", "hr_brady_warning"],
+      "body": "A slow resting pulse is normal in athletic adults and during sleep. It matters when it comes with dizziness, fainting, confusion, breathlessness, or chest discomfort, or when the person takes heart-rate-lowering medicines. Confirm the rate by feeling the radial pulse for a full minute; optical sensors can halve or double a true rate. In infants a rate below the expected floor is always significant and needs urgent assessment."
+    },
+    {
+      "id": "temp-fever-01",
+      "source": "WHO IMCI",
+      "title": "Fever management",
+      "ruleTags": ["temp_fever"],
+      "body": "Fever is the body's response to infection, not the illness itself. Encourage fluids, light clothing, and rest, and treat discomfort. Look for the source: cough and fast breathing point to the chest, burning urine to the urinary tract, loose stools to the gut, a stiff neck or drowsiness to something more serious. Advise return immediately if the person becomes drowsy, will not drink, has a fit, or develops fast or difficult breathing. In pregnancy and in immunosuppressed people the app lowers the fever threshold, because a smaller rise carries more weight."
+    },
+    {
+      "id": "temp-high-01",
+      "source": "WHO IMCI",
+      "title": "High fever",
+      "ruleTags": ["temp_high"],
+      "body": "A temperature at or above the high-fever threshold increases fluid loss and, in small children, the chance of a febrile seizure. Cool with tepid sponging rather than cold water or alcohol. Push oral fluids and check the person can drink. High fever alongside a fast pulse and low oxygen saturation should be treated as a same-day referral rather than watched at home."
+    },
+    {
+      "id": "temp-low-01",
+      "source": "WHO IMCI",
+      "title": "Low body temperature",
+      "ruleTags": ["temp_low"],
+      "body": "A low body temperature is a danger sign, especially in newborns, the frail elderly, and anyone with severe infection. It can also follow cold exposure. Confirm with a second measurement, ideally axillary, since skin-surface sensors read low on a cold limb. Warm the person with dry blankets and skin-to-skin contact for a baby, keep them out of draughts, and refer. Low temperature with a fast pulse suggests body-wide infection and needs urgent assessment."
+    },
+    {
+      "id": "sepsis-01",
+      "source": "WHO / ICMR sepsis awareness",
+      "title": "Fever with fast pulse and low oxygen",
+      "ruleTags": ["sepsis_screen"],
+      "body": "Fever, a fast pulse, and a low oxygen saturation appearing together are the classic warning combination for an infection affecting the whole body. Additional concerning features are confusion or drowsiness, passing little urine, mottled or very cold skin, and a rash that does not fade under pressure. This combination is not something to observe at home: arrange same-day assessment, keep the person drinking if they are alert, and record the three values you acted on."
+    },
+    {
+      "id": "ecg-irregular-01",
+      "source": "Device guidance",
+      "title": "Irregular beat-to-beat interval",
+      "ruleTags": ["ecg_irregular"],
+      "body": "Wide variation between successive beats can indicate a rhythm disturbance such as atrial fibrillation, but a single-lead trace from a finger sensor cannot diagnose one. Movement, shivering, talking, and loose electrode contact all produce the same pattern. Repeat the recording with the arm supported and the person quiet. If the irregularity persists, or if there is breathlessness, chest discomfort, dizziness, or a history of stroke, refer for a proper 12-lead ECG. Never start or stop a medicine on the basis of this screen."
+    },
+    {
+      "id": "ecg-quality-01",
+      "source": "Device guidance",
+      "title": "ECG trace too noisy to analyse",
+      "ruleTags": ["ecg_poor_quality"],
+      "body": "A poor-quality trace says nothing about the heart. It means the signal was not clean enough to measure. Improve contact: moisten the contact points slightly, press firmly but comfortably, rest the forearm on a solid surface, and stop the person from talking or shivering. Move away from mains chargers and fluorescent lights. Re-record before drawing any conclusion, and do not report a rhythm from a noisy trace."
+    },
+    {
+      "id": "bp-estimate-01",
+      "source": "ICMR hypertension guidance",
+      "title": "Cuffless blood-pressure estimates",
+      "ruleTags": ["bp_high"],
+      "body": "A pulse-transit-time estimate is a screening prompt, never a diagnosis. Hypertension is defined on properly measured cuff readings, taken after five minutes of rest, with the arm supported at heart level, on at least two separate occasions. Treat a high estimate as a reason to arrange a cuff measurement, not as a reason to start treatment. If the person has severe headache, visual disturbance, chest pain, breathlessness, or is pregnant with any of these, arrange assessment the same day regardless of the estimate."
+    },
+    {
+      "id": "respiratory-01",
+      "source": "WHO IMCI",
+      "title": "Breathing symptoms",
+      "ruleTags": ["respiratory_symptoms"],
+      "body": "Count breaths for a full minute with the chest exposed and the person calm. Fast breathing thresholds by age: 60 or more per minute under two months, 50 or more from two to eleven months, 40 or more from one to five years, and above 20 in older children and adults. Chest indrawing, grunting, nasal flaring, inability to drink, and drowsiness are danger signs that need referral regardless of the count."
+    },
+    {
+      "id": "red-flag-01",
+      "source": "WHO IMCI danger signs",
+      "title": "Danger signs that stand on their own",
+      "ruleTags": ["red_flag_symptoms"],
+      "body": "Some symptoms warrant assessment even when every vital sign looks normal: chest pain, severe difficulty breathing, a fit or convulsion, unconsciousness or new confusion, inability to drink or feed, persistent vomiting, one-sided weakness or slurred speech, severe bleeding, and severe abdominal pain. Reassuring numbers must never override any of these. Arrange transfer and record what you saw."
+    },
+    {
+      "id": "dehydration-01",
+      "source": "WHO ORS guidance",
+      "title": "Fluid loss and rehydration",
+      "ruleTags": ["dehydration_symptoms"],
+      "body": "Vomiting, loose stools, and dizziness together point to fluid loss. Assess sunken eyes, dry mouth, skin that stays pinched, reduced urine, and in a baby a sunken fontanelle and no tears. Start oral rehydration solution in small frequent sips, continue breastfeeding, and give zinc to children with diarrhoea per local protocol. Refer if the person cannot keep fluids down, is drowsy, has blood in the stool, or shows severe dehydration."
+    },
+    {
+      "id": "multiple-symptoms-01",
+      "source": "Triage principle",
+      "title": "Several symptoms together",
+      "ruleTags": ["multiple_symptoms"],
+      "body": "Three or more symptoms at once make significant illness more likely than any one alone, even when each is mild. Record onset, duration, and what has changed since. Set an explicit review point rather than leaving it open, and tell the person which specific changes should bring them back sooner."
+    },
+    {
+      "id": "vuln-elderly-01",
+      "source": "Geriatric triage guidance",
+      "title": "Older adults present differently",
+      "ruleTags": ["vuln_elderly"],
+      "body": "Older adults often lack a fever even with serious infection, and confusion, a fall, or loss of appetite may be the only sign. Their baseline oxygen saturation runs slightly lower and their heart-rate response is blunted, so the app tightens the saturation and temperature thresholds for this group. A small change from that person's own normal matters more than the absolute number. Ask what they were able to do last week that they cannot do today."
+    },
+    {
+      "id": "vuln-chronic-01",
+      "source": "NCD follow-up guidance",
+      "title": "Chronic conditions",
+      "ruleTags": ["vuln_chronic"],
+      "body": "In diabetes, hypertension, chronic lung, kidney, or heart disease, an acute illness destabilises the underlying condition. Confirm medicines are being taken and not running out, ask about missed doses, and check for the specific decompensation of that disease: breathlessness on lying flat, ankle swelling, very high or very low glucose readings, or reduced urine output. Thresholds are tightened for this group because a smaller deviation carries more consequence."
+    },
+    {
+      "id": "vuln-pregnant-01",
+      "source": "WHO ANC guidance",
+      "title": "Pregnancy",
+      "ruleTags": ["vuln_pregnant"],
+      "body": "A resting pulse ten to twenty beats above the pre-pregnancy rate is expected, so the app shifts the heart-rate band rather than flagging normal pregnancy as abnormal. Treat these as urgent at any gestation: severe headache with visual disturbance, upper abdominal pain, facial or hand swelling of sudden onset, reduced fetal movement, vaginal bleeding, leaking fluid, fever, or a fit. Blood-pressure estimates in pregnancy must be confirmed with a cuff without delay."
+    },
+    {
+      "id": "vuln-infant-01",
+      "source": "WHO IMCI newborn care",
+      "title": "Infants under one year",
+      "ruleTags": ["vuln_infant"],
+      "body": "Normal ranges for infants are entirely different from adults: a resting pulse of 100 to 160 is expected and 72 would be dangerously slow, which is why the app substitutes infant thresholds rather than merely adjusting adult ones. Danger signs are refusing to feed, no movement on stimulation, a bulging or sunken fontanelle, grunting, chest indrawing, temperature instability in either direction, and fewer wet nappies. Any of these means urgent referral."
+    },
+    {
+      "id": "vuln-immuno-01",
+      "source": "ICMR guidance",
+      "title": "Reduced immunity",
+      "ruleTags": ["vuln_immunocompromised"],
+      "body": "With reduced immunity, from HIV, cancer treatment, steroids, or transplant medicines, infection can advance quickly with few outward signs. The fever threshold is lowered because even a modest rise is significant. Do not wait for a clear localising sign before referring, and mention the immune status explicitly in the referral so it is not missed."
+    },
+    {
+      "id": "green-advice-01",
+      "source": "Triage principle",
+      "title": "When everything reads normal",
+      "ruleTags": [],
+      "body": "Normal vitals at one moment describe that moment only. Tell the person plainly which changes should bring them back: difficulty breathing, chest pain, a fit, drowsiness, inability to drink, or symptoms that worsen rather than settle. Record the screening so the next reading has something to compare against, since a trend across visits is far more informative than any single set of numbers."
+    },
+    {
+      "id": "device-limits-01",
+      "source": "Device guidance",
+      "title": "What this device can and cannot do",
+      "ruleTags": [],
+      "body": "This is a screening aid. It measures pulse rate, oxygen saturation, and temperature, records a single-lead trace, and estimates blood pressure without a cuff. It does not diagnose. It cannot detect a heart attack, exclude one, or replace a 12-lead ECG, a cuff blood-pressure measurement, or a clinician's examination. Every risk band is produced by a fixed set of published thresholds, not by a model guessing; the written explanation only puts those thresholds into words."
+    },
+    {
+      "id": "referral-01",
+      "source": "Referral practice",
+      "title": "Making a referral count",
+      "ruleTags": [],
+      "body": "A referral works when the receiving clinician can act on it. Send the measured values with their times, the symptoms and when they started, current medicines, known conditions, pregnancy status, and what you already did. Say plainly why you are worried. Confirm the person has transport and can reach the facility, and agree who will follow up if they do not arrive."
+    }
+  ]
+}

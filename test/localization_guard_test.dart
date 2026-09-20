@@ -29,6 +29,8 @@ const remainingAllowance = <String, int>{
   'devices/screens/device_connection_screen.dart': 14,
   'devices/screens/device_diagnostics_screen.dart': 3,
   'devices/screens/device_scan_screen.dart': 13,
+  // Smartwatch Companion Hub & interactive simulator for Wear OS
+  'devices/screens/smartwatch_hub_screen.dart': 29,
   'devices/widgets/phone_fall_simulator_sheet.dart': 8,
   'emergency/screens/emergency_contacts_screen.dart': 28,
   // Offline disaster survival playbook for SIH #26181
@@ -73,6 +75,8 @@ const remainingAllowance = <String, int>{
   'settings/screens/storage_settings_screen.dart': 49,
   'sync/screens/pending_sync_screen.dart': 8,
   'trends/screens/trends_screen.dart': 9,
+  // Circular Wear OS & smartwatch dedicated live vitals screen
+  'wearable/screens/wearable_screen.dart': 5,
 };
 
 // Dev-only surfaces are exempt from user-facing localization.

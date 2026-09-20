@@ -21,6 +21,8 @@ analyzer:
     - swasthya-setu-ai-private-main/**
     - reserch paper/**
     - "Important Files/**"
+    - "All in One/**"
+    - fitness/**
 
 linter:
   # The lint rules applied to this project can be customized in the

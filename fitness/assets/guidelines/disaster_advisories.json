@@ -1,0 +1,98 @@
+{
+  "advisories": [
+    {
+      "id": "flood",
+      "title": "Flood",
+      "forWhom": "Anyone in a flood-prone area or caught by rising water",
+      "before": [
+        "Know your nearest high ground and evacuation route.",
+        "Keep documents, medicines, and a battery torch in a waterproof bag at waist height.",
+        "Store 3 days of drinking water (2 L/person/day) and ready-to-eat food.",
+        "Charge phones and power banks; save 112, 108, and 1078 in contacts."
+      ],
+      "during": [
+        "Move to higher ground immediately — do not wait for orders.",
+        "Never walk or drive through flowing water; 15 cm can knock you down, 30 cm floats a car.",
+        "Avoid downed power lines and standing water — electrocution risk.",
+        "If trapped, go to the highest floor or roof; signal with bright cloth or light."
+      ],
+      "after": [
+        "Do not return until authorities declare the area safe.",
+        "Boil or chlorinate all drinking water; flood water contaminates everything.",
+        "Discard food that touched flood water — even sealed tins may be unsafe.",
+        "Watch for snake bites and skin infections; seek care for any wound."
+      ],
+      "helplines": "112 (emergency), 108 (ambulance), 1078 (disaster helpline), local district control room"
+    },
+    {
+      "id": "cyclone",
+      "title": "Cyclone / Severe Storm",
+      "forWhom": "Coastal and inland areas in the storm track",
+      "before": [
+        "Secure loose objects (tin sheets, pots, furniture) that can become missiles.",
+        "Tape windows in an X or board them; keep curtains drawn.",
+        "Fill water containers and bathtubs; power may be out for days.",
+        "Identify the strongest interior room (bathroom, hallway) away from windows."
+      ],
+      "during": [
+        "Stay indoors, away from windows and glass doors.",
+        "If the eye passes — sudden calm — do NOT go out; the back eyewall hits in minutes.",
+        "Keep a battery radio on for official updates; do not trust rumours.",
+        "If the building fails, shelter under a sturdy table or mattress."
+      ],
+      "after": [
+        "Wait for the official all-clear; winds can gust after the centre passes.",
+        "Watch for fallen wires, broken glass, and weakened trees.",
+        "Check on neighbours, especially elderly and disabled.",
+        "Report gas leaks, downed lines, and blocked roads to 112."
+      ],
+      "helplines": "112 (emergency), 108 (ambulance), 1078 (disaster helpline), IMD cyclone warnings on 1800-180-1717"
+    },
+    {
+      "id": "heatwave",
+      "title": "Extreme Heat",
+      "forWhom": "Everyone, especially elderly, children, pregnant women, outdoor workers, and those with chronic illness",
+      "before": [
+        "Drink water before you feel thirsty — at least 2.5 L/day; carry a bottle.",
+        "Schedule hard outdoor work before 10 am or after 5 pm.",
+        "Cool your home: curtains drawn, wet towels on windows, fan + bowl of ice.",
+        "Check on vulnerable neighbours daily; agree on a check-in time."
+      ],
+      "during": [
+        "Stay in the coolest room; wet cloth on neck, wrists, and ankles.",
+        "Take cool (not ice-cold) showers; avoid alcohol and heavy meals.",
+        "If you feel dizzy, nauseous, cramps, or stop sweating while hot — seek shade, sip water, call 108.",
+        "Never leave anyone (or pets) in a parked car — temperatures become lethal in minutes."
+      ],
+      "after": [
+        "Keep hydrating for 24 hours after the heat peak.",
+        "Watch for delayed heat exhaustion — fatigue, headache, confusion.",
+        "Restock water and cooling supplies for the next spell."
+      ],
+      "helplines": "112 (emergency), 108 (ambulance), 1075 (national heat helpline), state health dept. local number"
+    },
+    {
+      "id": "earthquake",
+      "title": "Earthquake",
+      "forWhom": "Anyone in seismic zones (Himalayan belt, North-East, Kutch, Koyna, etc.)",
+      "before": [
+        "Anchor tall furniture and appliances to walls.",
+        "Keep a torch, whistle, and shoes by the bed.",
+        "Practice Drop-Cover-Hold On with household members.",
+        "Know how to shut off gas and electricity."
+      ],
+      "during": [
+        "DROP to hands and knees, COVER head under sturdy table, HOLD ON until shaking stops.",
+        "If outdoors, move away from buildings, wires, and slopes.",
+        "If driving, pull over away from bridges/overpasses; stay in the vehicle."
+      ],
+      "after": [
+        "Expect aftershocks — Drop-Cover-Hold On each time.",
+        "Check for gas leaks; if you smell gas, shut off main valve and ventilate.",
+        "Text, don't call — lines jam; use 112 for life-threatening only.",
+        "Do not enter damaged buildings until inspected."
+      ],
+      "helplines": "112 (emergency), 108 (ambulance), 1078 (disaster helpline), NDMA: ndma.gov.in"
+    }
+  ]
+}

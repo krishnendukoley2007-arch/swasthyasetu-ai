@@ -14,6 +14,7 @@ import 'package:swasthyasetu_ai/core/services/storage_manager.dart';
 import 'package:swasthyasetu_ai/core/services/sync_service.dart';
 import 'package:swasthyasetu_ai/core/services/community_sync_service.dart';
 import 'package:swasthyasetu_ai/core/services/waveform_store.dart';
+import 'package:swasthyasetu_ai/core/services/wearable_service.dart';
 import 'package:swasthyasetu_ai/data/database/app_database.dart';
 import 'package:swasthyasetu_ai/data/repositories/auth_repository.dart';
 import 'package:swasthyasetu_ai/data/repositories/device_repository.dart';
@@ -652,4 +653,15 @@ final mapReaderProvider = FutureProvider<MbTilesReader?>((ref) async {
   final reader = MbTilesReader.open(pack.path, bundled: pack.bundled);
   ref.onDispose(() => reader?.close());
   return reader;
+});
+
+final wearableServiceProvider = Provider<WearableService>((ref) {
+  final service = WearableService();
+  ref.onDispose(service.dispose);
+  return service;
+});
+
+final wearableSnapshotProvider = StreamProvider<WearableSnapshot>((ref) {
+  final service = ref.watch(wearableServiceProvider);
+  return service.states;
 });
