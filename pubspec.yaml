@@ -17,8 +17,8 @@ dependencies:
   # Navigation
   go_router: ^13.0.1
   # Local database
-  drift: ^2.28.0
-  sqlite3: ^2.4.0
+  drift: ^2.35.0
+  sqlite3: ^3.5.2
   sqlite3_flutter_libs: ^0.5.18
   path: ^1.9.0
   path_provider: ^2.1.2
@@ -68,11 +68,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.1
-  build_runner: ^2.9.0
-  drift_dev: ^2.31.0
+  build_runner: ^2.16.1
+  drift_dev: ^2.35.0
   # Pinned high on purpose: analyzer <10 lacks visitDotShorthandPropertyAccess
   # and crashes the whole codegen run on Dart 3.13 sources.
-  analyzer: ^10.0.1
+  analyzer: ^14.4.0
 
 flutter:
   uses-material-design: true
