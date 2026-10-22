@@ -23,7 +23,7 @@ dependencies:
   path: ^1.9.0
   path_provider: ^2.1.2
   # BLE
-  flutter_blue_plus: ^1.31.2
+  flutter_blue_plus: ^2.3.12
   # Firebase — Phone OTP auth + cloud data persistence
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
